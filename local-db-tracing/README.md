@@ -226,13 +226,13 @@ python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_O
 Generate `rdb-selects.sql` from an existing paired run:
 
 ```powershell
-python local-db-tracing/generate_rdb_selects.py --paired-run-dir local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
+python local-db-tracing/generate_query_expected.py --paired-run-dir local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
 ```
 
 Or generate from a manifest directly:
 
 ```powershell
-python local-db-tracing/generate_rdb_selects.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
+python local-db-tracing/generate_query_expected.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
 Narrow ambiguous `WHERE ... IN (@var1, @var2, ...)` predicates before validation:
@@ -258,19 +258,19 @@ python local-db-tracing/compare_logical_changes.py --baseline-file local-db-trac
 Regenerate `summary.txt` from `changes.jsonl`:
 
 ```powershell
-python local-db-tracing/regenerate_summary.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
+python local-db-tracing/generate_setup.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
 ```
 
 Regenerate `summary.txt` and include action text:
 
 ```powershell
-python local-db-tracing/regenerate_summary.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
+python local-db-tracing/generate_setup.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
 ```
 
 Include helper-table writes in regenerated SQL when needed:
 
 ```powershell
-python local-db-tracing/regenerate_summary.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
+python local-db-tracing/generate_setup.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
 ```
 
 Show RDB-vs-RDB_MODERN compare tracer help:
@@ -295,12 +295,19 @@ Commonly used options across tracers:
 - `--known-associations-file`: override replay association mappings
 - `--replay-mode core|full`: `core` for functional test replay, `full` for all replayable side effects
 
-For `regenerate_summary.py`:
+For `generate_setup.py`:
 
 - `--input-file`: required path to `changes.jsonl`
 - `--manifest-file`: optional path to companion `manifest.json`
 - `--output-file`: optional output path for regenerated `summary.txt`
 - `--action`: optional action note (repeatable)
+
+For `generate_query_expected.py`:
+
+- `--paired-run-dir`: paired run directory containing `combined-manifest.json`
+- `--combined-manifest`: explicit manifest path (overrides `--paired-run-dir`)
+- `--output-file`: custom output SQL path (defaults next to manifest)
+- Also emits cumulative `logical-<database>/step-<N>/query.sql` and sibling `expected.json` by default
 
 ## Output Structure
 
@@ -325,7 +332,7 @@ Dual-capture run (example `.../20260408-111218-NBS_ODSE-to-RDB_MODERN/`):
 - `cdc-<database>/step-<N>/setup.sql`: replay SQL for individual source steps
 - `logical-<database>/`: logical artifacts for target database
 - `logical-<database>/step-<N>/query.sql`: cumulative verification SQL for each target step
-- `rdb-selects.sql`: generated target verification queries with `-- EXPECTED_ROWS_JSON` comments
+- `rdb-selects.sql`: generated target verification queries with literal WHERE values (no DECLARE block)
 - `rdb-selects-results.json`: machine-readable validation results (when validator is run)
 - `rdb-selects-results.md`: human-readable validation report (when validator is run)
 

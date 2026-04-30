@@ -221,7 +221,7 @@ Output Folder
 
 ### Test Coverage Files
 - `test_connection_defaults.py`: Connection configuration validation
-- `test_generate_rdb_selects.py`: SELECT query generation
+- `test_generate_query_expected.py`: SELECT query generation
 - `test_logical_changes.py`: Logical diff computation
 - `test_logical_compare.py`: Cross-database comparison
 - `test_logical_markdown.py`: Report formatting
