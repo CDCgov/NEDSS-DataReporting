@@ -63,8 +63,8 @@ public class QueryRunner {
                 "RECENT JOB_FLOW_LOG entries: "
                     + client
                         .sql(
-                            "SELECT TOP 20 Status_Type, Step_Name, row_count, Error_Description"
-                                + " FROM RDB_MODERN.DBO.JOB_FLOW_LOG WHERE Status_Type='ERROR'"
+                            "SELECT TOP 100 Status_Type, Step_Name, row_count, Error_Description"
+                                + " FROM RDB_MODERN.DBO.JOB_FLOW_LOG"
                                 + " ORDER BY record_id DESC")
                         .query()
                         .listOfRows());
