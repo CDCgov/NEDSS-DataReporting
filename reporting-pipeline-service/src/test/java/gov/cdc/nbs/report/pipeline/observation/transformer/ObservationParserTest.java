@@ -1,21 +1,24 @@
-package gov.cdc.nbs.report.pipeline.observation;
+package gov.cdc.nbs.report.pipeline.observation.transformer;
 
 import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.*;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationCoded;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationDate;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationEdx;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationMaterial;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationNumeric;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReason;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationTransformed;
-import gov.cdc.nbs.report.pipeline.observation.transformer.ProcessObservationDataUtil;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationTxt;
+import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ParsedObservation;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -23,68 +26,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.shaded.org.checkerframework.checker.nullness.qual.NonNull;
 
-class ObservationDataProcessTests {
-  @Mock KafkaTemplate<String, String> kafkaTemplate;
-
-  @Captor private ArgumentCaptor<String> topicCaptor;
-
-  @Captor private ArgumentCaptor<String> keyCaptor;
-
-  @Captor private ArgumentCaptor<String> messageCaptor;
+class ObservationParserTest {
 
   private static final String FILE_PREFIX = "rawDataFiles/observation/";
-  private static final String CODED_TOPIC = "codedTopic";
-  private static final String DATE_TOPIC = "dateTopic";
-  private static final String EDX_TOPIC = "edxTopic";
-  private static final String MATERIAL_TOPIC = "materialTopic";
-  private static final String NUMERIC_TOPIC = "numericTopic";
-  private static final String REASON_TOPIC = "reasonTopic";
-  private static final String TXT_TOPIC = "txtTopic";
-
   private static final Long BATCH_ID = 11L;
-
-  ProcessObservationDataUtil transformer;
-
-  private AutoCloseable closeable;
   private final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
-  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @BeforeEach
   void setUp() {
-    closeable = MockitoAnnotations.openMocks(this);
-    transformer = new ProcessObservationDataUtil(kafkaTemplate);
-
-    transformer.setCodedTopicName(CODED_TOPIC);
-    transformer.setEdxTopicName(EDX_TOPIC);
-    transformer.setDateTopicName(DATE_TOPIC);
-    transformer.setMaterialTopicName(MATERIAL_TOPIC);
-    transformer.setNumericTopicName(NUMERIC_TOPIC);
-    transformer.setReasonTopicName(REASON_TOPIC);
-    transformer.setTxtTopicName(TXT_TOPIC);
-
-    Logger logger = (Logger) LoggerFactory.getLogger(ProcessObservationDataUtil.class);
+    Logger logger = (Logger) LoggerFactory.getLogger(ObservationParser.class);
     listAppender.start();
     logger.addAppender(listAppender);
-
-    when(kafkaTemplate.send(anyString(), anyString(), isNull()))
-        .thenReturn(CompletableFuture.completedFuture(null));
-    when(kafkaTemplate.send(anyString(), anyString(), anyString()))
-        .thenReturn(CompletableFuture.completedFuture(null));
   }
 
   @AfterEach
-  void tearDown() throws Exception {
-    Logger logger = (Logger) LoggerFactory.getLogger(ProcessObservationDataUtil.class);
+  void tearDown() {
+    Logger logger = (Logger) LoggerFactory.getLogger(ObservationParser.class);
     logger.detachAppender(listAppender);
-    closeable.close();
   }
 
   @Test
@@ -100,16 +61,15 @@ class ObservationDataProcessTests {
         readFileData(FILE_PREFIX + "MaterialParticipations.json"));
     observation.setFollowupObservations(readFileData(FILE_PREFIX + "FollowupObservations.json"));
 
-    ObservationTransformed observationTransformed =
-        transformer.transformObservationData(observation, BATCH_ID);
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    Long patId = observationTransformed.getPatientId();
-    String ordererId = observationTransformed.getOrderingPersonId();
-    Long authorOrgId = observationTransformed.getAuthorOrganizationId();
-    Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
-    Long performerOrgId = observationTransformed.getPerformingOrganizationId();
-    Long materialId = observationTransformed.getMaterialId();
-    String resultObsUid = observationTransformed.getResultObservationUid();
+    Long patId = parsedObservation.transformed().getPatientId();
+    String ordererId = parsedObservation.transformed().getOrderingPersonId();
+    Long authorOrgId = parsedObservation.transformed().getAuthorOrganizationId();
+    Long ordererOrgId = parsedObservation.transformed().getOrderingOrganizationId();
+    Long performerOrgId = parsedObservation.transformed().getPerformingOrganizationId();
+    Long materialId = parsedObservation.transformed().getMaterialId();
+    String resultObsUid = parsedObservation.transformed().getResultObservationUid();
 
     Assertions.assertEquals("10000055", ordererId);
     Assertions.assertEquals(10000066L, patId);
@@ -129,9 +89,9 @@ class ObservationDataProcessTests {
     final var expected = getObservationTransformed();
 
     observation.setPersonParticipations(readFileData(FILE_PREFIX + "PersonParticipations.json"));
-    ObservationTransformed observationTransformed =
-        transformer.transformObservationData(observation, BATCH_ID);
-    Assertions.assertEquals(expected, observationTransformed);
+
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
+    Assertions.assertEquals(expected, parsedObservation.transformed());
   }
 
   @Test
@@ -151,9 +111,8 @@ class ObservationDataProcessTests {
 
     observation.setPersonParticipations(
         readFileData(FILE_PREFIX + "PersonParticipationsMorb.json"));
-    ObservationTransformed observationTransformed =
-        transformer.transformObservationData(observation, BATCH_ID);
-    Assertions.assertEquals(expected, observationTransformed);
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
+    Assertions.assertEquals(expected, parsedObservation.transformed());
   }
 
   @Test
@@ -165,11 +124,10 @@ class ObservationDataProcessTests {
     observation.setOrganizationParticipations(
         readFileData(FILE_PREFIX + "OrganizationParticipations.json"));
 
-    ObservationTransformed observationTransformed =
-        transformer.transformObservationData(observation, BATCH_ID);
-    Long authorOrgId = observationTransformed.getAuthorOrganizationId();
-    Long ordererOrgId = observationTransformed.getOrderingOrganizationId();
-    Long performerOrgId = observationTransformed.getPerformingOrganizationId();
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
+    Long authorOrgId = parsedObservation.transformed().getAuthorOrganizationId();
+    Long ordererOrgId = parsedObservation.transformed().getOrderingOrganizationId();
+    Long performerOrgId = parsedObservation.transformed().getPerformingOrganizationId();
 
     Assertions.assertNull(authorOrgId);
     Assertions.assertNull(ordererOrgId);
@@ -177,7 +135,7 @@ class ObservationDataProcessTests {
   }
 
   @Test
-  void testObservationMaterialTransformation() throws JsonProcessingException {
+  void testObservationMaterialTransformation() {
     Observation observation = new Observation();
     observation.setObservationUid(100000003L);
     observation.setObsDomainCdSt1("Order");
@@ -185,27 +143,11 @@ class ObservationDataProcessTests {
         readFileData(FILE_PREFIX + "MaterialParticipations.json"));
 
     ObservationMaterial material = constructObservationMaterial(100000003L);
-    ObservationTransformed observationTransformed =
-        transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(MATERIAL_TOPIC, topicCaptor.getValue());
-    assertEquals(10000005L, observationTransformed.getMaterialId());
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(2)
-            .getFormattedMessage()
-            .contains("Observation Material data (uid=10000005) sent to " + MATERIAL_TOPIC));
+    assertEquals(10000005L, parsedObservation.transformed().getMaterialId());
 
-    var actualMaterial =
-        objectMapper.readValue(
-            objectMapper
-                .readTree(messageCaptor.getAllValues().getFirst())
-                .path("payload")
-                .toString(),
-            ObservationMaterial.class);
-
-    assertEquals(material, actualMaterial);
+    assertEquals(material, parsedObservation.materialEntries().get(0));
   }
 
   @ParameterizedTest
@@ -217,15 +159,14 @@ class ObservationDataProcessTests {
         "[{\"parent_type_cd\":\"MorbFrmQ\",\"parent_uid\":234567888,\"parent_domain_cd_st_1\":\"R_Order\"}]");
 
     observation.setObsDomainCdSt1(domainCd);
-    ObservationTransformed observationTransformed =
-        transformer.transformObservationData(observation, BATCH_ID);
-    assertEquals(234567888L, observationTransformed.getReportObservationUid());
-    assertNull(observationTransformed.getReportRefrUid());
-    assertNull(observationTransformed.getReportSprtUid());
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
+    assertEquals(234567888L, parsedObservation.transformed().getReportObservationUid());
+    assertNull(parsedObservation.transformed().getReportRefrUid());
+    assertNull(parsedObservation.transformed().getReportSprtUid());
   }
 
   @Test
-  void testObservationCodedTransformation() throws JsonProcessingException {
+  void testObservationCodedTransformation() {
     Observation observation = new Observation();
     observation.setObservationUid(10001234L);
     observation.setObsCode(readFileData(FILE_PREFIX + "ObservationCoded.json"));
@@ -240,25 +181,13 @@ class ObservationDataProcessTests {
     coded.setOvcAltCdDescTxt("NORMAL");
     coded.setBatchId(BATCH_ID);
 
-    transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(CODED_TOPIC, topicCaptor.getValue());
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(6)
-            .getFormattedMessage()
-            .contains("Observation Coded data (uid=10001234) sent to " + CODED_TOPIC));
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    var actualCoded =
-        objectMapper.readValue(
-            objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(),
-            ObservationCoded.class);
-
-    assertEquals(coded, actualCoded);
+    assertEquals(coded, parsedObservation.codedEntries().get(0));
   }
 
   @Test
-  void testObservationDateTransformation() throws JsonProcessingException {
+  void testObservationDateTransformation() {
     Observation observation = new Observation();
     observation.setObservationUid(10001234L);
     observation.setObsDate(readFileData(FILE_PREFIX + "ObservationDate.json"));
@@ -269,25 +198,13 @@ class ObservationDataProcessTests {
     obd.setOvdSeq(1);
     obd.setBatchId(BATCH_ID);
 
-    transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(DATE_TOPIC, topicCaptor.getValue());
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(7)
-            .getFormattedMessage()
-            .contains("Observation Date data (uid=10001234) sent to " + DATE_TOPIC));
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    var actualObd =
-        objectMapper.readValue(
-            objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(),
-            ObservationDate.class);
-
-    assertEquals(obd, actualObd);
+    assertEquals(obd, parsedObservation.dateEntries().get(0));
   }
 
   @Test
-  void testObservationEdxTransformation() throws JsonProcessingException {
+  void testObservationEdxTransformation() {
     Observation observation = new Observation();
     observation.setActUid(10001234L);
     observation.setObservationUid(10001234L);
@@ -298,29 +215,13 @@ class ObservationDataProcessTests {
     edx.setEdxActUid(observation.getActUid());
     edx.setEdxAddTime("2024-09-30T21:08:19.017");
 
-    transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate, times(2))
-        .send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(EDX_TOPIC, topicCaptor.getValue());
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(8)
-            .getFormattedMessage()
-            .contains("Observation Edx data (edx doc uid=10101) sent to " + EDX_TOPIC));
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    var actualEdx =
-        objectMapper.readValue(
-            objectMapper
-                .readTree(messageCaptor.getAllValues().getFirst())
-                .path("payload")
-                .toString(),
-            ObservationEdx.class);
-
-    assertEquals(edx, actualEdx);
+    assertEquals(edx, parsedObservation.edxEntries().get(0));
   }
 
   @Test
-  void testObservationNumericTransformation() throws JsonProcessingException {
+  void testObservationNumericTransformation() {
     Observation observation = new Observation();
     observation.setObservationUid(10001234L);
     observation.setObsNum(readFileData(FILE_PREFIX + "ObservationNumeric.json"));
@@ -337,25 +238,13 @@ class ObservationDataProcessTests {
     numeric.setOvnSeq(1);
     numeric.setBatchId(BATCH_ID);
 
-    transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(NUMERIC_TOPIC, topicCaptor.getValue());
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(9)
-            .getFormattedMessage()
-            .contains("Observation Numeric data (uid=10001234) sent to " + NUMERIC_TOPIC));
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    var actualNumeric =
-        objectMapper.readValue(
-            objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(),
-            ObservationNumeric.class);
-
-    assertEquals(numeric, actualNumeric);
+    assertEquals(numeric, parsedObservation.numericEntries().get(0));
   }
 
   @Test
-  void testObservationReasonTransformation() throws JsonProcessingException {
+  void testObservationReasonTransformation() {
     Observation observation = new Observation();
     observation.setObservationUid(10001234L);
     observation.setObsReason(readFileData(FILE_PREFIX + "ObservationReason.json"));
@@ -366,25 +255,13 @@ class ObservationDataProcessTests {
     reason.setReasonDescTxt("PRESENCE OF REASON");
     reason.setBatchId(BATCH_ID);
 
-    transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate).send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(REASON_TOPIC, topicCaptor.getValue());
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(10)
-            .getFormattedMessage()
-            .contains("Observation Reason data (uid=10001234) sent to " + REASON_TOPIC));
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    var actualReason =
-        objectMapper.readValue(
-            objectMapper.readTree(messageCaptor.getValue()).path("payload").toString(),
-            ObservationReason.class);
-
-    assertEquals(reason, actualReason);
+    assertEquals(reason, parsedObservation.reasonEntries().get(0));
   }
 
   @Test
-  void testObservationTxtTransformation() throws JsonProcessingException {
+  void testObservationTxtTransformation() {
     Observation observation = new Observation();
     observation.setObservationUid(10001234L);
     observation.setObsTxt(readFileData(FILE_PREFIX + "ObservationTxt.json"));
@@ -396,25 +273,9 @@ class ObservationDataProcessTests {
     txt.setOvtValueTxt("RECOMMENDED IN SUCH INSTANCES.");
     txt.setBatchId(BATCH_ID);
 
-    transformer.transformObservationData(observation, BATCH_ID);
-    verify(kafkaTemplate, times(2))
-        .send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
-    assertEquals(TXT_TOPIC, topicCaptor.getValue());
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(11)
-            .getFormattedMessage()
-            .contains("Observation Txt data (uid=10001234) sent to " + TXT_TOPIC));
+    ParsedObservation parsedObservation = ObservationParser.parse(observation, BATCH_ID);
 
-    var actualTxt =
-        objectMapper.readValue(
-            objectMapper
-                .readTree(messageCaptor.getAllValues().getFirst())
-                .path("payload")
-                .toString(),
-            ObservationTxt.class);
-
-    assertEquals(txt, actualTxt);
+    assertEquals(txt, parsedObservation.textEntries().get(0));
   }
 
   @Test
@@ -422,7 +283,7 @@ class ObservationDataProcessTests {
     Observation observation = new Observation();
     observation.setObservationUid(10001234L);
     observation.setOrganizationParticipations("{\"act_uid\": 10000003}");
-    transformer.transformObservationData(observation, BATCH_ID);
+    ObservationParser.parse(observation, BATCH_ID);
 
     List<ILoggingEvent> logs = listAppender.list;
     logs.forEach(le -> assertTrue(le.getFormattedMessage().matches("^\\w+ array is null.")));
@@ -447,7 +308,7 @@ class ObservationDataProcessTests {
     observation.setObsReason(invalidJSON);
     observation.setObsTxt(invalidJSON);
 
-    transformer.transformObservationData(observation, BATCH_ID);
+    ObservationParser.parse(observation, BATCH_ID);
 
     List<ILoggingEvent> logs = listAppender.list;
     logs.forEach(le -> assertTrue(le.getFormattedMessage().contains(invalidJSON)));
@@ -467,7 +328,7 @@ class ObservationDataProcessTests {
     observation.setMaterialParticipations(dummyJSON);
     observation.setFollowupObservations(dummyJSON);
 
-    transformer.transformObservationData(observation, BATCH_ID);
+    ObservationParser.parse(observation, BATCH_ID);
 
     List<ILoggingEvent> logs = listAppender.list.subList(0, 4);
     logs.forEach(
@@ -491,7 +352,7 @@ class ObservationDataProcessTests {
     observation.setFollowupObservations(payload);
     observation.setParentObservations(payload);
 
-    transformer.transformObservationData(observation, BATCH_ID);
+    ObservationParser.parse(observation, BATCH_ID);
 
     List<ILoggingEvent> logs = listAppender.list.subList(0, 4);
     logs.forEach(

@@ -45,13 +45,6 @@ spring:
         ldf-data: ${TOPIC_NRT_LDF_DATA:nrt_ldf_data}
         metadata-columns: ${TOPIC_NRT_METADATA_COLUMNS:nrt_metadata_columns}
         observation: ${TOPIC_NRT_OBSERVATION:nrt_observation}
-        observation-coded: ${TOPIC_NRT_OBSERVATION_CODED:nrt_observation_coded}
-        observation-date: ${TOPIC_NRT_OBSERVATION_DATE:nrt_observation_date}
-        observation-edx: ${TOPIC_NRT_OBSERVATION_EDX:nrt_observation_edx}
-        observation-material: ${TOPIC_NRT_OBSERVATION_MATERIAL:nrt_observation_material}
-        observation-numeric: ${TOPIC_NRT_OBSERVATION_NUMERIC:nrt_observation_numeric}
-        observation-reason: ${TOPIC_NRT_OBSERVATION_REASON:nrt_observation_reason}
-        observation-txt: ${TOPIC_NRT_OBSERVATION_TXT:nrt_observation_txt}
         odse-nbs-page: ${TOPIC_NRT_ODSE_NBS_PAGE:nrt_odse_NBS_page}
         odse-state-defined-field-metadata: ${TOPIC_NRT_ODSE_STATE_DEFINED_FIELD_METADATA:nrt_odse_state_defined_field_metadata}
         organization: ${TOPIC_NRT_ORGANIZATION:nrt_organization}

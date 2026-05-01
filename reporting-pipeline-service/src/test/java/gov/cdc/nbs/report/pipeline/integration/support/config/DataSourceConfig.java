@@ -28,7 +28,7 @@ public class DataSourceConfig {
   }
 
   @Primary
-  @Bean
+  @Bean("rtrClient")
   public JdbcClient jdbcClient(DataSource dataSource) {
     return JdbcClient.create(dataSource);
   }
