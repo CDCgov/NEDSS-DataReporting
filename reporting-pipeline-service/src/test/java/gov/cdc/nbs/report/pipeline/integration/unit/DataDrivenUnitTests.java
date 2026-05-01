@@ -87,7 +87,32 @@ class DataDrivenUnitTests extends UnitTest {
 
             // Execute setup.sql
             try {
-              client.sql(setup).update();
+              java.sql.Connection conn =
+                  org.springframework.jdbc.datasource.DataSourceUtils.getConnection(
+                      adminDataSource);
+              try (java.sql.Statement stmt = conn.createStatement()) {
+                boolean hasResults = stmt.execute(setup);
+                while (true) {
+                  java.sql.SQLWarning warning = stmt.getWarnings();
+                  while (warning != null) {
+                    System.err.println("[SQL MESSAGE]: " + warning.getMessage());
+                    warning = warning.getNextWarning();
+                  }
+                  stmt.clearWarnings();
+
+                  if (hasResults) {
+                    try (java.sql.ResultSet rs = stmt.getResultSet()) {
+                      // consume result set
+                    }
+                  } else {
+                    int updateCount = stmt.getUpdateCount();
+                    if (updateCount == -1) {
+                      break;
+                    }
+                  }
+                  hasResults = stmt.getMoreResults();
+                }
+              }
             } catch (Exception e) {
               System.err.println("================= SETUP ERROR =================");
               System.err.println("Failed to execute setup.sql for " + testDirectory.getFileName());
