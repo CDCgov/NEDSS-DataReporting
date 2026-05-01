@@ -28,7 +28,9 @@ public class QueryRunner {
 
     for (String query : queries) {
       String trimmedQuery = query.trim();
-      if (trimmedQuery.isEmpty()) continue;
+      if (trimmedQuery.isEmpty()) {
+        continue;
+      }
 
       try {
         // Log exactly what is being sent to the sandbox
@@ -51,14 +53,19 @@ public class QueryRunner {
                 "NRT_INVESTIGATION for 10009289: "
                     + client
                         .sql(
-                            "SELECT PUBLIC_HEALTH_CASE_UID, CD, JURISDICTION_CD, INVESTIGATION_STATUS, RECORD_STATUS_CD FROM RDB_MODERN.DBO.NRT_INVESTIGATION WHERE PUBLIC_HEALTH_CASE_UID = 10009289")
+                            "SELECT PUBLIC_HEALTH_CASE_UID, CD, JURISDICTION_CD,"
+                                + " INVESTIGATION_STATUS, RECORD_STATUS_CD FROM"
+                                + " RDB_MODERN.DBO.NRT_INVESTIGATION WHERE PUBLIC_HEALTH_CASE_UID ="
+                                + " 10009289")
                         .query()
                         .listOfRows());
             System.err.println(
                 "RECENT JOB_FLOW_LOG entries: "
                     + client
                         .sql(
-                            "SELECT TOP 20 Status_Type, Step_Name, row_count, Error_Description FROM RDB_MODERN.DBO.JOB_FLOW_LOG ORDER BY record_id DESC")
+                            "SELECT TOP 20 Status_Type, Step_Name, row_count, Error_Description"
+                                + " FROM RDB_MODERN.DBO.JOB_FLOW_LOG WHERE Status_Type='ERROR'"
+                                + " ORDER BY record_id DESC")
                         .query()
                         .listOfRows());
             System.err.println(
