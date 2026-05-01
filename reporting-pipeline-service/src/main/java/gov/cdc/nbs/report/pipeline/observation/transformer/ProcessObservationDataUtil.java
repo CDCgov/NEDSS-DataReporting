@@ -56,8 +56,6 @@ public class ProcessObservationDataUtil {
   @Value("${spring.kafka.topics.nrt.observation-txt}")
   public String txtTopicName;
 
-  ObservationKey observationKey = new ObservationKey();
-
   private static final String SUBJECT_CLASS_CD = "subject_class_cd";
   public static final String TYPE_CD = "type_cd";
   public static final String ENTITY_ID = "entity_id";
@@ -72,7 +70,6 @@ public class ProcessObservationDataUtil {
     observationTransformed.setReportObservationUid(observation.getObservationUid());
     observationTransformed.setBatchId(batchId);
 
-    observationKey.setObservationUid(observation.getObservationUid());
     String obsDomainCdSt1 = observation.getObsDomainCdSt1();
 
     transformPersonParticipations(
@@ -396,10 +393,10 @@ public class ProcessObservationDataUtil {
     try {
       JsonNode observationCodedJsonArray = parseJsonArray(observationCoded);
 
-      ObservationCodedKey codedKey = new ObservationCodedKey();
       for (JsonNode jsonNode : observationCodedJsonArray) {
         ObservationCoded coded = objectMapper.treeToValue(jsonNode, ObservationCoded.class);
         coded.setBatchId(batchId);
+        ObservationCodedKey codedKey = new ObservationCodedKey();
         codedKey.setObservationUid(coded.getObservationUid());
         codedKey.setOvcCode(coded.getOvcCode());
         sendToKafka(
@@ -425,6 +422,8 @@ public class ProcessObservationDataUtil {
       for (JsonNode jsonNode : observationDateJsonArray) {
         ObservationDate obsDate = objectMapper.treeToValue(jsonNode, ObservationDate.class);
         obsDate.setBatchId(batchId);
+        ObservationKey observationKey = new ObservationKey();
+        observationKey.setObservationUid(obsDate.getObservationUid());
         sendToKafka(
             observationKey,
             obsDate,
@@ -470,6 +469,8 @@ public class ProcessObservationDataUtil {
       for (JsonNode jsonNode : observationNumericJsonArray) {
         ObservationNumeric numeric = objectMapper.treeToValue(jsonNode, ObservationNumeric.class);
         numeric.setBatchId(batchId);
+        ObservationKey observationKey = new ObservationKey();
+        observationKey.setObservationUid(numeric.getObservationUid());
         sendToKafka(
             observationKey,
             numeric,
@@ -490,10 +491,10 @@ public class ProcessObservationDataUtil {
     try {
       JsonNode observationReasonsJsonArray = parseJsonArray(observationReasons);
 
-      ObservationReasonKey reasonKey = new ObservationReasonKey();
       for (JsonNode jsonNode : observationReasonsJsonArray) {
         ObservationReason reason = objectMapper.treeToValue(jsonNode, ObservationReason.class);
         reason.setBatchId(batchId);
+        ObservationReasonKey reasonKey = new ObservationReasonKey();
         reasonKey.setObservationUid(reason.getObservationUid());
         reasonKey.setReasonCd(reason.getReasonCd());
         sendToKafka(
@@ -516,10 +517,10 @@ public class ProcessObservationDataUtil {
     try {
       JsonNode observationTxtJsonArray = parseJsonArray(observationTxt);
 
-      ObservationTxtKey txtKey = new ObservationTxtKey();
       for (JsonNode jsonNode : observationTxtJsonArray) {
         ObservationTxt txt = objectMapper.treeToValue(jsonNode, ObservationTxt.class);
         txt.setBatchId(batchId);
+        ObservationTxtKey txtKey = new ObservationTxtKey();
         txtKey.setObservationUid(txt.getObservationUid());
         txtKey.setOvtSeq(txt.getOvtSeq());
         sendToKafka(
