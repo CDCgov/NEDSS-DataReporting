@@ -24,7 +24,7 @@ DECLARE @superuser_id bigint = 10009282;
 DECLARE @dbo_nrt_organization_organization_uid bigint = 10000000;
 DECLARE @dbo_nrt_organization_organization_uid_2 bigint = 10000001;
 DECLARE @dbo_nrt_patient_patient_uid bigint = 10000002;
-DECLARE @dbo_nrt_investigation_public_health_case_uid bigint = 10000003;
+DECLARE @dbo_nrt_investigation_public_health_case_uid bigint = 10009289;
 DECLARE @dbo_nrt_provider_provider_uid bigint = 10000004;
 DECLARE @dbo_nrt_provider_provider_uid_2 bigint = 10000005;
 DECLARE @dbo_nrt_provider_provider_uid_3 bigint = 10000006;
@@ -323,4 +323,4 @@ INSERT INTO [dbo].[EVENT_METRIC_INC] ([EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [LO
 INSERT INTO [dbo].[EVENT_METRIC] ([EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [LOCAL_PATIENT_ID], [CONDITION_CD], [CONDITION_DESC_TXT], [PROG_AREA_CD], [PROG_AREA_DESC_TXT], [JURISDICTION_CD], [JURISDICTION_DESC_TXT], [RECORD_STATUS_CD], [RECORD_STATUS_DESC_TXT], [RECORD_STATUS_TIME], [ADD_TIME], [ADD_USER_ID], [LAST_CHG_TIME], [LAST_CHG_USER_ID], [CASE_CLASS_CD], [CASE_CLASS_DESC_TXT], [INVESTIGATION_STATUS_CD], [INVESTIGATION_STATUS_DESC_TXT], [ADD_USER_NAME], [LAST_CHG_USER_NAME]) VALUES (N'PHCInvForm', 10009289, @dbo_nrt_investigation_local_id, N'PSN10063000GA01', N'11065', N'2019 Novel Coronavirus', N'GCD', N'GCD', N'130001', N'Fulton County', N'OPEN', N'Open', N'2026-04-24T23:15:09.197', N'2026-04-24T23:15:09.197', @superuser_id, N'2030-01-01T00:00:00', @superuser_id, N'C', N'Confirmed', N'O', N'Open', N'Kent, Ariella', N'Kent, Ariella');
 
 -- Execute the covid case datamart proc
-EXEC RDB_MODERN.DBO.SP_COVID_CASE_DATAMART_POSTPROCESSING 10000003;
+EXEC RDB_MODERN.DBO.SP_COVID_CASE_DATAMART_POSTPROCESSING 10009289;
