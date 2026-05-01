@@ -9,7 +9,6 @@ import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.*;
-import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.InterviewReporting;
 import io.micrometer.core.instrument.Counter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,6 +86,7 @@ public class ProcessInvestigationDataUtil {
   private static final String TYPE_CD = "type_cd";
   private static final String RDB_COLUMN_NM = "RDB_COLUMN_NM";
   private static final String ANSWER_VAL = "ANSWER_VAL";
+  private static final String ANSWER_CODE = "ANSWER_CODE";
 
   private Counter ntfProcessed;
   private Counter ntfSuccess;
@@ -723,6 +723,7 @@ public class ProcessInvestigationDataUtil {
         contactAnswer.setContactUid(contactUid);
         contactAnswer.setRdbColumnNm(rdbColumnNm);
         contactAnswer.setAnswerVal(node.path(ANSWER_VAL).asText());
+        contactAnswer.setAnswerCode(node.path(ANSWER_CODE).asText());
 
         String jsonKey = jsonGenerator.generateStringJson(contactAnswerKey);
         String jsonValue = jsonGenerator.generateStringJson(contactAnswer);

@@ -12,4 +12,5 @@ public class ContactAnswer {
   private Long contactUid;
   private String rdbColumnNm;
   private String answerVal;
+  private String answerCode;
 }
