@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import javax.sql.DataSource;
 import org.json.JSONException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,18 +20,24 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 class DataDrivenUnitTests extends UnitTest {
 
   private final JdbcClient client;
+  private final DataSource adminDataSource;
   private final ObjectMapper mapper =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-  DataDrivenUnitTests(@Qualifier("adminClient") JdbcClient client) {
+  DataDrivenUnitTests(
+      @Qualifier("adminClient") JdbcClient client,
+      @Qualifier("adminDataSource") DataSource adminDataSource) {
     this.client = client;
+    this.adminDataSource = adminDataSource;
   }
 
   /**
@@ -66,27 +73,43 @@ class DataDrivenUnitTests extends UnitTest {
   @ParameterizedTest
   @MethodSource("unitTestDirectoryProvider")
   void testRunner(Path testDirectory) throws IOException, JSONException {
-    // Parse test data
-    String setup = Files.readString(testDirectory.resolve("setup.sql"));
-    String query = Files.readString(testDirectory.resolve("query.sql"));
-    String expected = Files.readString(testDirectory.resolve("expected.json"));
+    DataSourceTransactionManager transactionManager =
+        new DataSourceTransactionManager(adminDataSource);
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-    // Execute setup.sql
-    try {
-        client.sql(setup).update();
-    } catch (Exception e) {
-        System.err.println("================= SETUP ERROR =================");
-        System.err.println("Failed to execute setup.sql for " + testDirectory.getFileName());
-        e.printStackTrace();
-        System.err.println("===============================================");
-        throw e;
-    }
+    transactionTemplate.execute(
+        status -> {
+          try {
+            // Parse test data
+            String setup = Files.readString(testDirectory.resolve("setup.sql"));
+            String query = Files.readString(testDirectory.resolve("query.sql"));
+            String expected = Files.readString(testDirectory.resolve("expected.json"));
 
-    // Execute query.sql statements until data is returned
-    Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+            // Execute setup.sql
+            try {
+              client.sql(setup).update();
+            } catch (Exception e) {
+              System.err.println("================= SETUP ERROR =================");
+              System.err.println("Failed to execute setup.sql for " + testDirectory.getFileName());
+              e.printStackTrace();
+              System.err.println("===============================================");
+              throw e;
+            }
 
-    // Validate data returned matches expected.json
-    String actual = mapper.writeValueAsString(results);
-    JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+            // Execute query.sql statements until data is returned
+            Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+
+            // Validate data returned matches expected.json
+            String actual = mapper.writeValueAsString(results);
+            JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          } finally {
+            // Always rollback at the end of the test to reset the database state
+            status.setRollbackOnly();
+          }
+          return null;
+        });
   }
 }
