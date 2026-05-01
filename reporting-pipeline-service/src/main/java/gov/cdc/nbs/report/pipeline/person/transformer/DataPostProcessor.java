@@ -12,6 +12,7 @@ import gov.cdc.nbs.report.pipeline.person.model.dto.persondetail.*;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderElasticSearch;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderReporting;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.NoArgsConstructor;
@@ -118,45 +119,24 @@ public class DataPostProcessor {
     // Deserialize once
     Phone[] allData = requireNonNull(deserializePayload(telephone, Phone[].class));
 
-    // --- Special work phone logic for ProviderReporting / ProviderElasticSearch ---
-    if (pf instanceof ProviderReporting || pf instanceof ProviderElasticSearch) {
-      Phone workPhone =
-          Arrays.stream(allData)
-              .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()) && "O".equalsIgnoreCase(p.getCd()))
-              .max(Comparator.comparing(Phone::getTeleLocatorUid))
-              .orElse(null);
-
-      if (workPhone == null) {
-        workPhone =
-            Arrays.stream(allData)
-                .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()))
-                .max(Comparator.comparing(Phone::getTeleLocatorUid))
-                .orElse(null);
-      }
-
-      if (workPhone != null) {
-        workPhone.updatePerson(pf); // delegate update
-      }
-    } else {
-      Arrays.stream(allData)
-          .filter(p -> "WP".equalsIgnoreCase(p.getUseCd()))
-          .max(Comparator.comparing(Phone::getTeleLocatorUid))
-          .ifPresent(p -> p.updatePerson(pf)); // delegate update
-    }
-
-    Function<Predicate<? super Phone>, T> personPhoneFn =
+    Consumer<Predicate<? super Phone>> maxPhoneFn =
         p ->
             Arrays.stream(allData)
                 .filter(p)
                 .max(Comparator.comparing(Phone::getTeleLocatorUid))
-                .map(n -> n.updatePerson(pf))
-                .orElse(null);
+                .ifPresent(n -> n.updatePerson(pf));
 
-    // --- Home phone ---
-    personPhoneFn.apply(p -> "H".equalsIgnoreCase(p.getUseCd()));
+    // Work place phone
+    maxPhoneFn.accept(p -> "WP".equalsIgnoreCase(p.getUseCd()) && "PH".equalsIgnoreCase(p.getCd()));
 
-    // --- Cell phone ---
-    personPhoneFn.apply(p -> "CP".equalsIgnoreCase(p.getCd()));
+    // Work place office phone
+    maxPhoneFn.accept(p -> "WP".equalsIgnoreCase(p.getUseCd()) && "O".equalsIgnoreCase(p.getCd()));
+
+    // Home phone
+    maxPhoneFn.accept(p -> "H".equalsIgnoreCase(p.getUseCd()) && "PH".equalsIgnoreCase(p.getCd()));
+
+    // Cell phone
+    maxPhoneFn.accept(p -> "CP".equalsIgnoreCase(p.getCd()));
   }
 
   public <T extends PersonExtendedProps> void processPersonEntityData(String entityData, T pf) {
