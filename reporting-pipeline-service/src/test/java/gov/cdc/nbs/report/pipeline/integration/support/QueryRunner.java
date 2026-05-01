@@ -41,12 +41,40 @@ public class QueryRunner {
           System.err.println("================= DEBUG START =================");
           System.err.println("DEBUG: Query returned empty result. Running diagnostic queries:");
           try {
-              System.err.println("COUNT COVID_CASE_DATAMART: " + client.sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.COVID_CASE_DATAMART").query().listOfRows());
-              System.err.println("NRT_INVESTIGATION for 10009289: " + client.sql("SELECT PUBLIC_HEALTH_CASE_UID, CD, JURISDICTION_CD, INVESTIGATION_STATUS, RECORD_STATUS_CD FROM RDB_MODERN.DBO.NRT_INVESTIGATION WHERE PUBLIC_HEALTH_CASE_UID = 10009289").query().listOfRows());
-              System.err.println("RECENT JOB_FLOW_LOG errors: " + client.sql("SELECT TOP 10 Status_Type, Step_Name, Msg_Description1 FROM RDB_MODERN.DBO.JOB_FLOW_LOG ORDER BY record_id DESC").query().listOfRows());
-              System.err.println("NRT_PAGE_CASE_ANSWER for 10009289: " + client.sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.NRT_PAGE_CASE_ANSWER WHERE ACT_UID = 10009289").query().listOfRows());
-          } catch(Exception diagE) {
-              System.err.println("Failed diagnostic query: " + diagE.getMessage());
+            System.err.println(
+                "COUNT COVID_CASE_DATAMART: "
+                    + client
+                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.COVID_CASE_DATAMART")
+                        .query()
+                        .listOfRows());
+            System.err.println(
+                "NRT_INVESTIGATION for 10009289: "
+                    + client
+                        .sql(
+                            "SELECT PUBLIC_HEALTH_CASE_UID, CD, JURISDICTION_CD,"
+                                + " INVESTIGATION_STATUS, RECORD_STATUS_CD FROM"
+                                + " RDB_MODERN.DBO.NRT_INVESTIGATION WHERE PUBLIC_HEALTH_CASE_UID ="
+                                + " 10009289")
+                        .query()
+                        .listOfRows());
+            System.err.println(
+                "RECENT JOB_FLOW_LOG errors: "
+                    + client
+                        .sql(
+                            "SELECT TOP 10 Status_Type, Step_Name, Msg_Description1 FROM"
+                                + " RDB_MODERN.DBO.JOB_FLOW_LOG ORDER BY record_id DESC")
+                        .query()
+                        .listOfRows());
+            System.err.println(
+                "NRT_PAGE_CASE_ANSWER for 10009289: "
+                    + client
+                        .sql(
+                            "SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.NRT_PAGE_CASE_ANSWER WHERE"
+                                + " ACT_UID = 10009289")
+                        .query()
+                        .listOfRows());
+          } catch (Exception diagE) {
+            System.err.println("Failed diagnostic query: " + diagE.getMessage());
           }
           System.err.println("================= DEBUG END =================");
 
