@@ -60,7 +60,7 @@ public class QueryRunner {
                   "[NRT_ODSE_NBS_UI_METADATA]",
                   "[NRT_PAGE_CASE_ANSWER]",
                   "[NRT_SRTE_CODESET]",
-                  "[NRT_SRTE_CODE_VALUE_GENERAL]")
+                  "[NRT_SRTE_CODE_VALUE_GENERAL]");
           try {
             System.err.println(
                 "NRT_INVESTIGATION for 10009289: "
@@ -83,8 +83,11 @@ public class QueryRunner {
                         .listOfRows());
             for (String table : tables) {
               System.err.println(
-                  "COUNT " + table + ": "
-                      + client.sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO." + table)
+                  "COUNT "
+                      + table
+                      + ": "
+                      + client
+                          .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO." + table)
                           .query()
                           .listOfRows());
             }
