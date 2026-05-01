@@ -352,3 +352,6 @@ EXEC RDB_MODERN.DBO.SP_COVID_CASE_DATAMART_POSTPROCESSING 10009289;
 
 -- Wait 2 seconds for proc to finsih up
 WAITFOR DELAY '00:00:02';
+
+-- Query the datamart to debug the output during script execution
+SELECT * FROM RDB_MODERN.DBO.COVID_CASE_DATAMART WHERE PUBLIC_HEALTH_CASE_UID = 10009289;

@@ -102,8 +102,16 @@ class DataDrivenUnitTests extends UnitTest {
 
                   if (hasResults) {
                     try (java.sql.ResultSet rs = stmt.getResultSet()) {
-                      // consume result set
-                    }
+                      java.sql.ResultSetMetaData rsmd = rs.getMetaData();
+                      int columnsNumber = rsmd.getColumnCount();
+                      while (rs.next()) {
+                          StringBuilder sb = new StringBuilder("[RESULT SET ROW]: ");
+                          for (int i = 1; i <= columnsNumber; i++) {
+                              if (i > 1) sb.append(",  ");
+                              sb.append(rsmd.getColumnName(i)).append(": ").append(rs.getString(i));
+                          }
+                          System.err.println(sb.toString());
+                      }                    }
                   } else {
                     int updateCount = stmt.getUpdateCount();
                     if (updateCount == -1) {
