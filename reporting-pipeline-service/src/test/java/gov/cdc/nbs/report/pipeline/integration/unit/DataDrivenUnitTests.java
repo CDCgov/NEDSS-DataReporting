@@ -72,7 +72,15 @@ class DataDrivenUnitTests extends UnitTest {
     String expected = Files.readString(testDirectory.resolve("expected.json"));
 
     // Execute setup.sql
-    client.sql(setup).update();
+    try {
+        client.sql(setup).update();
+    } catch (Exception e) {
+        System.err.println("================= SETUP ERROR =================");
+        System.err.println("Failed to execute setup.sql for " + testDirectory.getFileName());
+        e.printStackTrace();
+        System.err.println("===============================================");
+        throw e;
+    }
 
     // Execute query.sql statements until data is returned
     Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
