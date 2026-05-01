@@ -235,6 +235,18 @@ Or generate from a manifest directly:
 python local-db-tracing/generate_query_expected.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
+Build step-level functional test artifacts (`setup.sql`, `query.sql`, `expected.json`) from paired run output:
+
+```powershell
+python local-db-tracing/build_step_test_artifacts.py --setup-step local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/step-3 --logical-step local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/step-3 --test-step reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/030-Investigate-AddTreatmentStartSalmonella
+```
+
+Or run it without arguments and enter paths when prompted:
+
+```powershell
+python local-db-tracing/build_step_test_artifacts.py
+```
+
 Narrow ambiguous `WHERE ... IN (@var1, @var2, ...)` predicates before validation:
 
 ```powershell
