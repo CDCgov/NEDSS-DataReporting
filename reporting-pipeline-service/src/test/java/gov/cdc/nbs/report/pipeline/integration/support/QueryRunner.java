@@ -58,7 +58,6 @@ public class QueryRunner {
                   "[NRT_PATIENT]",
                   "[NRT_ODSE_NBS_RDB_METADATA]",
                   "[NRT_ODSE_NBS_UI_METADATA]",
-                  "[NRT_PAGE_CASE_ANSWER]",
                   "[NRT_SRTE_CODESET]",
                   "[NRT_SRTE_CODE_VALUE_GENERAL]");
           try {
