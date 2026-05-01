@@ -349,3 +349,6 @@ INSERT INTO [dbo].[EVENT_METRIC] ([EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [LOCAL_
 
 -- Execute the covid case datamart proc
 EXEC RDB_MODERN.DBO.SP_COVID_CASE_DATAMART_POSTPROCESSING 10009289;
+
+-- Wait 2 seconds for proc to finsih up
+WAITFOR DELAY '00:00:02';
