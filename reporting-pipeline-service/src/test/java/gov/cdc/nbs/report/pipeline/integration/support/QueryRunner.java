@@ -42,13 +42,26 @@ public class QueryRunner {
         if (result.isEmpty()) {
           System.err.println("================= DEBUG START =================");
           System.err.println("DEBUG: Query returned empty result. Running diagnostic queries:");
+          /* init a list of table names to check counts on */
+          List<String> tables =
+              List.of(
+                  "COVID_CASE_DATAMART",
+                  "[D_ORGANIZATION]",
+                  "[D_PATIENT]",
+                  "[D_PROVIDER]",
+                  "[INVESTIGATION]",
+                  "[NRT_INVESTIGATION_CONFIRMATION]",
+                  "[NRT_INVESTIGATION_OBSERVATION]",
+                  "[NRT_INVESTIGATION]",
+                  "[NRT_OBSERVATION]",
+                  "[NRT_PAGE_CASE_ANSWER]",
+                  "[NRT_PATIENT]",
+                  "[NRT_ODSE_NBS_RDB_METADATA]",
+                  "[NRT_ODSE_NBS_UI_METADATA]",
+                  "[NRT_PAGE_CASE_ANSWER]",
+                  "[NRT_SRTE_CODESET]",
+                  "[NRT_SRTE_CODE_VALUE_GENERAL]")
           try {
-            System.err.println(
-                "COUNT COVID_CASE_DATAMART: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.COVID_CASE_DATAMART")
-                        .query()
-                        .listOfRows());
             System.err.println(
                 "NRT_INVESTIGATION for 10009289: "
                     + client
@@ -68,50 +81,13 @@ public class QueryRunner {
                                 + " ORDER BY record_id DESC")
                         .query()
                         .listOfRows());
-            System.err.println(
-                "F_PAGE_CASE count: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.F_PAGE_CASE")
-                        .query()
-                        .listOfRows());
-            System.err.println(
-                "INVESTIGATION count: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.INVESTIGATION")
-                        .query()
-                        .listOfRows());
-            System.err.println(
-                "RDB_METADATA count: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.NRT_ODSE_NBS_RDB_METADATA")
-                        .query()
-                        .listOfRows());
-            System.err.println(
-                "UI_METADATA count: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.NRT_ODSE_NBS_UI_METADATA")
-                        .query()
-                        .listOfRows());
-            System.err.println(
-                "CASE_ANSWER count: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.NRT_PAGE_CASE_ANSWER")
-                        .query()
-                        .listOfRows());
-            System.err.println(
-                "CODESET count: "
-                    + client
-                        .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO.NRT_SRTE_CODESET")
-                        .query()
-                        .listOfRows());
-            System.err.println(
-                "CODE VALUE GENERAL count: "
-                    + client
-                        .sql(
-                            "SELECT COUNT(*) as cnt FROM"
-                                + " RDB_MODERN.DBO.NRT_SRTE_CODE_VALUE_GENERAL")
-                        .query()
-                        .listOfRows());
+            for (String table : tables) {
+              System.err.println(
+                  "COUNT " + table + ": "
+                      + client.sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO." + table)
+                          .query()
+                          .listOfRows());
+            }
           } catch (Exception diagE) {
             System.err.println("Failed diagnostic query: " + diagE.getMessage());
           }
