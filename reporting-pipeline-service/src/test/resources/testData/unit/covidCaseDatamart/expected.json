@@ -1,10 +1,10 @@
 {
   "0": [
     {
-      "COVID_CASE_DATAMART_KEY": 10000003,
-      "public_health_case_uid": 8503,
-      "INV_LOCAL_ID": "CAS8503GA01",
-      "PATIENT_LOCAL_ID": "PSN8502GA01",
+      "COVID_CASE_DATAMART_KEY": 10009289,
+      "public_health_case_uid": 10009289,
+      "INV_LOCAL_ID": "CAS10009289GA01",
+      "PATIENT_LOCAL_ID": "PSN10000002GA01",
       "ADD_TIME": "2026-04-24 23:15:09",
       "LAST_CHG_TIME": "2030-01-01 00:00:00",
       "CONDITION_CD": "11065",
