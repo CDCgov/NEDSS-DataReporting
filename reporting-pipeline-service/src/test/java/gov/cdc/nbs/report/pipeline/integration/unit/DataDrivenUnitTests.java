@@ -87,38 +87,40 @@ class DataDrivenUnitTests extends UnitTest {
 
             // Execute setup.sql
             try {
-              java.sql.Connection conn = org.springframework.jdbc.datasource.DataSourceUtils.getConnection(adminDataSource);
+              java.sql.Connection conn =
+                  org.springframework.jdbc.datasource.DataSourceUtils.getConnection(
+                      adminDataSource);
               try (java.sql.Statement stmt = conn.createStatement()) {
-                  boolean hasResults = stmt.execute(setup);
-                  while (true) {
-                      java.sql.SQLWarning warning = stmt.getWarnings();
-                      while (warning != null) {
-                          System.err.println("[SQL WARNING]: " + warning.getMessage());
-                          warning = warning.getNextWarning();
-                      }
-                      stmt.clearWarnings();
-                      
-                      if (hasResults) {
-                          try (java.sql.ResultSet rs = stmt.getResultSet()) {
-                              java.sql.ResultSetMetaData rsmd = rs.getMetaData();
-                              int columnsNumber = rsmd.getColumnCount();
-                              while (rs.next()) {
-                                  StringBuilder sb = new StringBuilder("[SETUP SCRIPT OUTPUT ROW]: ");
-                                  for (int i = 1; i <= columnsNumber; i++) {
-                                      if (i > 1) sb.append(",  ");
-                                      sb.append(rsmd.getColumnName(i)).append(": ").append(rs.getString(i));
-                                  }
-                                  System.err.println(sb.toString());
-                              }
-                          }
-                      } else {
-                          int updateCount = stmt.getUpdateCount();
-                          if (updateCount == -1) {
-                              break;
-                          }
-                      }
-                      hasResults = stmt.getMoreResults();
+                boolean hasResults = stmt.execute(setup);
+                while (true) {
+                  java.sql.SQLWarning warning = stmt.getWarnings();
+                  while (warning != null) {
+                    System.err.println("[SQL WARNING]: " + warning.getMessage());
+                    warning = warning.getNextWarning();
                   }
+                  stmt.clearWarnings();
+
+                  if (hasResults) {
+                    try (java.sql.ResultSet rs = stmt.getResultSet()) {
+                      java.sql.ResultSetMetaData rsmd = rs.getMetaData();
+                      int columnsNumber = rsmd.getColumnCount();
+                      while (rs.next()) {
+                        StringBuilder sb = new StringBuilder("[SETUP SCRIPT OUTPUT ROW]: ");
+                        for (int i = 1; i <= columnsNumber; i++) {
+                          if (i > 1) sb.append(",  ");
+                          sb.append(rsmd.getColumnName(i)).append(": ").append(rs.getString(i));
+                        }
+                        System.err.println(sb.toString());
+                      }
+                    }
+                  } else {
+                    int updateCount = stmt.getUpdateCount();
+                    if (updateCount == -1) {
+                      break;
+                    }
+                  }
+                  hasResults = stmt.getMoreResults();
+                }
               }
             } catch (Exception e) {
               System.err.println("================= SETUP ERROR =================");
