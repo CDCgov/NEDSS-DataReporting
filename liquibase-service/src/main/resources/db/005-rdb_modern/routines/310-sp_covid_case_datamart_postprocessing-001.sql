@@ -1243,6 +1243,15 @@ BEGIN TRY
 
     if @debug='true'
 	    select @insert_query as insert_query;
+
+    DECLARE @debugCoreCount INT = (SELECT COUNT(*) FROM #COVID_CASE_CORE_DATA);
+    DECLARE @debugPatCount INT = (SELECT COUNT(*) FROM #COVID_PATIENT_DATA);
+    DECLARE @debugJoinCount INT = (SELECT COUNT(*) FROM #COVID_CASE_CORE_DATA coreData INNER JOIN #COVID_PATIENT_DATA patData ON coreData.public_health_case_uid = patData.PAT_CASE_UID);
+    
+    INSERT INTO [DBO].[JOB_FLOW_LOG]
+    (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT], [Error_Description])
+    VALUES (@BATCH_ID, @Dataflow_Name,@Package_Name, 'START', @PROC_STEP_NO, 'DEBUG COUNTS', @debugJoinCount, 'Core:' + CAST(@debugCoreCount AS VARCHAR) + ' Pat:' + CAST(@debugPatCount AS VARCHAR));
+
     EXEC sp_executesql @insert_query;
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
