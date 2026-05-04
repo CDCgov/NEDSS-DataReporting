@@ -625,24 +625,20 @@
       "TEST_RESULT_GRP_KEY": 2
     }
   ],
-  "27": [
+  "27": 
     {
-      "D_INV_ADMINISTRATIVE_KEY": 3,
-      "PAGE_CASE_UID": 3300017
     }
-  ],
+  ,
   "28": [
     {
       "D_INV_CLINICAL_KEY": 3,
       "PAGE_CASE_UID": 3300017
     }
   ],
-  "29": [
+  "29": 
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3,
-      "PAGE_CASE_UID": 3300017
     }
-  ],
+  ,
   "30": [
     {
       "D_INV_TREATMENT_KEY": 3,
