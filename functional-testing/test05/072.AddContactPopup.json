@@ -1,0 +1,797 @@
+{
+    "title": "AddContactPopup",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 800,
+            "height": 699,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Patient's First Name Contains"
+                ],
+                [
+                    "#DEM104"
+                ],
+                [
+                    "xpath///*[@id=\"DEM104\"]"
+                ],
+                [
+                    "pierce/#DEM104"
+                ]
+            ],
+            "offsetY": 4.8125,
+            "offsetX": 70.140625
+        },
+        {
+            "type": "change",
+            "value": "FredC",
+            "selectors": [
+                [
+                    "aria/Patient's First Name Contains"
+                ],
+                [
+                    "#DEM104"
+                ],
+                [
+                    "xpath///*[@id=\"DEM104\"]"
+                ],
+                [
+                    "pierce/#DEM104"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyUp",
+            "key": "c",
+            "target": "main"
+        },
+        {
+            "type": "change",
+            "value": "FredContact",
+            "selectors": [
+                [
+                    "aria/Patient's First Name Contains"
+                ],
+                [
+                    "#DEM104"
+                ],
+                [
+                    "xpath///*[@id=\"DEM104\"]"
+                ],
+                [
+                    "pierce/#DEM104"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#nedssForm div.popupButtonBar > input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"qsearch\"]/div[4]/input[1]"
+                ],
+                [
+                    "pierce/#nedssForm div.popupButtonBar > input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 7.6640625,
+            "offsetX": 12.28125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/PatientSearch.do?method=patientSearchSubmit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "div:nth-of-type(5) > input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"Add\"]"
+                ],
+                [
+                    "pierce/div:nth-of-type(5) > input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 16.3984375,
+            "offsetX": 23.8359375,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ContactTracing.do?method=AddContactLoad&MprUid=-1&patientUid=-1&caseLocalId=null&addNew=true",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_8 tr:nth-of-type(4) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_8\"]/tbody/tr[4]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_8 tr:nth-of-type(4) img"
+                ]
+            ],
+            "offsetY": 10.1640625,
+            "offsetX": 12
+        },
+        {
+            "type": "change",
+            "value": "M",
+            "selectors": [
+                [
+                    "aria/Patient's current sex.[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM113"
+                ],
+                [
+                    "xpath///*[@id=\"DEM113\"]"
+                ],
+                [
+                    "pierce/#DEM113"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_8 tr:nth-of-type(4) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_8\"]/tbody/tr[4]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_UI_8 tr:nth-of-type(4) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 62.1640625,
+            "offsetX": 44
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_8 tr:nth-of-type(8) img"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_8\"]/tbody/tr[8]/td[2]/img"
+                ],
+                [
+                    "pierce/#NBS_UI_8 tr:nth-of-type(8) img"
+                ]
+            ],
+            "offsetY": 8.1640625,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "N",
+            "selectors": [
+                [
+                    "aria/Indicator of whether or not a patient is alive or dead.[role=\"listbox\"]"
+                ],
+                [
+                    "#DEM127"
+                ],
+                [
+                    "xpath///*[@id=\"DEM127\"]"
+                ],
+                [
+                    "pierce/#DEM127"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_8 tr:nth-of-type(8) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_8\"]/tbody/tr[8]/td[2]"
+                ],
+                [
+                    "pierce/#NBS_UI_8 tr:nth-of-type(8) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 46.1640625,
+            "offsetX": 39
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/General comments pertaining to the patient's address."
+                ],
+                [
+                    "#DEM175_W"
+                ],
+                [
+                    "xpath///*[@id=\"DEM175_W\"]"
+                ],
+                [
+                    "pierce/#DEM175_W"
+                ]
+            ],
+            "offsetY": 28.6640625,
+            "offsetX": 194
+        },
+        {
+            "type": "change",
+            "value": "found in the park wearing a red shirt and jeans",
+            "selectors": [
+                [
+                    "aria/General comments pertaining to the patient's address."
+                ],
+                [
+                    "#DEM175_W"
+                ],
+                [
+                    "xpath///*[@id=\"DEM175_W\"]"
+                ],
+                [
+                    "pierce/#DEM175_W"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#NBS_UI_9 tr:nth-of-type(7) input"
+                ],
+                [
+                    "xpath///*[@id=\"NBS_UI_9\"]/tbody/tr[7]/td[2]/input"
+                ],
+                [
+                    "pierce/#NBS_UI_9 tr:nth-of-type(7) input"
+                ]
+            ],
+            "offsetY": 7.6640625,
+            "offsetX": 10
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(2) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head1\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(2) > tbody > tr:nth-of-type(1) td:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 23.4921875,
+            "offsetX": 81.8359375
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA17103 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA17103\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#GA17103 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 12.8359375,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "THSPAT",
+            "selectors": [
+                [
+                    "aria/Indicate if the relationship being recorded is a direct exposure/relationship between this patient and Contact or an exposure/relationship between the Contact and another known infected patient.[role=\"listbox\"]"
+                ],
+                [
+                    "#CON141"
+                ],
+                [
+                    "xpath///*[@id=\"CON141\"]"
+                ],
+                [
+                    "pierce/#CON141"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA17103 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"GA17103\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#GA17103 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 66.3359375,
+            "offsetX": 68
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA17103 tr:nth-of-type(5) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA17103\"]/tbody/tr[5]/td[2]/img"
+                ],
+                [
+                    "pierce/#GA17103 tr:nth-of-type(5) img"
+                ]
+            ],
+            "offsetY": 6.8359375,
+            "offsetX": 11
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The interview at which the contact was named. May also indicate if the contact record was initiated w/out interview"
+                ],
+                [
+                    "#GA17103 tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath///*[@id=\"GA17103\"]/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/#GA17103 tr:nth-of-type(5) input"
+                ]
+            ],
+            "offsetY": 6.8828125,
+            "offsetX": 143
+        },
+        {
+            "type": "change",
+            "value": "X",
+            "selectors": [
+                [
+                    "aria/The interview at which the contact was named. May also indicate if the contact record was initiated w/out interview"
+                ],
+                [
+                    "#GA17103 tr:nth-of-type(5) input"
+                ],
+                [
+                    "xpath///*[@id=\"GA17103\"]/tbody/tr[5]/td[2]/input"
+                ],
+                [
+                    "pierce/#GA17103 tr:nth-of-type(5) input"
+                ]
+            ],
+            "target": "main"
+        },
+
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA17103 tr:nth-of-type(5) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"GA17103\"]/tbody/tr[5]/td[2]"
+                ],
+                [
+                    "pierce/#GA17103 tr:nth-of-type(5) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 64.8359375,
+            "offsetX": 60
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA17104 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA17104\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#GA17104 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 8.3359375,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "P1",
+            "selectors": [
+                [
+                    "aria/Document the appropriate identifier for the specific type of partner, social contact and/or Associate.[role=\"listbox\"]"
+                ],
+                [
+                    "#CON144"
+                ],
+                [
+                    "xpath///*[@id=\"CON144\"]"
+                ],
+                [
+                    "pierce/#CON144"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA17104 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"GA17104\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#GA17104 tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 80.3359375,
+            "offsetX": 117
+        },
+        {
+            "type": "change",
+            "value": "03/15/2026",
+            "selectors": [
+                [
+                    "aria/The date of the first sexual exposure to the original/index patient."
+                ],
+                [
+                    "#NBS118"
+                ],
+                [
+                    "xpath///*[@id=\"NBS118\"]"
+                ],
+                [
+                    "pierce/#NBS118"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The date of the last sexual exposure to the original/index patient."
+                ],
+                [
+                    "#NBS120"
+                ],
+                [
+                    "xpath///*[@id=\"NBS120\"]"
+                ],
+                [
+                    "pierce/#NBS120"
+                ]
+            ],
+            "offsetY": 14.3359375,
+            "offsetX": 35
+        },
+        {
+            "type": "change",
+            "value": "04/01/2026",
+            "selectors": [
+                [
+                    "aria/The date of the last sexual exposure to the original/index patient."
+                ],
+                [
+                    "#NBS120"
+                ],
+                [
+                    "xpath///*[@id=\"NBS120\"]"
+                ],
+                [
+                    "pierce/#NBS120"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#GA25101 > tbody > tr:nth-of-type(1) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA25101\"]/tbody/tr[1]/td[2]/img"
+                ],
+                [
+                    "pierce/#GA25101 > tbody > tr:nth-of-type(1) img"
+                ]
+            ],
+            "offsetY": 10.0078125,
+            "offsetX": 8
+        },
+        {
+            "type": "change",
+            "value": "FF",
+            "selectors": [
+                [
+                    "aria/The action to be taken for this contact record (e.g., intitiate a new investigation associate to existing investigation, no follow-up reason)[role=\"listbox\"]"
+                ],
+                [
+                    "#CON145"
+                ],
+                [
+                    "xpath///*[@id=\"CON145\"]"
+                ],
+                [
+                    "pierce/#CON145"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#Disposition > div tr:nth-of-type(1) > td:nth-of-type(2)"
+                ],
+                [
+                    "xpath///*[@id=\"GA25101\"]/tbody/tr[1]/td[2]"
+                ],
+                [
+                    "pierce/#Disposition > div tr:nth-of-type(1) > td:nth-of-type(2)"
+                ]
+            ],
+            "offsetY": 51.0078125,
+            "offsetX": 90
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tr:nth-of-type(1) td:nth-of-type(5)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head2\"]"
+                ],
+                [
+                    "pierce/tr:nth-of-type(1) td:nth-of-type(5)"
+                ]
+            ],
+            "offsetY": 15.4921875,
+            "offsetX": 70.171875
+        },
+        {
+            "type": "change",
+            "value": "04/25/2026",
+            "selectors": [
+                [
+                    "#INV147"
+                ],
+                [
+                    "xpath///*[@id=\"INV147\"]"
+                ],
+                [
+                    "pierce/#INV147"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/The Public Health Investigator assigned to the Investigation."
+                ],
+                [
+                    "#CONINV180Text"
+                ],
+                [
+                    "xpath///*[@id=\"CONINV180Text\"]"
+                ],
+                [
+                    "pierce/#CONINV180Text"
+                ]
+            ],
+            "offsetY": 12.6640625,
+            "offsetX": 35.1640625
+        },
+        {
+            "type": "change",
+            "value": "1",
+            "selectors": [
+                [
+                    "aria/The Public Health Investigator assigned to the Investigation."
+                ],
+                [
+                    "#CONINV180Text"
+                ],
+                [
+                    "xpath///*[@id=\"CONINV180Text\"]"
+                ],
+                [
+                    "pierce/#CONINV180Text"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Quick Code Lookup"
+                ],
+                [
+                    "#CONINV180CodeLookupButton"
+                ],
+                [
+                    "xpath///*[@id=\"CONINV180CodeLookupButton\"]"
+                ],
+                [
+                    "pierce/#CONINV180CodeLookupButton"
+                ]
+            ],
+            "offsetY": 9.4140625,
+            "offsetX": 19.453125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#INV110"
+                ],
+                [
+                    "xpath///*[@id=\"INV110\"]"
+                ],
+                [
+                    "pierce/#INV110"
+                ]
+            ],
+            "offsetY": 4.1640625,
+            "offsetX": 36
+        },
+        {
+            "type": "change",
+            "value": "04/25/2026",
+            "selectors": [
+                [
+                    "#INV110"
+                ],
+                [
+                    "xpath///*[@id=\"INV110\"]"
+                ],
+                [
+                    "pierce/#INV110"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#tabs0tab2 tr:nth-of-type(9) img"
+                ],
+                [
+                    "xpath///*[@id=\"GA30102\"]/tbody/tr[9]/td[2]/img"
+                ],
+                [
+                    "pierce/#tabs0tab2 tr:nth-of-type(9) img"
+                ]
+            ],
+            "offsetY": 10.1640625,
+            "offsetX": 8.5
+        },
+        {
+            "type": "change",
+            "value": "06",
+            "selectors": [
+                [
+                    "aria/Notifiable[role=\"listbox\"]"
+                ],
+                [
+                    "#NBS143"
+                ],
+                [
+                    "xpath///*[@id=\"NBS143\"]"
+                ],
+                [
+                    "pierce/#NBS143"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/6-Yes, Notifiable"
+                ],
+                [
+                    "#tabs0tab2 option:nth-of-type(6)"
+                ],
+                [
+                    "xpath///*[@id=\"NBS143\"]/option[6]"
+                ],
+                [
+                    "pierce/#tabs0tab2 option:nth-of-type(6)"
+                ],
+                [
+                    "text/6-Yes, Notifiable"
+                ]
+            ],
+            "offsetY": 3.1640625,
+            "offsetX": 124
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+              ["#doc3 > form > div.popupButtonBar > input[type=button]:nth-child(1)"]
+            ],
+            "offsetX": 10,
+            "offsetY": 10
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+              ["#doc3 > form > div.popupButtonBar > input[type=button]:nth-child(4)"]
+            ],
+            "offsetX": 10,
+            "offsetY": 10
+        }
+    ]
+}

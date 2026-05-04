@@ -21,11 +21,12 @@ import org.testcontainers.utility.DockerImageName;
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 public abstract class UnitTest {
   private static boolean started = false;
+  private static final File base = new File("../docker-compose.yaml");
+  private static final File testCompose = new File("../docker-compose.test.yaml");
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
-      new ComposeContainer(
-              DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
+      new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base)
           .withServices("nbs-mssql", "liquibase")
           .withOptions("--build")
           .waitingFor(

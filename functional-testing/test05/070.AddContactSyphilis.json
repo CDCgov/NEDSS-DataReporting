@@ -1,0 +1,71 @@
+{
+    "title": "09AddContactsSyphilis",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table:nth-of-type(4) > tbody > tr:nth-of-type(1) tr:nth-of-type(2) > td:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head0\"]"
+                ],
+                [
+                    "pierce/table:nth-of-type(4) > tbody > tr:nth-of-type(1) tr:nth-of-type(2) > td:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 16.5859375,
+            "offsetX": 50.5
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(11)"
+                ],
+                [
+                    "xpath///*[@id=\"tabs0head5\"]"
+                ],
+                [
+                    "pierce/form > div > table:nth-of-type(4) > tbody > tr:nth-of-type(1) td:nth-of-type(11)"
+                ]
+            ],
+            "offsetY": 13.5859375,
+            "offsetX": 79.1796875
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Add New Contact Record[role=\"button\"]"
+                ],
+                [
+                    "#editContactTracing2 input"
+                ],
+                [
+                    "xpath///*[@id=\"contactNamedByPatListID\"]/tbody/tr[2]/td/input"
+                ],
+                [
+                    "pierce/#editContactTracing2 input"
+                ],
+                [
+                    "text/Add New Contact"
+                ]
+            ],
+            "offsetY": 11.7734375,
+            "offsetX": 71.90625
+        }
+    ]
+}

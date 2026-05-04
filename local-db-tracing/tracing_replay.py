@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 
 from tracing_constants import (
@@ -22,6 +23,17 @@ from tracing_sql import quote_identifier, sql_literal, sql_quote
 
 
 SUPERUSER_ID_VARIABLE = "@superuser_id"
+
+SCALAR_DECLARE_PATTERN = re.compile(
+    r"^DECLARE\s+(?P<name>@[A-Za-z0-9_]+)\s+(?P<sql_type>[^=;]+?)(?:\s*=\s*(?P<expression>.+?))?;\s*$",
+    re.IGNORECASE,
+)
+LOCAL_ID_EXPRESSION_PATTERN = re.compile(
+    r"^N'(?P<prefix>[^']*)'\s*\+\s*CONVERT\(nvarchar\(\d+\),\s*ABS\(CONVERT\(bigint,\s*(?P<numeric>.+?)\)\)\)\s*\+\s*N'(?P<suffix>[^']*)'$",
+    re.IGNORECASE,
+)
+VAR_PLUS_OFFSET_PATTERN = re.compile(r"^(?P<left>@[A-Za-z0-9_]+)\s*\+\s*(?P<offset>-?\d+)$")
+OFFSET_PLUS_VAR_PATTERN = re.compile(r"^(?P<offset>-?\d+)\s*\+\s*(?P<right>@[A-Za-z0-9_]+)$")
 
 
 
@@ -86,6 +98,127 @@ def format_value(value: object) -> str:
     """
 
     return json.dumps(value, ensure_ascii=True)
+
+
+def parse_int_literal(expression: str) -> int | None:
+    stripped = expression.strip()
+    if stripped.startswith("+"):
+        stripped = stripped[1:]
+    if stripped.startswith("-"):
+        return int(stripped) if stripped[1:].isdigit() else None
+    return int(stripped) if stripped.isdigit() else None
+
+
+def resolve_declare_values(sql_lines: list[str]) -> dict[str, object]:
+    pending: dict[str, str] = {}
+    for block in sql_lines:
+        for line in block.splitlines():
+            match = SCALAR_DECLARE_PATTERN.match(line.strip())
+            if not match:
+                continue
+            expression = match.group("expression")
+            if expression is None:
+                continue
+            pending[match.group("name")] = expression.strip()
+
+    resolved: dict[str, object] = {}
+    while pending:
+        progressed = False
+        for variable_name, expression in list(pending.items()):
+            int_literal = parse_int_literal(expression)
+            if int_literal is not None:
+                resolved[variable_name] = int_literal
+                del pending[variable_name]
+                progressed = True
+                continue
+
+            local_id_match = LOCAL_ID_EXPRESSION_PATTERN.match(expression)
+            if local_id_match:
+                numeric_expression = local_id_match.group("numeric").strip()
+                numeric_value: int | None = None
+                if numeric_expression.startswith("@"):
+                    candidate = resolved.get(numeric_expression)
+                    if isinstance(candidate, int):
+                        numeric_value = candidate
+                else:
+                    numeric_value = parse_int_literal(numeric_expression)
+                if numeric_value is not None:
+                    resolved[variable_name] = (
+                        local_id_match.group("prefix") + str(abs(numeric_value)) + local_id_match.group("suffix")
+                    )
+                    del pending[variable_name]
+                    progressed = True
+                    continue
+
+            if expression.startswith("N'") and expression.endswith("'"):
+                resolved[variable_name] = expression[2:-1].replace("''", "'")
+                del pending[variable_name]
+                progressed = True
+                continue
+
+            var_plus_offset_match = VAR_PLUS_OFFSET_PATTERN.match(expression)
+            if var_plus_offset_match:
+                left_variable = var_plus_offset_match.group("left")
+                left_value = resolved.get(left_variable)
+                if isinstance(left_value, int):
+                    resolved[variable_name] = left_value + int(var_plus_offset_match.group("offset"))
+                    del pending[variable_name]
+                    progressed = True
+                    continue
+
+            offset_plus_var_match = OFFSET_PLUS_VAR_PATTERN.match(expression)
+            if offset_plus_var_match:
+                right_variable = offset_plus_var_match.group("right")
+                right_value = resolved.get(right_variable)
+                if isinstance(right_value, int):
+                    resolved[variable_name] = int(offset_plus_var_match.group("offset")) + right_value
+                    del pending[variable_name]
+                    progressed = True
+                    continue
+
+        if not progressed:
+            break
+
+    return resolved
+
+
+def decode_value_key(serialized_value: str) -> object:
+    try:
+        return json.loads(serialized_value)
+    except json.JSONDecodeError:
+        return serialized_value
+
+
+def build_id_map_entries(
+    variable_registry: dict[tuple[str, str, str, str], str],
+    sql_lines: list[str],
+) -> list[dict[str, object]]:
+    resolved_values = resolve_declare_values(sql_lines)
+    entries: list[dict[str, object]] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for (_, _, _, serialized_original), parameter_name in variable_registry.items():
+        if parameter_name not in resolved_values:
+            continue
+        original_value = decode_value_key(serialized_original)
+        resolved_value = resolved_values[parameter_name]
+        dedupe_key = (
+            json.dumps(original_value, ensure_ascii=True, sort_keys=True, separators=(",", ":")),
+            parameter_name,
+            json.dumps(resolved_value, ensure_ascii=True, sort_keys=True, separators=(",", ":")),
+        )
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        entries.append(
+            {
+                "original": original_value,
+                "parameter": parameter_name,
+                "value": resolved_value,
+            }
+        )
+
+    return entries
 
 
 
@@ -1098,6 +1231,8 @@ def reconstruct_sql_statements(
     superuser_id: int = 10009282,
     starting_uid: int = DEFAULT_STARTING_UID,
     nbs_steps: list[dict[str, object]] | None = None,
+    emit_only_step: int | None = None,
+    id_map_entries_out: list[dict[str, object]] | None = None,
 ) -> list[str]:
     statements: list[str] = []
     top_level_declarations: list[str] = [
@@ -1130,8 +1265,9 @@ def reconstruct_sql_statements(
 
         raw_step = record.get("_step")
         current_step: int | None = int(raw_step) if raw_step is not None else None
+        should_emit_statement = emit_only_step is None or current_step == emit_only_step
 
-        if current_step is not None and current_step != last_step_num:
+        if should_emit_statement and current_step is not None and current_step != last_step_num:
             if statements:
                 statements.append("")
             desc = step_descriptions.get(current_step, "")
@@ -1143,7 +1279,8 @@ def reconstruct_sql_statements(
             table_name = f"{record['schema_name']}.{record['table_name']}"
             comment = f"-- Skipped {record['operation']} for {table_name} at {record['start_lsn']} because row payload could not be parsed"
             tagged = f"-- step: {current_step}\n{comment}" if current_step is not None else comment
-            last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+            if should_emit_statement:
+                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
         primary_key_columns = primary_keys_by_table.get(table_key, [])
@@ -1167,7 +1304,8 @@ def reconstruct_sql_statements(
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
         if operation == "delete":
@@ -1180,7 +1318,8 @@ def reconstruct_sql_statements(
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
         if operation == "update_before":
@@ -1192,7 +1331,8 @@ def reconstruct_sql_statements(
             if before_record is None:
                 comment = f"-- Skipped update for {record['schema_name']}.{record['table_name']} at {record['start_lsn']} because the before image was missing"
                 tagged = f"-- step: {current_step}\n{comment}" if current_step is not None else comment
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
                 continue
             sql_statement = reconstruct_update_sql(
                 before_record,
@@ -1207,7 +1347,8 @@ def reconstruct_sql_statements(
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
-                last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
+                if should_emit_statement:
+                    last_table_key = append_sql_statement(statements, last_table_key, table_key, tagged)
             continue
 
     for orphan in pending_updates.values():
@@ -1216,12 +1357,23 @@ def reconstruct_sql_statements(
         orphan_step_int: int | None = int(orphan_step) if orphan_step is not None else None
         comment = f"-- Skipped update for {orphan['schema_name']}.{orphan['table_name']} at {orphan['start_lsn']} because the after image was missing"
         tagged = f"-- step: {orphan_step_int}\n{comment}" if orphan_step_int is not None else comment
-        last_table_key = append_sql_statement(statements, last_table_key, orphan_table_key, tagged)
+        if emit_only_step is None or orphan_step_int == emit_only_step:
+            last_table_key = append_sql_statement(statements, last_table_key, orphan_table_key, tagged)
+
+    if emit_only_step is not None and not statements:
+        if id_map_entries_out is not None:
+            id_map_entries_out.clear()
+        return []
 
     if not top_level_declarations:
-        return statements
+        final_lines = statements
+    elif not statements:
+        final_lines = top_level_declarations
+    else:
+        final_lines = [*top_level_declarations, "", *statements]
 
-    if not statements:
-        return top_level_declarations
+    if id_map_entries_out is not None:
+        id_map_entries_out.clear()
+        id_map_entries_out.extend(build_id_map_entries(variable_registry, final_lines))
 
-    return [*top_level_declarations, "", *statements]
+    return final_lines
