@@ -53,6 +53,17 @@ jacoco {
     reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
 }
 
+bootRun {
+    systemProperty 'spring.profiles.active', 'default,development,local'
+
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 17071
+    }
+}
+
 jacocoTestReport {
     reports {
         xml.required = true
