@@ -27,6 +27,7 @@ public abstract class UnitTest {
       new ComposeContainer(
               DockerImageName.parse("docker:25.0.5"), new File("../docker-compose.yaml"))
           .withServices("nbs-mssql", "liquibase")
+          .withOptions("--build")
           .waitingFor(
               "liquibase",
               Wait.forLogMessage("Migrations complete.*", 1)
