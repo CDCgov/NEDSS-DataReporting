@@ -535,7 +535,6 @@
     {
       "CONDITION_KEY": 242,
       "COPY_TO_PROVIDER_KEY": 1,
-      "INVESTIGATION_KEY": 3,
       "LAB_RPT_DT_KEY": 1,
       "LAB_TEST_KEY": 2,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -555,7 +554,6 @@
     {
       "CONDITION_KEY": 1,
       "COPY_TO_PROVIDER_KEY": 1,
-      "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 1,
       "LAB_TEST_KEY": 3,
       "LAB_TEST_TECHNICIAN_KEY": 1,
