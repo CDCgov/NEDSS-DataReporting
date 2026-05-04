@@ -1,7 +1,5 @@
 package gov.cdc.nbs.report.pipeline.integration.support;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +27,94 @@ public class QueryRunner {
     int queryIndex = 0;
 
     for (String query : queries) {
-      Optional<List<Map<String, Object>>> result =
-          Await.waitFor(() -> QueryRunner.select(query, client));
-      assertThat(result).isPresent();
-      results.put(String.valueOf(queryIndex), result.get());
+      String trimmedQuery = query.trim();
+      if (trimmedQuery.isEmpty()) {
+        continue;
+      }
+
+      try {
+        // Log exactly what is being sent to the sandbox
+        System.out.println("DEBUG: Executing Batch Query [" + queryIndex + "]: " + trimmedQuery);
+
+        Optional<List<Map<String, Object>>> result =
+            Await.waitFor(() -> QueryRunner.select(trimmedQuery, client));
+
+        if (result.isEmpty()) {
+          System.err.println("================= DEBUG START =================");
+          System.err.println("DEBUG: Query returned empty result. Running diagnostic queries:");
+          /* init a list of table names to check counts on */
+          List<String> tables =
+              List.of(
+                  "COVID_CASE_DATAMART",
+                  "[D_ORGANIZATION]",
+                  "[D_PATIENT]",
+                  "[D_PROVIDER]",
+                  "[INVESTIGATION]",
+                  "[NRT_INVESTIGATION_CONFIRMATION]",
+                  "[NRT_INVESTIGATION_OBSERVATION]",
+                  "[NRT_INVESTIGATION]",
+                  "[NRT_OBSERVATION]",
+                  "[NRT_PAGE_CASE_ANSWER]",
+                  "[NRT_PATIENT]",
+                  "[NRT_ODSE_NBS_RDB_METADATA]",
+                  "[NRT_ODSE_NBS_UI_METADATA]",
+                  "[NRT_SRTE_CODESET]",
+                  "[NRT_SRTE_CODE_VALUE_GENERAL]",
+                  "[nrt_srte_Condition_code]");
+          try {
+            System.err.println(
+                "NRT_INVESTIGATION for 10009289: "
+                    + client
+                        .sql(
+                            "SELECT PUBLIC_HEALTH_CASE_UID, CD, JURISDICTION_CD,"
+                                + " INVESTIGATION_STATUS, RECORD_STATUS_CD FROM"
+                                + " RDB_MODERN.DBO.NRT_INVESTIGATION WHERE PUBLIC_HEALTH_CASE_UID ="
+                                + " 10009289")
+                        .query()
+                        .listOfRows());
+            System.err.println(
+                "RECENT JOB_FLOW_LOG entries: "
+                    + client
+                        .sql(
+                            "SELECT TOP 100 Status_Type, Step_Name, row_count, Error_Description"
+                                + " FROM RDB_MODERN.DBO.JOB_FLOW_LOG"
+                                + " ORDER BY record_id DESC")
+                        .query()
+                        .listOfRows());
+            for (String table : tables) {
+              System.err.println(
+                  "COUNT "
+                      + table
+                      + ": "
+                      + client
+                          .sql("SELECT COUNT(*) as cnt FROM RDB_MODERN.DBO." + table)
+                          .query()
+                          .listOfRows());
+            }
+          } catch (Exception diagE) {
+            System.err.println("Failed diagnostic query: " + diagE.getMessage());
+          }
+          System.err.println("================= DEBUG END =================");
+
+          // This is where your failure happens.
+          // We throw a detailed exception here to stop the test and show the context.
+          throw new AssertionError(
+              String.format(
+                  "Query [%d] failed to return a result container.\n"
+                      + "SQL: %s\n"
+                      + "Possible causes: SP has no SELECT statement, connection lost, or timeout"
+                      + " in Await.waitFor.",
+                  queryIndex, trimmedQuery));
+        }
+
+        results.put(String.valueOf(queryIndex), result.get());
+        System.out.println(
+            "DEBUG: Query [" + queryIndex + "] returned " + result.get().size() + " rows.");
+
+      } catch (Exception e) {
+        throw new AssertionError(
+            "Exception during execution of query [" + queryIndex + "]: " + trimmedQuery, e);
+      }
       queryIndex++;
     }
 

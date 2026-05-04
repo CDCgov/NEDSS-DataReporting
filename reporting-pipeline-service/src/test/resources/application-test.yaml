@@ -1,13 +1,13 @@
 spring:
   datasource:
     default:
-      username: rtr_service_user
-      password: rtr_service_user
-      url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      username: ${RTR_SERVICE_USER_NAME:rtr_service_user}
+      password: ${RTR_SERVICE_USER_PASSWORD:rtr_service_user}
+      url: ${DB_HOST_RDB:jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;}
     admin:
-      username: rtr_admin
-      password: rtr_admin
-      url: jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      username: ${RTR_ADMIN_NAME:rtr_admin}
+      password: ${RTR_ADMIN_PASSWORD:rtr_admin}
+      url: ${DB_HOST_ODSE:jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;}
   jpa:
     show-sql: "true"
     hibernate:

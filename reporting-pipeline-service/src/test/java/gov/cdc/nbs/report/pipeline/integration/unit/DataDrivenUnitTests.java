@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import javax.sql.DataSource;
 import org.json.JSONException;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -21,18 +22,24 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 class DataDrivenUnitTests extends UnitTest {
 
   private final JdbcClient client;
+  private final DataSource adminDataSource;
   private final ObjectMapper mapper =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-  DataDrivenUnitTests(@Qualifier("adminClient") JdbcClient client) {
+  DataDrivenUnitTests(
+      @Qualifier("adminClient") JdbcClient client,
+      @Qualifier("adminDataSource") DataSource adminDataSource) {
     this.client = client;
+    this.adminDataSource = adminDataSource;
   }
 
   /**
@@ -69,19 +76,77 @@ class DataDrivenUnitTests extends UnitTest {
   @Execution(ExecutionMode.CONCURRENT)
   @MethodSource("unitTestDirectoryProvider")
   void testRunner(Path testDirectory) throws IOException, JSONException {
-    // Parse test data
-    String setup = Files.readString(testDirectory.resolve("setup.sql"));
-    String query = Files.readString(testDirectory.resolve("query.sql"));
-    String expected = Files.readString(testDirectory.resolve("expected.json"));
+    DataSourceTransactionManager transactionManager =
+        new DataSourceTransactionManager(adminDataSource);
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-    // Execute setup.sql
-    client.sql(setup).update();
+    transactionTemplate.execute(
+        status -> {
+          try {
+            // Parse test data
+            String setup = Files.readString(testDirectory.resolve("setup.sql"));
+            String query = Files.readString(testDirectory.resolve("query.sql"));
+            String expected = Files.readString(testDirectory.resolve("expected.json"));
 
-    // Execute query.sql statements until data is returned
-    Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+            // Execute setup.sql
+            try {
+              java.sql.Connection conn =
+                  org.springframework.jdbc.datasource.DataSourceUtils.getConnection(
+                      adminDataSource);
+              try (java.sql.Statement stmt = conn.createStatement()) {
+                boolean hasResults = stmt.execute(setup);
+                while (true) {
+                  java.sql.SQLWarning warning = stmt.getWarnings();
+                  while (warning != null) {
+                    System.err.println("[SQL WARNING]: " + warning.getMessage());
+                    warning = warning.getNextWarning();
+                  }
+                  stmt.clearWarnings();
 
-    // Validate data returned matches expected.json
-    String actual = mapper.writeValueAsString(results);
-    JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+                  if (hasResults) {
+                    try (java.sql.ResultSet rs = stmt.getResultSet()) {
+                      java.sql.ResultSetMetaData rsmd = rs.getMetaData();
+                      int columnsNumber = rsmd.getColumnCount();
+                      while (rs.next()) {
+                        StringBuilder sb = new StringBuilder("[SETUP SCRIPT OUTPUT ROW]: ");
+                        for (int i = 1; i <= columnsNumber; i++) {
+                          if (i > 1) sb.append(",  ");
+                          sb.append(rsmd.getColumnName(i)).append(": ").append(rs.getString(i));
+                        }
+                        System.err.println(sb.toString());
+                      }
+                    }
+                  } else {
+                    int updateCount = stmt.getUpdateCount();
+                    if (updateCount == -1) {
+                      break;
+                    }
+                  }
+                  hasResults = stmt.getMoreResults();
+                }
+              }
+            } catch (Exception e) {
+              System.err.println("================= SETUP ERROR =================");
+              System.err.println("Failed to execute setup.sql for " + testDirectory.getFileName());
+              e.printStackTrace();
+              System.err.println("===============================================");
+              throw e;
+            }
+
+            // Execute query.sql statements until data is returned
+            Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+
+            // Validate data returned matches expected.json
+            String actual = mapper.writeValueAsString(results);
+            JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+
+          } catch (Exception e) {
+            throw new RuntimeException(e);
+          } finally {
+            // Always rollback at the end of the test to reset the database state
+            status.setRollbackOnly();
+          }
+          return null;
+        });
   }
 }
