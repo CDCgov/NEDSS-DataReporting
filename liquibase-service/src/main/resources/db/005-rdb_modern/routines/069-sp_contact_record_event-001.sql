@@ -68,6 +68,7 @@ BEGIN
             when (cc.CONTACT_STATUS is not null and cc.CONTACT_STATUS != '')
                 then (select * from dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
             end as CTT_STATUS,
+        cc.CONTACT_STATUS AS CTT_STATUS_CODE,
         cc.CT_CONTACT_UID,
         cc.DISPOSITION_CD,
         cc.DISPOSITION_DATE AS CTT_DISPO_DT,
