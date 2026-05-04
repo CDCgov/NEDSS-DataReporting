@@ -414,6 +414,21 @@ class ReplaySqlTest(unittest.TestCase):
             },
             {
                 "schema_name": "dbo",
+                "table_name": "Person",
+                "operation": "insert",
+                "start_lsn": "0x01",
+                "seqval": "0x03",
+                "operation_code": 2,
+                "_step": 1,
+                "row": {
+                    "person_uid": 10009297,
+                    "local_id": "PSN10009297GA01",
+                    "cd": "PAT",
+                    "status_cd": "A",
+                },
+            },
+            {
+                "schema_name": "dbo",
                 "table_name": "Postal_locator",
                 "operation": "insert",
                 "start_lsn": "0x02",
@@ -421,6 +436,31 @@ class ReplaySqlTest(unittest.TestCase):
                 "operation_code": 2,
                 "_step": 2,
                 "row": {"postal_locator_uid": 10009298, "state_cd": "13"},
+            },
+            {
+                "schema_name": "dbo",
+                "table_name": "Entity",
+                "operation": "insert",
+                "start_lsn": "0x03",
+                "seqval": "0x06",
+                "operation_code": 2,
+                "_step": 2,
+                "row": {"entity_uid": 10009300, "class_cd": "PSN"},
+            },
+            {
+                "schema_name": "dbo",
+                "table_name": "Person",
+                "operation": "insert",
+                "start_lsn": "0x03",
+                "seqval": "0x07",
+                "operation_code": 2,
+                "_step": 2,
+                "row": {
+                    "person_uid": 10009300,
+                    "local_id": "PSN10009297GA01",
+                    "cd": "PAT",
+                    "status_cd": "A",
+                },
             },
         ]
 
@@ -448,10 +488,17 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertIn("-- STEP 1: Create patient", step1_sql)
         self.assertIn("INSERT INTO [dbo].[Entity]", step1_sql)
         self.assertNotIn("INSERT INTO [dbo].[Postal_locator]", step1_sql)
+
+        # Step 2 should not reuse step 1 synthetic IDs when replaying incrementally.
+        self.assertIn("INSERT INTO [dbo].[Entity] ([entity_uid], [class_cd]) VALUES (@dbo_Entity_entity_uid_2, N'PSN');", step2_sql)
+        self.assertNotIn("INSERT INTO [dbo].[Entity] ([entity_uid], [class_cd]) VALUES (@dbo_Entity_entity_uid, N'PSN');", step2_sql)
         self.assertIn("USE [NBS_ODSE];", step2_sql)
+        self.assertIn("DECLARE @dbo_Person_local_id", step2_sql)
+        self.assertIn("INSERT INTO [dbo].[Person]", step2_sql)
+        self.assertIn("@dbo_Person_local_id", step2_sql)
         self.assertIn("-- STEP 2: Add address", step2_sql)
         self.assertIn("INSERT INTO [dbo].[Postal_locator]", step2_sql)
-        self.assertNotIn("INSERT INTO [dbo].[Entity]", step2_sql)
+        self.assertIn("INSERT INTO [dbo].[Entity]", step2_sql)
 
 
 if __name__ == "__main__":

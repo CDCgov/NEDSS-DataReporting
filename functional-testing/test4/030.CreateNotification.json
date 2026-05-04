@@ -1,0 +1,31 @@
+{
+    "title": "CreateNotification",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1905,
+            "height": 824,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(1) td:nth-of-type(2) > input"
+                ],
+                [
+                    "xpath///*[@id=\"createNoti\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(1) td:nth-of-type(2) > input"
+                ]
+            ],
+            "offsetY": 24.5,
+            "offsetX": 9.21875
+        }
+    ]
+}
