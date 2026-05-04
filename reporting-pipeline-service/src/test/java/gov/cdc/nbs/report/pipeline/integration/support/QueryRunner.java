@@ -59,7 +59,8 @@ public class QueryRunner {
                   "[NRT_ODSE_NBS_RDB_METADATA]",
                   "[NRT_ODSE_NBS_UI_METADATA]",
                   "[NRT_SRTE_CODESET]",
-                  "[NRT_SRTE_CODE_VALUE_GENERAL]");
+                  "[NRT_SRTE_CODE_VALUE_GENERAL]",
+                  "[nrt_srte_Condition_code]");
           try {
             System.err.println(
                 "NRT_INVESTIGATION for 10009289: "
