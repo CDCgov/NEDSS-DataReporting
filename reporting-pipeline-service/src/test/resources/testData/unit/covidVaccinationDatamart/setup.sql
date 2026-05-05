@@ -1,6 +1,5 @@
 USE [RDB_MODERN]
 
--- TODO - Adjust keys or clear them out?
 -- nrt_vaccination
 INSERT INTO [dbo].[nrt_vaccination]
             ([vaccination_uid],

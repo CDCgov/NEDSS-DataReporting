@@ -78,7 +78,7 @@ class DataDrivenUnitTests extends UnitTest {
     client.sql(setup).update();
 
     // Execute query.sql statements until data is returned
-    Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+    Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client, false);
 
     // Validate data returned matches expected.json
     String actual = mapper.writeValueAsString(results);

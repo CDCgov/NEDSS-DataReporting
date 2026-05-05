@@ -27,7 +27,6 @@ public abstract class UnitTest {
   private static final ComposeContainer environment =
       new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base, testCompose)
           .withServices("nbs-mssql")
-          .withStartupTimeout(Duration.ofMinutes(5))
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(5));
 

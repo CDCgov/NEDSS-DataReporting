@@ -24,13 +24,21 @@ public class QueryRunner {
    * @return
    */
   public static Map<String, List<Map<String, Object>>> queryForMap(String sql, JdbcClient client) {
+    return queryForMap(sql, client, true);
+  }
+
+  public static Map<String, List<Map<String, Object>>> queryForMap(
+      String sql, JdbcClient client, boolean wait) {
     Map<String, List<Map<String, Object>>> results = new HashMap<>();
     String[] queries = sql.trim().split(";");
     int queryIndex = 0;
 
     for (String query : queries) {
       Optional<List<Map<String, Object>>> result =
-          Await.waitFor(() -> QueryRunner.select(query, client));
+          wait
+              ? Await.waitFor(() -> QueryRunner.select(query, client))
+              : QueryRunner.select(query, client);
+
       assertThat(result).isPresent();
       results.put(String.valueOf(queryIndex), result.get());
       queryIndex++;
