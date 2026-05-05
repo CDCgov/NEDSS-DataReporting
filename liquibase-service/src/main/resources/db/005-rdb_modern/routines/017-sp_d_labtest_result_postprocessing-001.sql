@@ -35,6 +35,8 @@ BEGIN
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     DECLARE @Dataflow_Name VARCHAR(200) = 'D_LABTEST_RESULTS Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_labtest_result_postprocessing';
+	DECLARE @curr_test_result_grp_key BIGINT;
+	DECLARE @max_test_result_grp_key BIGINT;
 
     BEGIN TRY
 
@@ -872,9 +874,19 @@ BEGIN
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING keys for new TEST_RESULT_GROUP ';
 
+			SELECT @curr_test_result_grp_key = CONVERT(BIGINT, IDENT_CURRENT('dbo.nrt_lab_test_result_group_key'));
+			SELECT @max_test_result_grp_key = ISNULL(MAX(TEST_RESULT_GRP_KEY), 0)
+			FROM [dbo].nrt_lab_test_result_group_key WITH (UPDLOCK, HOLDLOCK);
+
+			IF @curr_test_result_grp_key < @max_test_result_grp_key
+				DBCC CHECKIDENT ('[dbo].nrt_lab_test_result_group_key', RESEED, @max_test_result_grp_key);
+
 			INSERT INTO [dbo].nrt_lab_test_result_group_key (LAB_TEST_UID)
-			SELECT lab_test_uid
-			FROM #TEST_Result_Group_N
+			SELECT DISTINCT n.lab_test_uid
+			FROM #TEST_Result_Group_N n
+			LEFT JOIN [dbo].nrt_lab_test_result_group_key ck WITH (NOLOCK)
+				ON ck.LAB_TEST_UID = n.LAB_TEST_UID
+			WHERE ck.LAB_TEST_UID IS NULL
 
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
