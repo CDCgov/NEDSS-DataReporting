@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import javax.sql.DataSource;
 import org.json.JSONException;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -19,20 +20,30 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 class DataDrivenUnitTests extends UnitTest {
 
-  private final JdbcClient client;
+  @Autowired
+  @Qualifier("adminDataSource")
+  private DataSource adminDataSource;
+
+  @Autowired
+  @Qualifier("adminClient")
+  private JdbcClient client;
+
   private final ObjectMapper mapper =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-  DataDrivenUnitTests(@Qualifier("adminClient") JdbcClient client) {
-    this.client = client;
+  public DataDrivenUnitTests() {
+    super();
   }
 
   /**
@@ -68,20 +79,30 @@ class DataDrivenUnitTests extends UnitTest {
   @ParameterizedTest
   @Execution(ExecutionMode.CONCURRENT)
   @MethodSource("unitTestDirectoryProvider")
-  void testRunner(Path testDirectory) throws IOException, JSONException {
+  void testRunner(Path testDirectory) throws IOException {
+    DataSourceTransactionManager transactionManager =
+        new DataSourceTransactionManager(adminDataSource);
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
     // Parse test data
     String setup = Files.readString(testDirectory.resolve("setup.sql"));
     String query = Files.readString(testDirectory.resolve("query.sql"));
     String expected = Files.readString(testDirectory.resolve("expected.json"));
 
-    // Execute setup.sql
-    client.sql(setup).update();
-
-    // Execute query.sql statements until data is returned
-    Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
-
-    // Validate data returned matches expected.json
-    String actual = mapper.writeValueAsString(results);
-    JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+    transactionTemplate.executeWithoutResult(
+        status -> {
+          // Always rollback at the end of the test to reset the database state
+          status.setRollbackOnly();
+          try {
+            // Execute setup.sql
+            client.sql(setup).update();
+            // Execute query.sql statements until data is returned
+            Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
+            // Validate data returned matches expected.json
+            String actual = mapper.writeValueAsString(results);
+            JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
+          } catch (Exception e) {
+            throw (e instanceof RuntimeException re) ? re : new RuntimeException(e);
+          }
+        });
   }
 }
