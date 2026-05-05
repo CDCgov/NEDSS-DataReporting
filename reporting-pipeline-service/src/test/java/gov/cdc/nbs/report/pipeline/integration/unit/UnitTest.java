@@ -4,6 +4,7 @@ import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.nio.file.Files;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -57,8 +58,7 @@ public abstract class UnitTest {
 
   @BeforeAll
   void runMigrations() throws Exception {
-    // TODO: add a test to see if a database connection can be made,
-    // if not print a warning explaining the requirement
+    checkDatabaseConnection();
     log.info("Starting Migration Phase...");
 
     applyMigration("NBS_ODSE", "db.odse.admin.tasks.changelog-16.1.yaml");
@@ -69,6 +69,38 @@ public abstract class UnitTest {
 
     log.info("Starting Onboarding Phase...");
     applyOnboardingScripts("NBS_ODSE");
+  }
+
+  private void checkDatabaseConnection() {
+    try (Connection conn = adminDataSource.getConnection()) {
+      // Force a short login timeout for this check (3 seconds)
+      conn.setNetworkTimeout(null, 3000);
+      if (!conn.isValid(3)) {
+        throw new SQLException("Connection is not valid.");
+      }
+    } catch (Exception e) {
+      String errorMessage =
+          """
+          #################################################################################
+          DATABASE CONNECTION FAILURE:
+          Could not establish a connection to the database.
+
+          REQUIREMENT: You must have an NBS >=6.0.17 version of SQL Server running
+          in the background (local service or Docker) before starting this test.
+
+          Please check your 'application-test.yaml' credentials and ensure a connection
+          to SQL Server with those credentials is correct.
+
+          Typically, starting an nbs-mssql in the background with docker compose is
+          sufficent.
+
+          Example:
+          docker compose -f docker-compose.yml up -d nbs-mssql
+          #################################################################################
+          """;
+      System.err.println(errorMessage);
+      throw new RuntimeException(errorMessage, e);
+    }
   }
 
   private void applyMigration(String dbName, String changelogFile) throws Exception {

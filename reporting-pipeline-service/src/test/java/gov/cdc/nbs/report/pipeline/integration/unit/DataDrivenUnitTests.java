@@ -20,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -27,19 +28,22 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 class DataDrivenUnitTests extends UnitTest {
 
-  private final JdbcClient client;
-  private final DataSource adminDataSource;
+  @Autowired
+  @Qualifier("adminDataSource")
+  private DataSource adminDataSource;
+
+  @Autowired
+  @Qualifier("adminClient")
+  private JdbcClient client;
+
   private final ObjectMapper mapper =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-  DataDrivenUnitTests(
-      @Qualifier("adminClient") JdbcClient client,
-      @Qualifier("adminDataSource") DataSource adminDataSource) {
-    this.client = client;
-    this.adminDataSource = adminDataSource;
+  public DataDrivenUnitTests() {
+    super();
   }
 
   /**
