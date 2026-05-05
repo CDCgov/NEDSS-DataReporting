@@ -37,10 +37,19 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Build and analyze
+      - name: Start database
+        run: |
+          docker compose --file docker-compose.test.yaml up --detach nbs-mssql
+
+      - name: Run stored procedure tests
         working-directory: ./
         run: |
           ./gradlew clean reporting-pipeline-service:test-unit --continue
+
+      - name: Stop database
+        if: always()
+        run: |
+          docker compose --file docker-compose.test.yaml down
 
       - name: Publish Testing Reports
         if: always()
