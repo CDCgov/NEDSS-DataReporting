@@ -319,8 +319,38 @@ def is_warning_mismatch(
     return field_name_ends_with_id_uid_or_key(field_name)
 
 
+def normalize_json_arrays(data: object) -> object:
+    """
+    Normalize JSON by sorting arrays of objects consistently.
+    This ensures that array ordering doesn't affect comparison validation.
+    Arrays of objects are sorted by their JSON representation.
+    """
+    if isinstance(data, dict):
+        return {key: normalize_json_arrays(value) for key, value in data.items()}
+    
+    if isinstance(data, list):
+        # Normalize each element recursively
+        normalized_items = [normalize_json_arrays(item) for item in data]
+        
+        # Sort arrays if they contain objects (dicts) - sort by JSON representation
+        if normalized_items and isinstance(normalized_items[0], dict):
+            try:
+                normalized_items.sort(key=lambda x: json.dumps(x, sort_keys=True, default=str))
+            except (TypeError, ValueError):
+                # If sorting fails, keep original order
+                pass
+        
+        return normalized_items
+    
+    return data
+
+
 def count_differences(expected: object, actual: object) -> tuple[int, int]:
     """Return (warning_count, failure_count) for differences between expected and actual."""
+    # Normalize arrays to ensure consistent ordering for comparison
+    expected = normalize_json_arrays(expected)
+    actual = normalize_json_arrays(actual)
+    
     expected_fields = flatten_json_fields(expected)
     actual_fields = flatten_json_fields(actual)
     field_names = set(expected_fields.keys()) | set(actual_fields.keys())
@@ -351,6 +381,26 @@ def status_span(status: str) -> str:
     if status == "warning":
         return '<span class="warning">WARNING</span>'
     return '<span class="error">FAIL</span>'
+
+
+def numeric_sort_key(field_name: str) -> tuple:
+    """
+    Create a sort key that handles numeric array indices correctly.
+    Converts field names like "data[1]" and "data[10]" to sort numerically.
+    Returns a tuple where array indices are integers for proper numeric sorting.
+    """
+    parts: list = []
+    
+    # Pattern to match either array indices [N] or field names
+    pattern = r'\[(\d+)\]|([^\[\]]+)'
+    
+    for match in re.finditer(pattern, field_name):
+        if match.group(1):  # Array index
+            parts.append((1, int(match.group(1))))  # Tuple with 1 for array, then numeric index
+        elif match.group(2):  # Field name
+            parts.append((0, match.group(2)))  # Tuple with 0 for field, then string
+    
+    return tuple(parts) if parts else ((0, field_name),)
 
 
 def markdown_table_cell(value: object) -> str:
@@ -399,9 +449,13 @@ def comparison_cell(value: object, differs: bool, is_warning: bool = False) -> s
 
 
 def render_field_comparison_table(expected: object, actual: object) -> list[str]:
+    # Normalize arrays to ensure consistent ordering for comparison
+    expected = normalize_json_arrays(expected)
+    actual = normalize_json_arrays(actual)
+    
     expected_fields = flatten_json_fields(expected)
     actual_fields = flatten_json_fields(actual)
-    field_names = sorted(set(expected_fields.keys()) | set(actual_fields.keys()))
+    field_names = sorted(set(expected_fields.keys()) | set(actual_fields.keys()), key=numeric_sort_key)
 
     lines = [
         "| Field | Expected | Returned |",
@@ -615,7 +669,10 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
             actual_json = {}
             parse_error = str(error)
 
-        if actual_json == case.expected_json:
+        expected_normalized = normalize_json_arrays(case.expected_json)
+        actual_normalized = normalize_json_arrays(actual_json)
+
+        if actual_normalized == expected_normalized:
             status = "pass"
         else:
             # Check if only warnings (null vs empty string differences)
