@@ -347,6 +347,7 @@ public class TestUtils {
     contactAnswer.setContactUid(contactUid);
     contactAnswer.setAnswerVal("Common Space");
     contactAnswer.setRdbColumnNm("CTT_EXPOSURE_TYPE");
+    contactAnswer.setAnswerCode("COMMSPACE");
     return contactAnswer;
   }
 
