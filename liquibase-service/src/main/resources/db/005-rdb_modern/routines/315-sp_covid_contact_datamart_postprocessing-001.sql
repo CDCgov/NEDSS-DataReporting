@@ -48,7 +48,7 @@ BEGIN
             pat.PATIENT_LAST_NAME                                   AS 'SRC_PATIENT_LAST_NAME',
             pat.PATIENT_DOB                                         AS 'SRC_PATIENT_DOB',
             pat.PATIENT_AGE_REPORTED                                AS 'SRC_PATIENT_AGE_REPORTED',
-            pat.PATIENT_AGE_REPORTED_UNIT                           AS 'SRC_PATIENT_AGE_RPTD_UNIT',
+            nrt_pat.age_reported_unit_cd                            AS 'SRC_PATIENT_AGE_RPTD_UNIT',
             cvg1.CODE_VAL                                           AS 'SRC_PATIENT_CURRENT_SEX',
             cvg2.CODE_VAL                                           AS 'SRC_PATIENT_DECEASED_IND',
             pat.PATIENT_DECEASED_DATE                               AS 'SRC_PATIENT_DECEASED_DT',
@@ -66,45 +66,45 @@ BEGIN
             inv.legacy_case_id                                      AS 'SRC_INV_LEGACY_CASE_ID',
             inv_asw1.answer_txt                                     AS 'SRC_INV_CDC_ASSIGNED_ID',
             inv_asw2.answer_txt                                     AS 'SRC_INV_RPTNG_CNTY',
-            inv.hospitalized_ind_cd                                 AS 'SRC_INV_HSPTLIZD_IND',
-            inv.outcome_cd                                          AS 'SRC_INV_DIE_FRM_ILLNESS_IND',
+            ISNULL(inv.hospitalized_ind_cd, '')                     AS 'SRC_INV_HSPTLIZD_IND',
+            ISNULL(inv.outcome_cd, '')                              AS 'SRC_INV_DIE_FRM_ILLNESS_IND',
             inv.deceased_time                                       AS 'SRC_INV_DEATH_DT',
             inv.case_class_cd                                       AS 'SRC_INV_CASE_STATUS',
             inv_asw3.answer_txt                                     AS 'SRC_INV_SYMPTOMATIC',
             inv.effective_from_time                                 AS 'SRC_INV_ILLNESS_ONSET_DT',
             inv.effective_to_time                                   AS 'SRC_INV_ILLNESS_END_DT',
             inv_asw4.answer_txt                                     AS 'SRC_INV_SYMPTOM_STATUS',
-            cvg4.code                                               AS 'SRC_CTT_INV_PRIORITY',
+            ISNULL(cvg4.code, '')                                   AS 'SRC_CTT_INV_PRIORITY',
             inv.infectious_from_date                                AS 'SRC_CTT_INV_INFECTIOUS_FRM_DT',
             inv.infectious_to_date                                  AS 'SRC_CTT_INV_INFECTIOUS_TO_DT',
-            inv.contact_inv_status                                  AS 'SRC_CTT_INV_STATUS',
-            REPLACE(inv.contact_inv_txt, CHAR(13) + CHAR(10), ' ')  AS 'SRC_CTT_INV_COMMENTS',
+            ISNULL(inv.contact_inv_status, '')                      AS 'SRC_CTT_INV_STATUS',
+            REPLACE(ISNULL(inv.contact_inv_txt, ''), CHAR(13) + CHAR(10), ' ')  AS 'SRC_CTT_INV_COMMENTS',
 
             -- CR: Contact Record (using nrt_contact instead of ct_contact)
             con.CTT_JURISDICTION_NM                                 AS 'CR_JURISDICTION_NM',
-            con.CTT_STATUS                                          AS 'CR_STATUS',
-            cvg5.code                                               AS 'CR_PRIORITY',
+            con.CTT_STATUS_CODE                                     AS 'CR_STATUS',
+            ISNULL(cvg5.code, '')                                   AS 'CR_PRIORITY',
 
             -- Investigator information (using D_PROVIDER dimension table)
-            pat_inv.PROVIDER_FIRST_NAME                             AS 'CR_INV_FIRST_NAME',
-            pat_inv.PROVIDER_LAST_NAME                              AS 'CR_INV_LAST_NAME',
+            ctt_pat_con.PATIENT_FIRST_NAME                          AS 'CR_INV_FIRST_NAME',
+            ctt_pat_con.PATIENT_LAST_NAME                           AS 'CR_INV_LAST_NAME',
             con.CTT_INV_ASSIGNED_DT                                 AS 'CR_INV_ASSIGNED_DT',
-            cvg6.code                                               AS 'CR_DISPOSITION',
+            ISNULL(cvg6.code, '')                                   AS 'CR_DISPOSITION',
             con.CTT_DISPO_DT                                        AS 'CR_DISPO_DT',
             con.CTT_NAMED_ON_DT                                     AS 'CR_NAMED_ON_DT',
             cvg7.code                                               AS 'CR_RELATIONSHIP',
-            cvg8.code                                               AS 'CR_HEALTH_STATUS',
+            ISNULL(cvg8.code, '')                                   AS 'CR_HEALTH_STATUS',
 
             -- These match CT_CONTACT_ANSWER with different question identifiers
-            con_ans1.answer_val                                     AS 'CR_EXPOSURE_TYPE',
+            con_ans1.answer_code                                    AS 'CR_EXPOSURE_TYPE',
             con_ans2.answer_val                                     AS 'CR_EXPOSURE_SITE_TY',
             con_ans3.answer_val                                     AS 'CR_FIRST_EXPOSURE_DT',
             con_ans4.answer_val                                     AS 'CR_LAST_EXPOSURE_DT',
-            cvg9.code                                               AS 'CR_SYMP_IND',
+            ISNULL(cvg9.code, '')                                   AS 'CR_SYMP_IND',
             con.CTT_SYMP_ONSET_DT                                   AS 'CR_SYMP_ONSET_DT',
-            cvg10.code                                              AS 'CR_RISK_IND',
+            ISNULL(cvg10.code, '')                                  AS 'CR_RISK_IND',
             REPLACE(con.CTT_RISK_NOTES, CHAR(13) + CHAR(10), ' ')   AS 'CR_RISK_NOTES',
-            cvg11.code                                              AS 'CR_EVAL_COMPLETED',
+            ISNULL(cvg11.code, '')                                  AS 'CR_EVAL_COMPLETED',
             con.CTT_EVAL_DT                                         AS 'CR_EVAL_DT',
             REPLACE(con.CTT_EVAL_NOTES, CHAR(13) + CHAR(10), ' ')   AS 'CR_EVAL_NOTES',
 
@@ -136,8 +136,8 @@ BEGIN
                 END AS 'CTT_PATIENT_AGE_REPORTED',
 
             CASE
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_AGE_REPORTED_UNIT
-                ELSE ctt_pat_con.PATIENT_AGE_REPORTED_UNIT
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN nrt_contact_patient.age_reported_unit_cd
+                ELSE nrt_ctt_pat_con.age_reported_unit_cd
                 END AS 'CTT_PATIENT_AGE_RPTD_UNIT',
 
             cvg12.CODE_VAL AS 'CTT_PATIENT_CURRENT_SEX',
@@ -155,7 +155,7 @@ BEGIN
 
             CASE
                 WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_STREET_ADDRESS_2
-                ELSE ctt_pat_con.PATIENT_STREET_ADDRESS_2
+                ELSE ISNULL(ctt_pat_con.PATIENT_STREET_ADDRESS_2, '')
                 END AS 'CTT_PATIENT_STREET_ADDR_2',
 
             CASE
@@ -175,7 +175,7 @@ BEGIN
 
             CASE
                 WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_COUNTY_CODE
-                ELSE ctt_pat_con.PATIENT_COUNTY_CODE
+                ELSE ISNULL(ctt_pat_con.PATIENT_COUNTY_CODE, '')
                 END AS 'CTT_PATIENT_COUNTY',
 
             cvg14.CODE_VAL AS 'CTT_PATIENT_COUNTRY',
@@ -289,6 +289,10 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_investigation con_inv WITH (NOLOCK)
                                  ON con.CONTACT_ENTITY_PHC_UID = con_inv.public_health_case_uid
 
+            -- Contact patient nrt_patient entry. Used to retrieve age_reported_unit_cd
+                 LEFT OUTER JOIN dbo.nrt_patient nrt_contact_patient WITH (NOLOCK)
+                                 ON con.CONTACT_ENTITY_PHC_UID = nrt_contact_patient.patient_uid
+
             -- Contact investigation jurisdiction
                  LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv WITH (NOLOCK)
                                  ON con_inv.jurisdiction_cd = j_con_inv.CODE
@@ -321,6 +325,9 @@ BEGIN
             -- CTT records from contact (use D_PATIENT dimension table directly)
                  LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_con WITH (NOLOCK)
                                  ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
+                 
+                 LEFT OUTER JOIN dbo.nrt_patient nrt_ctt_pat_con WITH (NOLOCK)
+                                 ON ctt_pat_con.PATIENT_UID = nrt_ctt_pat_con.patient_uid
 
                  LEFT JOIN dbo.nrt_srte_Code_value_general cvg4 WITH (NOLOCK)
                            ON cvg4.code_short_desc_txt = inv.contact_inv_priority AND cvg4.code_set_nm = 'NBS_PRIORITY'

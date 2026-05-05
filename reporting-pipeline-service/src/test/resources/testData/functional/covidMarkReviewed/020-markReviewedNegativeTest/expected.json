@@ -162,7 +162,6 @@
       "RESULTEDTEST_VAL_CD_DESC": "negative",
       "RESULTED_LAB_TEST_CD": "T-50130",
       "RESULTED_LAB_TEST_CD_DESC": "Acid-Fast Stain",
-      "RESULTED_LAB_TEST_KEY": 4,
       "SPECIMEN_COLLECTION_DT": "2026-04-20T00:00:00.000",
       "SPECIMEN_SRC_CD": "NOS",
       "SPECIMEN_SRC_DESC": "Nose (nasal passage)"
@@ -311,7 +310,6 @@
       "COPY_TO_PROVIDER_KEY": 1,
       "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 1,
-      "LAB_TEST_KEY": 2,
       "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 22000008,
       "LDF_GROUP_KEY": 1,
@@ -322,15 +320,13 @@
       "RECORD_STATUS_CD": "ACTIVE",
       "REPORTING_LAB_KEY": 3,
       "RESULT_COMMENT_GRP_KEY": 1,
-      "SPECIMEN_COLLECTOR_KEY": 1,
-      "TEST_RESULT_GRP_KEY": 1
+      "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
       "CONDITION_KEY": 1,
       "COPY_TO_PROVIDER_KEY": 1,
       "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 1,
-      "LAB_TEST_KEY": 3,
       "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 22000009,
       "LDF_GROUP_KEY": 1,
@@ -341,15 +337,13 @@
       "RECORD_STATUS_CD": "ACTIVE",
       "REPORTING_LAB_KEY": 1,
       "RESULT_COMMENT_GRP_KEY": 1,
-      "SPECIMEN_COLLECTOR_KEY": 1,
-      "TEST_RESULT_GRP_KEY": 2
+      "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
       "CONDITION_KEY": 1,
       "COPY_TO_PROVIDER_KEY": 1,
       "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 1,
-      "LAB_TEST_KEY": 4,
       "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 22000012,
       "LDF_GROUP_KEY": 1,
@@ -360,8 +354,7 @@
       "RECORD_STATUS_CD": "ACTIVE",
       "REPORTING_LAB_KEY": 1,
       "RESULT_COMMENT_GRP_KEY": 1,
-      "SPECIMEN_COLLECTOR_KEY": 1,
-      "TEST_RESULT_GRP_KEY": 3
+      "SPECIMEN_COLLECTOR_KEY": 1
     }
   ],
   "8": [
