@@ -164,6 +164,7 @@ def main() -> int:
     manifest["database"] = database
     log_progress("Writing regenerated summary.txt")
     nbs_steps = manifest.get("steps") or None
+    id_map_dir = changes_path.parent.parent
     write_summary(
         output_path,
         args.action,
@@ -181,6 +182,7 @@ def main() -> int:
         superuser_id,
         starting_uid,
         nbs_steps=nbs_steps,
+        id_map_dir=id_map_dir,
     )
     print(output_path)
     return 0

@@ -1,0 +1,61 @@
+{
+    "title": "030.AddTreatmentSyphilis",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "table.topButtonBar td:nth-of-type(1) td:nth-of-type(1) > input"
+                ],
+                [
+                    "xpath///*[@id=\"manageAssociations\"]"
+                ],
+                [
+                    "pierce/table.topButtonBar td:nth-of-type(1) td:nth-of-type(1) > input"
+                ]
+            ],
+            "offsetY": 23,
+            "offsetX": 14.765625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewInvestigation2.do?ContextAction=ManageEvents&invFormCd=PG_STD_Investigation",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Add Treatment"
+                ],
+                [
+                    "#events6 input"
+                ],
+                [
+                    "xpath///*[@id=\"events6\"]/tbody/tr/td/div/input"
+                ],
+                [
+                    "pierce/#events6 input"
+                ],
+                [
+                    "text/Add Treatment"
+                ]
+            ],
+            "offsetY": 8.9609375,
+            "offsetX": 34.4375
+        }
+    ]
+}

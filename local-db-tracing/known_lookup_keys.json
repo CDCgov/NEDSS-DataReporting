@@ -1,6 +1,6 @@
-{
+﻿{
   "_comment": "Maps tables to their preferred lookup columns for rdb-selects.sql WHERE clause generation. Use when multiple candidate keys exist and you want to specify which column should be used in the WHERE predicate.",
-  "_usage": "Reference this file when reviewing generated rdb-selects.sql or update it to guide generate_rdb_selects.py toward correct predicates for multi-key tables.",
+  "_usage": "Reference this file when reviewing generated rdb-selects.sql or update it to guide generate_query_expected.py toward correct predicates for multi-key tables.",
   "known_tables": {
     "dbo.D_PATIENT": {
       "lookup_column": "PATIENT_LOCAL_ID",

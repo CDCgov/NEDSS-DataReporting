@@ -80,7 +80,7 @@ spring:
   datasource:
     password: ${DB_PASSWORD}
     username: ${DB_USERNAME}
-    url: ${DB_HOST}
+    url: ${DB_CONNECTION_URL}
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}

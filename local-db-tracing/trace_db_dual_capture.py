@@ -1,4 +1,4 @@
-"""Capture source CDC and target logical changes in one synchronized tracing run."""
+﻿"""Capture source CDC and target logical changes in one synchronized tracing run."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from tracing_constants import (
 from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_logical_changes import build_logical_changes, write_logical_changes
 from tracing_logical_markdown import write_logical_changes_markdown
-from generate_rdb_selects import generate_rdb_selects_from_manifest
+from generate_query_expected import generate_rdb_selects_from_manifest
 from tracing_metadata import (
     fetch_capture_instances,
     fetch_database_cdc_enabled,
@@ -458,9 +458,9 @@ def main() -> int:
             step_start_time = utc_now()
 
             print()
-            print(f"Step {step_num} — {plan_prefix(cdc_plan)} Start time (UTC): {step_start_time}")
-            print(f"Step {step_num} — {plan_prefix(cdc_plan)} Start LSN:        {step_cdc_start_lsn}")
-            print(f"Step {step_num} — {plan_prefix(logical_plan)} Start LSN:    {step_logical_start_lsn}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} Start time (UTC): {step_start_time}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} Start LSN:        {step_cdc_start_lsn}")
+            print(f"Step {step_num} - {plan_prefix(logical_plan)} Start LSN:    {step_logical_start_lsn}")
 
             post_processing_wait_since_utc = utc_now()
             input(f"Perform the UI action for step {step_num}, then press Enter to capture both traces... ")
@@ -476,9 +476,9 @@ def main() -> int:
             step_cdc_end_lsn = fetch_max_lsn(cdc_plan.client)
             step_logical_end_lsn = fetch_max_lsn(logical_plan.client)
             step_end_time = utc_now()
-            print(f"Step {step_num} — {plan_prefix(cdc_plan)} End time (UTC):   {step_end_time}")
-            print(f"Step {step_num} — {plan_prefix(cdc_plan)} End LSN:          {step_cdc_end_lsn}")
-            print(f"Step {step_num} — {plan_prefix(logical_plan)} End LSN:      {step_logical_end_lsn}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} End time (UTC):   {step_end_time}")
+            print(f"Step {step_num} - {plan_prefix(cdc_plan)} End LSN:          {step_cdc_end_lsn}")
+            print(f"Step {step_num} - {plan_prefix(logical_plan)} End LSN:      {step_logical_end_lsn}")
 
             step_description = input(f"Describe what you did in step {step_num}: ").strip()
 
@@ -647,6 +647,7 @@ def main() -> int:
             superuser_id,
             starting_uid,
             nbs_steps=nbs_steps,
+            id_map_dir=combined_run_dir,
         )
 
         log_progress(f"{plan_prefix(logical_plan)} Writing manifest.json")
@@ -664,7 +665,7 @@ def main() -> int:
         )
 
         log_progress("Generating rdb-selects.sql from combined tracing artifacts")
-        rdb_selects_path, rdb_select_count = generate_rdb_selects_from_manifest(
+        rdb_selects_path, expected_json_path, rdb_select_count = generate_rdb_selects_from_manifest(
             combined_run_dir / "combined-manifest.json",
             combined_run_dir / "rdb-selects.sql",
         )
@@ -676,6 +677,7 @@ def main() -> int:
         print(f"{plan_prefix(logical_plan)} Built {len(logical_changes)} logical change events")
         print(f"Generated {rdb_select_count} RDB SELECT statements")
         print(f"RDB select scaffold: {rdb_selects_path}")
+        print(f"Expected JSON: {expected_json_path}")
         print(f"Combined output written to: {combined_run_dir}")
 
         disable_tables_after_run = prompt_cleanup_choice(args, [cdc_plan, logical_plan])

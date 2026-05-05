@@ -1,0 +1,510 @@
+{
+  "0": [
+    {
+      "count": 1
+    }
+  ],
+  "1": [
+    {
+      "AGE_REPORTED": 62,
+      "AGE_REPORTED_UNIT": "Years",
+      "CASE_STATUS": "Confirmed",
+      "DISEASE": "Hepatitis A, acute",
+      "DISEASE_CD": "10110",
+      "EVENT_DATE": "2026-04-03T00:00:00.000",
+      "EVENT_DATE_TYPE": "Illness Onset Date",
+      "INVESTIGATION_LOCAL_ID": "CAS20100408GA01",
+      "INVESTIGATION_START_DATE": "2026-04-22T00:00:00.000",
+      "JURISDICTION_NAME": "Dekalb County",
+      "PATIENT_CITY": "Atlanta",
+      "PATIENT_COUNTY": "Fulton County",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DOB": "1964-01-30T00:00:00.000",
+      "PATIENT_FIRST_NM": "Richard",
+      "PATIENT_HOME_PHONE": "707-555-1111",
+      "PATIENT_LAST_NM": "Wells",
+      "PATIENT_LOCAL_ID": "PSN20100400GA01",
+      "PATIENT_MIDDLE_NM": "D",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STREET_ADDRESS_1": "174 Neuport Drive",
+      "PATIENT_ZIP": "30338",
+      "PHC_ADD_TIME": "2026-04-22T20:47:53.240",
+      "PHC_LAST_CHG_TIME": "2026-04-22T20:47:53.240",
+      "PHYSICIAN_NAME": "Xerogeanes, John",
+      "PROGRAM_AREA_DESCRIPTION": "HEP",
+      "PROGRAM_JURISDICTION_OID": 1300500011,
+      "RACE": "White",
+      "REPORTING_SOURCE": "CHOA - Scottish Rite"
+    }
+  ],
+  "2": [
+    {
+      "CONFIRMATION_DT": "2026-04-20T00:00:00.000"
+    }
+  ],
+  "3": [
+    {
+      "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
+      "ADM_RPTNG_CNTY": "Dekalb, GA"
+    }
+  ],
+  "4": [
+    {
+      "EPI_CNTRY_USUAL_RESID": "UNITED STATES",
+      "EPI_ChildCareCase": "No",
+      "EPI_ContactOfCase": "Unknown",
+      "EPI_DaycareContact": "No",
+      "EPI_EpiLinked": "No",
+      "EPI_FemaleSexPartners": "1",
+      "EPI_FoodHandler": "No",
+      "EPI_IVDrugUse": "No",
+      "EPI_InDayCare": "Unknown",
+      "EPI_MaleSexPartner": "0",
+      "EPI_OutbreakAssoc": "No",
+      "EPI_RecDrugUse": "No"
+    }
+  ],
+  "5": [
+    {
+      "LAB_ALT_Result": "1",
+      "LAB_AST_Result": "2",
+      "LAB_HBV_NAT": "Unknown",
+      "LAB_HBV_NAT_Date": "2026-04-09",
+      "LAB_HBeAg": "Positive",
+      "LAB_HBeAg_Date": "2026-04-10",
+      "LAB_HBsAg": "Unknown",
+      "LAB_HBsAg_Date": "2026-04-06",
+      "LAB_HCVRNA": "Positive",
+      "LAB_HCVRNA_Date": "2026-04-12",
+      "LAB_IgMAntiHAVDate": "2026-04-05",
+      "LAB_IgMAntiHBc": "Negative",
+      "LAB_IgMAntiHBcDate": "2026-04-08",
+      "LAB_IgM_AntiHAV": "Negative",
+      "LAB_SignalToCutoff": "2",
+      "LAB_Supplem_antiHCV": "Unknown",
+      "LAB_Supplem_antiHCV_Date": "2026-04-12",
+      "LAB_TestDate": "2026-04-15",
+      "LAB_TestDate2": "2026-04-16",
+      "LAB_TestResultUpperLimit": "2",
+      "LAB_TestResultUpperLimit2": "1",
+      "LAB_TotalAntiHAV": "Positive",
+      "LAB_TotalAntiHAVDate": "2026-04-04",
+      "LAB_TotalAntiHBc": "Positive",
+      "LAB_TotalAntiHBcDate": "2026-04-07",
+      "LAB_TotalAntiHCV": "Negative",
+      "LAB_TotalAntiHCV_Date": "2026-04-11",
+      "LAB_TotalAntiHDV": "Negative",
+      "LAB_TotalAntiHDV_Date": "2026-04-13",
+      "LAB_TotalAntiHEV": "Unknown",
+      "LAB_TotalAntiHEV_Date": "2026-04-14"
+    }
+  ],
+  "6": [
+    {
+      "MDH_Diabetes": "No",
+      "MDH_Jaundiced": "No",
+      "MDH_PrevAwareInfection": "Yes",
+      "MDH_ProviderOfCare": "No",
+      "MDH_Symptomatic": "Yes"
+    }
+  ],
+  "7": [
+    {
+      "IPO_SEXUAL_PREF": "Heterosexual"
+    }
+  ],
+  "8": [
+    {
+      "TRV_HouseholdTravel": "No",
+      "TRV_PatientTravel": "No"
+    }
+  ],
+  "9": [
+    {
+      "VAC_ImmuneGlobulin": "No",
+      "VAC_Vacc_Rcvd": "Yes",
+      "VAC_VaccineDoses": "1",
+      "VAC_YearofLastDose": "1978"
+    }
+  ],
+  "10": [
+    {
+      "PATIENT_ADDED_BY": "LocalUser, DIS",
+      "PATIENT_ADD_TIME": "2026-04-22T20:44:33.130",
+      "PATIENT_BIRTH_SEX": "Male",
+      "PATIENT_CITY": "Atlanta",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_COUNTY": "Fulton County",
+      "PATIENT_COUNTY_CODE": "13121",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DECEASED_INDICATOR": "No",
+      "PATIENT_DOB": "1964-01-30T00:00:00.000",
+      "PATIENT_ENTRY_METHOD": "N",
+      "PATIENT_ETHNICITY": "Not Hispanic or Latino",
+      "PATIENT_FIRST_NAME": "Richard",
+      "PATIENT_LAST_CHANGE_TIME": "2026-04-22T20:47:53.160",
+      "PATIENT_LAST_NAME": "Wells",
+      "PATIENT_LAST_UPDATED_BY": "LocalUser, DIS",
+      "PATIENT_LOCAL_ID": "PSN20100400GA01",
+      "PATIENT_MARITAL_STATUS": "Married",
+      "PATIENT_MIDDLE_NAME": "D",
+      "PATIENT_MPR_UID": 20100400,
+      "PATIENT_PHONE_HOME": "707-555-1111",
+      "PATIENT_PHONE_WORK": "707-454-1212",
+      "PATIENT_RACE_ALL": "White",
+      "PATIENT_RACE_CALCULATED": "White",
+      "PATIENT_RACE_CALC_DETAILS": "White",
+      "PATIENT_RECORD_STATUS": "ACTIVE",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STATE_CODE": "13",
+      "PATIENT_STREET_ADDRESS_1": "174 Neuport Drive",
+      "PATIENT_UID": 20100400,
+      "PATIENT_ZIP": "30338"
+    },
+    {
+      "PATIENT_ADDED_BY": "LocalUser, DIS",
+      "PATIENT_ADD_TIME": "2026-04-22T20:47:53.183",
+      "PATIENT_AGE_REPORTED": 62,
+      "PATIENT_AGE_REPORTED_UNIT": "Years",
+      "PATIENT_CITY": "Atlanta",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_COUNTY": "Fulton County",
+      "PATIENT_COUNTY_CODE": "13121",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DECEASED_INDICATOR": "No",
+      "PATIENT_DOB": "1964-01-30T00:00:00.000",
+      "PATIENT_ENTRY_METHOD": "N",
+      "PATIENT_ETHNICITY": "Not Hispanic or Latino",
+      "PATIENT_FIRST_NAME": "Richard",
+      "PATIENT_LAST_CHANGE_TIME": "2026-04-22T20:47:53.183",
+      "PATIENT_LAST_NAME": "Wells",
+      "PATIENT_LAST_UPDATED_BY": "LocalUser, DIS",
+      "PATIENT_LOCAL_ID": "PSN20100400GA01",
+      "PATIENT_MARITAL_STATUS": "Married",
+      "PATIENT_MIDDLE_NAME": "D",
+      "PATIENT_MPR_UID": 20100400,
+      "PATIENT_PHONE_HOME": "707-555-1111",
+      "PATIENT_PHONE_WORK": "707-454-1212",
+      "PATIENT_RACE_ALL": "White",
+      "PATIENT_RACE_CALCULATED": "White",
+      "PATIENT_RACE_CALC_DETAILS": "White",
+      "PATIENT_RECORD_STATUS": "ACTIVE",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STATE_CODE": "13",
+      "PATIENT_STREET_ADDRESS_1": "174 Neuport Drive",
+      "PATIENT_UID": 20100404,
+      "PATIENT_ZIP": "30338"
+    }
+  ],
+  "11": [
+    {
+      "ADD_TIME": "2026-04-22T20:47:53.240",
+      "ADD_USER_ID": 10007004,
+      "ADD_USER_NAME": "LocalUser, DIS",
+      "CASE_CLASS_CD": "C",
+      "CASE_CLASS_DESC_TXT": "Confirmed",
+      "CONDITION_CD": "10110",
+      "CONDITION_DESC_TXT": "Hepatitis A, acute",
+      "INVESTIGATION_STATUS_CD": "O",
+      "INVESTIGATION_STATUS_DESC_TXT": "Open",
+      "JURISDICTION_CD": "130005",
+      "JURISDICTION_DESC_TXT": "Dekalb County",
+      "LAST_CHG_TIME": "2026-04-22T20:47:53.240",
+      "LAST_CHG_USER_ID": 10007004,
+      "LAST_CHG_USER_NAME": "LocalUser, DIS",
+      "LOCAL_ID": "CAS20100408GA01",
+      "LOCAL_PATIENT_ID": "PSN20100400GA01",
+      "PROGRAM_JURISDICTION_OID": 1300500011,
+      "PROG_AREA_CD": "HEP",
+      "PROG_AREA_DESC_TXT": "HEP",
+      "RECORD_STATUS_CD": "OPEN",
+      "RECORD_STATUS_DESC_TXT": "Open",
+      "RECORD_STATUS_TIME": "2026-04-22T20:47:53.240"
+    }
+  ],
+  "12": [
+    {
+      "ADD_TIME": "2026-04-22T20:47:53.240",
+      "ADD_USER_ID": 10007004,
+      "ADD_USER_NAME": "LocalUser, DIS",
+      "CASE_CLASS_CD": "C",
+      "CASE_CLASS_DESC_TXT": "Confirmed",
+      "CONDITION_CD": "10110",
+      "CONDITION_DESC_TXT": "Hepatitis A, acute",
+      "INVESTIGATION_STATUS_CD": "O",
+      "INVESTIGATION_STATUS_DESC_TXT": "Open",
+      "JURISDICTION_CD": "130005",
+      "JURISDICTION_DESC_TXT": "Dekalb County",
+      "LAST_CHG_TIME": "2026-04-22T20:47:53.240",
+      "LAST_CHG_USER_ID": 10007004,
+      "LAST_CHG_USER_NAME": "LocalUser, DIS",
+      "LOCAL_ID": "CAS20100408GA01",
+      "LOCAL_PATIENT_ID": "PSN20100400GA01",
+      "PROGRAM_JURISDICTION_OID": 1300500011,
+      "PROG_AREA_CD": "HEP",
+      "PROG_AREA_DESC_TXT": "HEP",
+      "RECORD_STATUS_CD": "OPEN",
+      "RECORD_STATUS_DESC_TXT": "Open",
+      "RECORD_STATUS_TIME": "2026-04-22T20:47:53.240"
+    }
+  ],
+  "13": [
+    {
+      "count": 1
+    }
+  ],
+  "14": [
+    {
+      "ALT_RESULT_DT": "2026-04-15",
+      "ALT_SGPT_RESULT": 1,
+      "ALT_SGPT_RSLT_UP_LMT": 2,
+      "ANTIHCV_SIGCUT_RATIO": "2",
+      "ANTIHCV_SUPP_ASSAY": "Unknown",
+      "AST_RESULT_DT": "2026-04-16",
+      "AST_SGOT_RESULT": 2,
+      "AST_SGOT_RSLT_UP_LMT": 1,
+      "CASE_RPT_MMWR_WEEK": 16,
+      "CASE_RPT_MMWR_YEAR": 2026,
+      "CASE_UID": 20100408,
+      "CHILDCARE_CASE_IND": "No",
+      "CNTRY_USUAL_RESIDENCE": "UNITED STATES",
+      "COM_SRC_OUTBREAK_IND": "No",
+      "CONDITION_CD": "10110",
+      "DIABETES_IND": "No",
+      "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
+      "DIE_FRM_THIS_ILLNESS_IND": "No",
+      "DNP_EMPLOYEE_IND": "Unknown",
+      "DNP_HOUSEHOLD_CT_IND": "No",
+      "EARLIEST_RPT_TO_CNTY": "2026-04-02T00:00:00.000",
+      "EARLIEST_RPT_TO_STATE_DT": "2026-04-03T00:00:00.000",
+      "EVENT_DATE": "2026-04-03T00:00:00.000",
+      "EVENT_DATE_TYPE": "Illness Onset Date",
+      "FEMALE_SEX_PRTNR_NBR": 1,
+      "FOODHNDLR_PRIOR_IND": "No",
+      "HBE_AG_DT": "2026-04-10",
+      "HBS_AG_DT": "2026-04-06",
+      "HBV_NAT_DT": "2026-04-09",
+      "HCV_RNA": "Positive",
+      "HCV_RNA_DT": "2026-04-12",
+      "HEP_A_EPLINK_IND": "No",
+      "HEP_A_IGM_ANTIBODY": "Negative",
+      "HEP_A_TOTAL_ANTIBODY": "Positive",
+      "HEP_B_DNA": "Unknown",
+      "HEP_B_IGM_ANTIBODY": "Negative",
+      "HEP_B_SURFACE_ANTIGEN": "Unknown",
+      "HEP_B_TOTAL_ANTIBODY": "Positive",
+      "HEP_CARE_PROVIDER": "No",
+      "HEP_CONTACT_IND": "Unknown",
+      "HEP_C_TOTAL_ANTIBODY": "Negative",
+      "HEP_D_TOTAL_ANTIBODY": "Negative",
+      "HEP_E_ANTIGEN": "Positive",
+      "HEP_E_TOTAL_ANTIBODY": "Unknown",
+      "HOUSEHOLD_TRAVEL_IND": "No",
+      "HSPTLIZD_IND": "Yes",
+      "HSPTL_ADMISSION_DT": "2026-04-01T00:00:00.000",
+      "IGM_ANTI_HAV_DT": "2026-04-05",
+      "IGM_ANTI_HBC_DT": "2026-04-08",
+      "ILLNESS_ONSET_DT": "2026-04-03T00:00:00.000",
+      "IMM_GLOB_RECVD_IND": "No",
+      "INVESTIGATION_STATUS": "Open",
+      "INVESTIGATOR_NAME": "LocalUser, DIS ",
+      "INVESTIGATOR_UID": 10007000,
+      "INV_CASE_STATUS": "Confirmed",
+      "INV_LOCAL_ID": "CAS20100408GA01",
+      "INV_RPT_DT": "2026-04-01T00:00:00.000",
+      "INV_START_DT": "2026-04-22T00:00:00.000",
+      "JURISDICTION_NM": "Dekalb County",
+      "LEGACY_CASE_ID": "2",
+      "MALE_SEX_PRTNR_NBR": 0,
+      "OUTBREAK_IND": "No",
+      "PATIENT_UID": 20100404,
+      "PAT_CITY": "Atlanta",
+      "PAT_COUNTRY": "United States",
+      "PAT_COUNTY": "Fulton County",
+      "PAT_CURR_GENDER": "Male",
+      "PAT_DOB": "1964-01-30T00:00:00.000",
+      "PAT_ELECTRONIC_IND": "N",
+      "PAT_ETHNICITY": "Not Hispanic or Latino",
+      "PAT_FIRST_NM": "Richard",
+      "PAT_JUNDICED_IND": "No",
+      "PAT_LAST_NM": "Wells",
+      "PAT_LOCAL_ID": "PSN20100400GA01",
+      "PAT_MIDDLE_NM": "D",
+      "PAT_PREV_AWARE_IND": "Yes",
+      "PAT_RACE": "White",
+      "PAT_REPORTED_AGE": 62,
+      "PAT_REPORTED_AGE_UNIT": "Years",
+      "PAT_STATE": "Georgia",
+      "PAT_STREET_ADDR_1": "174 Neuport Drive",
+      "PAT_ZIP_CODE": "30338",
+      "PHYSICIAN_UID": 10003004,
+      "PHYS_CITY": "Atlanta",
+      "PHYS_COUNTY": "Dekalb County",
+      "PHYS_NAME": "Xerogeanes, John ",
+      "PHYS_STATE": "Georgia",
+      "PROGRAM_JURISDICTION_OID": 1300500011,
+      "REPORTING_SOURCE_UID": 10003007,
+      "RPT_SRC_CD_DESC": "Hospital",
+      "RPT_SRC_CITY": "Atlanta",
+      "RPT_SRC_COUNTY": "Dekalb County",
+      "RPT_SRC_COUNTY_CD": "13089",
+      "RPT_SRC_SOURCE_NM": "CHOA - Scottish Rite",
+      "RPT_SRC_STATE": "Georgia",
+      "SEX_PREF": "Heterosexual",
+      "STREET_DRUG_INJECTED": "No",
+      "STREET_DRUG_USED": "No",
+      "SUPP_ANTI_HCV_DT": "2026-04-12",
+      "SYMPTOMATIC_IND": "Yes",
+      "TOTAL_ANTI_HAV_DT": "2026-04-04",
+      "TOTAL_ANTI_HBC_DT": "2026-04-07",
+      "TOTAL_ANTI_HCV_DT": "2026-04-11",
+      "TOTAL_ANTI_HDV_DT": "2026-04-13",
+      "TOTAL_ANTI_HEV_DT": "2026-04-14",
+      "TRANSMISSION_MODE": "Bloodborne",
+      "TRAVEL_OUT_USACAN_IND": "No",
+      "VACC_DOSE_RECVD_NBR": 1,
+      "VACC_GT_4_IND": "False",
+      "VACC_LAST_RECVD_YR": 1978,
+      "VACC_RECVD_IND": "Yes"
+    }
+  ],
+  "15": [
+    {
+      "AGE_REPORTED": 62,
+      "AGE_REPORTED_UNIT": "Years",
+      "CASE_STATUS": "Confirmed",
+      "CONFIRMATION_DT": "2026-04-20T00:00:00.000",
+      "CONFIRMATION_METHOD": "Laboratory report",
+      "DIAGNOSIS_DATE": "2026-04-21T00:00:00.000",
+      "DISEASE": "Hepatitis A, acute",
+      "DISEASE_CD": "10110",
+      "EARLIEST_RPT_TO_CNTY_DT": "2026-04-02T00:00:00.000",
+      "EARLIEST_RPT_TO_STATE_DT": "2026-04-03T00:00:00.000",
+      "EVENT_DATE": "2026-04-03T00:00:00.000",
+      "EVENT_DATE_TYPE": "Illness Onset Date",
+      "HSPTL_ADMISSION_DT": "2026-04-01T00:00:00.000",
+      "ILLNESS_ONSET_DATE": "2026-04-03T00:00:00.000",
+      "INVESTIGATION_CREATED_BY": "LocalUser, DIS",
+      "INVESTIGATION_CREATE_DATE": "2026-04-22T20:47:53.240",
+      "INVESTIGATION_LAST_UPDTD_BY": "LocalUser, DIS",
+      "INVESTIGATION_LAST_UPDTD_DATE": "2026-04-22T20:47:53.240",
+      "INVESTIGATION_LOCAL_ID": "CAS20100408GA01",
+      "INVESTIGATION_STATUS": "Open",
+      "INV_RPT_DT": "2026-04-01T00:00:00.000",
+      "INV_START_DT": "2026-04-22T00:00:00.000",
+      "JURISDICTION_NM": "Dekalb County",
+      "MMWR_WEEK": 16,
+      "MMWR_YEAR": 2026,
+      "PATIENT_CITY": "Atlanta",
+      "PATIENT_COUNTY": "Fulton County",
+      "PATIENT_COUNTY_CODE": "13121",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DOB": "1964-01-30T00:00:00.000",
+      "PATIENT_ETHNICITY": "Not Hispanic or Latino",
+      "PATIENT_FIRST_NAME": "Richard",
+      "PATIENT_LAST_NAME": "Wells",
+      "PATIENT_LOCAL_ID": "PSN20100400GA01",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STREET_ADDRESS_1": "174 Neuport Drive",
+      "PATIENT_ZIP": "30338",
+      "PHYSICIAN_FIRST_NAME": "John",
+      "PHYSICIAN_LAST_NAME": "Xerogeanes",
+      "PROGRAM_AREA": "HEP",
+      "PROGRAM_JURISDICTION_OID": 1300500011,
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White"
+    }
+  ],
+  "16": [
+    {
+      "ADD_TIME": "2026-04-22T20:47:53.240",
+      "CASE_OID": 1300500011,
+      "CASE_RPT_MMWR_WK": 16,
+      "CASE_RPT_MMWR_YR": 2026,
+      "CASE_TYPE": "I",
+      "CASE_UID": 20100408,
+      "CONTACT_INFECTIOUS_FROM_DATE": "2026-04-10T00:00:00.000",
+      "CONTACT_INFECTIOUS_TO_DATE": "2026-04-21T00:00:00.000",
+      "CONTACT_INV_COMMENTS": "This is a test comment",
+      "CONTACT_INV_PRIORITY": "Low",
+      "CONTACT_INV_STATUS": "Open",
+      "DAYCARE_ASSOCIATION_IND": "No",
+      "DETECTION_METHOD_DESC_TXT": "Laboratory reported",
+      "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
+      "DIE_FRM_THIS_ILLNESS_IND": "No",
+      "EARLIEST_RPT_TO_CNTY_DT": "2026-04-02T00:00:00.000",
+      "EARLIEST_RPT_TO_STATE_DT": "2026-04-03T00:00:00.000",
+      "FOOD_HANDLR_IND": "No",
+      "HSPTLIZD_IND": "Yes",
+      "HSPTL_ADMISSION_DT": "2026-04-01T00:00:00.000",
+      "ILLNESS_ONSET_DT": "2026-04-03T00:00:00.000",
+      "INVESTIGATION_ADDED_BY": "LocalUser, DIS",
+      "INVESTIGATION_LAST_UPDATED_BY": "LocalUser, DIS",
+      "INVESTIGATION_STATUS": "Open",
+      "INV_ASSIGNED_DT": "2026-04-20T00:00:00.000",
+      "INV_CASE_STATUS": "Confirmed",
+      "INV_LOCAL_ID": "CAS20100408GA01",
+      "INV_RPT_DT": "2026-04-01T00:00:00.000",
+      "INV_SHARE_IND": "T",
+      "INV_START_DT": "2026-04-22T00:00:00.000",
+      "INV_STATE_CASE_ID": "1",
+      "JURISDICTION_CD": "130005",
+      "JURISDICTION_NM": "Dekalb County",
+      "LAST_CHG_TIME": "2026-04-22T20:47:53.240",
+      "LEGACY_CASE_ID": "2",
+      "OUTBREAK_IND": "No",
+      "PATIENT_AGE_AT_ONSET": 62,
+      "PATIENT_AGE_AT_ONSET_UNIT": "Years",
+      "PROGRAM_AREA_DESCRIPTION": "HEP",
+      "RECORD_STATUS_CD": "ACTIVE",
+      "RPT_SRC_CD": "HO",
+      "RPT_SRC_CD_DESC": "Hospital",
+      "TRANSMISSION_MODE": "Bloodborne"
+    }
+  ],
+  "17": [
+    {
+      "count": 1
+    }
+  ],
+  "18": [
+    {
+      "count": 1
+    }
+  ],
+  "19": [
+    {
+      "count": 1
+    }
+  ],
+  "20": [
+    {
+      "count": 1
+    }
+  ],
+  "21": [
+    {
+      "count": 1
+    }
+  ],
+  "22": [
+    {
+      "count": 1
+    }
+  ],
+  "23": [
+    {
+      "count": 1
+    }
+  ],
+  "24": [
+    {
+      "count": 1
+    }
+  ],
+  "25": [
+    {
+      "count": 1
+    }
+  ]
+}

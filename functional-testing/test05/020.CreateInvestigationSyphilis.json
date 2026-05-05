@@ -1,0 +1,143 @@
+{
+    "title": "020.CreateInvestigationSyphilis",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+    "type": "click",
+    "target": "main",
+    "selectors": [
+        [
+            "aria/Lab Report[role=\"link\"]"
+        ],
+        [
+            "#subsect_Reports > div a"
+        ],
+        [
+            "xpath///*[@id=\"PatSumaryDRRQ\"]/tbody/tr/td[1]/a"
+        ],
+        [
+            "pierce/#subsect_Reports > div a"
+        ]
+    ],
+    "offsetY": 9.671875,
+    "offsetX": 48,
+    "assertedEvents": [
+        {
+            "type": "navigation",
+            "url": "http://localhost:7003/nbs/ViewFile1.do?ContextAction=ObservationLabIDOnSummary&observationUID=10009358",
+            "title": ""
+        }
+    ]
+},
+
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "form > div.grayButtonBar input:nth-of-type(3)"
+                ],
+                [
+                    "xpath///*[@id=\"doc3\"]/form/div[2]/table/tbody/tr/td[2]/input[3]"
+                ],
+                [
+                    "pierce/form > div.grayButtonBar input:nth-of-type(3)"
+                ]
+            ],
+            "offsetY": 9,
+            "offsetX": 104.703125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/ViewObservationLab3.do?ContextAction=CreateInvestigation&method=viewGenericSubmit",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Choose option[role=\"image\"]"
+                ],
+                [
+                    "tr:nth-of-type(3) > td > table > tbody img"
+                ],
+                [
+                    "xpath///*[@id=\"ccd_ac_table\"]/tbody/tr[1]/td/img"
+                ],
+                [
+                    "pierce/tr:nth-of-type(3) > td > table > tbody img"
+                ]
+            ],
+            "offsetY": 12,
+            "offsetX": 9
+        },
+        {
+            "type": "change",
+            "value": "700",
+            "selectors": [
+                [
+                    "aria/ Please select a condition:   Choose option Syphilis, Unknown[role=\"cell\"]",
+                    "aria/[role=\"listbox\"]"
+                ],
+                [
+                    "#ccd"
+                ],
+                [
+                    "xpath///*[@id=\"ccd\"]"
+                ],
+                [
+                    "pierce/#ccd"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Syphilis, Unknown"
+                ],
+                [
+                    "option:nth-of-type(150)"
+                ],
+                [
+                    "xpath///*[@id=\"ccd\"]/option[150]"
+                ],
+                [
+                    "pierce/option:nth-of-type(150)"
+                ]
+            ],
+            "offsetY": 5,
+            "offsetX": 103
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ],
+                [
+                    "xpath///*[@id=\"Submit\"]"
+                ],
+                [
+                    "pierce/tfoot td:nth-of-type(4) > table:nth-of-type(1) input"
+                ]
+            ],
+            "offsetY": 22.671875,
+            "offsetX": 12.2578125
+        }
+    ]
+}

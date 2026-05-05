@@ -1,0 +1,157 @@
+{
+    "title": "approvecontactdisposition",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1130,
+            "height": 738,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Home"
+                ],
+                [
+                    "table.nedssNavTable td:nth-of-type(1) td:nth-of-type(1) > a"
+                ],
+                [
+                    "xpath///*[@id=\"bd\"]/table[1]/tbody/tr/td[1]/table/tbody/tr/td[1]/a"
+                ],
+                [
+                    "pierce/table.nedssNavTable td:nth-of-type(1) td:nth-of-type(1) > a"
+                ]
+            ],
+            "offsetY": 6,
+            "offsetX": 26,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/HomePage.do?method=loadHomePage",
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Supervisor Review Queue (1)"
+                ],
+                [
+                    "form:nth-of-type(1) > div > div:nth-of-type(3) li:nth-of-type(8) > a"
+                ],
+                [
+                    "xpath///*[@id=\"myQueues\"]/div/div[3]/ul/li[8]/a"
+                ],
+                [
+                    "pierce/form:nth-of-type(1) > div > div:nth-of-type(3) li:nth-of-type(8) > a"
+                ],
+                [
+                    "text/Supervisor Review"
+                ]
+            ],
+            "offsetY": 8.5078125,
+            "offsetX": 34.40625,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/MyTaskList1.do?ContextAction=SupervisorReviewQueue&initLoad=true",
+                    "title": "Supervisor Review Queue"
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Approve[role=\"image\"]"
+                ],
+                [
+                    "td:nth-of-type(1) > img"
+                ],
+                [
+                    "xpath///*[@id=\"parent\"]/tbody/tr/td[1]/img"
+                ],
+                [
+                    "pierce/td:nth-of-type(1) > img"
+                ]
+            ],
+            "offsetY": 9.84375,
+            "offsetX": 6.3125
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Notes"
+                ],
+                [
+                    "textarea"
+                ],
+                [
+                    "xpath///*[@id=\"rejectMessageDiv\"]/textarea"
+                ],
+                [
+                    "pierce/textarea"
+                ]
+            ],
+            "offsetY": 51,
+            "offsetX": 135.3828125
+        },
+        {
+            "type": "change",
+            "value": "the neighbors think he left the country",
+            "selectors": [
+                [
+                    "aria/Notes"
+                ],
+                [
+                    "textarea"
+                ],
+                [
+                    "xpath///*[@id=\"rejectMessageDiv\"]/textarea"
+                ],
+                [
+                    "pierce/textarea"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/ OK "
+                ],
+                [
+                    "#rejectMessageDiv input:nth-of-type(1)"
+                ],
+                [
+                    "xpath///*[@id=\"rejectMessageDiv\"]/span/input[1]"
+                ],
+                [
+                    "pierce/#rejectMessageDiv input:nth-of-type(1)"
+                ]
+            ],
+            "offsetY": 16.5,
+            "offsetX": 26.3828125,
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "http://localhost:7003/nbs/LoadSupervisorReviewQueue.do",
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}

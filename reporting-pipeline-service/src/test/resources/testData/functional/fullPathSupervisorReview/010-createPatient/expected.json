@@ -1,0 +1,37 @@
+{
+  "0": [
+    {
+      "PATIENT_ADDED_BY": "LocalUser, DIS",
+      "PATIENT_ADD_TIME": "2026-04-22T20:44:33.130",
+      "PATIENT_BIRTH_SEX": "Male",
+      "PATIENT_CITY": "Atlanta",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_COUNTY": "Fulton County",
+      "PATIENT_COUNTY_CODE": "13121",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DECEASED_INDICATOR": "No",
+      "PATIENT_DOB": "1964-01-30T00:00:00.000",
+      "PATIENT_ENTRY_METHOD": "N",
+      "PATIENT_ETHNICITY": "Not Hispanic or Latino",
+      "PATIENT_FIRST_NAME": "Richard",
+      "PATIENT_LAST_CHANGE_TIME": "2026-04-22T20:44:33.130",
+      "PATIENT_LAST_NAME": "Wells",
+      "PATIENT_LAST_UPDATED_BY": "LocalUser, DIS",
+      "PATIENT_LOCAL_ID": "PSN20100400GA01",
+      "PATIENT_MARITAL_STATUS": "Married",
+      "PATIENT_MIDDLE_NAME": "D",
+      "PATIENT_MPR_UID": 20100400,
+      "PATIENT_PHONE_HOME": "707-555-1111",
+      "PATIENT_PHONE_WORK": "707-454-1212",
+      "PATIENT_RACE_ALL": "White",
+      "PATIENT_RACE_CALCULATED": "White",
+      "PATIENT_RACE_CALC_DETAILS": "White",
+      "PATIENT_RECORD_STATUS": "ACTIVE",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STATE_CODE": "13",
+      "PATIENT_STREET_ADDRESS_1": "174 Neuport Drive",
+      "PATIENT_UID": 20100400,
+      "PATIENT_ZIP": "30338"
+    }
+  ]
+}

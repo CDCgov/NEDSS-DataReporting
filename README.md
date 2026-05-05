@@ -47,6 +47,9 @@ To run only the `functional` tests in the reporting-pipeline-service
 ./gradlew clean reporting-pipeline-service:test-functional
 ```
 
+### Adding MasterEtl-level Validation for Functional Tests
+Review [FuncationTestValidation.md](./documentation/FunctionalTestValidation.md) for more details.
+
 ### Windows Note (Testcontainers EOF Error)
 
 If you see `unexpected EOF` while running containerized tests on Windows, this is usually caused by Testcontainers trying to copy the entire project directory into a container and hitting a locked file.

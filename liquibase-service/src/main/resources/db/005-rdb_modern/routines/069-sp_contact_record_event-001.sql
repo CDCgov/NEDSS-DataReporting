@@ -66,7 +66,7 @@ BEGIN
         cc.CONTACT_REFERRAL_BASIS_CD,
         case
             when (cc.CONTACT_STATUS is not null and cc.CONTACT_STATUS != '')
-                then (select * from nbs_odse.dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
+                then (select * from dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
             end as CTT_STATUS,
         cc.CT_CONTACT_UID,
         cc.DISPOSITION_CD,

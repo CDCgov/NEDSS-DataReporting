@@ -1,4 +1,4 @@
-"""Narrow ambiguous WHERE IN variable predicates in generated rdb-selects.sql files.
+﻿"""Narrow ambiguous WHERE IN variable predicates in generated rdb-selects.sql files.
 
 This helper executes each SELECT case and rewrites:
     WHERE [COLUMN] IN (@var1, @var2, ...)
@@ -17,7 +17,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from generate_rdb_selects import parse_declare_entries, resolve_declare_values
+from generate_query_expected import parse_declare_entries, resolve_declare_values
 from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_models import SqlCmdError
 from tracing_sql import SqlCmdClient, require_sqlcmd
