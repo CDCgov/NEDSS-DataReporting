@@ -87,7 +87,7 @@ public abstract class UnitTest {
           DATABASE CONNECTION FAILURE:
           Could not establish a connection to the database.
 
-          Target URL: %s
+          Target URL: {}
 
           REQUIREMENT: You must have an NBS >=6.0.17 version of SQL Server running
           in the background (local service or Docker) before starting this test.
