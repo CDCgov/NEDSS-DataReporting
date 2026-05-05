@@ -31,7 +31,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
@@ -47,10 +47,6 @@ public abstract class UnitTest {
   @Qualifier("adminDataSource")
   private DataSource adminDataSource;
 
-  @Autowired
-  @Qualifier("adminClient")
-  private JdbcClient adminClient;
-
   // The root from which ALL db files (changelogs and sql) can be found
   private static final String RESOURCE_ROOT = "../liquibase-service/src/main/resources";
 
@@ -61,6 +57,8 @@ public abstract class UnitTest {
 
   @BeforeAll
   void runMigrations() throws Exception {
+    // TODO: add a test to see if a database connection can be made,
+    // if not print a warning explaining the requirement
     log.info("Starting Migration Phase...");
 
     applyMigration("NBS_ODSE", "db.odse.admin.tasks.changelog-16.1.yaml");
@@ -139,6 +137,9 @@ public abstract class UnitTest {
     }
     Arrays.sort(sqlFiles, Comparator.comparing(File::getName));
 
+    // Create a local JdbcTemplate to gain access to the low-level .execute() method
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(adminDataSource);
+
     for (File sqlFile : sqlFiles) {
       log.debug("Executing SQL: " + sqlFile.getName());
       String content = Files.readString(sqlFile.toPath());
@@ -146,7 +147,7 @@ public abstract class UnitTest {
       Arrays.stream(content.split("(?i)\\bGO\\b"))
           .map(String::trim)
           .filter(batch -> !batch.isEmpty())
-          .forEach(batch -> adminClient.sql(batch).update());
+          .forEach(batch -> jdbcTemplate.execute(batch));
     }
   }
 }
