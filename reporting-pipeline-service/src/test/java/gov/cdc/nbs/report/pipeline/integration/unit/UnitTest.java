@@ -72,8 +72,10 @@ public abstract class UnitTest {
   }
 
   private void checkDatabaseConnection() {
+    String url = "unknown";
     try (Connection conn = adminDataSource.getConnection()) {
       // Force a short login timeout for this check (3 seconds)
+      url = conn.getMetaData().getURL();
       conn.setNetworkTimeout(null, 3000);
       if (!conn.isValid(3)) {
         throw new SQLException("Connection is not valid.");
@@ -84,6 +86,8 @@ public abstract class UnitTest {
           #################################################################################
           DATABASE CONNECTION FAILURE:
           Could not establish a connection to the database.
+
+          Target URL: %s
 
           REQUIREMENT: You must have an NBS >=6.0.17 version of SQL Server running
           in the background (local service or Docker) before starting this test.
@@ -98,7 +102,7 @@ public abstract class UnitTest {
           docker compose -f docker-compose.yml up -d nbs-mssql
           #################################################################################
           """;
-      System.err.println(errorMessage);
+      log.error(errorMessage, url);
       throw new RuntimeException(errorMessage, e);
     }
   }
