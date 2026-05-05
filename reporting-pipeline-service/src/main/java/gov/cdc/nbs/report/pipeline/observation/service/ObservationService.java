@@ -90,8 +90,6 @@ public class ObservationService {
   public static final ToLongFunction<ConsumerRecord<String, String>> toBatchId =
       rec -> rec.timestamp() + rec.offset() + rec.partition();
 
-  ObservationKey observationKey = new ObservationKey();
-
   private static final String SERVICE_NAME = "observation-reporting";
 
   private final CustomMetrics metrics;
@@ -170,6 +168,7 @@ public class ObservationService {
                 isFromObservationTopic
                     ? extractUid(value, "observation_uid")
                     : actRelationshipSourceActUid;
+            ObservationKey observationKey = new ObservationKey();
             observationKey.setObservationUid(Long.valueOf(observationUid));
             logger.info(topicDebugLog, observationUid, observationTopic);
             Optional<Observation> observationData =
@@ -181,6 +180,13 @@ public class ObservationService {
                   processObservationDataUtil.transformObservationData(
                       observationData.get(), batchId);
               modelMapper.map(observationTransformed, reportingModel);
+              logger.info(
+                  "Publishing observation message to {} with key observation_uid={} payload observation_uid={} domain={} ctrl_cd_display_form={}",
+                  observationTopicOutputReporting,
+                  observationKey.getObservationUid(),
+                  reportingModel.getObservationUid(),
+                  reportingModel.getObsDomainCdSt1(),
+                  reportingModel.getCtrlCdDisplayForm());
               pushKeyValuePairToKafka(
                   observationKey, reportingModel, observationTopicOutputReporting);
               logger.info(
