@@ -162,7 +162,6 @@
       "RESULTEDTEST_VAL_CD_DESC": "negative",
       "RESULTED_LAB_TEST_CD": "T-50130",
       "RESULTED_LAB_TEST_CD_DESC": "Acid-Fast Stain",
-      "RESULTED_LAB_TEST_KEY": 4,
       "SPECIMEN_COLLECTION_DT": "2026-04-20T00:00:00.000",
       "SPECIMEN_SRC_CD": "NOS",
       "SPECIMEN_SRC_DESC": "Nose (nasal passage)"
