@@ -35,6 +35,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'jacoco'
     apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'io.github.dsdolzhenko.dotenv'
 
     spotless {
         // Disable incremental check if specific files are provided via CLI

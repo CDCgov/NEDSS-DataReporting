@@ -103,7 +103,7 @@ public abstract class UnitTest {
           #################################################################################
           """;
       log.error(errorMessage, url);
-      throw new RuntimeException(errorMessage, e);
+      throw new RuntimeException(e);
     }
   }
 
