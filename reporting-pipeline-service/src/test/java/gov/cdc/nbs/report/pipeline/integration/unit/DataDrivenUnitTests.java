@@ -79,74 +79,26 @@ class DataDrivenUnitTests extends UnitTest {
     DataSourceTransactionManager transactionManager =
         new DataSourceTransactionManager(adminDataSource);
     TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    // Parse test data
+    String setup = Files.readString(testDirectory.resolve("setup.sql"));
+    String query = Files.readString(testDirectory.resolve("query.sql"));
+    String expected = Files.readString(testDirectory.resolve("expected.json"));
 
-    transactionTemplate.execute(
+    transactionTemplate.executeWithoutResult(
         status -> {
+          // Always rollback at the end of the test to reset the database state
+          status.setRollbackOnly();
           try {
-            // Parse test data
-            String setup = Files.readString(testDirectory.resolve("setup.sql"));
-            String query = Files.readString(testDirectory.resolve("query.sql"));
-            String expected = Files.readString(testDirectory.resolve("expected.json"));
-
             // Execute setup.sql
-            try {
-              java.sql.Connection conn =
-                  org.springframework.jdbc.datasource.DataSourceUtils.getConnection(
-                      adminDataSource);
-              try (java.sql.Statement stmt = conn.createStatement()) {
-                boolean hasResults = stmt.execute(setup);
-                while (true) {
-                  java.sql.SQLWarning warning = stmt.getWarnings();
-                  while (warning != null) {
-                    System.err.println("[SQL WARNING]: " + warning.getMessage());
-                    warning = warning.getNextWarning();
-                  }
-                  stmt.clearWarnings();
-
-                  if (hasResults) {
-                    try (java.sql.ResultSet rs = stmt.getResultSet()) {
-                      java.sql.ResultSetMetaData rsmd = rs.getMetaData();
-                      int columnsNumber = rsmd.getColumnCount();
-                      while (rs.next()) {
-                        StringBuilder sb = new StringBuilder("[SETUP SCRIPT OUTPUT ROW]: ");
-                        for (int i = 1; i <= columnsNumber; i++) {
-                          if (i > 1) sb.append(",  ");
-                          sb.append(rsmd.getColumnName(i)).append(": ").append(rs.getString(i));
-                        }
-                        System.err.println(sb.toString());
-                      }
-                    }
-                  } else {
-                    int updateCount = stmt.getUpdateCount();
-                    if (updateCount == -1) {
-                      break;
-                    }
-                  }
-                  hasResults = stmt.getMoreResults();
-                }
-              }
-            } catch (Exception e) {
-              System.err.println("================= SETUP ERROR =================");
-              System.err.println("Failed to execute setup.sql for " + testDirectory.getFileName());
-              e.printStackTrace();
-              System.err.println("===============================================");
-              throw e;
-            }
-
+            client.sql(setup).update();
             // Execute query.sql statements until data is returned
             Map<String, List<Map<String, Object>>> results = QueryRunner.queryForMap(query, client);
-
             // Validate data returned matches expected.json
             String actual = mapper.writeValueAsString(results);
             JSONAssert.assertEquals(expected, actual, JSONCompareMode.LENIENT);
-
           } catch (Exception e) {
-            throw new RuntimeException(e);
-          } finally {
-            // Always rollback at the end of the test to reset the database state
-            status.setRollbackOnly();
+            throw (e instanceof RuntimeException re) ? re : new RuntimeException(e);
           }
-          return null;
         });
   }
 }
