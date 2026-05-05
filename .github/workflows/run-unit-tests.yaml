@@ -39,7 +39,23 @@ jobs:
 
       - name: Start database
         run: |
-          docker compose --file docker-compose.test.yaml up --detach nbs-mssql
+          docker compose --file docker-compose.yaml --file docker-compose.test.yaml up --detach nbs-mssql
+
+      - name: Wait for nbs-mssql to be healthy
+        run: |
+          TIMEOUT=60
+          COUNT=0
+          until [ "$(docker inspect -f '{{.State.Health.Status}}' nbs-mssql)" == "healthy" ]; do
+            if [ $COUNT -ge $TIMEOUT ]; then
+              echo "Timeout reached! nbs-mssql failed to become healthy."
+              docker logs nbs-mssql
+              exit 1
+            fi
+            echo "Waiting for nbs-mssql to be healthy... ($COUNT/$TIMEOUT)"
+            sleep 2
+            COUNT=$((COUNT + 2))
+          done
+          echo "nbs-mssql is healthy!"
 
       - name: Run stored procedure tests
         working-directory: ./
@@ -49,7 +65,7 @@ jobs:
       - name: Stop database
         if: always()
         run: |
-          docker compose --file docker-compose.test.yaml down
+          docker compose --file docker-compose.yaml --file docker-compose.test.yaml up down
 
       - name: Publish Testing Reports
         if: always()
