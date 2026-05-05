@@ -135,9 +135,9 @@ BEGIN
                 ELSE ctt_pat_con.PATIENT_AGE_REPORTED
                 END AS 'CTT_PATIENT_AGE_REPORTED',
 
-            CASE -- TODO - The unit_code is not available on the D_PATIENT table, but is on the nrt_patient table. Figure this out
-                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN ctt_pat_inv.PATIENT_AGE_REPORTED_UNIT
-                ELSE ctt_pat_con.PATIENT_AGE_REPORTED_UNIT
+            CASE
+                WHEN con.CONTACT_ENTITY_PHC_UID is not NULL THEN nrt_contact_patient.age_reported_unit_cd
+                ELSE nrt_ctt_pat_con.age_reported_unit_cd
                 END AS 'CTT_PATIENT_AGE_RPTD_UNIT',
 
             cvg12.CODE_VAL AS 'CTT_PATIENT_CURRENT_SEX',
@@ -289,6 +289,10 @@ BEGIN
                  LEFT OUTER JOIN dbo.nrt_investigation con_inv WITH (NOLOCK)
                                  ON con.CONTACT_ENTITY_PHC_UID = con_inv.public_health_case_uid
 
+            -- Contact patient nrt_patient entry. Used to retrieve age_reported_unit_cd
+                 LEFT OUTER JOIN dbo.nrt_patient nrt_contact_patient WITH (NOLOCK)
+                                 ON con.CONTACT_ENTITY_PHC_UID = nrt_contact_patient.patient_uid
+
             -- Contact investigation jurisdiction
                  LEFT OUTER JOIN dbo.nrt_srte_Jurisdiction_code j_con_inv WITH (NOLOCK)
                                  ON con_inv.jurisdiction_cd = j_con_inv.CODE
@@ -321,6 +325,9 @@ BEGIN
             -- CTT records from contact (use D_PATIENT dimension table directly)
                  LEFT OUTER JOIN dbo.D_PATIENT ctt_pat_con WITH (NOLOCK)
                                  ON ctt_pat_con.PATIENT_UID = con.CONTACT_ENTITY_UID
+                 
+                 LEFT OUTER JOIN dbo.nrt_patient nrt_ctt_pat_con WITH (NOLOCK)
+                                 ON ctt_pat_con.PATIENT_UID = nrt_ctt_pat_con.patient_uid
 
                  LEFT JOIN dbo.nrt_srte_Code_value_general cvg4 WITH (NOLOCK)
                            ON cvg4.code_short_desc_txt = inv.contact_inv_priority AND cvg4.code_set_nm = 'NBS_PRIORITY'
