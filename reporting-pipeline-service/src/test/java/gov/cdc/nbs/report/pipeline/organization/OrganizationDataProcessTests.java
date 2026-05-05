@@ -1,8 +1,8 @@
 package gov.cdc.nbs.report.pipeline.organization;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
 import static gov.cdc.nbs.report.pipeline.organization.transformer.OrganizationType.ORGANIZATION_REPORTING;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
+import static gov.cdc.nbs.report.pipeline.util.UtilHelper.deserializePayload;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

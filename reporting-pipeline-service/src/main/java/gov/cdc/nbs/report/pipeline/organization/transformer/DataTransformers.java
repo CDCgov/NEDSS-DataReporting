@@ -1,11 +1,11 @@
 package gov.cdc.nbs.report.pipeline.organization.transformer;
 
-import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationElasticSearch;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationKey;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationReporting;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.*;
+import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

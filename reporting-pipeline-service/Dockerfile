@@ -8,7 +8,6 @@ COPY gradlew /usr/src/gradlew
 COPY settings.gradle /usr/src/settings.gradle
 
 #Copy sources
-COPY common-util /usr/src/common-util
 COPY reporting-pipeline-service /usr/src/reporting-pipeline-service
 
 #cd to root directory

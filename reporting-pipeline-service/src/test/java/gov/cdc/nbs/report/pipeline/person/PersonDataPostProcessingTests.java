@@ -1,7 +1,7 @@
 package gov.cdc.nbs.report.pipeline.person;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
+import static gov.cdc.nbs.report.pipeline.util.UtilHelper.deserializePayload;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -1,20 +1,20 @@
 package gov.cdc.nbs.report.pipeline.observation.service;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.nbs.report.pipeline.observation.service.ObservationService.toBatchId;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cdc.etldatapipeline.commonutil.NoDataException;
-import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
 import gov.cdc.nbs.report.pipeline.observation.repository.ObservationRepository;
 import gov.cdc.nbs.report.pipeline.observation.transformer.ProcessObservationDataUtil;
+import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
