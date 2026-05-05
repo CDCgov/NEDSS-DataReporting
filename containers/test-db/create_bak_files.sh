@@ -5,7 +5,7 @@ LIQUIBASE_CONTAINER_NAME="${LIQUIBASE_CONTAINER_NAME:-rtr-liquibase-1}"
 SQLCMDUSER="${SQLCMDUSER:-sa}"
 SQLCMDPASSWORD="${SQLCMDPASSWORD:-PizzaIsGood33!}"
 IMAGE_NAME="${IMAGE_NAME:-ghcr.io/cdcgov/nedss-datareporting-mssql:6.0.18.1}"
-BUILD_IMAGE="${BUILD_IMAGE:-true}"
+BUILD_IMAGE="${BUILD_IMAGE:-false}"
 
 # Create clean backups by starting a fresh nedssdb and applying liquibase migrations
 echo "starting database and applying liquibase migrations..."

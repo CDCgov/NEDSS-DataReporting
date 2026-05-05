@@ -1,7 +1,5 @@
 package gov.cdc.nbs.report.pipeline.integration.support;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +37,6 @@ public class QueryRunner {
               ? Await.waitFor(() -> QueryRunner.select(query, client))
               : QueryRunner.select(query, client);
 
-      assertThat(result).isPresent();
       results.put(String.valueOf(queryIndex), result.get());
       queryIndex++;
     }
