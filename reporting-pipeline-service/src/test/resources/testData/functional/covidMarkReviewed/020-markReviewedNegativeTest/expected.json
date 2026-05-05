@@ -307,24 +307,60 @@
   "7": [
     {
       "CONDITION_KEY": 239,
+      "COPY_TO_PROVIDER_KEY": 1,
+      "INVESTIGATION_KEY": 1,
+      "LAB_RPT_DT_KEY": 1,
+      "LAB_TEST_KEY": 2,
+      "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 22000008,
+      "LDF_GROUP_KEY": 1,
+      "MORB_RPT_KEY": 1,
+      "ORDERING_ORG_KEY": 1,
       "ORDERING_PROVIDER_KEY": 3,
+      "PERFORMING_LAB_KEY": 1,
       "RECORD_STATUS_CD": "ACTIVE",
-      "REPORTING_LAB_KEY": 3
+      "REPORTING_LAB_KEY": 3,
+      "RESULT_COMMENT_GRP_KEY": 1,
+      "SPECIMEN_COLLECTOR_KEY": 1,
+      "TEST_RESULT_GRP_KEY": 1
     },
     {
       "CONDITION_KEY": 1,
+      "COPY_TO_PROVIDER_KEY": 1,
+      "INVESTIGATION_KEY": 1,
+      "LAB_RPT_DT_KEY": 1,
+      "LAB_TEST_KEY": 3,
+      "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 22000009,
+      "LDF_GROUP_KEY": 1,
+      "MORB_RPT_KEY": 1,
+      "ORDERING_ORG_KEY": 1,
       "ORDERING_PROVIDER_KEY": 1,
+      "PERFORMING_LAB_KEY": 1,
       "RECORD_STATUS_CD": "ACTIVE",
-      "REPORTING_LAB_KEY": 1
+      "REPORTING_LAB_KEY": 1,
+      "RESULT_COMMENT_GRP_KEY": 1,
+      "SPECIMEN_COLLECTOR_KEY": 1,
+      "TEST_RESULT_GRP_KEY": 2
     },
     {
       "CONDITION_KEY": 1,
+      "COPY_TO_PROVIDER_KEY": 1,
+      "INVESTIGATION_KEY": 1,
+      "LAB_RPT_DT_KEY": 1,
+      "LAB_TEST_KEY": 4,
+      "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 22000012,
+      "LDF_GROUP_KEY": 1,
+      "MORB_RPT_KEY": 1,
+      "ORDERING_ORG_KEY": 1,
       "ORDERING_PROVIDER_KEY": 1,
+      "PERFORMING_LAB_KEY": 1,
       "RECORD_STATUS_CD": "ACTIVE",
-      "REPORTING_LAB_KEY": 1
+      "REPORTING_LAB_KEY": 1,
+      "RESULT_COMMENT_GRP_KEY": 1,
+      "SPECIMEN_COLLECTOR_KEY": 1,
+      "TEST_RESULT_GRP_KEY": 3
     }
   ],
   "8": [
