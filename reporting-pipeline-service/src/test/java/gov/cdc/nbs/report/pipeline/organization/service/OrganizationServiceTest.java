@@ -1,7 +1,7 @@
 package gov.cdc.nbs.report.pipeline.organization.service;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
-import static gov.cdc.etldatapipeline.commonutil.UtilHelper.deserializePayload;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
+import static gov.cdc.nbs.report.pipeline.util.UtilHelper.deserializePayload;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -12,13 +12,13 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cdc.etldatapipeline.commonutil.NoDataException;
-import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.*;
 import gov.cdc.nbs.report.pipeline.organization.repository.OrgRepository;
 import gov.cdc.nbs.report.pipeline.organization.repository.PlaceRepository;
 import gov.cdc.nbs.report.pipeline.organization.transformer.DataTransformers;
+import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

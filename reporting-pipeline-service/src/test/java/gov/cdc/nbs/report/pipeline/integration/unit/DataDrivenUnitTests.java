@@ -79,7 +79,7 @@ class DataDrivenUnitTests extends UnitTest {
   @ParameterizedTest
   @Execution(ExecutionMode.CONCURRENT)
   @MethodSource("unitTestDirectoryProvider")
-  void testRunner(Path testDirectory) throws IOException, JSONException {
+  void testRunner(Path testDirectory) throws IOException {
     DataSourceTransactionManager transactionManager =
         new DataSourceTransactionManager(adminDataSource);
     TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);

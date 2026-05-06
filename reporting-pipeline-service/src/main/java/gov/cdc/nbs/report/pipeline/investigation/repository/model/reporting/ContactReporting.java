@@ -17,6 +17,7 @@ public class ContactReporting {
   private Long contactEntityUid;
   private String cttReferralBasis;
   private String cttStatus;
+  private String cttStatusCode;
   private String cttDispoDt;
   private String cttDisposition;
   private String cttEvalCompleted;

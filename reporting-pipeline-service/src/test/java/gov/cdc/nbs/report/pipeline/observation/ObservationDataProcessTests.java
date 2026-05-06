@@ -1,6 +1,6 @@
 package gov.cdc.nbs.report.pipeline.observation;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;

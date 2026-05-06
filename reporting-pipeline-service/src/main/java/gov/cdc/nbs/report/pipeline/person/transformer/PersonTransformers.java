@@ -1,6 +1,5 @@
 package gov.cdc.nbs.report.pipeline.person.transformer;
 
-import gov.cdc.etldatapipeline.commonutil.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.person.model.dto.PersonExtendedProps;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientElasticSearch;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientKey;
@@ -12,6 +11,7 @@ import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderReporting;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUserKey;
+import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import org.springframework.stereotype.Component;
 
 @Component
