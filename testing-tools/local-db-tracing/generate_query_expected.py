@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from tracing_constants import LOCAL_TRACING_DIR
-from tracing_paths import is_excluded_trace_table, replay_metadata_cache_file_for_database
+from tracing_paths import is_excluded_artifact_table, replay_metadata_cache_file_for_database
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -811,7 +811,7 @@ def build_scaffolds(
         fields, strategy, comparison_eligible = stable_identity_fields(change)
         if not table_name or not fields:
             continue
-        if is_excluded_trace_table(schema_name, table_name):
+        if is_excluded_artifact_table(schema_name, table_name):
             continue
 
         ordered_fields = tuple(sorted((str(key), value) for key, value in fields.items()))
