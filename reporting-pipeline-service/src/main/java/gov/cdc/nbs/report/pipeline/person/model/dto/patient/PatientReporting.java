@@ -41,6 +41,7 @@ public class PatientReporting implements PersonExtendedProps {
   private String lastChgTime;
   private String localId;
   private String maritalStatus;
+  private String maritalStatusCd;
   private String primaryOccupation;
   private Long patientMprUid;
   private String preferredGender;
