@@ -85,6 +85,46 @@ The remaining 15 partially-covered tables are deferred:
   lab_test_result (LAB_RESULT_VAL_LARGE_TXT_KEY phantom),
   test_result_grouping (RDB_LAST_REFRESH_TIME explicit-NULL by SP).
 
+## Empty (59) tables — second-pass triage
+
+Tier 3 v1 also re-triaged the 59 "Empty" tables to confirm they're
+correctly classified as out-of-scope rather than missed Tier 3
+opportunities. Findings:
+
+- **~25 datamart fact tables** (`*_datamart`, `hep100`, `lab100`,
+  `lab101`, `sr100`, `f_page_case`, `f_std_page_case`, `f_tb_pam`,
+  `f_var_pam`, `inv_summ_datamart`, `case_count`, `event_metric`,
+  `summary_report_case`): correctly deferred to Merge contract step 9
+  (datamart SPs, Phase 2).
+- **~12 LDF tables** (`ldf_*`, `*_ldf_group`, `*_pam_ldf`): correctly
+  deferred to Phase 2 LDF breadth expansion.
+- **~14 patient-detail group dimensions** (`d_addl_risk`,
+  `d_disease_site`, `d_gt_12_reas`, `d_hc_prov_ty_3`, `d_move_*`,
+  `d_moved_where`, `d_out_of_cntry`, `d_pcr_source`, `d_rash_loc_gen`,
+  `d_smr_exam_ty`, `d_tb_hiv`, `d_tb_pam`, `d_var_pam`,
+  `d_case_management`): the **TB-PAM cluster**. All 14 d_<topic> SPs
+  (`sp_nrt_d_<topic>_postprocessing`, files 145-230) read from
+  `D_TB_PAM` (which is itself written by `sp_nrt_d_tb_pam_postprocessing`).
+  The whole cluster requires:
+    1. An Investigation with `condition_cd` indicating TB (not Hep A)
+    2. NBS_case_answer rows for the TB form responses
+    3. TB-PAM SP runs first; the 14 detail SPs run against its output
+  This is **multi-condition territory** explicitly deferred to Phase 2
+  per STRATEGY.md "Multi-condition variants per disease family". Not a
+  missed v1 opportunity.
+- **`morb_rpt_user_comment`**: blocked by RTR bug at
+  `sp_d_morbidity_report_postprocessing:802-816` (self-defeating
+  join+filter). Documented in coverage_morbidity.md and
+  coverage_morb_inv.md. Not fixable without RTR change.
+- **`l_investigation_repeat_inc`**: repeating-block inc table, depends
+  on `sp_dyn_dm_*` SPs (Phase 2 datamart territory).
+- **`etl_dq_log`, `lookup_table_n_rept`**: NO writer in any RTR
+  routine — MasterETL-only tables. Maps to teammate's note about ~80
+  RTR-not-writes tables.
+
+Conclusion: all 59 empty tables fall into existing deferral categories.
+No additional Tier 3 v1 work warranted.
+
 ## ODSE-unknown tables (note from teammate, 2026-05)
 
 A teammate identified ~80 RDB tables that no one on the team currently
