@@ -185,6 +185,51 @@ are present, F_PAGE_CASE has matching rows, the datamart SPs just
 can't see them due to the upstream RTR bug. Filed as a single
 RTR-investigation item covering the whole condition-datamart family.
 
+### LDF answer chain (Tetanus)
+
+**Goal**: populate `LDF_DATA`, `LDF_GROUP`, `LDF_DIMENSIONAL_DATA`,
+`LDF_TETANUS`, and the 12 LDF tables overall. The LDF chain is:
+`nrt_ldf_data` (answers in staging) → `sp_nrt_ldf_postprocessing` →
+`LDF_DATA` + `LDF_GROUP` → `sp_nrt_ldf_dimensional_data_postprocessing`
+→ `LDF_DIMENSIONAL_DATA` → per-condition `sp_ldf_<condition>_datamart_postprocessing`
+→ per-condition LDF tables.
+
+**Fix**: `fixtures/30_sp_coverage/ldf_answers_tetanus.sql` —
+1. Adds a Tetanus Investigation variant (UID 22000200, condition_cd
+   '10210') since multi_condition_investigations.sql didn't include
+   Tetanus.
+2. Authors 5 `nrt_ldf_data` rows pulling real LDF UIDs from
+   `nrt_odse_state_defined_field_metadata` for Tetanus PHC (87 LDFs
+   are baseline-seeded for condition 10210).
+3. Tail-EXEC runs sp_nrt_ldf_postprocessing,
+   sp_nrt_ldf_dimensional_data_postprocessing, and
+   sp_ldf_tetanus_datamart_postprocessing.
+
+**Result (partial)**:
+- LDF_DATA: 0/17 → **9/17** (5 rows, 9 cols populated)
+- LDF_GROUP: 0/2 → **2/2** (1 row, fully covered)
+- LDF_DIMENSIONAL_DATA: 0 rows (next gap, blocks LDF_TETANUS et al.)
+- LDF_TETANUS: 0 rows (cascades from LDF_DIMENSIONAL_DATA empty)
+
+**Bugs surfaced (also out of project scope)**:
+1. `LDF_DATA.RECORD_STATUS_CD` is `varchar(8)` but the SP at line 1132
+   maps `metadata_record_status_cd` (typically `'LDF_PROCESSED'` = 13
+   chars) into it — guaranteed truncation error. Worked around by
+   authoring `metadata_record_status_cd='ACTIVE'` (6 chars). Real
+   fix is to widen the column or change the source.
+2. `sp_nrt_ldf_dimensional_data_postprocessing` at step "GENERATING
+   TMP_LDF_DATA" produces 0 rows even with valid `nrt_ldf_data` and
+   `nrt_odse_state_defined_field_metadata` rows. Looks like another
+   transaction-isolation issue (similar pattern to the
+   condition-datamart family bug — TMP table aggregation returns 0
+   from inside the SP but works manually).
+3. `sp_ldf_tetanus_datamart_postprocessing` at line 824: "Invalid
+   length parameter passed to LEFT or SUBSTRING function" — likely
+   downstream of LDF_DIMENSIONAL_DATA being empty.
+
+The fixture-side work has gone as far as it can. The LDF chain needs
+upstream RTR debugging to populate the per-condition LDF tables.
+
 ## Tables NOT addressed by Tier 3 (and why)
 
 The remaining 15 partially-covered tables are deferred:
