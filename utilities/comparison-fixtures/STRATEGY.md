@@ -468,3 +468,26 @@ Captured here so they don't get lost as we focus on v1:
   multi-select coded LDFs.
 - **Repeating-block cardinality > 3.** v1 uses N=3. Phase 2 tests N=1, N=10
   to flush off-by-one logic in `sp_dyn_dm_repeat*`.
+
+- **TODO: ~80 RDB tables nobody on the team currently knows how to populate
+  via ODSE inputs.** Per a teammate's note (2026-05): a substantial set of
+  legacy RDB tables (DM_INV_*, HEP100, LAB101, SR100, TB_DATAMART,
+  TB_HIV_DATAMART, VAR_DATAMART, NBS_CASE_ANSWER_REPT, GEOCODING_LOCATION,
+  HEPATITIS_CASE, PERTUSSIS_CASE, RUBELLA_CASE, MISSING_LAB_CASES,
+  STAGING_KEY_REPEATING_FINAL, SUMM_DATAMART, VACC_DIFFERENTIAL_*,
+  VACC_DISASSOCIATED_TABLE, the various LDF_* / *_LDF / *_LDF_GROUP
+  tables, plus L_ADDL_RISK / L_DISEASE_SITE / L_GT_12_REAS /
+  L_HC_PROV_TY_3 link tables) are written only by MasterETL — no
+  documented ODSE input pattern populates them through RTR. Most
+  appear in our Phase 0 catalog as dynamic-SQL targets or are
+  populated only after specific datamart SPs run. **Action items**:
+  (1) cross-reference the teammate's full list against
+  `coverage/coverage_merged.md`'s "Empty (59)" category to find
+  overlaps. (2) for each ODSE-unknown table, document in the
+  catalog whether it's MasterETL-only (RTR doesn't write it →
+  flag as comparison-test gap, not a fixture gap), datamart-SP-driven
+  (would populate at Merge step 9 → out of scope for v1), or
+  genuinely uninvestigated (belongs in a Tier 3 spike). (3) Once
+  the comparison test runs, columns in MasterETL-only tables
+  will diff as "RDB has rows, RDB_MODERN doesn't" — that's a
+  legitimate finding about RTR coverage gaps, not a fixture bug.

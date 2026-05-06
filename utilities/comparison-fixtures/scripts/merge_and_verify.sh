@@ -123,6 +123,8 @@ run_infrastructure_sps() {
   # Insert sentinel row at DATE_KEY=1 first — postprocessing SPs use
   # COALESCE(<lookup>, 1) for missing dates and the FK constraint requires
   # DATE_KEY=1 to exist.
+  # Populate all 11 derived calendar columns so coverage_summary.sh shows
+  # RDB_DATE as fully covered (year/month/day/quarter/week/etc.).
   sql_q RDB_MODERN "
     INSERT INTO dbo.RDB_DATE (DATE_KEY, DATE_MM_DD_YYYY) VALUES (1, NULL);
     WITH dates AS (
@@ -130,8 +132,25 @@ run_infrastructure_sps() {
       UNION ALL
       SELECT DATEADD(day, 1, dt) FROM dates WHERE dt < '2030-12-31'
     )
-    INSERT INTO dbo.RDB_DATE (DATE_KEY, DATE_MM_DD_YYYY)
-    SELECT DATEDIFF(day, '2010-01-01', dt) + 1, dt FROM dates
+    INSERT INTO dbo.RDB_DATE (
+      DATE_KEY, DATE_MM_DD_YYYY,
+      DAY_OF_WEEK, DAY_NBR_IN_CLNDR_MON, DAY_NBR_IN_CLNDR_YR,
+      WK_NBR_IN_CLNDR_MON, WK_NBR_IN_CLNDR_YR,
+      CLNDR_MON_NAME, CLNDR_MON_IN_YR, CLNDR_QRTR, CLNDR_YR
+    )
+    SELECT
+      DATEDIFF(day, '2010-01-01', dt) + 1,
+      dt,
+      DATEPART(weekday, dt),
+      DATEPART(day, dt),
+      DATEPART(dayofyear, dt),
+      ((DATEPART(day, dt) - 1) / 7) + 1,
+      DATEPART(week, dt),
+      DATENAME(month, dt),
+      DATEPART(month, dt),
+      DATEPART(quarter, dt),
+      DATEPART(year, dt)
+    FROM dates
     OPTION (MAXRECURSION 0);
   " >/dev/null
 

@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-06 08:02:04 PDT
+Generated: 2026-05-06 08:09:51 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 42
-- Partially covered (some columns populated): 16
+- Fully covered (all columns populated for at least one row): 43
+- Partially covered (some columns populated): 15
 - Empty (table exists, 0 rows): 59
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4312
-- Columns with ≥1 populated row: 694
-- Overall column coverage: 16.1%
+- Columns with ≥1 populated row: 703
+- Overall column coverage: 16.3%
 
 ## Per-table coverage
 
@@ -129,7 +129,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.pertussis_suspected_source_grp | 1 | 1 | **1/1** |
 | dbo.pertussis_treatment_group | 1 | 1 | **1/1** |
 | dbo.provider_ldf_group | 0 | 3 | 0/3 |
-| dbo.rdb_date | 4019 | 11 | 2/11 |
+| dbo.rdb_date | 4019 | 11 | **11/11** |
 | dbo.result_comment_group | 2 | 3 | **3/3** |
 | dbo.sr100 | 0 | 20 | 0/20 |
 | dbo.std_hiv_datamart | 0 | 248 | 0/248 |
@@ -148,7 +148,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 ## Categorization
 
-### Fully covered (42)
+### Fully covered (43)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -190,12 +190,13 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.notification_event
 - dbo.pertussis_suspected_source_grp
 - dbo.pertussis_treatment_group
+- dbo.rdb_date
 - dbo.result_comment_group
 - dbo.treatment
 - dbo.treatment_event
 - dbo.user_profile
 
-### Partially covered (16)
+### Partially covered (15)
 
 Tables with rows but at least one column never populated. These are the
 candidates for Tier 3 gap-driven coverage work.
@@ -213,7 +214,6 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.l_investigation_repeat
 - dbo.lab_test_result
 - dbo.ldf_datamart_column_ref
-- dbo.rdb_date
 - dbo.summary_case_group
 - dbo.test_result_grouping
 
