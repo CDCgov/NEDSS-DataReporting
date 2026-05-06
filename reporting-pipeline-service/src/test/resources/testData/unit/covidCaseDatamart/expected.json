@@ -60,7 +60,8 @@
       "PHYS_FIRST_NAME": "John",
       "RPT_PRV_LAST_NAME": "Reporter",
       "RPT_PRV_FIRST_NAME": "Jane",
-      "RPT_ORG_NAME": "Reporting Agency"
+      "RPT_ORG_NAME": "Reporting Agency",
+      "PATIENT_MARITAL_STS": "M"
     }
   ]
 }
