@@ -34,6 +34,9 @@ EXCLUDED_ARTIFACT_TABLES = {
     ("dbo", "job_flow_log"),
     ("dbo", "job_batch_log"),
 }
+EXCLUDED_ARTIFACT_TABLE_PREFIXES = {
+    ("dbo", "lookup_table_"),
+}
 DEFAULT_UID_BLOCK_SIZE_BY_CLASS = {
     "GA": 1000,
     "PERSON": 1000,
