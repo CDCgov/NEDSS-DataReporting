@@ -21,22 +21,33 @@ LEGACY_STATE_FILE = LOCAL_TRACING_DIR / "enabled-cdc-tables.json"
 DEFAULT_KNOWN_ASSOCIATIONS_FILE = LOCAL_TRACING_DIR / "known_replay_associations.json"
 REPLAY_METADATA_CACHE_PREFIX = "replay-metadata-"
 REPLAY_METADATA_CACHE_VERSION = 5
+
+# CDC is not turned on for these tables
+EXCLUDED_TRACE_TABLES = {
+    ("dbo", "job_flow_log"),
+}
+
+# CDC is on for these tables, but they are excluded from setup.sql because
+# they are populated as side-effects of replaying other entities
 DEFAULT_CORE_REPLAY_IGNORED_TABLES = {
     ("dbo", "EDX_entity_match"),
     ("dbo", "EDX_patient_match"),
 }
-EXCLUDED_TRACE_TABLES = {
-    ("dbo", "job_flow_log"),
-}
+
+# These tables are excluded from query.sql and expected.json
 EXCLUDED_ARTIFACT_TABLES = {
     ("dbo", "activity_log_detail"),
     ("dbo", "activity_log_master"),
     ("dbo", "job_flow_log"),
     ("dbo", "job_batch_log"),
 }
+
+# These table prefixes are excluded from query.sql and expected.json
 EXCLUDED_ARTIFACT_TABLE_PREFIXES = {
     ("dbo", "lookup_table_"),
 }
+
+# These columns are excluded from query.sql and expected.json (no matter the table)
 IGNORED_OUTPUT_COLUMNS = {
     "INVESTIGATION_KEY",
     "LAB_TEST_KEY",
@@ -46,6 +57,7 @@ IGNORED_OUTPUT_COLUMNS = {
     "RESULTED_LAB_TEST_KEY",
     "TEST_RESULT_GRP_KEY",
 }
+
 DEFAULT_UID_BLOCK_SIZE_BY_CLASS = {
     "GA": 1000,
     "PERSON": 1000,
