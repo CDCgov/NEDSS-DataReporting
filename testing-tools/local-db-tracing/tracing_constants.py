@@ -27,6 +27,8 @@ DEFAULT_CORE_REPLAY_IGNORED_TABLES = {
 }
 EXCLUDED_TRACE_TABLES = {
     ("dbo", "job_flow_log"),
+    ("dbo", "activity_log_detail"),
+    ("dbo", "job_batch_log"),
 }
 DEFAULT_UID_BLOCK_SIZE_BY_CLASS = {
     "GA": 1000,
