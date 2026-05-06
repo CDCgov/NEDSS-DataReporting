@@ -441,7 +441,12 @@ Every coverage report is markdown with these sections, in order:
    treatment → vaccination → contact).
 8. Tier 2 template + agents.
 9. Tier 3 template + agents (only on reported gaps).
-10. Final merge + full-chain verification.
+10. Final merge + full-chain verification — `scripts/merge_and_verify.sh`
+    runs the deterministic 9-step Merge contract end-to-end (reset →
+    infrastructure SPs → foundation → Tier 1 fixtures → Tier 1 chains →
+    Tier 2 fixtures → re-run affected Tier 1 chains → Tier 3 → datamart).
+    First successful end-to-end run produces ~25 RDB_MODERN dim/fact
+    rows across 19 target tables and ~22 cross-subject connective rows.
 
 ## Follow-on / phase-2
 
