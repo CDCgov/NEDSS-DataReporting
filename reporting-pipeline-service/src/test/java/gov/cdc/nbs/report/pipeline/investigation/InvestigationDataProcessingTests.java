@@ -1,7 +1,7 @@
 package gov.cdc.nbs.report.pipeline.investigation;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
 import static gov.cdc.nbs.report.pipeline.investigation.utils.TestUtils.*;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -11,12 +11,12 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cdc.etldatapipeline.commonutil.metrics.CustomMetrics;
 import gov.cdc.nbs.report.pipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.InterviewReporting;
 import gov.cdc.nbs.report.pipeline.investigation.util.ProcessInvestigationDataUtil;
+import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

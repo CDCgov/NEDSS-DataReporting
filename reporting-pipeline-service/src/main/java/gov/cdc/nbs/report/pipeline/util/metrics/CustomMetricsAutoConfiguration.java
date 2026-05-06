@@ -1,4 +1,4 @@
-package gov.cdc.etldatapipeline.commonutil.metrics;
+package gov.cdc.nbs.report.pipeline.util.metrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -10,11 +10,13 @@ import org.springframework.context.annotation.Bean;
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
 @ConditionalOnBean(MeterRegistry.class)
-@AutoConfigureAfter(name = "org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration")
+@AutoConfigureAfter(
+    name =
+        "org.springframework.boot.actuate.autoconfigure.metrics.export.prometheus.PrometheusMetricsExportAutoConfiguration")
 public class CustomMetricsAutoConfiguration {
 
-    @Bean
-    public CustomMetrics customMetrics(MeterRegistry meterRegistry) {
-        return new CustomMetrics(meterRegistry);
-    }
+  @Bean
+  public CustomMetrics customMetrics(MeterRegistry meterRegistry) {
+    return new CustomMetrics(meterRegistry);
+  }
 }

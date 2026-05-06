@@ -7,7 +7,6 @@ updates:
   - package-ecosystem: "gradle"
     directories:
       - "/"
-      - "/common-util"
       - "/liquibase-service"
       - "/reporting-pipeline-service"
     schedule:
