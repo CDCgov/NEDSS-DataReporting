@@ -19,12 +19,6 @@ jobs:
       id-token: write
       contents: read
 
-    services:
-      nbs-mssql:
-        image: ghcr.io/cdcgov/nedss-datareporting-mssql:6.0.18.1
-        ports:
-          - 1433:1433
-
     steps:
       - uses: actions/checkout@v6
         with:
@@ -45,9 +39,6 @@ jobs:
 
       - name: Run stored procedure tests
         working-directory: ./
-        env:
-          DB_URL_RDB: "jdbc:sqlserver://localhost:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;loginTimeout=3;"
-          DB_URL_ODSE: "jdbc:sqlserver://localhost:1433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;loginTimeout=3;"
         run: |
           ./gradlew clean reporting-pipeline-service:test-unit --continue
 

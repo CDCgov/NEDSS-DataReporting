@@ -4,7 +4,7 @@ import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.nio.file.Files;
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -34,6 +34,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
 @ActiveProfiles("test")
 @Tag("Unit")
@@ -43,6 +46,17 @@ import org.springframework.test.context.ActiveProfiles;
 @TestInstance(Lifecycle.PER_CLASS)
 @Slf4j
 public abstract class UnitTest {
+
+  private static boolean started = false;
+  private static final File base = new File("../docker-compose.yaml");
+
+  @SuppressWarnings("resource")
+  private static final ComposeContainer environment =
+      new ComposeContainer(DockerImageName.parse("docker:25.0.5"), base)
+          .withServices("nbs-mssql")
+          .waitingFor("nbs-mssql", Wait.forHealthcheck())
+          // Set the maximum startup timeout all the waits set are bounded to
+          .withStartupTimeout(Duration.ofMinutes(5));
 
   @Autowired
   @Qualifier("adminDataSource")
@@ -58,7 +72,11 @@ public abstract class UnitTest {
 
   @BeforeAll
   void runMigrations() throws Exception {
-    checkDatabaseConnection();
+    if (!started) {
+      environment.start();
+      started = true;
+    }
+    // checkDatabaseConnection();
     log.info("Starting Migration Phase...");
 
     applyMigration("NBS_ODSE", "db.odse.admin.tasks.changelog-16.1.yaml");
@@ -69,42 +87,6 @@ public abstract class UnitTest {
 
     log.info("Starting Onboarding Phase...");
     applyOnboardingScripts("NBS_ODSE");
-  }
-
-  private void checkDatabaseConnection() {
-    String url = "unknown";
-    try (Connection conn = adminDataSource.getConnection()) {
-      // Force a short login timeout for this check (3 seconds)
-      url = conn.getMetaData().getURL();
-      conn.setNetworkTimeout(null, 3000);
-      if (!conn.isValid(3)) {
-        throw new SQLException("Connection is not valid.");
-      }
-    } catch (Exception e) {
-      String errorMessage =
-          """
-          #################################################################################
-          DATABASE CONNECTION FAILURE:
-          Could not establish a connection to the database.
-
-          Target URL: {}
-
-          REQUIREMENT: You must have an NBS >=6.0.17 version of SQL Server running
-          in the background (local service or Docker) before starting this test.
-
-          Please check your 'application-test.yaml' credentials and ensure a connection
-          to SQL Server with those credentials is correct.
-
-          Typically, starting an nbs-mssql in the background with docker compose is
-          sufficent.
-
-          Example:
-          docker compose -f docker-compose.yml up -d nbs-mssql
-          #################################################################################
-          """;
-      log.error(errorMessage, url);
-      throw new RuntimeException(e);
-    }
   }
 
   private void applyMigration(String dbName, String changelogFile) throws Exception {
