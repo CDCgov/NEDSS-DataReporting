@@ -257,41 +257,39 @@ BEGIN TRY
         cast(pat.PATIENT_NAME_SUFFIX as varchar(20)) AS 'PATIENT_NAME_SUFFIX',
         pat.PATIENT_DOB AS 'PATIENT_DOB',
         cast(pat.PATIENT_AGE_REPORTED as varchar(10)) AS 'PATIENT_AGE_REPORTED',
-        pat.PATIENT_AGE_REPORTED_UNIT AS 'PATIENT_AGE_RPTD_UNIT',
+        nrtPat.AGE_REPORTED_UNIT_CD AS 'PATIENT_AGE_RPTD_UNIT',
         cast(pat.PATIENT_BIRTH_COUNTRY as varchar(20)) AS 'PATIENT_BIRTH_COUNTRY',
         cast(pat.PATIENT_CURRENT_SEX as varchar(1)) AS 'PATIENT_CURRENT_SEX',
-        cast(pat.PATIENT_DECEASED_INDICATOR as varchar(20)) AS 'PATIENT_DECEASED_IND',
+        cast(nrtPat.DECEASED_IND_CD as varchar(20)) AS 'PATIENT_DECEASED_IND',
         pat.PATIENT_DECEASED_DATE AS 'PATIENT_DECEASED_DT',
         pat.PATIENT_MARITAL_STATUS AS 'PATIENT_MARITAL_STS',
         pat.PATIENT_STREET_ADDRESS_1 AS 'PATIENT_STREET_ADDR_1',
         pat.PATIENT_STREET_ADDRESS_2 AS 'PATIENT_STREET_ADDR_2',
         pat.PATIENT_CITY AS 'PATIENT_CITY',
-        cast(pat.PATIENT_STATE as varchar(20)) AS 'PATIENT_STATE',
+        cast(nrtPat.STATE_CODE as varchar(20)) AS 'PATIENT_STATE',
         cast(pat.PATIENT_ZIP as varchar(20)) AS 'PATIENT_ZIP',
-        pat.PATIENT_COUNTY AS 'PATIENT_COUNTY',
-        cast(pat.PATIENT_COUNTRY as varchar(20)) AS 'PATIENT_COUNTRY',
+        cast(nrtPat.COUNTY_CODE as varchar(20)) AS 'PATIENT_COUNTY',
+        cast(nrtPat.COUNTRY_CODE as varchar(20)) AS 'PATIENT_COUNTRY',
         cast(pat.PATIENT_PHONE_HOME as varchar(20)) AS 'PATIENT_TEL_HOME',
         cast(pat.PATIENT_PHONE_WORK as varchar(20)) AS 'PATIENT_PHONE_WORK',
         cast(pat.PATIENT_PHONE_EXT_WORK as varchar(20)) AS 'PATIENT_PHONE_EXT_WORK',
         cast(pat.PATIENT_PHONE_CELL as varchar(20)) AS 'PATIENT_TEL_CELL',
         pat.PATIENT_EMAIL AS 'PATIENT_EMAIL',
-        cast(pat.PATIENT_ETHNICITY as varchar(20)) AS 'PATIENT_ETHNICITY',
+        cast(nrtPat.ETHNIC_GROUP_IND as varchar(20)) AS 'PATIENT_ETHNICITY',
         pat.PATIENT_RACE_CALCULATED AS 'PATIENT_RACE_CALC'
     INTO
         #COVID_PATIENT_DATA
     FROM
         dbo.NRT_INVESTIGATION inv
-    inner join
-        #PHC_LIST phc_list on inv.public_health_case_uid = phc_list.public_health_case_uid
-    left outer join
-    (
-        select dPat.*
-        from dbo.D_PATIENT dPat WITH(NOLOCK)
-    	inner join  dbo.NRT_PATIENT nrtPat WITH(NOLOCK)
-    		on nrtPat.patient_uid = dPat.patient_uid
-    		and nrtPat.status_name_cd  = 'A' and nrtPat.nm_use_cd = 'L'
-    ) pat
-    ON inv.patient_id = pat.patient_uid ;
+    INNER JOIN
+        #PHC_LIST phc_list ON inv.public_health_case_uid = phc_list.public_health_case_uid
+    LEFT OUTER JOIN
+        dbo.D_PATIENT pat WITH(NOLOCK) ON inv.patient_id = pat.patient_uid
+    LEFT OUTER JOIN
+        dbo.NRT_PATIENT nrtPat WITH(NOLOCK)
+            ON nrtPat.patient_uid = pat.patient_uid
+            AND nrtPat.status_name_cd = 'A'
+            AND nrtPat.nm_use_cd = 'L';
 
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
