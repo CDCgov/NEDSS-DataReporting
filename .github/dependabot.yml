@@ -7,14 +7,7 @@ updates:
   - package-ecosystem: "gradle"
     directories:
       - "/"
-      - "/common-util"
-      - "/ldfdata-service"
-      - "/investigation-service"
       - "/liquibase-service"
-      - "/observation-service"
-      - "/organization-service"
-      - "/person-service"
-      - "/post-processing-service"
       - "/reporting-pipeline-service"
     schedule:
       interval: "weekly"
@@ -26,13 +19,7 @@ updates:
   # Enable version updates for Docker
   - package-ecosystem: "docker"
     directories:
-      - "/ldfdata-service"
-      - "/investigation-service"
       - "/liquibase-service"
-      - "/observation-service"
-      - "/organization-service"
-      - "/person-service"
-      - "/post-processing-service"
       - "/reporting-pipeline-service"
     schedule:
       interval: "weekly"

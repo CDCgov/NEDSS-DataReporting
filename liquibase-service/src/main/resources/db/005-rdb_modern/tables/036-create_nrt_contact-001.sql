@@ -9,6 +9,7 @@ CREATE TABLE dbo.nrt_contact
     CONTACT_ENTITY_UID                bigint NULL,
     CTT_REFERRAL_BASIS                varchar(4000) NULL,
     CTT_STATUS                        varchar(4000) NULL,
+    CTT_STATUS_CODE                   varchar(20) NULL,
     CTT_DISPO_DT                      datetime NULL,
     CTT_DISPOSITION                   varchar(4000) NULL,
     CTT_EVAL_COMPLETED                varchar(4000) NULL,

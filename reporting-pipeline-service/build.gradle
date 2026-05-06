@@ -53,6 +53,17 @@ jacoco {
     reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
 }
 
+bootRun {
+    systemProperty 'spring.profiles.active', 'default,development,local'
+
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 17071
+    }
+}
+
 jacocoTestReport {
     reports {
         xml.required = true
@@ -87,26 +98,21 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.slf4j:slf4j-api'
 
     implementation 'org.modelmapper:modelmapper:3.2.0'
     implementation 'com.google.guava:guava:33.5.0-jre'
 
     implementation 'io.micrometer:micrometer-core'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-
-    if (findProject(':common-util')) {
-        implementation project(':common-util')
-    } else {
-        // this mostly needed when testing the app on idea
-        implementation files('libs/common-util-0.0.1-SNAPSHOT.jar')
-    }
+    implementation 'commons-io:commons-io:2.21.0'    
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
     testImplementation 'org.testcontainers:testcontainers:2.0.5'
     testImplementation 'org.testcontainers:testcontainers-kafka:2.0.5'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.5'
-    testImplementation 'org.awaitility:awaitility:4.2.0'
+    testImplementation 'org.awaitility:awaitility:4.3.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
 }

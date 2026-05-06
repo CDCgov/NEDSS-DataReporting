@@ -33,6 +33,9 @@ public class Contact {
   @Column(name = "ctt_status")
   private String cttStatus;
 
+  @Column(name = "CTT_STATUS_CODE")
+  private String cttStatusCode;
+
   @Column(name = "ctt_dispo_dt")
   private String cttDispoDt;
 
