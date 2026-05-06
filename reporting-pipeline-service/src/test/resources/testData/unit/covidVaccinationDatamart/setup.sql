@@ -1,6 +1,20 @@
 USE [RDB_MODERN]
 
--- TODO - Adjust keys or clear them out?
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @public_health_case_uid bigint = 20002004;
+DECLARE @vaccination_uid bigint = 20002005;
+DECLARE @vaccination_local_id nvarchar(40) = 'INT20002005GA01';
+DECLARE @patient0 bigint = 20002000;
+DECLARE @patient1 bigint = 20002002;
+DECLARE @patient2 bigint = 20002006;
+DECLARE @patient_local_id nvarchar(40) = 'PSN20002000GA01';
+DECLARE @dbo_nrt_patient_key_d_patient_key bigint;
+DECLARE @dbo_nrt_patient_key_d_patient_key_output TABLE ([value] bigint);
+DECLARE @dbo_nrt_patient_key_d_patient_key2 bigint;
+DECLARE @dbo_nrt_patient_key_d_patient_key_output2 TABLE ([value] bigint);
+DECLARE @dbo_nrt_patient_key_d_patient_key3 bigint;
+DECLARE @dbo_nrt_patient_key_d_patient_key_output3 TABLE ([value] bigint);
+
 -- nrt_vaccination
 INSERT INTO [dbo].[nrt_vaccination]
             ([vaccination_uid],
@@ -32,14 +46,14 @@ INSERT INTO [dbo].[nrt_vaccination]
              [jurisdiction_cd],
              [program_jurisdiction_oid],
              [material_cd])
-VALUES      ('20002005',
+VALUES      (@vaccination_uid,
              '2026-04-29 20:57:09.377',
-             '10009282',
+             @superuser_id,
              '22',
              N'Years',
              '2026-04-29 20:57:09.380',
-             '10009282',
-             N'INT20002005GA01',
+             @superuser_id,
+             @vaccination_local_id,
              N'ACTIVE',
              '2026-04-29 20:57:09.380',
              '2026-04-29 00:00:00.000',
@@ -54,8 +68,8 @@ VALUES      ('20002005',
              N'N',
              '10003010',
              '10003001',
-             '20002004',
-             '20002006',
+             @public_health_case_uid,
+             @patient1,
              NULL,
              NULL,
              NULL,
@@ -198,7 +212,7 @@ INSERT INTO [dbo].[nrt_investigation]
              [batch_id],
              [rpt_cnty_cd],
              [notes])
-VALUES      ('20002004',
+VALUES      (@public_health_case_uid,
              '1300500009',
              N'CAS20002004GA01',
              N'T',
@@ -265,10 +279,10 @@ VALUES      ('20002004',
              NULL,
              NULL,
              N'GCD',
-             '10009282',
+             @superuser_id,
              N'Kent, Ariella',
              '2026-04-29 20:56:23.277',
-             '10009282',
+             @superuser_id,
              N'Kent, Ariella',
              '2026-04-29 20:56:23.277',
              NULL,
@@ -281,7 +295,7 @@ VALUES      ('20002004',
              N'O',
              NULL,
              NULL,
-             '20002002',
+             @patient1,
              NULL,
              NULL,
              NULL,
@@ -295,7 +309,7 @@ VALUES      ('20002004',
              N'',
              NULL,
              NULL,
-             '20002004',
+             @public_health_case_uid,
              '2026-04-29 20:56:23.277',
              '2026-04-29 20:56:23.277',
              NULL,
@@ -357,13 +371,13 @@ INSERT INTO [dbo].[d_vaccination]
              [electronic_ind],
              [vaccination_uid])
 VALUES      ('2026-04-29 20:57:09.377',
-             '10009282',
+             @superuser_id,
              '22',
              N'Years',
              '2',
              '2026-04-29 20:57:09.380',
-             '10009282',
-             N'INT20002005GA01',
+             @superuser_id,
+             @vaccination_local_id,
              N'ACTIVE',
              '2026-04-29 20:57:09.380',
              '2026-04-29 00:00:00.000',
@@ -376,7 +390,47 @@ VALUES      ('2026-04-29 20:57:09.377',
              N'Akorn, Inc',
              '1',
              N'N',
-             '20002005');
+             @vaccination_uid);
+
+-- NRT_PATIENT_KEYs
+INSERT INTO [dbo].[nrt_patient_key]
+            ([patient_uid],
+             [created_dttm],
+             [updated_dttm])
+output      inserted.[d_patient_key]
+INTO @dbo_nrt_patient_key_d_patient_key_output ([value])
+VALUES      (@patient0,
+             N'2026-05-05T16:00:56.3166667',
+             N'2026-05-05T16:00:56.3166667');
+
+SELECT TOP 1 @dbo_nrt_patient_key_d_patient_key = [value]
+FROM   @dbo_nrt_patient_key_d_patient_key_output; 
+
+INSERT INTO [dbo].[nrt_patient_key]
+            ([patient_uid],
+             [created_dttm],
+             [updated_dttm])
+output      inserted.[d_patient_key]
+INTO @dbo_nrt_patient_key_d_patient_key_output2 ([value])
+VALUES      (@patient1,
+             N'2026-05-05T16:00:56.3166667',
+             N'2026-05-05T16:00:56.3166667');
+
+SELECT TOP 1 @dbo_nrt_patient_key_d_patient_key2 = [value]
+FROM   @dbo_nrt_patient_key_d_patient_key_output2; 
+
+INSERT INTO [dbo].[nrt_patient_key]
+            ([patient_uid],
+             [created_dttm],
+             [updated_dttm])
+output      inserted.[d_patient_key]
+INTO @dbo_nrt_patient_key_d_patient_key_output3 ([value])
+VALUES      (@patient2,
+             N'2026-05-05T16:00:56.3166667',
+             N'2026-05-05T16:00:56.3166667');
+
+SELECT TOP 1 @dbo_nrt_patient_key_d_patient_key3 = [value]
+FROM   @dbo_nrt_patient_key_d_patient_key_output3; 
 
 -- D_PATIENT
 INSERT INTO [dbo].[d_patient]
@@ -461,10 +515,10 @@ INSERT INTO [dbo].[d_patient]
              [patient_birth_country],
              [patient_primary_occupation],
              [patient_primary_language])
-VALUES      ('4',
-             '20002000',
+VALUES      (@dbo_nrt_patient_key_d_patient_key,
+             @patient0,
              N'ACTIVE',
-             N'PSN20002000GA01',
+             @patient_local_id,
              NULL,
              N'Covid',
              NULL,
@@ -528,7 +582,7 @@ VALUES      ('4',
              NULL,
              N'N',
              '2026-04-29 20:57:09.577',
-             '20002000',
+             @patient0,
              '2026-04-29 20:55:17.803',
              N'Kent, Ariella',
              N'Kent, Ariella',
@@ -542,10 +596,10 @@ VALUES      ('4',
              NULL,
              NULL,
              NULL),
-            ('5',
-             '20002000',
+            (@dbo_nrt_patient_key_d_patient_key2,
+             @patient0,
              N'ACTIVE',
-             N'PSN20002000GA01',
+             @patient_local_id,
              NULL,
              N'Covid',
              NULL,
@@ -609,7 +663,7 @@ VALUES      ('4',
              NULL,
              N'N',
              '2026-04-29 20:56:23.223',
-             '20002002',
+             @patient1,
              '2026-04-29 20:56:23.223',
              N'Kent, Ariella',
              N'Kent, Ariella',
@@ -623,10 +677,10 @@ VALUES      ('4',
              NULL,
              NULL,
              NULL),
-            ('6',
-             '20002000',
+            (@dbo_nrt_patient_key_d_patient_key3,
+             @patient0,
              N'ACTIVE',
-             N'PSN20002000GA01',
+             @patient_local_id,
              NULL,
              N'Covid',
              NULL,
@@ -690,7 +744,7 @@ VALUES      ('4',
              NULL,
              N'N',
              '2026-04-29 20:57:09.590',
-             '20002006',
+             @patient2,
              '2026-04-29 20:57:09.590',
              N'Kent, Ariella',
              N'Kent, Ariella',

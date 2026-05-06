@@ -68,6 +68,7 @@ BEGIN
             when (cc.CONTACT_STATUS is not null and cc.CONTACT_STATUS != '')
                 then (select * from dbo.fn_get_value_by_cd_codeset(cc.CONTACT_STATUS, 'INV109'))
             end as CTT_STATUS,
+        cc.CONTACT_STATUS AS CTT_STATUS_CODE,
         cc.CT_CONTACT_UID,
         cc.DISPOSITION_CD,
         cc.DISPOSITION_DATE AS CTT_DISPO_DT,
@@ -611,6 +612,7 @@ BEGIN
         cctd.NBS_QUESTION_UID,
         cct.RDB_COLUMN_NM,
         cct.NBS_ANSWER_UID,
+        cct.CODE,
         CASE
             WHEN LEN(LTRIM(RTRIM(ANSWER_DESC11))) > 0
             AND RIGHT(RTRIM(ANSWER_DESC11),
@@ -693,7 +695,8 @@ BEGIN
 
     SELECT COALESCE(CTO.RDB_COLUMN_NM, CCT.RDB_COLUMN_NM, CTSM.RDB_COLUMN_NM) AS RDB_COLUMN_NM,
                 COALESCE(CTO.CT_CONTACT_UID, CCT.CT_CONTACT_UID, CTSM.CT_CONTACT_UID) AS CT_CONTACT_UID,
-                COALESCE(CCT.ANSWER_DESC11, CTSM.ANSWER_DESC11)                    AS ANSWER_DESC11
+                COALESCE(CCT.ANSWER_DESC11, CTSM.ANSWER_DESC11)                    AS ANSWER_DESC11,
+                CTO.CODE
     INTO #CODED_TABLE_FINAL
     FROM #CODED_TABLE_OTH CTO
             FULL OUTER JOIN #CODED_COUNTY_TABLE_DESC CCT
@@ -1092,27 +1095,32 @@ BEGIN
     WITH ud AS (
 	    SELECT CT_CONTACT_UID,
 	       RDB_COLUMN_NM,
-	       ANSWER_DESC11 AS ANSWER_VAL
+	       ANSWER_DESC11 AS ANSWER_VAL,
+         CODE AS ANSWER_CODE
 	    FROM #CODED_TABLE_FINAL
 	    UNION ALL
 	    SELECT CT_CONTACT_UID,
 	        RDB_COLUMN_NM,
-	        ANSWER_TXT1 AS ANSWER_VAL
+	        ANSWER_TXT1 AS ANSWER_VAL,
+	        null AS ANSER_CODE
 	    FROM #DATE_DATA
 	    UNION ALL
 	    SELECT CT_CONTACT_UID,
 	        RDB_COLUMN_NM,
-	        ANSWER_TXT AS ANSWER_VAL
+	        ANSWER_TXT AS ANSWER_VAL,
+	        null AS ANSER_CODE
 	    FROM #NUMERIC_DATA_TRANS1
 	    UNION ALL
 	    SELECT CT_CONTACT_UID,
 	        RDB_COLUMN_NM,
-	        ANSWER_TXT AS ANSWER_VAL
+	        ANSWER_TXT AS ANSWER_VAL,
+	        null AS ANSER_CODE
 	    FROM #TEXT_FINAL
     )
     SELECT CT_CONTACT_UID,
         RDB_COLUMN_NM,
-        ANSWER_VAL
+        ANSWER_VAL,
+        ANSWER_CODE
     INTO #UNIONED_DATA
     FROM ud;
 
@@ -1188,6 +1196,7 @@ BEGIN
     CONTACT_ENTITY_UID ,
     CONTACT_REFERRAL_BASIS_CD,
     CTT_STATUS,
+    CTT_STATUS_CODE,
     CT_CONTACT_UID,
     DISPOSITION_CD,
     CTT_DISPO_DT,
@@ -1256,7 +1265,8 @@ BEGIN
     OUTER apply (
         SELECT * FROM
             (SELECT (SELECT ud.RDB_COLUMN_NM,
-                               ud.ANSWER_VAL
+                               ud.ANSWER_VAL,
+                               ud.ANSWER_CODE
                         FROM #UNIONED_DATA ud
                         WHERE ud.CT_CONTACT_UID = ix.CT_CONTACT_UID
                         FOR json path,INCLUDE_NULL_VALUES) AS answers) AS answers,

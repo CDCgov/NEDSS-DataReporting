@@ -1,7 +1,4 @@
 rootProject.name = 'NEDSS-DataReporting'
 
-// Common utility library
-include 'common-util'
-
 // Data Reporting service
 include 'reporting-pipeline-service'

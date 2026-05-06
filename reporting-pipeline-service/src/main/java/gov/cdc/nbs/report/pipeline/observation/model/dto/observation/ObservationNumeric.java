@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import gov.cdc.etldatapipeline.commonutil.json.NumberToPlainStringDeserializer;
+import gov.cdc.nbs.report.pipeline.util.json.NumberToPlainStringDeserializer;
 import lombok.Data;
 
 @Data

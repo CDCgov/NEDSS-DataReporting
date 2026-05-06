@@ -1,6 +1,6 @@
 package gov.cdc.nbs.report.pipeline.investigation.utils;
 
-import static gov.cdc.etldatapipeline.commonutil.TestUtils.readFileData;
+import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
 
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.*;
@@ -347,6 +347,7 @@ public class TestUtils {
     contactAnswer.setContactUid(contactUid);
     contactAnswer.setAnswerVal("Common Space");
     contactAnswer.setRdbColumnNm("CTT_EXPOSURE_TYPE");
+    contactAnswer.setAnswerCode("COMMSPACE");
     return contactAnswer;
   }
 

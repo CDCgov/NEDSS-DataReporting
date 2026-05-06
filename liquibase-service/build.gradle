@@ -13,7 +13,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.6'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.liquibase.gradle' version '2.2.2'
-    id 'org.sonarqube' version '4.2.1.3168'
+    id 'org.sonarqube' version '7.3.0.8198'
 }
 
 //apply plugin: 'org.owasp.dependencycheck'
@@ -112,8 +112,6 @@ sonarqube {
         property "sonar.projectKey", "CDCgov_NEDSS-DataAccess"
         property "sonar.organization", "cdcgov"
         property "sonar.host.url", "https://sonarcloud.io"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${rootDir}/investigation-service/build/customJacocoReportDir/test/jacocoTestReport.xml," +
-                "${rootDir}/ldfdata-service/build/customJacocoReportDir/test/jacocoTestReport.xml,${rootDir}/observation-service/build/customJacocoReportDir/test/jacocoTestReport.xml,${rootDir}/person-service/build/customJacocoReportDir/test/jacocoTestReport.xml," +
-                "${rootDir}/post-processing-service/build/customJacocoReportDir/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths"
     }
 }
