@@ -22,6 +22,7 @@ import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.DirectoryResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
@@ -70,8 +71,16 @@ public abstract class UnitTest {
   private static final String ONBOARDING_DIR =
       RESOURCE_ROOT + "/db/001-master/02_onboarding_script_data_load";
 
+  @AfterAll
+  void tearDown() throws Exception {
+    if (started) {
+      environment.stop();
+      started = false;
+    }
+  }
+
   @BeforeAll
-  void runMigrations() throws Exception {
+  void setUp() throws Exception {
     if (!started) {
       environment.start();
       started = true;
