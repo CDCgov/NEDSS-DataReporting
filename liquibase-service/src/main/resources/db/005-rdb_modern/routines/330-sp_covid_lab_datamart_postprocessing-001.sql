@@ -380,7 +380,7 @@ BEGIN
             COALESCE(dim_state_provider_order.state_NM, nrt_state_provider_order.state_NM) AS Ordering_Provider_State,
             COALESCE(d_provider_order.PROVIDER_ZIP,provider_order.zip) AS Ordering_Provider_Zip_Cd,
             provider_order.phone_work_phone AS Ordering_Provider_Phone_Nbr,
-            COALESCE(provider_order.phone_ext_work_phone, '')  AS Ordering_Provider_Phone_Ext,
+            provider_order.phone_ext_work_phone  AS Ordering_Provider_Phone_Ext,
             provider_order.provider_npi AS ORDERING_PROVIDER_ID
         INTO #COVID_LAB_ENTITIES_DATA
         FROM #COVID_LAB_CORE_DATA o
