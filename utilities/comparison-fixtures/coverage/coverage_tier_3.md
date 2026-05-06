@@ -135,6 +135,56 @@ HEPATITIS_DATAMART populating, several downstream tables stay empty:
 
 The fix path is upstream RTR debugging, not fixture work.
 
+### Multi-condition Investigation fan-out
+
+**Problem**: condition-specific datamart SPs (sp_tb_datamart,
+sp_var_datamart, sp_covid_case_datamart, sp_pertussis_case_datamart,
+sp_measles_case_datamart, sp_rubella_case_datamart, sp_std_hiv_datamart,
+sp_bmird_strep_pneumo_datamart, sp_crs_case_datamart) all returned 0
+rows because the only Investigation in the merged state was condition
+'10110' (Hep A acute). Each SP filters on a different condition_cd or
+investigation_form_cd, so none matched.
+
+**Fix**: `fixtures/30_sp_coverage/multi_condition_investigations.sql` —
+authors 10 additional Investigation variants directly as nrt_investigation
+rows (no full ODSE Investigation+PHC since the postprocessing/datamart
+SPs read from nrt_investigation directly). One Investigation per
+condition family:
+- 22000010 — TB (10220, INV_FORM_RVCT)
+- 22000020 — Varicella (10030, INV_FORM_VAR)
+- 22000030 — Mumps (10180)
+- 22000040 — Pertussis (10190)
+- 22000050 — Measles (10140)
+- 22000060 — Rubella (10200)
+- 22000070 — COVID-19 (11065)
+- 22000080 — Syphilis primary (10311, STD)
+- 22000090 — HIV pediatric (10561)
+- 22000100 — Strep pneumoniae invasive (11717, BMIRD)
+
+The orchestrator's `sp_nrt_srte_condition_code_postprocessing` call also
+extended from a single condition to 17 codes covering all the families,
+so dbo.condition has 23 rows post-merge.
+
+**Result**:
+- INVESTIGATION: 4 → 14 rows (10 new variants flow through
+  sp_nrt_investigation_postprocessing in the fixture's tail-EXEC).
+- F_PAGE_CASE: 1 → 6 rows (more Investigations passed the form-cd
+  filter).
+- CONDITION: 2 → 23 rows.
+- Condition-specific datamarts: still 0 rows. **Same RTR transaction-
+  isolation bug** that affects HEPATITIS_DATAMART (TMP_F_PAGE_CASE
+  projection returns 0 rows even with valid F_PAGE_CASE rows). The
+  bug is shared across the entire condition-datamart SP family —
+  TB_DATAMART, VAR_DATAMART, COVID_CASE_DATAMART,
+  PERTUSSIS_CASE/MEASLES_CASE/RUBELLA_CASE, STD_HIV_DATAMART,
+  BMIRD_STREP_PNEUMO_DATAMART all use the same TMP_F_PAGE_CASE
+  pattern at the top of their SP body and all fail identically.
+
+The fixture-side work is done — Investigation variants and conditions
+are present, F_PAGE_CASE has matching rows, the datamart SPs just
+can't see them due to the upstream RTR bug. Filed as a single
+RTR-investigation item covering the whole condition-datamart family.
+
 ## Tables NOT addressed by Tier 3 (and why)
 
 The remaining 15 partially-covered tables are deferred:

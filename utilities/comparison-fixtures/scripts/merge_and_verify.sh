@@ -155,7 +155,26 @@ run_infrastructure_sps() {
   " >/dev/null
 
   log "  populate CONDITION via sp_nrt_srte_condition_code_postprocessing"
-  sql_q RDB_MODERN "EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = N'10110', @debug = 0;" >/dev/null
+  # Multi-condition fan-out: seed conditions for every condition-gated
+  # datamart so each can populate when fed a matching Investigation:
+  #   10110 Hepatitis A acute       (sp_hepatitis_*)
+  #   10100 Hepatitis B acute       (Hep B/C datamart family)
+  #   10101 Hepatitis C acute
+  #   10220 Tuberculosis            (sp_tb_*)
+  #   10030 Varicella               (sp_var_datamart)
+  #   10180 Mumps                   (sp_ldf_mumps)
+  #   10190 Pertussis               (sp_pertussis_case_datamart)
+  #   10140 Measles (Rubeola)       (sp_measles_case_datamart)
+  #   10200 Rubella                 (sp_rubella_case_datamart)
+  #   10370 Rubella congenital      (sp_crs_case_datamart)
+  #   11065 COVID-19                (sp_covid_case_datamart)
+  #   11066 MIS-C COVID-19
+  #   10311 Syphilis primary        (sp_std_hiv_datamart — STD)
+  #   10561 HIV pediatric           (sp_std_hiv_datamart — HIV)
+  #   10274 Chlamydia
+  #   10280 Gonorrhea
+  #   11717 Strep pneumoniae        (sp_bmird_strep_pneumo_datamart)
+  sql_q RDB_MODERN "EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = N'10110,10100,10101,10220,10030,10180,10190,10140,10200,10370,11065,11066,10311,10561,10274,10280,11717', @debug = 0;" >/dev/null
 
   local rdb_date_count cond_count
   rdb_date_count=$(sql_q RDB_MODERN "SELECT COUNT(*) FROM dbo.RDB_DATE" | tr -dc '0-9' )
@@ -415,7 +434,7 @@ apply_tier_3_fixtures() {
 #   Treatment:     20000150, 20100010, 20100020
 #   Interview:     20000140, 20090010
 
-readonly PHC_UIDS='20000100,20050010'
+readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100'
 readonly PAT_UIDS='20000000,20020010,20020020'
 readonly PRV_UIDS='20000010,20010010'
 readonly ORG_UIDS='20000020,20030010'
