@@ -36,8 +36,6 @@ triaged to identify which warrant Tier 3 fixture work:
 
 ## Tier 3 fixture work performed
 
-Only one of the 16 partially-covered tables warranted Tier 3 work:
-
 ### RDB_DATE calendar enrichment
 
 **Problem**: the recursive-CTE seed in `merge_and_verify.sh` step 2
@@ -67,6 +65,75 @@ itself — that's correct (it represents an unknown date).
 **Result**: rdb_date moves from "Partially covered (2/11)" to
 "Fully covered (11/11)" in coverage_merged.md. Verified by re-running
 the orchestrator + coverage_summary.sh.
+
+### F_PAGE_CASE unblock
+
+**Problem**: F_PAGE_CASE was empty (0 rows) after the initial datamart
+step run. The SP at line 85-95 of `012-sp_f_page_case_postprocessing-001.sql`
+filters `nrt_investigation` rows on:
+
+```sql
+WHERE INVESTIGATION_FORM_CD NOT IN (legacy hepatitis form codes)
+  AND CASE_MANAGEMENT_UID is null
+```
+
+Foundation Inv (CASE_UID 20000100) was authored with `INVESTIGATION_FORM_CD=NULL`
+and `CASE_MANAGEMENT_UID=NULL`. NULL fails `NOT IN` (UNKNOWN treated as
+false in WHERE), so foundation was filtered out. v2 Inv (20050010) has
+form_cd set but case_management_uid set too — also filtered out.
+
+**Fix**: `fixtures/30_sp_coverage/f_page_case_unblock.sql` — UPDATE
+foundation's `nrt_investigation` row to set `INVESTIGATION_FORM_CD =
+'PG_Hepatitis_A_Acute_Investigation'` (modern form, passes filter).
+This is a staging-table UPDATE consistent with the Tier 2 pattern
+established by `lab_inv` and `morb_inv` (UPDATE `nrt_observation.associated_phc_uids`).
+
+**Result**: F_PAGE_CASE: 0 → 1 row. Same single-row content as v1's
+condition fan-out; multi-condition expansion is Phase 2.
+
+### F_PAGE_CASE → HEPATITIS_DATAMART cascade — RTR investigation needed
+
+**Problem**: After F_PAGE_CASE has 1 row,
+`sp_hepatitis_datamart_postprocessing` STILL produces 0 rows in
+HEPATITIS_DATAMART. Its first internal step `#TMP_F_PAGE_CASE` reports
+`row_count=0` even though F_PAGE_CASE has a row that should match all
+the filters.
+
+The TMP_F_PAGE_CASE generation query (lines 95-101) joins:
+```sql
+SELECT F_PAGE_CASE.INVESTIGATION_KEY, T.CONDITION_KEY, F_PAGE_CASE.PATIENT_KEY
+INTO #TMP_F_PAGE_CASE
+FROM dbo.F_PAGE_CASE
+   INNER JOIN #TMP_CONDITION T ON F_PAGE_CASE.CONDITION_KEY = T.CONDITION_KEY
+   INNER JOIN dbo.D_PATIENT ON F_PAGE_CASE.PATIENT_KEY = D_PATIENT.PATIENT_KEY
+   INNER JOIN dbo.INVESTIGATION ON INVESTIGATION.INVESTIGATION_KEY = F_PAGE_CASE.INVESTIGATION_KEY
+WHERE INVESTIGATION.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','))
+  AND INVESTIGATION.RECORD_STATUS_CD = 'ACTIVE'
+```
+
+Verified manually: this exact query (with `dbo.condition` substituted
+for `#TMP_CONDITION`) returns 1 row. Inside the SP's scope it returns 0.
+`#TMP_CONDITION` has 1 row per `job_flow_log` ("Generating  #TMP_CONDITION
+START 1"). All key values match across F_PAGE_CASE / D_PATIENT /
+INVESTIGATION / condition. No obvious cause.
+
+Possible explanations (not investigated further; out of project scope):
+- Snapshot isolation or transaction-scope quirk between the SP's
+  context and the outer connection.
+- F_PAGE_CASE row was inserted in the same batch the hepatitis SP runs
+  in, and the SP doesn't see it due to read-committed snapshot.
+- Latent bug in `#TMP_CONDITION` projection (it selects 4 columns
+  including DISEASE_GRP_DESC but `condition.DISEASE_GRP_DESC` may have
+  unexpected value affecting downstream joins).
+
+**Status**: documented as another RTR investigation item. Without
+HEPATITIS_DATAMART populating, several downstream tables stay empty:
+- HEPATITIS_DATAMART (0 rows; the headline diff target for Hep A)
+- HEPATITIS_CASE (0 rows; sibling case-detail table)
+- INV_HIV (1 row but partial — unrelated; populated by std_hiv chain)
+- LDF_HEPATITIS (0 rows; cascades from HEPATITIS_DATAMART being empty)
+
+The fix path is upstream RTR debugging, not fixture work.
 
 ## Tables NOT addressed by Tier 3 (and why)
 
