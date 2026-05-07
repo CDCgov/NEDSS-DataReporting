@@ -44,7 +44,6 @@ EXCLUDED_ARTIFACT_TABLES = {
 
 # These table prefixes are excluded from query.sql and expected.json
 EXCLUDED_ARTIFACT_TABLE_PREFIXES = {
-    ("dbo", "lookup_table_"),
 }
 
 # These columns are excluded from query.sql and expected.json (no matter the table)
