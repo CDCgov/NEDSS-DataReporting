@@ -9,8 +9,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from tracing_constants import LOCAL_TRACING_DIR
-from tracing_paths import replay_metadata_cache_file_for_database
+from tracing_constants import IGNORED_OUTPUT_COLUMNS, LOCAL_TRACING_DIR
+from tracing_paths import is_excluded_artifact_table, replay_metadata_cache_file_for_database
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -27,13 +27,6 @@ LOCAL_ID_EXPRESSION_PATTERN = re.compile(
 )
 VAR_PLUS_OFFSET_PATTERN = re.compile(r"^(?P<left>@[A-Za-z0-9_]+)\s*\+\s*(?P<offset>-?\d+)$")
 OFFSET_PLUS_VAR_PATTERN = re.compile(r"^(?P<offset>-?\d+)\s*\+\s*(?P<right>@[A-Za-z0-9_]+)$")
-
-IGNORED_OUTPUT_COLUMNS = frozenset(
-    {
-        "RDB_LAST_REFRESH_TIME",
-        "LAB_RPT_LAST_UPDATE_DT",
-    }
-)
 
 
 @dataclass(frozen=True)
@@ -810,6 +803,8 @@ def build_scaffolds(
         table_name = str(change.get("table_name") or "")
         fields, strategy, comparison_eligible = stable_identity_fields(change)
         if not table_name or not fields:
+            continue
+        if is_excluded_artifact_table(schema_name, table_name):
             continue
 
         ordered_fields = tuple(sorted((str(key), value) for key, value in fields.items()))
