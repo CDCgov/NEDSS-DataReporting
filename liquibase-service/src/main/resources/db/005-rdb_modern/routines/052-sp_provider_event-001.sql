@@ -120,7 +120,6 @@ BEGIN
                                                 (elp.USE_CD = 'WP' AND elp.CD = 'PH' AND elp.STATUS_CD = 'A') -- provider workplace phone
                                                 OR
                                                 (elp.CD = 'CP') -- provider cell phone
-                                                -- todo: let service do filtering by cd and use_cd for readability/findability?
                                              )
                                         FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
                                   -- person email
