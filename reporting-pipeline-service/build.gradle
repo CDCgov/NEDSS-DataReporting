@@ -84,7 +84,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    implementation 'org.springframework.kafka:spring-kafka:3.3.1'
+    implementation 'org.springframework.kafka:spring-kafka:4.0.5'
     implementation 'org.apache.kafka:kafka-clients:3.9.2'
     implementation 'org.apache.kafka:connect-api:3.9.1'
     implementation 'io.debezium:debezium-core:2.4.1.Final'
