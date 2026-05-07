@@ -75,3 +75,15 @@ GENERIC_LOCAL_ID_PATTERN = re.compile(r"^(?P<prefix>[^0-9]+)(?P<number>\d+)(?P<s
 REPLAY_DATETIME_LITERAL_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$"
 )
+
+# These column names are always rewritten to CURRENT_TIMESTAMP when auto-datetime mode is 'current',
+# regardless of whether the DB metadata reports them as having a function-based DEFAULT.
+ALWAYS_REPLACE_COLUMN_NAMES: frozenset[str] = frozenset({
+    "last_chg_time",
+    "record_status_time",
+    "status_time",
+    "add_time",
+    "activity_to_time",
+    "rpt_to_state_time",
+    "as_of_date"
+})
