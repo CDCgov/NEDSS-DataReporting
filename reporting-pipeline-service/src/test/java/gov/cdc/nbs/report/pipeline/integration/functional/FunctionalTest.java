@@ -51,11 +51,11 @@ public abstract class FunctionalTest {
         new ComposeContainer(dockerImage, composeFiles)
             // List specific services to prevent launching wildfly container
             .withServices("nbs-mssql", "liquibase", "kafka", "debezium", "kafka-connect")
-            .waitingFor("liquibase", Wait.forLogMessage(".*Successfully applied.*\\n", 1))
             .waitingFor("debezium", Wait.forHealthcheck())
             .waitingFor("kafka-connect", Wait.forHealthcheck())
             // Pull logs from the containers for better debugging
             .withLogConsumer("nbs-mssql", consumer)
+            .withLogConsumer("liquibase", consumer)
             .withLogConsumer("kafka", consumer)
             .withLogConsumer("debezium", consumer)
             .withLogConsumer("kafka-connect", consumer)
