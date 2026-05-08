@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from compare_logical_changes import write_compare_markdown
-from tracing_capture import disable_managed_tables, enable_table_cdc, fetch_changes_for_captures, fetch_max_lsn
+from tracing_capture import disable_managed_tables, enable_table_cdc, fetch_cdc_enabled_tables, fetch_changes_for_captures, fetch_max_lsn
 from tracing_constants import LOCAL_TRACING_DIR
 from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_logical_changes import build_logical_changes, write_logical_changes
@@ -107,7 +107,12 @@ def capture_logical_window(
     print(f"[{database}] Initial CDC-enabled tables: {sum(1 for item in table_statuses if item.is_tracked_by_cdc)}")
     print(f"[{database}] Tables to attempt enabling: {len(to_enable)}")
 
+    cdc_enabled = fetch_cdc_enabled_tables(client)
     for table in to_enable:
+        if (table.schema_name, table.table_name) in cdc_enabled:
+            skipped_tables.append({"schema_name": table.schema_name, "table_name": table.table_name, "detail": "Already enabled"})
+            print(f"[{database}] Already enabled: {table.schema_name}.{table.table_name}")
+            continue
         enabled, detail = enable_table_cdc(client, table.schema_name, table.table_name)
         entry = {"schema_name": table.schema_name, "table_name": table.table_name, "detail": detail}
         if enabled:

@@ -11,6 +11,7 @@ from pathlib import Path
 from tracing_capture import (
     disable_managed_tables,
     enable_table_cdc,
+    fetch_cdc_enabled_tables,
     fetch_changes_for_captures,
     fetch_max_lsn,
 )
@@ -250,7 +251,12 @@ def enable_missing_tables(plan: TracePlan, tables_to_enable: list[object]) -> No
     if plan.managed_tables:
         print(f"{plan_prefix(plan)} Tracer-managed tables already recorded: {len(plan.managed_tables)}")
 
+    cdc_enabled = fetch_cdc_enabled_tables(plan.client)
     for table in tables_to_enable:
+        if (table.schema_name, table.table_name) in cdc_enabled:
+            plan.skipped_tables.append({"schema_name": table.schema_name, "table_name": table.table_name, "detail": "Already enabled"})
+            print(f"{plan_prefix(plan)} Already enabled: {table.schema_name}.{table.table_name}")
+            continue
         enabled, detail = enable_table_cdc(plan.client, table.schema_name, table.table_name)
         entry = {"schema_name": table.schema_name, "table_name": table.table_name, "detail": detail}
         if enabled:
