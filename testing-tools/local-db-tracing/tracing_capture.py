@@ -102,6 +102,23 @@ END CATCH;
 
 
 
+def fetch_cdc_enabled_tables(client: SqlCmdClient) -> set[tuple[str, str]]:
+    """Return the set of (schema_name, table_name) tuples that currently have CDC enabled.
+
+    Uses sys.sp_cdc_help_change_data_capture to discover which tables are
+    currently tracked, so callers can avoid trying to disable tables that are
+    already off.
+    """
+
+    sql = """
+SET NOCOUNT ON;
+EXEC sys.sp_cdc_help_change_data_capture;
+"""
+    rows = list(read_tsv(client.query(sql)))
+    # The stored procedure returns rows with source_schema (col 0) and source_table (col 1).
+    return {(row[0].strip(), row[1].strip()) for row in rows if len(row) >= 2}
+
+
 def disable_managed_tables(client: SqlCmdClient, managed_tables: list[dict[str, str]]) -> list[dict[str, str]]:
     """Disable all tracer-managed tables and keep only failed cleanup entries.
 
@@ -114,26 +131,32 @@ def disable_managed_tables(client: SqlCmdClient, managed_tables: list[dict[str, 
     """
 
     remaining_tables: list[dict[str, str]] = []
+    cdc_enabled = fetch_cdc_enabled_tables(client)
     for entry in managed_tables:
-        disabled, detail = disable_table_cdc(client, entry["schema_name"], entry["table_name"])
+        schema_name = entry["schema_name"]
+        table_name = entry["table_name"]
+        if (schema_name, table_name) not in cdc_enabled:
+            print(f"Already disabled: {schema_name}.{table_name}")
+            continue
+        disabled, detail = disable_table_cdc(client, schema_name, table_name)
         if disabled:
-            print(f"Disabled CDC: {entry['schema_name']}.{entry['table_name']}")
+            print(f"Disabled CDC: {schema_name}.{table_name}")
             continue
 
         message = detail.strip()
         lowered = message.lower()
         if "is not enabled for change data capture" in lowered or "does not have change data capture enabled" in lowered:
-            print(f"Already disabled: {entry['schema_name']}.{entry['table_name']}")
+            print(f"Already disabled: {schema_name}.{table_name}")
             continue
 
         remaining_tables.append(
             {
-                "schema_name": entry["schema_name"],
-                "table_name": entry["table_name"],
+                "schema_name": schema_name,
+                "table_name": table_name,
                 "detail": message,
             }
         )
-        print(f"Cleanup failed: {entry['schema_name']}.{entry['table_name']} | {message}")
+        print(f"Cleanup failed: {schema_name}.{table_name} | {message}")
     return remaining_tables
 
 
