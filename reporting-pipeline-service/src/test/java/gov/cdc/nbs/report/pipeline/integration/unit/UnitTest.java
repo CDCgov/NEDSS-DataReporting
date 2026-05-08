@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -16,8 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -25,12 +22,11 @@ import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+@DataJpaTest()
+@TestInstance(Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 @Tag("Unit")
-@DataJpaTest()
 @Import(DataSourceConfig.class)
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-@TestInstance(Lifecycle.PER_CLASS)
 public abstract class UnitTest {
 
   private static final Logger log = LoggerFactory.getLogger(UnitTest.class);
@@ -42,10 +38,6 @@ public abstract class UnitTest {
   @Autowired
   @Qualifier("customComposeFile")
   private File customComposeFile;
-
-  @Autowired
-  @Qualifier("adminDataSource")
-  private DataSource adminDataSource;
 
   @SuppressWarnings("resource")
   void initializeEnvironment() {

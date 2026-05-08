@@ -1,5 +1,6 @@
 package gov.cdc.nbs.report.pipeline.integration.functional;
 
+import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -8,11 +9,14 @@ import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -20,6 +24,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
+@Import(DataSourceConfig.class)
+@TestInstance(Lifecycle.PER_CLASS)
 @ActiveProfiles("test")
 @Tag("Functional")
 public abstract class FunctionalTest {
@@ -39,7 +45,7 @@ public abstract class FunctionalTest {
   void initializeEnvironment() {
     List<File> composeFiles = new ArrayList<>(Arrays.asList(base));
     if (customComposeFile != null) {
-      log.info(
+      log.warn(
           "Using custom compose override. Base: {}, Custom: {}",
           base.getPath(),
           customComposeFile.getPath());
