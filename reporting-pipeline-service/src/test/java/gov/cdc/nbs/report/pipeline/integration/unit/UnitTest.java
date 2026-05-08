@@ -64,23 +64,27 @@ public abstract class UnitTest {
 
   @BeforeAll
   void setUp() throws Exception {
-    if (!started) {
-      if (environment == null) {
-        initializeEnvironment();
+    synchronized (UnitTest.class) {
+      if (!started) {
+        if (environment == null) {
+          initializeEnvironment();
+        }
+        environment.start();
+        started = true;
       }
-      environment.start();
-      started = true;
     }
   }
 
   @AfterAll
   void tearDown() throws Exception {
-    if (started) {
-      if (environment == null) {
-        initializeEnvironment();
+    synchronized (UnitTest.class) {
+      if (started) {
+        if (environment == null) {
+          initializeEnvironment();
+        }
+        environment.stop();
+        started = false;
       }
-      environment.stop();
-      started = false;
     }
   }
 }

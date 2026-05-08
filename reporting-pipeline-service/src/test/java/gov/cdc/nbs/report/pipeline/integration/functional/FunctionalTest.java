@@ -74,25 +74,29 @@ public abstract class FunctionalTest {
 
   @BeforeAll
   void setUp() {
-    // Start up necessary containers if they are not already running.
-    // ComposeContainer does not allow container reuse natively
-    if (!started) {
-      if (environment == null) {
-        initializeEnvironment();
+    synchronized (FunctionalTest.class) {
+      // Start up necessary containers if they are not already running.
+      // ComposeContainer does not allow container reuse natively
+      if (!started) {
+        if (environment == null) {
+          initializeEnvironment();
+        }
+        environment.start();
+        started = true;
       }
-      environment.start();
-      started = true;
     }
   }
 
   @AfterAll
   void tearDown() {
-    if (started) {
-      if (environment == null) {
-        initializeEnvironment();
+    synchronized (FunctionalTest.class) {
+      if (started) {
+        if (environment == null) {
+          initializeEnvironment();
+        }
+        environment.stop();
+        started = false;
       }
-      environment.stop();
-      started = false;
     }
   }
 }
