@@ -76,7 +76,6 @@ public class DataSourceConfig {
       return parentDirFile;
     }
 
-    log.warn("Custom compose file '{}' not found in current or parent directory.", filePath);
-    return null;
+    throw new RuntimeException("Custom compose file '%s' could not be found.".formatted(filePath));
   }
 }

@@ -24,34 +24,34 @@ import org.testcontainers.utility.DockerImageName;
 @Tag("Functional")
 public abstract class FunctionalTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(FunctionalTest.class);
-  private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(logger);
-  private static boolean started = false;
-
+  private static final Logger log = LoggerFactory.getLogger(FunctionalTest.class);
+  private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(log);
   private static final File base = new File("../docker-compose.yaml");
 
+  private static boolean started = false;
   private static ComposeContainer environment;
 
   @Autowired
   @Qualifier("customComposeFile")
-  private static File customComposeFile;
+  private File customComposeFile;
 
   @SuppressWarnings("resource")
-  static void initializeEnvironment() {
-    DockerImageName dockerImage = DockerImageName.parse("docker:25.0.5");
+  void initializeEnvironment() {
     List<File> composeFiles = new ArrayList<>(Arrays.asList(base));
     if (customComposeFile != null) {
-      logger.info(
+      log.info(
           "Using custom compose override. Base: {}, Custom: {}",
           base.getPath(),
           customComposeFile.getPath());
       composeFiles.add(customComposeFile);
     }
     environment =
-        new ComposeContainer(dockerImage, composeFiles)
+        new ComposeContainer(DockerImageName.parse("docker:25.0.5"), composeFiles)
             // List specific services to prevent launching wildfly container
             .withServices("nbs-mssql", "liquibase", "kafka", "debezium", "kafka-connect")
+            .waitingFor("nbs-mssql", Wait.forHealthcheck())
             .waitingFor("debezium", Wait.forHealthcheck())
+            .waitingFor("liquibase", Wait.forLogMessage(".*Migrations complete.*\\n", 1))
             .waitingFor("kafka-connect", Wait.forHealthcheck())
             // Pull logs from the containers for better debugging
             .withLogConsumer("nbs-mssql", consumer)
@@ -64,7 +64,7 @@ public abstract class FunctionalTest {
   }
 
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     // Start up necessary containers if they are not already running.
     // ComposeContainer does not allow container reuse natively
     if (!started) {
@@ -77,7 +77,7 @@ public abstract class FunctionalTest {
   }
 
   @AfterAll
-  static void tearDown() {
+  void tearDown() {
     if (started) {
       if (environment == null) {
         initializeEnvironment();
