@@ -23,7 +23,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
@@ -55,7 +54,7 @@ public abstract class FunctionalTest {
       composeFiles.add(customComposeFile);
     }
     environment =
-        new ComposeContainer(DockerImageName.parse("docker:25.0.5"), composeFiles)
+        new ComposeContainer(composeFiles)
             // List specific services to prevent launching wildfly container
             .withServices("nbs-mssql", "liquibase", "kafka", "debezium", "kafka-connect")
             .waitingFor("nbs-mssql", Wait.forHealthcheck())

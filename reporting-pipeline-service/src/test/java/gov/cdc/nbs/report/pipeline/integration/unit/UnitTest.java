@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.utility.DockerImageName;
 
 @DataJpaTest()
 @AutoConfigureTestDatabase(replace = Replace.NONE)
@@ -53,7 +52,7 @@ public abstract class UnitTest {
       composeFiles.add(customComposeFile);
     }
     environment =
-        new ComposeContainer(DockerImageName.parse("docker:25.0.5"), composeFiles)
+        new ComposeContainer(composeFiles)
             .withServices("nbs-mssql")
             .waitingFor("nbs-mssql", Wait.forHealthcheck())
             .withServices("liquibase")
