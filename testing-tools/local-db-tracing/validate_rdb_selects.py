@@ -18,6 +18,7 @@ from tracing_sql import SqlCmdClient, require_sqlcmd
 USE_DATABASE_PATTERN = re.compile(r"^\s*USE\s+\[(?P<database>[^\]]+)\]\s*;\s*$", re.IGNORECASE)
 EXPECTED_MARKER = "-- EXPECTED_ROWS_JSON:"
 JSON_HEADER_PREFIX = "JSON_F52E2B61"
+SELECT_STATEMENT_PREFIX_PATTERN = re.compile(r"^\s*(SELECT|WITH)\b", re.IGNORECASE)
 
 MISSING = object()
 
@@ -168,6 +169,24 @@ def parse_use_database(statements: list[SqlStatement]) -> str | None:
     return None
 
 
+def statement_returns_json(sql: str) -> bool:
+    return "FOR JSON PATH" in sql.upper()
+
+
+def is_select_statement(sql: str) -> bool:
+    return SELECT_STATEMENT_PREFIX_PATTERN.match(sql) is not None
+
+
+def ensure_query_returns_json(sql: str) -> str:
+    if statement_returns_json(sql):
+        return sql
+
+    stripped = sql.rstrip()
+    if stripped.endswith(";"):
+        stripped = stripped[:-1].rstrip()
+    return f"{stripped}\nFOR JSON PATH;"
+
+
 def parse_cases(sql_text: str) -> tuple[list[SqlStatement], list[SelectCase]]:
     lines = sql_text.splitlines()
     statements = split_sql_statements(sql_text)
@@ -202,7 +221,7 @@ def parse_cases_from_expected_json(sql_text: str, expected_json_path: Path) -> t
 
     lines = sql_text.splitlines()
     statements = split_sql_statements(sql_text)
-    select_statements = [s for s in statements if "FOR JSON PATH" in s.sql.upper()]
+    select_statements = [s for s in statements if is_select_statement(s.sql)]
     cases: list[SelectCase] = []
 
     for index, statement in enumerate(select_statements):
@@ -655,7 +674,7 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
     sql_batch_parts = ["SET NOCOUNT ON;"]
     if prelude_sql.strip():
         sql_batch_parts.append(prelude_sql)
-    sql_batch_parts.append(case.query_sql)
+    sql_batch_parts.append(ensure_query_returns_json(case.query_sql))
     sql_batch = "\n\n".join(sql_batch_parts)
 
     try:

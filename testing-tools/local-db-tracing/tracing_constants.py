@@ -44,6 +44,7 @@ EXCLUDED_ARTIFACT_TABLES = {
 
 # These table prefixes are excluded from query.sql and expected.json
 EXCLUDED_ARTIFACT_TABLE_PREFIXES = {
+    "LOOKUP_TABLE_N_"
 }
 
 # These columns are excluded from query.sql and expected.json (no matter the table)
@@ -75,3 +76,23 @@ GENERIC_LOCAL_ID_PATTERN = re.compile(r"^(?P<prefix>[^0-9]+)(?P<number>\d+)(?P<s
 REPLAY_DATETIME_LITERAL_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$"
 )
+
+# These column names are always rewritten to CURRENT_TIMESTAMP when auto-datetime mode is 'current',
+# regardless of whether the DB metadata reports them as having a function-based DEFAULT.
+ALWAYS_REPLACE_COLUMN_NAMES: frozenset[str] = frozenset({
+    "last_chg_time",
+    "record_status_time",
+    "status_time",
+    "add_time",
+    "activity_to_time",
+    "rpt_to_state_time",
+    "as_of_date"
+})
+
+# Used by step-scoped replay lookup subqueries that re-find NBS_act_entity rows when prior-step UID vars are unavailable.
+# Timestamp audit fields are ignored because when recreating with CURRENT_TIMESTAMP, these would be invalid.
+NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS: frozenset[str] = frozenset({
+    "add_time",
+    "last_chg_time",
+    "record_status_time",
+})
