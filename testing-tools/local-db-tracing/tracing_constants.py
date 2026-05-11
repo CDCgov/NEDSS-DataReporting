@@ -43,6 +43,7 @@ EXCLUDED_ARTIFACT_TABLES = {
 }
 
 # These table prefixes are excluded from query.sql and expected.json
+# Each entry is (schema_name, table_name_prefix); compared case-insensitively in tracing_paths.is_excluded_artifact_table.
 EXCLUDED_ARTIFACT_TABLE_PREFIXES = {
     ("dbo", "LOOKUP_TABLE_N_"),
 }
