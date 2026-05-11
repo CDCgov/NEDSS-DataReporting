@@ -320,6 +320,23 @@ def field_name_is_warning_exception(field_name: str) -> bool:
     return upper_name == "RDB_LAST_REFRESH_TIME"
 
 
+def normalize_trailing_zero_millis(value: object) -> object:
+    """Normalize datetime strings where only trailing .000 milliseconds differ."""
+    if not isinstance(value, str):
+        return value
+
+    # Matches: 2026-05-08T14:22:20.000, with optional timezone suffix like Z or +00:00.
+    return re.sub(r"(?<=\d)\.000(?=(?:Z|[+-]\d{2}:?\d{2})?$)", "", value)
+
+
+def is_datetime_zero_millis_mismatch(expected: object, actual: object) -> bool:
+    if not (isinstance(expected, str) and isinstance(actual, str)):
+        return False
+    if expected == actual:
+        return False
+    return normalize_trailing_zero_millis(expected) == normalize_trailing_zero_millis(actual)
+
+
 def is_warning_mismatch(
     field_name: str,
     expected_has: bool,
@@ -332,6 +349,8 @@ def is_warning_mismatch(
     if expected_value == actual_value:
         return False
     if is_null_vs_empty_mismatch(expected_value, actual_value):
+        return True
+    if is_datetime_zero_millis_mismatch(expected_value, actual_value):
         return True
     if field_name_is_warning_exception(field_name):
         return True
@@ -717,8 +736,8 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
             elif status == "warning":
                 result["error"] = (
                     "JSON matches except for warning-level differences "
-                    "(null vs empty string, *_ID/*_UID/*_KEY value mismatches, "
-                    "and/or RDB_LAST_REFRESH_TIME mismatch)"
+                    "(null vs empty string, datetime values differing only by .000, "
+                    "*_ID/*_UID/*_KEY value mismatches, and/or RDB_LAST_REFRESH_TIME mismatch)"
                 )
             else:
                 result["error"] = "Expected JSON does not match actual query result"
