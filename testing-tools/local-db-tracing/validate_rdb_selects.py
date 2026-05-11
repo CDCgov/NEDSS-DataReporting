@@ -269,7 +269,7 @@ def clean_sqlcmd_output(raw_output: str) -> str:
             continue
         if set(stripped) <= {"-", " ", "\t"}:
             continue
-        cleaned_lines.append(stripped)
+        cleaned_lines.append(raw_line)
     return "".join(cleaned_lines)
 
 
