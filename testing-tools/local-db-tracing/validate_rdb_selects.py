@@ -169,6 +169,10 @@ def parse_use_database(statements: list[SqlStatement]) -> str | None:
     return None
 
 
+def is_use_database_statement(sql: str) -> bool:
+    return USE_DATABASE_PATTERN.match(sql.strip()) is not None
+
+
 def statement_returns_json(sql: str) -> bool:
     return "FOR JSON PATH" in sql.upper()
 
@@ -241,8 +245,15 @@ def parse_cases_from_expected_json(sql_text: str, expected_json_path: Path) -> t
     return statements, cases
 
 
-def build_prelude_sql(statements: list[SqlStatement], first_case: SelectCase) -> str:
-    prelude = [statement.sql for statement in statements if statement.end_line < first_case.query_start_line]
+def build_prelude_sql(
+    statements: list[SqlStatement],
+    first_case: SelectCase,
+    strip_leading_use: bool = False,
+) -> str:
+    prelude_statements = [statement.sql for statement in statements if statement.end_line < first_case.query_start_line]
+    if strip_leading_use and prelude_statements and is_use_database_statement(prelude_statements[0]):
+        prelude_statements = prelude_statements[1:]
+    prelude = prelude_statements
     return "\n\n".join(prelude)
 
 
@@ -528,8 +539,14 @@ def render_markdown_report(
     summary: dict[str, object],
     results: list[dict[str, object]],
 ) -> str:
+    database_name = str(summary.get("database") or "").strip()
+    report_title = (
+        f"# {database_name} Select Validation Results"
+        if database_name
+        else "# RDB Select Validation Results"
+    )
     lines: list[str] = [
-        "# RDB Select Validation Results",
+        report_title,
         "",
         f"Input file: {input_file}",
         f"JSON results: {output_file}",
@@ -792,7 +809,7 @@ def main() -> int:
     )
     executable = require_sqlcmd(args.sqlcmd)
     client = SqlCmdClient(executable, args.server, database, args.user, args.password)
-    prelude_sql = build_prelude_sql(statements, cases[0])
+    prelude_sql = build_prelude_sql(statements, cases[0], strip_leading_use=args.database is not None)
     use_color = colors_enabled(args.no_color)
 
     print(f"Input file: {input_file}")

@@ -53,6 +53,25 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         self.assertIn("USE [RDB_MODERN];", prelude)
         self.assertIn("DECLARE @id bigint = 1;", prelude)
 
+    def test_build_prelude_sql_strips_leading_use_when_requested(self) -> None:
+        sql_text = """
+USE [RDB];
+
+DECLARE @id bigint = 1;
+
+-- dbo.TableA | operations: insert
+SELECT [id] FROM [dbo].[TableA] WHERE [id] = @id FOR JSON PATH;
+-- EXPECTED_ROWS_JSON:
+-- [{"id":1}]
+""".strip()
+
+        statements, cases = validate_rdb_selects.parse_cases(sql_text)
+
+        prelude = validate_rdb_selects.build_prelude_sql(statements, cases[0], strip_leading_use=True)
+
+        self.assertNotIn("USE [RDB];", prelude)
+        self.assertIn("DECLARE @id bigint = 1;", prelude)
+
     def test_compare_case_handles_sql_error_without_raising(self) -> None:
         case = validate_rdb_selects.SelectCase(
             case_index=1,
@@ -164,6 +183,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = 2;
 
     def test_markdown_report_contains_error_style_and_spans(self) -> None:
         summary = {
+            "database": "RDB_Modern",
             "case_count": 2,
             "pass_count": 1,
             "warning_count": 0,
@@ -198,6 +218,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = 2;
         )
 
         self.assertIn("<style>", report)
+        self.assertIn("# RDB_Modern Select Validation Results", report)
         self.assertIn('.error {', report)
         self.assertIn('.warning {', report)
         self.assertIn('| <span class="ok">Passes</span> | 1 |', report)
