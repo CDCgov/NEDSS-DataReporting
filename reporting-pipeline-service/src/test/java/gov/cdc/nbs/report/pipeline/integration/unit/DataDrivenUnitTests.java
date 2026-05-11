@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 class DataDrivenUnitTests extends UnitTest {
@@ -79,6 +81,7 @@ class DataDrivenUnitTests extends UnitTest {
   @ParameterizedTest
   @Execution(ExecutionMode.CONCURRENT)
   @MethodSource("unitTestDirectoryProvider")
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   void testRunner(Path testDirectory) throws IOException {
     DataSourceTransactionManager transactionManager =
         new DataSourceTransactionManager(adminDataSource);

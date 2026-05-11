@@ -18,6 +18,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -36,7 +37,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
-      - name: Build and analyze
+      - name: Run stored procedure tests
         working-directory: ./
         run: |
           ./gradlew clean reporting-pipeline-service:test-unit --continue

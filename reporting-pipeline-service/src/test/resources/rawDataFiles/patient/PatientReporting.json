@@ -120,6 +120,11 @@
       {
         "type": "string",
         "optional": true,
+        "field": "marital_status_cd"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "primary_occupation"
       },
       {
@@ -473,6 +478,7 @@
     "last_chg_time": null,
     "local_id": null,
     "marital_status": null,
+    "marital_status_cd": null,
     "primary_occupation": null,
     "patient_mpr_uid": null,
     "preferred_gender": null,

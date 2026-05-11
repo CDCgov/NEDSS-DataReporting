@@ -257,41 +257,39 @@ BEGIN TRY
         cast(pat.PATIENT_NAME_SUFFIX as varchar(20)) AS 'PATIENT_NAME_SUFFIX',
         pat.PATIENT_DOB AS 'PATIENT_DOB',
         cast(pat.PATIENT_AGE_REPORTED as varchar(10)) AS 'PATIENT_AGE_REPORTED',
-        pat.PATIENT_AGE_REPORTED_UNIT AS 'PATIENT_AGE_RPTD_UNIT',
+        nrtPat.AGE_REPORTED_UNIT_CD AS 'PATIENT_AGE_RPTD_UNIT',
         cast(pat.PATIENT_BIRTH_COUNTRY as varchar(20)) AS 'PATIENT_BIRTH_COUNTRY',
         cast(pat.PATIENT_CURRENT_SEX as varchar(1)) AS 'PATIENT_CURRENT_SEX',
-        cast(pat.PATIENT_DECEASED_INDICATOR as varchar(20)) AS 'PATIENT_DECEASED_IND',
+        cast(nrtPat.DECEASED_IND_CD as varchar(20)) AS 'PATIENT_DECEASED_IND',
         pat.PATIENT_DECEASED_DATE AS 'PATIENT_DECEASED_DT',
-        pat.PATIENT_MARITAL_STATUS AS 'PATIENT_MARITAL_STS',
+        nrtPat.MARITAL_STATUS_CD AS 'PATIENT_MARITAL_STS',
         pat.PATIENT_STREET_ADDRESS_1 AS 'PATIENT_STREET_ADDR_1',
         pat.PATIENT_STREET_ADDRESS_2 AS 'PATIENT_STREET_ADDR_2',
         pat.PATIENT_CITY AS 'PATIENT_CITY',
-        cast(pat.PATIENT_STATE as varchar(20)) AS 'PATIENT_STATE',
+        cast(nrtPat.STATE_CODE as varchar(20)) AS 'PATIENT_STATE',
         cast(pat.PATIENT_ZIP as varchar(20)) AS 'PATIENT_ZIP',
-        pat.PATIENT_COUNTY AS 'PATIENT_COUNTY',
-        cast(pat.PATIENT_COUNTRY as varchar(20)) AS 'PATIENT_COUNTRY',
+        cast(nrtPat.COUNTY_CODE as varchar(20)) AS 'PATIENT_COUNTY',
+        cast(nrtPat.COUNTRY_CODE as varchar(20)) AS 'PATIENT_COUNTRY',
         cast(pat.PATIENT_PHONE_HOME as varchar(20)) AS 'PATIENT_TEL_HOME',
         cast(pat.PATIENT_PHONE_WORK as varchar(20)) AS 'PATIENT_PHONE_WORK',
         cast(pat.PATIENT_PHONE_EXT_WORK as varchar(20)) AS 'PATIENT_PHONE_EXT_WORK',
         cast(pat.PATIENT_PHONE_CELL as varchar(20)) AS 'PATIENT_TEL_CELL',
         pat.PATIENT_EMAIL AS 'PATIENT_EMAIL',
-        cast(pat.PATIENT_ETHNICITY as varchar(20)) AS 'PATIENT_ETHNICITY',
+        cast(nrtPat.ETHNIC_GROUP_IND as varchar(20)) AS 'PATIENT_ETHNICITY',
         pat.PATIENT_RACE_CALCULATED AS 'PATIENT_RACE_CALC'
     INTO
         #COVID_PATIENT_DATA
     FROM
         dbo.NRT_INVESTIGATION inv
-    inner join
-        #PHC_LIST phc_list on inv.public_health_case_uid = phc_list.public_health_case_uid
-    left outer join
-    (
-        select dPat.*
-        from dbo.D_PATIENT dPat WITH(NOLOCK)
-    	inner join  dbo.NRT_PATIENT nrtPat WITH(NOLOCK)
-    		on nrtPat.patient_uid = dPat.patient_uid
-    		and nrtPat.status_name_cd  = 'A' and nrtPat.nm_use_cd = 'L'
-    ) pat
-    ON inv.patient_id = pat.patient_uid ;
+    INNER JOIN
+        #PHC_LIST phc_list ON inv.public_health_case_uid = phc_list.public_health_case_uid
+    LEFT OUTER JOIN
+        dbo.D_PATIENT pat WITH(NOLOCK) ON inv.patient_id = pat.patient_uid
+    LEFT OUTER JOIN
+        dbo.NRT_PATIENT nrtPat WITH(NOLOCK)
+            ON nrtPat.patient_uid = pat.patient_uid
+            AND nrtPat.status_name_cd = 'A'
+            AND nrtPat.nm_use_cd = 'L';
 
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -379,7 +377,7 @@ BEGIN TRY
     );
 
     INSERT INTO @Table
-    SELECT [user_defined_column_nm]
+    SELECT DISTINCT [user_defined_column_nm]
     FROM
         dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
     inner join
@@ -444,7 +442,7 @@ BEGIN TRY
     SELECT @columns+=N', rdbMeta.' + QUOTENAME(LTRIM(RTRIM([user_defined_column_nm])))
     FROM
     (
-        SELECT [user_defined_column_nm]
+        SELECT DISTINCT [user_defined_column_nm]
         FROM
             dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
         inner join
@@ -463,7 +461,7 @@ BEGIN TRY
 
     SET @sql = N'SELECT [ACT_UID] as ACT_DISCRETE_UID , ' + STUFF(@columns, 1, 2, '')
             + ' into '+ @tmp_COVID_CASE_DISCRETE_DATA+ ' FROM (
-                    SELECT [ACT_UID],
+                    SELECT DISTINCT [ACT_UID],
                         replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), answer_txt ), CHAR(13) + CHAR(10), '' '') as answer_txt ,
                         [user_defined_column_nm]
                         from
@@ -579,7 +577,7 @@ BEGIN TRY
     );
 
     INSERT INTO @Table2
-    SELECT [user_defined_column_nm]
+    SELECT DISTINCT [user_defined_column_nm]
     FROM
         dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta
     inner join
@@ -641,7 +639,7 @@ BEGIN TRY
     SELECT @columns+=N', rdbMeta.' + QUOTENAME(LTRIM(RTRIM([user_defined_column_nm])))
     FROM
     (
-        SELECT [user_defined_column_nm]
+        SELECT DISTINCT [user_defined_column_nm]
         FROM
             dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta
         inner join
@@ -669,7 +667,7 @@ BEGIN TRY
                 #COVID_CASE_MULTI_ANS_MULTI_DATA multiAnsData
             inner join
             (
-                SELECT NBS_QUESTION_UID, user_defined_column_nm
+                SELECT DISTINCT NBS_QUESTION_UID, user_defined_column_nm
                 FROM
                     dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta with (nolock)
                 inner join
@@ -713,7 +711,7 @@ BEGIN TRY
     );
 
     INSERT INTO @Table3
-    SELECT [user_defined_column_nm] + '_1' AS user_defined_column_nm
+    SELECT DISTINCT [user_defined_column_nm] + '_1' AS user_defined_column_nm
     FROM
         dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
     inner join
@@ -773,7 +771,7 @@ BEGIN TRY
     SELECT @columns1+=N', rdbMeta.' + QUOTENAME(LTRIM(RTRIM([user_defined_column_nm])))
     FROM
     (
-        SELECT [user_defined_column_nm] + '_1' AS user_defined_column_nm
+        SELECT DISTINCT [user_defined_column_nm] + '_1' AS user_defined_column_nm
         FROM
             dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
         inner join
@@ -792,7 +790,7 @@ BEGIN TRY
 
     SET @sql = N'SELECT [ACT_UID] as ACT_RPT_1_UID , ' + STUFF(@columns1, 1, 2, '')
             + ' into '+@tmp_COVID_CASE_RPT_DATA_1+ ' FROM (
-                SELECT [ACT_UID], replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), CAST(answer_txt AS VARCHAR(2000) )), CHAR(13) + CHAR(10), '' '') as answer_txt , user_defined_column_nm' + '+''_1'' as user_defined_column_nm
+                SELECT DISTINCT [ACT_UID], replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), CAST(answer_txt AS VARCHAR(2000) )), CHAR(13) + CHAR(10), '' '') as answer_txt , user_defined_column_nm' + '+''_1'' as user_defined_column_nm
                 FROM
                     dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta with (nolock)
                 inner join
@@ -842,7 +840,7 @@ BEGIN TRY
     );
 
     INSERT INTO @Table4
-    SELECT [user_defined_column_nm] + '_2' AS user_defined_column_nm
+    SELECT DISTINCT [user_defined_column_nm] + '_2' AS user_defined_column_nm
     FROM
         dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
     inner join
@@ -902,7 +900,7 @@ BEGIN TRY
     SELECT @columns1+=N', rdbMeta.' + QUOTENAME(LTRIM(RTRIM([user_defined_column_nm])))
     FROM
     (
-        SELECT [user_defined_column_nm] + '_2' AS user_defined_column_nm
+        SELECT DISTINCT [user_defined_column_nm] + '_2' AS user_defined_column_nm
         FROM
             dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
         inner join
@@ -921,7 +919,7 @@ BEGIN TRY
 
     SET @sql = N'SELECT [ACT_UID] as ACT_RPT_2_UID , ' + STUFF(@columns1, 1, 2, '')
     	+ ' into '+@tmp_COVID_CASE_RPT_DATA_2 + ' FROM (
-            SELECT [ACT_UID], replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), CAST(answer_txt AS VARCHAR(2000) )), CHAR(13) + CHAR(10), '' '') as answer_txt , user_defined_column_nm' + '+''_2'' as user_defined_column_nm
+            SELECT DISTINCT [ACT_UID], replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), CAST(answer_txt AS VARCHAR(2000) )), CHAR(13) + CHAR(10), '' '') as answer_txt , user_defined_column_nm' + '+''_2'' as user_defined_column_nm
             from
                 dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta with (nolock)
             inner join
@@ -973,8 +971,8 @@ BEGIN TRY
     );
 
     insert into @Table5
-    select [user_defined_column_nm] + '_3' AS user_defined_column_nm
-    from
+    SELECT DISTINCT [user_defined_column_nm] + '_3' AS user_defined_column_nm
+    FROM
         dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
     inner join
         dbo.NRT_ODSE_NBS_UI_METADATA uiMeta WITH(NOLOCK)
@@ -1031,7 +1029,7 @@ BEGIN TRY
     SELECT @columns1+=N', rdbMeta.' + QUOTENAME(LTRIM(RTRIM([user_defined_column_nm])))
     FROM
     (
-        SELECT [user_defined_column_nm] + '_3' AS user_defined_column_nm
+        SELECT DISTINCT [user_defined_column_nm] + '_3' AS user_defined_column_nm
         FROM
             dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta WITH(NOLOCK)
         inner join
@@ -1050,7 +1048,7 @@ BEGIN TRY
 
     SET @sql = N'SELECT [ACT_UID] as ACT_RPT_3_UID , ' + STUFF(@columns1, 1, 2, '')
             + ' into '+@tmp_COVID_CASE_RPT_DATA_3 + ' FROM (
-                SELECT [ACT_UID], replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), CAST(answer_txt AS VARCHAR(2000) )), CHAR(13) + CHAR(10), '' '') as answer_txt , user_defined_column_nm' + '+''_3'' as user_defined_column_nm
+                SELECT DISTINCT [ACT_UID], replace(ISNULL(CAST(code_short_desc_txt AS VARCHAR(2000)), CAST(answer_txt AS VARCHAR(2000) )), CHAR(13) + CHAR(10), '' '') as answer_txt , user_defined_column_nm' + '+''_3'' as user_defined_column_nm
                 from
                     dbo.NRT_ODSE_NBS_RDB_METADATA rdbMeta with (nolock)
                 inner join
@@ -1112,125 +1110,125 @@ BEGIN TRY
 					THEN 'MAX' 
 					ELSE TRIM(STR(CHARACTER_MAXIMUM_LENGTH )) 
 				END + '))'
-			ELSE c.COLUMN_NAME
+			ELSE c.column_name
 		END AS casted_column
 	INTO #CASTED_COLUMNS		
-	FROM rdb.INFORMATION_SCHEMA.COLUMNS c WITH(NOLOCK)
+	FROM INFORMATION_SCHEMA.COLUMNS c WITH(NOLOCK)
 	WHERE c.TABLE_NAME = 'COVID_CASE_DATAMART' AND TABLE_SCHEMA = 'dbo'
 
     DECLARE @insert_query NVARCHAR(MAX);
     SET @insert_query =
     (	
     SELECT 'INSERT INTO  dbo.COVID_CASE_DATAMART( ' +
-    STUFF((
+    ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS 		
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt		
 	    WHERE table_name LIKE '#COVID_CASE_CORE_DATA%' 
-        ORDER BY column_name
+        ORDER BY tt.column_name
 	    FOR XML PATH('')
-    ), 1, 1, '') + ',' +
-    STUFF((
+    ), 1, 1, ''), '') + ',' +
+    ISNULL(STUFF((
     	SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name LIKE '#COVID_PATIENT_DATA%' AND column_name NOT IN('PAT_CASE_UID') 
-        ORDER BY column_name 
+        ORDER BY tt.column_name 
 		FOR XML PATH('')
-	), 1, 1, '') + ',' +
-	STUFF((
+	), 1, 1, ''), '') + ',' +
+	ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name LIKE '#COVID_ENTITIES_DATA%' AND column_name NOT IN('ENTITY_CASE_UID') 
-        ORDER BY column_name 
+        ORDER BY tt.column_name 
 		FOR XML PATH('')
-	), 1, 1, '') + ',' +
-	STUFF((
+	), 1, 1, ''), '') + ',' +
+	ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name = @tmp_COVID_CASE_DISCRETE_DATA AND column_name NOT IN('ACT_DISCRETE_UID') 
-        ORDER BY column_name FOR XML PATH('')
-	), 1, 1, '') + ', ' +
-	STUFF((
+        ORDER BY tt.column_name FOR XML PATH('')
+	), 1, 1, ''), '') + ', ' +
+	ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name = @tmp_COVID_CASE_MULTI_DATA AND column_name NOT IN('ACT_MULTI_UID') 
-        ORDER BY column_name FOR XML PATH('')
-	    ), 1, 1, '') + ', ' +
-	STUFF((
+        ORDER BY tt.column_name FOR XML PATH('')
+	    ), 1, 1, ''), '') + ', ' +
+	ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_1 AND column_name NOT IN('ACT_RPT_1_UID') 
-        ORDER BY column_name FOR XML PATH('')
-	    ), 1, 1, '') + ',' +
-	STUFF((
+        ORDER BY tt.column_name FOR XML PATH('')
+	    ), 1, 1, ''), '') + ',' +
+	ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_2 AND column_name NOT IN('ACT_RPT_2_UID') 
-        ORDER BY column_name FOR XML PATH('')
-	    ), 1, 1, '') + ',' +
-	STUFF((
+        ORDER BY tt.column_name FOR XML PATH('')
+	    ), 1, 1, ''), '') + ',' +
+	ISNULL(STUFF((
 	    SELECT ', [' + column_name + ']'
-	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS
+	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	    WHERE table_name = @tmp_COVID_CASE_RPT_DATA_3 AND column_name NOT IN('ACT_RPT_3_UID') 
-        ORDER BY column_name FOR XML PATH('')
-	    ), 1, 1, '')
+        ORDER BY tt.column_name FOR XML PATH('')
+	    ), 1, 1, ''), '')
 + ' ) select distinct ' +
-	STUFF((
+	ISNULL(STUFF((
     	SELECT ', ' + cc.casted_column 
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
 	    WHERE tt.table_name LIKE '#COVID_CASE_CORE_DATA%'
 		ORDER BY tt.column_name
 	    FOR XML PATH('')
-    ), 1, 1, '') + ',' +
-    STUFF((
+    ), 1, 1, ''), '') + ',' +
+    ISNULL(STUFF((
 	    SELECT ', ' + cc.casted_column 
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
 	    WHERE tt.table_name LIKE '#COVID_PATIENT_DATA%' AND tt.column_name NOT IN('PAT_CASE_UID') 
         ORDER BY tt.column_name FOR XML PATH('')
-	), 1, 1, '') + ',' +
-	STUFF((
+	), 1, 1, ''), '') + ',' +
+	ISNULL(STUFF((
 	    SELECT ', ' + cc.casted_column
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
 	    WHERE tt.table_name LIKE '#COVID_ENTITIES_DATA%' AND tt.column_name NOT IN('ENTITY_CASE_UID') 
         ORDER BY tt.column_name FOR XML PATH('')
-	), 1, 1, '') + ',' +
-	STUFF((
+	), 1, 1, ''), '') + ',' +
+	ISNULL(STUFF((
 	    SELECT ', ' + cc.casted_column
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
 	    WHERE tt.table_name = @tmp_COVID_CASE_DISCRETE_DATA AND tt.column_name NOT IN('ACT_DISCRETE_UID') 
         ORDER BY tt.column_name FOR XML PATH('')
-	), 1, 1, '') + ', ' +
-	STUFF((
+	), 1, 1, ''), '') + ', ' +
+	ISNULL(STUFF((
 	    SELECT ', ' + cc.casted_column
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
 	    WHERE tt.table_name = @tmp_COVID_CASE_MULTI_DATA AND tt.column_name NOT IN('ACT_MULTI_UID') 
         ORDER BY tt.column_name FOR XML PATH('')
-    ), 1, 1, '') + ', ' +
-    STUFF((
+    ), 1, 1, ''), '') + ', ' +
+    ISNULL(STUFF((
 	    SELECT ', ' + cc.casted_column
 	    FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 		INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
 	    WHERE tt.table_name = @tmp_COVID_CASE_RPT_DATA_1 AND tt.column_name NOT IN('ACT_RPT_1_UID') 
         ORDER BY tt.column_name FOR XML PATH('')
-    ), 1, 1, '') + ',' +
-    STUFF((
+    ), 1, 1, ''), '') + ',' +
+    ISNULL(STUFF((
     SELECT ', ' + cc.casted_column
     FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
     WHERE tt.table_name = @tmp_COVID_CASE_RPT_DATA_2 AND tt.column_name NOT IN('ACT_RPT_2_UID') 
     ORDER BY tt.column_name FOR XML PATH('')
-    ), 1, 1, '') + ',' +
-    STUFF((
+    ), 1, 1, ''), '') + ',' +
+    ISNULL(STUFF((
     SELECT ', ' + cc.casted_column
     FROM tempdb.INFORMATION_SCHEMA.COLUMNS tt
 	INNER JOIN #CASTED_COLUMNS cc on cc.COLUMN_NAME = tt.COLUMN_NAME
     WHERE tt.table_name = @tmp_COVID_CASE_RPT_DATA_3 AND tt.column_name NOT IN('ACT_RPT_3_UID') 
     ORDER BY tt.column_name FOR XML PATH('')
-    ), 1, 1, '') + '
+    ), 1, 1, ''), '') + '
     FROM #COVID_CASE_CORE_DATA coreData
     INNER JOIN #COVID_PATIENT_DATA patData ON coreData.public_health_case_uid = patData.PAT_CASE_UID
     LEFT OUTER JOIN #COVID_ENTITIES_DATA entData ON coreData.public_health_case_uid = entData.ENTITY_CASE_UID
@@ -1242,11 +1240,11 @@ BEGIN TRY
     );
 
     if @debug='true'
-	    select @insert_query as insert_query;
+            select @insert_query as insert_query;
+
     EXEC sp_executesql @insert_query;
 
     SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-
     COMMIT TRANSACTION; 
     
     INSERT INTO [DBO].[JOB_FLOW_LOG]

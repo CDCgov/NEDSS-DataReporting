@@ -115,6 +115,11 @@ dependencies {
     testImplementation 'org.awaitility:awaitility:4.3.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    testImplementation 'org.liquibase:liquibase-core:4.27.0'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 dependencyManagement {
