@@ -88,3 +88,11 @@ ALWAYS_REPLACE_COLUMN_NAMES: frozenset[str] = frozenset({
     "rpt_to_state_time",
     "as_of_date"
 })
+
+# Used by step-scoped replay lookup subqueries that re-find NBS_act_entity rows when prior-step UID vars are unavailable.
+# Timestamp audit fields are ignored because when recreating with CURRENT_TIMESTAMP, these would be invalid.
+NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS: frozenset[str] = frozenset({
+    "add_time",
+    "last_chg_time",
+    "record_status_time",
+})
