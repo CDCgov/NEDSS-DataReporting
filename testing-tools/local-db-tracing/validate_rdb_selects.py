@@ -16,6 +16,10 @@ from tracing_sql import SqlCmdClient, require_sqlcmd
 
 
 USE_DATABASE_PATTERN = re.compile(r"^\s*USE\s+\[(?P<database>[^\]]+)\]\s*;\s*$", re.IGNORECASE)
+THREE_PART_OBJECT_PATTERN = re.compile(
+    r"\[(?P<database>[^\]]+)\]\s*\.\s*\[[^\]]+\]\s*\.\s*\[[^\]]+\]",
+    re.IGNORECASE,
+)
 EXPECTED_MARKER = "-- EXPECTED_ROWS_JSON:"
 JSON_HEADER_PREFIX = "JSON_F52E2B61"
 SELECT_STATEMENT_PREFIX_PATTERN = re.compile(r"^\s*(SELECT|WITH)\b", re.IGNORECASE)
@@ -169,6 +173,13 @@ def parse_use_database(statements: list[SqlStatement]) -> str | None:
     return None
 
 
+def parse_database_from_three_part_names(sql_text: str) -> str | None:
+    match = THREE_PART_OBJECT_PATTERN.search(sql_text)
+    if not match:
+        return None
+    return match.group("database")
+
+
 def is_use_database_statement(sql: str) -> bool:
     return USE_DATABASE_PATTERN.match(sql.strip()) is not None
 
@@ -189,6 +200,32 @@ def ensure_query_returns_json(sql: str) -> str:
     if stripped.endswith(";"):
         stripped = stripped[:-1].rstrip()
     return f"{stripped}\nFOR JSON PATH;"
+
+
+def rewrite_query_database(sql: str, source_database: str | None, target_database: str | None) -> str:
+    if not source_database or not target_database:
+        return sql
+    if source_database.strip().lower() == target_database.strip().lower():
+        return sql
+
+    source_escaped = re.escape(source_database.strip())
+    target_bracketed = f"[{target_database.strip()}]."
+
+    # Rewrite bracketed three-part prefixes: [SOURCE].[schema].[table] -> [TARGET].[schema].[table]
+    rewritten = re.sub(
+        rf"\[(?i:{source_escaped})\]\s*\.",
+        target_bracketed,
+        sql,
+    )
+
+    # Rewrite unbracketed three-part prefixes: SOURCE.[schema].[table] -> [TARGET].[schema].[table]
+    rewritten = re.sub(
+        rf"\b(?i:{source_escaped})\b\s*\.",
+        target_bracketed,
+        rewritten,
+    )
+
+    return rewritten
 
 
 def parse_cases(sql_text: str) -> tuple[list[SqlStatement], list[SelectCase]]:
@@ -497,7 +534,18 @@ def comparison_cell(value: object, differs: bool, is_warning: bool = False) -> s
     return text
 
 
-def render_field_comparison_table(expected: object, actual: object) -> list[str]:
+def format_column_label(base_label: str, database_name: str | None) -> str:
+    if database_name and database_name.strip():
+        return f"{base_label} ({database_name.strip()})"
+    return base_label
+
+
+def render_field_comparison_table(
+    expected: object,
+    actual: object,
+    expected_database_name: str | None = None,
+    returned_database_name: str | None = None,
+) -> list[str]:
     # Normalize arrays to ensure consistent ordering for comparison
     expected = normalize_json_arrays(expected)
     actual = normalize_json_arrays(actual)
@@ -506,8 +554,11 @@ def render_field_comparison_table(expected: object, actual: object) -> list[str]
     actual_fields = flatten_json_fields(actual)
     field_names = sorted(set(expected_fields.keys()) | set(actual_fields.keys()), key=numeric_sort_key)
 
+    expected_header = markdown_table_cell(format_column_label("Expected", expected_database_name))
+    returned_header = markdown_table_cell(format_column_label("Returned", returned_database_name))
+
     lines = [
-        "| Field | Expected | Returned |",
+        f"| Field | {expected_header} | {returned_header} |",
         "| --- | --- | --- |",
     ]
 
@@ -540,6 +591,8 @@ def render_markdown_report(
     results: list[dict[str, object]],
 ) -> str:
     database_name = str(summary.get("database") or "").strip()
+    expected_database_name = str(summary.get("expected_database") or "").strip() or None
+    returned_database_name = str(summary.get("returned_database") or database_name).strip() or None
     report_title = (
         f"# {database_name} Select Validation Results"
         if database_name
@@ -602,9 +655,18 @@ def render_markdown_report(
                 lines.append(f"Error: <span class=\"{error_span_class}\">{html.escape(str(result['error']))}</span>")
                 lines.append("")
             if result.get("actual") is not None:
-                lines.extend(render_field_comparison_table(result.get("expected"), result.get("actual")))
+                lines.extend(
+                    render_field_comparison_table(
+                        result.get("expected"),
+                        result.get("actual"),
+                        expected_database_name=expected_database_name,
+                        returned_database_name=returned_database_name,
+                    )
+                )
             else:
-                lines.append("| Field | Expected | Returned |")
+                expected_header = markdown_table_cell(format_column_label("Expected", expected_database_name))
+                returned_header = markdown_table_cell(format_column_label("Returned", returned_database_name))
+                lines.append(f"| Field | {expected_header} | {returned_header} |")
                 lines.append("| --- | --- | --- |")
                 lines.append("| query_error | <span class=\"error\">(query did not return JSON)</span> | <span class=\"error\">missing</span> |")
             lines.append("")
@@ -706,11 +768,18 @@ def render_json_with_mask(value: object, mask: object, use_color: bool, diff_col
     return json.dumps(value, sort_keys=True)
 
 
-def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> dict[str, object]:
+def compare_case(
+    client: SqlCmdClient,
+    prelude_sql: str,
+    case: SelectCase,
+    source_database: str | None = None,
+    target_database: str | None = None,
+) -> dict[str, object]:
     sql_batch_parts = ["SET NOCOUNT ON;"]
     if prelude_sql.strip():
         sql_batch_parts.append(prelude_sql)
-    sql_batch_parts.append(ensure_query_returns_json(case.query_sql))
+    query_sql = rewrite_query_database(case.query_sql, source_database, target_database)
+    sql_batch_parts.append(ensure_query_returns_json(query_sql))
     sql_batch = "\n\n".join(sql_batch_parts)
 
     try:
@@ -797,6 +866,7 @@ def main() -> int:
     if not cases:
         raise SystemExit("No SELECT cases found in the SQL file.")
     inferred_database = parse_use_database(statements)
+    inferred_expected_database = inferred_database or parse_database_from_three_part_names(sql_text)
     database = args.database or inferred_database
     if not database:
         raise SystemExit("Could not determine database from SQL file. Pass --database explicitly.")
@@ -819,7 +889,13 @@ def main() -> int:
 
     case_results: list[dict[str, object]] = []
     for case in cases:
-        result = compare_case(client, prelude_sql, case)
+        result = compare_case(
+            client,
+            prelude_sql,
+            case,
+            source_database=inferred_expected_database,
+            target_database=database,
+        )
         case_results.append(result)
         status = str(result["status"]).upper()
         if status == "PASS":
@@ -846,6 +922,8 @@ def main() -> int:
         "input_file": str(input_file),
         "server": args.server,
         "database": database,
+        "expected_database": inferred_expected_database,
+        "returned_database": database,
         "case_count": len(case_results),
         "pass_count": pass_count,
         "warning_count": warning_count,
