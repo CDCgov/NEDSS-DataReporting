@@ -40,12 +40,27 @@ EXCLUDED_ARTIFACT_TABLES = {
     ("dbo", "activity_log_master"),
     ("dbo", "job_flow_log"),
     ("dbo", "job_batch_log"),
+
+    # See https://cdc-nbs.atlassian.net/wiki/spaces/NE/pages/2136506371/RTR+reporting+differences#RDB-Tables-Not-Considered-for-Comparison
+    ("dbo", "ETL_DQ_LOG"),
+    ("dbo", "ETL_HEALTH_CHECK_PAT_DATA"),
+    ("dbo", "ETL_MISSING_PATIENT"),
+    ("dbo", "ETL_MISSING_RECORD"),
+    ("dbo", "ETL_PROCESS"),
+    ("dbo", "EVENT_METRIC"),
+    ("dbo", "EVENT_METRIC_INC"),
 }
 
 # These table prefixes are excluded from query.sql and expected.json
 # Each entry is (schema_name, table_name_prefix); compared case-insensitively in tracing_paths.is_excluded_artifact_table.
 EXCLUDED_ARTIFACT_TABLE_PREFIXES = {
-    ("dbo", "LOOKUP_TABLE_N_"),
+    # ("dbo", "LOOKUP_TABLE_N_"),
+    # See https://cdc-nbs.atlassian.net/wiki/spaces/NE/pages/2136506371/RTR+reporting+differences#RDB-Tables-Not-Considered-for-Comparison
+    ("dbo", "L_"),
+    ("dbo", "LOOKUP_"),
+    ("dbo", "S_"),
+    ("dbo", "SAS_"),
+    ("dbo", "TEMP_"),
 }
 
 # These columns are excluded from query.sql and expected.json (no matter the table)
