@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 from tracing_env import load_database_connection_defaults, resolve_server_argument
-from tracing_constants import ALWAYS_REPLACE_COLUMN_NAMES
+from tracing_constants import ALWAYS_REPLACE_COLUMN_NAMES, DO_NOT_REPLACE_COLUMNS_ANY_TABLE, DO_NOT_REPLACE_COLUMNS_BY_TABLE
 from tracing_metadata import fetch_auto_datetime_columns, fetch_column_sql_types
 from tracing_sql import SqlCmdClient, require_sqlcmd
 
@@ -181,6 +181,20 @@ def should_replace_literal(value_token: str) -> bool:
     return bool(HARDCODED_DATE_LITERAL_PATTERN.match(value_token.strip()))
 
 
+def should_exclude_from_replacement(schema_name: str, table_name: str, column_name: str) -> bool:
+    """Check if a column should be excluded from datetime replacement.
+    
+    Returns True if the column matches either a table-specific or table-agnostic exclusion.
+    """
+    # Check table-specific exclusion
+    if (schema_name, table_name, column_name) in DO_NOT_REPLACE_COLUMNS_BY_TABLE:
+        return True
+    # Check generic column name exclusion (applies to all tables)
+    if column_name in DO_NOT_REPLACE_COLUMNS_ANY_TABLE:
+        return True
+    return False
+
+
 def rewrite_insert_statement(
     statement: str,
     eligible_columns: set[tuple[str, str, str]],
@@ -203,7 +217,7 @@ def rewrite_insert_statement(
         column_name = normalize_column_name(column_token)
         column_key = (schema_name, table_name, column_name)
         rewritten_value = value_token
-        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and should_replace_literal(value_token):
+        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
             sql_type = column_types.get(column_key, "datetime")
             rewritten_value = replacement_expression(sql_type)
             replacements += 1
@@ -244,7 +258,7 @@ def rewrite_update_statement(
         value_token = assignment_match.group("value")
         column_key = (schema_name, table_name, column_name)
         rewritten_assignment = assignment
-        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and should_replace_literal(value_token):
+        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
             sql_type = column_types.get(column_key, "datetime")
             rewritten_assignment = f"[{column_name}] = {replacement_expression(sql_type)}"
             replacements += 1

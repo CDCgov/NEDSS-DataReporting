@@ -90,6 +90,19 @@ ALWAYS_REPLACE_COLUMN_NAMES: frozenset[str] = frozenset({
     "as_of_date"
 })
 
+# Column names that should NOT be rewritten to CURRENT_TIMESTAMP, even if they have
+# function-based DEFAULT constraints. They represent business data rather than audit timestamps.
+# Applies to all tables.
+DO_NOT_REPLACE_COLUMNS_ANY_TABLE: frozenset[str] = frozenset({
+    "LAB_TEST_DT",  # exclude from all tables
+})
+
+# Table-specific column exclusions (schema, table, column) that should NOT be rewritten.
+# Use when a column name is business data in one table but an audit field in another.
+DO_NOT_REPLACE_COLUMNS_BY_TABLE: frozenset[tuple[str, str, str]] = frozenset({
+    # ("dbo", "LAB100", "LAB_TEST_DT"),
+})
+
 # Used by step-scoped replay lookup subqueries that re-find NBS_act_entity rows when prior-step UID vars are unavailable.
 # Timestamp audit fields are ignored because when recreating with CURRENT_TIMESTAMP, these would be invalid.
 NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS: frozenset[str] = frozenset({
