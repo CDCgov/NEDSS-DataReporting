@@ -169,6 +169,10 @@ def parse_use_database(statements: list[SqlStatement]) -> str | None:
     return None
 
 
+def is_use_database_statement(sql: str) -> bool:
+    return USE_DATABASE_PATTERN.match(sql.strip()) is not None
+
+
 def statement_returns_json(sql: str) -> bool:
     return "FOR JSON PATH" in sql.upper()
 
@@ -241,8 +245,15 @@ def parse_cases_from_expected_json(sql_text: str, expected_json_path: Path) -> t
     return statements, cases
 
 
-def build_prelude_sql(statements: list[SqlStatement], first_case: SelectCase) -> str:
-    prelude = [statement.sql for statement in statements if statement.end_line < first_case.query_start_line]
+def build_prelude_sql(
+    statements: list[SqlStatement],
+    first_case: SelectCase,
+    strip_leading_use: bool = False,
+) -> str:
+    prelude_statements = [statement.sql for statement in statements if statement.end_line < first_case.query_start_line]
+    if strip_leading_use and prelude_statements and is_use_database_statement(prelude_statements[0]):
+        prelude_statements = prelude_statements[1:]
+    prelude = prelude_statements
     return "\n\n".join(prelude)
 
 
@@ -258,7 +269,7 @@ def clean_sqlcmd_output(raw_output: str) -> str:
             continue
         if set(stripped) <= {"-", " ", "\t"}:
             continue
-        cleaned_lines.append(stripped)
+        cleaned_lines.append(raw_line)
     return "".join(cleaned_lines)
 
 
@@ -320,6 +331,23 @@ def field_name_is_warning_exception(field_name: str) -> bool:
     return upper_name == "RDB_LAST_REFRESH_TIME"
 
 
+def normalize_trailing_zero_millis(value: object) -> object:
+    """Normalize datetime strings where only trailing .000 milliseconds differ."""
+    if not isinstance(value, str):
+        return value
+
+    # Matches: 2026-05-08T14:22:20.000, with optional timezone suffix like Z or +00:00.
+    return re.sub(r"(?<=\d)\.000(?=(?:Z|[+-]\d{2}:?\d{2})?$)", "", value)
+
+
+def is_datetime_zero_millis_mismatch(expected: object, actual: object) -> bool:
+    if not (isinstance(expected, str) and isinstance(actual, str)):
+        return False
+    if expected == actual:
+        return False
+    return normalize_trailing_zero_millis(expected) == normalize_trailing_zero_millis(actual)
+
+
 def is_warning_mismatch(
     field_name: str,
     expected_has: bool,
@@ -332,6 +360,8 @@ def is_warning_mismatch(
     if expected_value == actual_value:
         return False
     if is_null_vs_empty_mismatch(expected_value, actual_value):
+        return True
+    if is_datetime_zero_millis_mismatch(expected_value, actual_value):
         return True
     if field_name_is_warning_exception(field_name):
         return True
@@ -509,8 +539,14 @@ def render_markdown_report(
     summary: dict[str, object],
     results: list[dict[str, object]],
 ) -> str:
+    database_name = str(summary.get("database") or "").strip()
+    report_title = (
+        f"# {database_name} Select Validation Results"
+        if database_name
+        else "# RDB Select Validation Results"
+    )
     lines: list[str] = [
-        "# RDB Select Validation Results",
+        report_title,
         "",
         f"Input file: {input_file}",
         f"JSON results: {output_file}",
@@ -717,8 +753,8 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
             elif status == "warning":
                 result["error"] = (
                     "JSON matches except for warning-level differences "
-                    "(null vs empty string, *_ID/*_UID/*_KEY value mismatches, "
-                    "and/or RDB_LAST_REFRESH_TIME mismatch)"
+                    "(null vs empty string, datetime values differing only by .000, "
+                    "*_ID/*_UID/*_KEY value mismatches, and/or RDB_LAST_REFRESH_TIME mismatch)"
                 )
             else:
                 result["error"] = "Expected JSON does not match actual query result"
@@ -773,7 +809,7 @@ def main() -> int:
     )
     executable = require_sqlcmd(args.sqlcmd)
     client = SqlCmdClient(executable, args.server, database, args.user, args.password)
-    prelude_sql = build_prelude_sql(statements, cases[0])
+    prelude_sql = build_prelude_sql(statements, cases[0], strip_leading_use=args.database is not None)
     use_color = colors_enabled(args.no_color)
 
     print(f"Input file: {input_file}")
