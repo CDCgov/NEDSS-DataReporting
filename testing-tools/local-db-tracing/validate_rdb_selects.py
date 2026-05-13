@@ -377,6 +377,33 @@ def normalize_trailing_zero_millis(value: object) -> object:
     return re.sub(r"(?<=\d)\.000(?=(?:Z|[+-]\d{2}:?\d{2})?$)", "", value)
 
 
+def is_iso_datetime_or_date_string(value: object) -> bool:
+    """Check if a value looks like an ISO format date or datetime string."""
+    if not isinstance(value, str):
+        return False
+    # Matches ISO date (YYYY-MM-DD), ISO datetime (YYYY-MM-DDTHH:MM:SS), or with timezone
+    return bool(re.match(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.[\d]+)?(Z|[+-]\d{2}:?\d{2})?)?$", value))
+
+
+def is_midnight_time(value: str) -> bool:
+    """Check if an ISO datetime string has a midnight time component (00:00:00)."""
+    # Match times that are exactly 00:00:00 or 00:00:00.000, etc.
+    return bool(re.search(r"T00:00:00(\.0+)?(Z|[+-]\d{2}:?\d{2})?$", value))
+
+
+def is_midnight_mismatch(expected: object, actual: object) -> bool:
+    """Check if one datetime is midnight and the other isn't."""
+    if not (isinstance(expected, str) and isinstance(actual, str)):
+        return False
+    if not ("T" in expected and "T" in actual):
+        return False  # Only check if both have time components
+    
+    expected_is_midnight = is_midnight_time(expected)
+    actual_is_midnight = is_midnight_time(actual)
+    # Return True if one is midnight and the other isn't (they differ)
+    return expected_is_midnight != actual_is_midnight
+
+
 def is_datetime_zero_millis_mismatch(expected: object, actual: object) -> bool:
     if not (isinstance(expected, str) and isinstance(actual, str)):
         return False
@@ -400,6 +427,14 @@ def is_warning_mismatch(
         return True
     if is_datetime_zero_millis_mismatch(expected_value, actual_value):
         return True
+    # Check if both are date/datetime values - if so, it's a warning (unless midnight mismatch)
+    if isinstance(expected_value, str) and isinstance(actual_value, str):
+        if is_iso_datetime_or_date_string(expected_value) and is_iso_datetime_or_date_string(actual_value):
+            # If one is midnight and the other isn't, it's an error (not a warning)
+            if is_midnight_mismatch(expected_value, actual_value):
+                return False
+            # Otherwise, date/datetime differences are warnings
+            return True
     if field_name_is_warning_exception(field_name):
         return True
     return field_name_ends_with_id_uid_or_key(field_name)
