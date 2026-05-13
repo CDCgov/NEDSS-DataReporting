@@ -96,7 +96,6 @@ SELECT
     [CA_INTERVIEWER_ASSIGN_DT],
     [CA_PATIENT_INTV_STATUS],
     [CC_CLOSED_DT],
-    [D_CASE_MANAGEMENT_KEY],
     [EPI_LINK_ID],
     [FIELD_FOLL_UP_OOJ_OUTCOME],
     [FLD_FOLL_UP_EXPECTED_IN],
@@ -209,9 +208,7 @@ SELECT
     [ADM_TRANSNATIONAL_REF],
     [ADM_US_ARRIVAL_DT],
     [ADM_US_BORN],
-    [D_INV_ADMINISTRATIVE_KEY],
-    [IX_DATE],
-    [nbs_case_answer_uid]
+    [IX_DATE]
 FROM [RDB_MODERN].[dbo].[D_INV_ADMINISTRATIVE]
 --- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
 WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
@@ -222,7 +219,6 @@ WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PBI_BIRTH_WEIGHT],
     [PBI_BIRTH_WEIGHT_GRAMS],
     [PBI_BIRTH_WEIGHT_GRAMS_UNIT],
@@ -262,8 +258,7 @@ SELECT
     [PBI_SYPH_TST_28_32_WK_GES],
     [PBI_SYPH_TST_DELIVERY],
     [PBI_TRI_FRST_PRNTAL_VISIT],
-    [PBI_VITAL_STATUS],
-    [nbs_case_answer_uid]
+    [PBI_VITAL_STATUS]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
 -- WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
 WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
