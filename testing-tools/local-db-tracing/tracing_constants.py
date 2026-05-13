@@ -110,6 +110,8 @@ ALWAYS_REPLACE_COLUMN_NAMES: frozenset[str] = frozenset({
 # Applies to all tables.
 DO_NOT_REPLACE_COLUMNS_ANY_TABLE: frozenset[str] = frozenset({
     "LAB_TEST_DT",  # exclude from all tables
+    "EARLIEST_RPT_TO_STATE_DT",
+    "LAB_RPT_RECEIVED_BY_PH_DT",
 })
 
 # Table-specific column exclusions (schema, table, column) that should NOT be rewritten.
