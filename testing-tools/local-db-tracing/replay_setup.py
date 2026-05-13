@@ -221,11 +221,15 @@ def should_exclude_from_replacement(schema_name: str, table_name: str, column_na
     
     Returns True if the column matches either a table-specific or table-agnostic exclusion.
     """
+    normalized_schema = schema_name.lower()
+    normalized_table = table_name.lower()
+    normalized_column = column_name.lower()
+
     # Check table-specific exclusion
-    if (schema_name, table_name, column_name) in DO_NOT_REPLACE_COLUMNS_BY_TABLE:
+    if (normalized_schema, normalized_table, normalized_column) in DO_NOT_REPLACE_COLUMNS_BY_TABLE:
         return True
     # Check generic column name exclusion (applies to all tables)
-    if column_name in DO_NOT_REPLACE_COLUMNS_ANY_TABLE:
+    if normalized_column in DO_NOT_REPLACE_COLUMNS_ANY_TABLE:
         return True
     return False
 
@@ -252,7 +256,8 @@ def rewrite_insert_statement(
         column_name = normalize_column_name(column_token)
         column_key = (schema_name, table_name, column_name)
         rewritten_value = value_token
-        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
+        normalized_column_name = column_name.lower()
+        if (column_key in eligible_columns or normalized_column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
             sql_type = column_types.get(column_key, "datetime")
             has_midnight = value_has_midnight_time(value_token)
             rewritten_value = replacement_expression(sql_type, has_midnight)
@@ -294,7 +299,8 @@ def rewrite_update_statement(
         value_token = assignment_match.group("value")
         column_key = (schema_name, table_name, column_name)
         rewritten_assignment = assignment
-        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
+        normalized_column_name = column_name.lower()
+        if (column_key in eligible_columns or normalized_column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
             sql_type = column_types.get(column_key, "datetime")
             has_midnight = value_has_midnight_time(value_token)
             rewritten_assignment = f"[{column_name}] = {replacement_expression(sql_type, has_midnight)}"

@@ -56,11 +56,10 @@ def is_excluded_artifact_table(schema_name: str, table_name: str) -> bool:
     """Keep internal/audit tables out of generated query.sql and expected.json artifacts."""
 
     key = (schema_name.lower(), table_name.lower())
-    excluded_exact_tables = {(schema.lower(), table.lower()) for schema, table in EXCLUDED_ARTIFACT_TABLES}
-    if key in excluded_exact_tables:
+    if key in EXCLUDED_ARTIFACT_TABLES:
         return True
     return any(
-        key[0] == schema.lower() and key[1].startswith(prefix.lower())
+        key[0] == schema and key[1].startswith(prefix)
         for schema, prefix in EXCLUDED_ARTIFACT_TABLE_PREFIXES
     )
 
