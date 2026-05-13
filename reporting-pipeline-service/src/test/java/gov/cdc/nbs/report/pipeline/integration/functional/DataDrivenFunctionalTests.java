@@ -48,7 +48,7 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    */
   static Stream<Path> functionalTestDirectoryProvider() throws IOException {
     Path root = Paths.get("src/test/resources/testData/functional");
-    return Files.list(root).filter(Files::isDirectory); // Filter out files
+    return Files.list(root).filter(Files::isDirectory);
   }
 
   /**
@@ -115,9 +115,19 @@ class DataDrivenFunctionalTests extends FunctionalTest {
         Optional<List<Map<String, Object>>> results =
             Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
 
-        assertThat(results).isPresent();
+        assertThat(results)
+            .withFailMessage(
+                "Query %d in %s/%s did not return results within the time limit",
+                i + 1, testDirectory.getFileName(), stepDirectory.getFileName())
+            .isPresent();
         String actual = mapper.writeValueAsString(results.get());
-        JSONAssert.assertEquals(expectedResult, actual, JSONCompareMode.LENIENT);
+        JSONAssert.assertEquals(
+            String.format(
+                "Query %d in %s/%s did not match expected JSON",
+                i + 1, testDirectory.getFileName(), stepDirectory.getFileName()),
+            expectedResult,
+            actual,
+            JSONCompareMode.LENIENT);
       }
     }
   }
