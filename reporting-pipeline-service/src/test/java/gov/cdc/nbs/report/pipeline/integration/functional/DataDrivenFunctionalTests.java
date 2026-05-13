@@ -118,13 +118,13 @@ class DataDrivenFunctionalTests extends FunctionalTest {
         assertThat(results)
             .withFailMessage(
                 "Query %d in %s/%s did not return results within the time limit",
-                i + 1, testDirectory.getFileName(), stepDirectory.getFileName())
+                i, testDirectory.getFileName(), stepDirectory.getFileName())
             .isPresent();
         String actual = mapper.writeValueAsString(results.get());
         JSONAssert.assertEquals(
             String.format(
                 "Query %d in %s/%s did not match expected JSON",
-                i + 1, testDirectory.getFileName(), stepDirectory.getFileName()),
+                i, testDirectory.getFileName(), stepDirectory.getFileName()),
             expectedResult,
             actual,
             JSONCompareMode.LENIENT);
