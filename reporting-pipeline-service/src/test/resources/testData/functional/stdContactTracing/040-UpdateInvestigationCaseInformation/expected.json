@@ -577,22 +577,6 @@
   ],
   "26": [
     {
-      "CONDITION_KEY": 1,
-      "COPY_TO_PROVIDER_KEY": 1,
-      "LAB_RPT_DT_KEY": 1,
-      "LAB_TEST_TECHNICIAN_KEY": 1,
-      "LAB_TEST_UID": 3400011,
-      "LDF_GROUP_KEY": 1,
-      "MORB_RPT_KEY": 1,
-      "ORDERING_ORG_KEY": 1,
-      "ORDERING_PROVIDER_KEY": 1,
-      "PERFORMING_LAB_KEY": 1,
-      "RECORD_STATUS_CD": "ACTIVE",
-      "REPORTING_LAB_KEY": 1,
-      "RESULT_COMMENT_GRP_KEY": 1,
-      "SPECIMEN_COLLECTOR_KEY": 1
-    },
-    {
       "CONDITION_KEY": 242,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 1,
@@ -605,6 +589,22 @@
       "PERFORMING_LAB_KEY": 1,
       "RECORD_STATUS_CD": "ACTIVE",
       "REPORTING_LAB_KEY": 4,
+      "RESULT_COMMENT_GRP_KEY": 1,
+      "SPECIMEN_COLLECTOR_KEY": 1
+    },
+    {
+      "CONDITION_KEY": 1,
+      "COPY_TO_PROVIDER_KEY": 1,
+      "LAB_RPT_DT_KEY": 1,
+      "LAB_TEST_TECHNICIAN_KEY": 1,
+      "LAB_TEST_UID": 3400011,
+      "LDF_GROUP_KEY": 1,
+      "MORB_RPT_KEY": 1,
+      "ORDERING_ORG_KEY": 1,
+      "ORDERING_PROVIDER_KEY": 1,
+      "PERFORMING_LAB_KEY": 1,
+      "RECORD_STATUS_CD": "ACTIVE",
+      "REPORTING_LAB_KEY": 1,
       "RESULT_COMMENT_GRP_KEY": 1,
       "SPECIMEN_COLLECTOR_KEY": 1
     }
