@@ -189,25 +189,26 @@ def value_has_midnight_time(value_token: str) -> bool:
 
 
 def replacement_expression(sql_type: str, has_midnight_time: bool = False) -> str:
+    sql_current_date = "CAST(CURRENT_TIMESTAMP AS date)"
     lowered = sql_type.lower()
     if lowered == "date":
-        return "CURRENT_DATE"
+        return sql_current_date
     if lowered == "time":
         return "CAST(CURRENT_TIMESTAMP AS time)"
     if lowered.startswith("datetimeoffset"):
         if has_midnight_time:
-            return "CAST(CURRENT_DATE AS datetimeoffset)"
+            return f"CAST({sql_current_date} AS datetimeoffset)"
         return "CAST(CURRENT_TIMESTAMP AS datetimeoffset)"
     if lowered.startswith("datetime2"):
         if has_midnight_time:
-            return "CAST(CURRENT_DATE AS datetime2)"
+            return f"CAST({sql_current_date} AS datetime2)"
         return "CAST(CURRENT_TIMESTAMP AS datetime2)"
     if lowered.startswith("smalldatetime"):
         if has_midnight_time:
-            return "CAST(CURRENT_DATE AS smalldatetime)"
+            return f"CAST({sql_current_date} AS smalldatetime)"
         return "CAST(CURRENT_TIMESTAMP AS smalldatetime)"
     if has_midnight_time:
-        return "CURRENT_DATE"
+        return sql_current_date
     return "CURRENT_TIMESTAMP"
 
 
