@@ -214,7 +214,7 @@ SELECT
     [nbs_case_answer_uid]
 FROM [RDB_MODERN].[dbo].[D_INV_ADMINISTRATIVE]
 --- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
 ;
 
 -- dbo.D_INV_PREGNANCY_BIRTH | operations: insert
@@ -266,7 +266,7 @@ SELECT
     [nbs_case_answer_uid]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
 -- WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
 ;
 
 -- dbo.D_PATIENT | operations: delete, insert
