@@ -318,8 +318,7 @@ SELECT
     [CLN_UNIT_DISCHARGE_DT]
 FROM [RDB_MODERN].[dbo].[D_INV_CLINICAL]
 -- WHERE [D_INV_CLINICAL_KEY] = 3.0
--- TODO: need AND nbs_question_uid=X
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_CLINICAL')
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001195 AND rdb_table_nm=N'D_INV_CLINICAL')
 ;
 
 -- dbo.D_INV_PREGNANCY_BIRTH | operations: insert
@@ -379,7 +378,6 @@ WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo
 SELECT
     [CLN_RSLT_CHEST_STDY],
     [CLN_RSLT_CHEST_STDY_OTH],
-    [D_INV_TREATMENT_KEY],
     [TRT_AMIKACIN_IND],
     [TRT_ANTICOAGULATION_IND],
     [TRT_ANTICOAGULATION_TXT],
@@ -479,8 +477,7 @@ SELECT
     [TRT_VASOACTIVE_MED_TXT]
 FROM [RDB_MODERN].[dbo].[D_INV_TREATMENT]
 -- WHERE [D_INV_TREATMENT_KEY] = 3.0
--- TODO: need nbs_question_uid=X
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_TREATMENT')
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001192 AND rdb_table_nm=N'D_INV_TREATMENT')
 ;
 
 -- dbo.D_PATIENT | operations: delete, insert
@@ -795,7 +792,7 @@ SELECT
     [HIV_SELF_REPORTED_RSLT_900],
     [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[INV_HIV]
-- WHERE [D_INV_HIV_KEY] = 1
+-- WHERE [D_INV_HIV_KEY] = 1
 WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM [RDB_MODERN].[dbo].INVESTIGATION WHERE INV_LOCAL_ID = N'CAS3400017GA01')
 ;
 
@@ -957,7 +954,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_CLINICAL_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_CLINICAL]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -968,7 +964,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_PREGNANCY_BIRTH]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -979,7 +974,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_TREATMENT_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_TREATMENT]
 WHERE [PAGE_CASE_UID] = 3400017.0

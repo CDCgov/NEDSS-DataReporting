@@ -218,7 +218,6 @@ WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PBI_BIRTH_WEIGHT],
     [PBI_BIRTH_WEIGHT_GRAMS],
     [PBI_BIRTH_WEIGHT_GRAMS_UNIT],

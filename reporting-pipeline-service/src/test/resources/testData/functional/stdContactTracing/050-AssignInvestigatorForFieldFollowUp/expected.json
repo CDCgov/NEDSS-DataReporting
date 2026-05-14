@@ -60,7 +60,6 @@
       "CA_INIT_INTVWR_ASSGN_DT": "2026-04-25",
       "CA_INTERVIEWER_ASSIGN_DT": "2026-04-25",
       "CA_PATIENT_INTV_STATUS": "A - Awaiting",
-      "D_CASE_MANAGEMENT_KEY": 2.0,
       "EPI_LINK_ID": "1310000026",
       "FLD_FOLL_UP_NOTIFICATION_PLAN": "3",
       "FL_FUP_DISPOSITION_CD": "C",
@@ -82,30 +81,22 @@
   ],
   "5": [
     {
-      "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "nbs_case_answer_uid": 3241
+      "ADM_IMM_NTNL_NTFBL_CNDTN": "No"
     }
   ],
   "6": [
     {
-      "CLN_CASE_DIAGNOSIS": "720 - Syphilis, secondary",
-      "D_INV_CLINICAL_KEY": 3.0,
-      "nbs_case_answer_uid": 3244
+      "CLN_CASE_DIAGNOSIS": "720 - Syphilis, secondary"
     }
   ],
   "7": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
-      "PBI_PATIENT_PREGNANT_WKS": "30",
-      "nbs_case_answer_uid": 3242
+      "PBI_PATIENT_PREGNANT_WKS": "30"
     }
   ],
   "8": [
     {
-      "D_INV_TREATMENT_KEY": 3.0,
-      "TRT_TREATMENT_DATE": "2026-04-20",
-      "nbs_case_answer_uid": 3243
+      "TRT_TREATMENT_DATE": "2026-04-20"
     }
   ],
   "9": [
@@ -314,7 +305,6 @@
       "DELIVERING_MD_KEY": 1,
       "DISPOSITIONED_BY_KEY": 2,
       "D_INVESTIGATION_REPEAT_KEY": 1.0,
-      "D_INV_ADMINISTRATIVE_KEY": 3,
       "D_INV_CLINICAL_KEY": 3,
       "D_INV_COMPLICATION_KEY": 1,
       "D_INV_CONTACT_KEY": 1,
@@ -442,26 +432,22 @@
   ],
   "18": [
     {
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "PAGE_CASE_UID": 3400017
+      "PAGE_CASE_UID": 3400017.0
     }
   ],
   "19": [
     {
-      "D_INV_CLINICAL_KEY": 3.0,
-      "PAGE_CASE_UID": 3400017
+      "PAGE_CASE_UID": 3400017.0
     }
   ],
   "20": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
-      "PAGE_CASE_UID": 3400017
+      "PAGE_CASE_UID": 3400017.0
     }
   ],
   "21": [
     {
-      "D_INV_TREATMENT_KEY": 3.0,
-      "PAGE_CASE_UID": 3400017
+      "PAGE_CASE_UID": 3400017.0
     }
   ],
   "22": [
