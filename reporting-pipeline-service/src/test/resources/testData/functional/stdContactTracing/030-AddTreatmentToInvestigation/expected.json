@@ -57,16 +57,12 @@
   ],
   "4": [
     {
-      "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "nbs_case_answer_uid": 3241
+      "ADM_IMM_NTNL_NTFBL_CNDTN": "No"
     }
   ],
   "5": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
-      "PBI_PATIENT_PREGNANT_WKS": "30",
-      "nbs_case_answer_uid": 3242
+      "PBI_PATIENT_PREGNANT_WKS": "30"
     }
   ],
   "6": [
