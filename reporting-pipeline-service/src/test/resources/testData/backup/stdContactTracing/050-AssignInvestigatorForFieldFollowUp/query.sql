@@ -1,8 +1,8 @@
 
 
--- dbo.CASE_COUNT | operations: insert
+-- dbo.CASE_COUNT | operations: delete, insert
 -- Query: 0
--- Step: 2
+-- Steps: 2, 4, 5
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADT_HSPTL_KEY],
@@ -13,19 +13,12 @@ SELECT
     [INV_RPT_DT_KEY],
     [INV_START_DT_KEY]
 FROM [RDB_MODERN].[dbo].[CASE_COUNT]
-WHERE [CONDITION_KEY] = 217
-  AND [INVESTIGATION_KEY] = 3
-  AND [INVESTIGATOR_KEY] = 3
-  AND [INV_ASSIGNED_DT_KEY] = 1
-  AND [PATIENT_KEY] = 6
-  AND [PHYSICIAN_KEY] = 1
-  AND [REPORTER_KEY] = 1
-  AND [RPT_SRC_ORG_KEY] = 4
+WHERE [CONDITION_KEY] IN (44, 217)
 ;
 
--- dbo.CASE_LAB_DATAMART | operations: insert
+-- dbo.CASE_LAB_DATAMART | operations: delete, insert
 -- Query: 1
--- Step: 2
+-- Steps: 2, 4, 5
 SELECT
     [AGE_REPORTED],
     [AGE_REPORTED_UNIT],
@@ -66,9 +59,20 @@ WHERE [INVESTIGATION_LOCAL_ID] = N'CAS3400017GA01'
   AND [PATIENT_LOCAL_ID] = N'PSN3400000GA01'
 ;
 
--- dbo.CONFIRMATION_METHOD_GROUP | operations: insert
+-- dbo.CONFIRMATION_METHOD | operations: insert
 -- Query: 2
--- Step: 2
+-- Step: 4
+-- Logical comparison marked this identity as not comparison-safe.
+SELECT
+    [CONFIRMATION_METHOD_CD],
+    [CONFIRMATION_METHOD_DESC]
+FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD]
+WHERE [CONFIRMATION_METHOD_CD] = N'LD' AND [CONFIRMATION_METHOD_DESC] = N'Laboratory confirmed'
+;
+
+-- dbo.CONFIRMATION_METHOD_GROUP | operations: delete, insert
+-- Query: 3
+-- Steps: 2, 4, 5
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [CONFIRMATION_DT]
@@ -76,9 +80,9 @@ FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD_GROUP]
 WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM [RDB_MODERN].[dbo].INVESTIGATION WHERE INV_LOCAL_ID = N'CAS3400017GA01')
 ;
 
--- dbo.D_CASE_MANAGEMENT | operations: insert
--- Query: 3
--- Step: 2
+-- dbo.D_CASE_MANAGEMENT | operations: insert, update
+-- Query: 4
+-- Steps: 2, 5
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ACT_REF_TYPE_CD],
@@ -98,7 +102,6 @@ SELECT
     [CA_INTERVIEWER_ASSIGN_DT],
     [CA_PATIENT_INTV_STATUS],
     [CC_CLOSED_DT],
-    [D_CASE_MANAGEMENT_KEY],
     [EPI_LINK_ID],
     [FIELD_FOLL_UP_OOJ_OUTCOME],
     [FLD_FOLL_UP_EXPECTED_IN],
@@ -148,12 +151,12 @@ SELECT
     [SURV_PROVIDER_EXAM_REASON],
     [SURV_PROV_EXM_REASON]
 FROM [RDB_MODERN].[dbo].[D_CASE_MANAGEMENT]
-WHERE [ADD_USER_ID] = 10009282.0
+WHERE [FL_FUP_FIELD_RECORD_NUM] = 1310000026
 ;
 
 -- dbo.D_INV_ADMINISTRATIVE | operations: insert
--- Query: 4
--- Step: 2
+-- Query: 5
+-- Steps: 2, 4, 5
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADM_ABSTRACTION_DT],
@@ -211,19 +214,119 @@ SELECT
     [ADM_TRANSNATIONAL_REF],
     [ADM_US_ARRIVAL_DT],
     [ADM_US_BORN],
-    [D_INV_ADMINISTRATIVE_KEY],
-    [IX_DATE],
-    [nbs_case_answer_uid]
+    [IX_DATE]
 FROM [RDB_MODERN].[dbo].[D_INV_ADMINISTRATIVE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+-- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
+;
+
+-- dbo.D_INV_CLINICAL | operations: insert
+-- Query: 6
+-- Steps: 4, 5
+-- Logical comparison marked this identity as not comparison-safe.
+SELECT
+    [CHEST_RAD_RESULT],
+    [CLN_ABDOMINAL_IMAGE_RSLT],
+    [CLN_ABDOMINAL_IMAGE_RSLT_OTH],
+    [CLN_ABDOMINAL_IMAGE_TYPE],
+    [CLN_ABDOMINAL_IMAGING_IND],
+    [CLN_ABN_CHEST_XRAY_IND],
+    [CLN_ACUTE_COINFECTIONS],
+    [CLN_ACUTE_COINFECTIONS_DE],
+    [CLN_ACUTE_HEMA_DISORDER],
+    [CLN_ADVERSE_EVNT_SEVERITY],
+    [CLN_ADVERSE_EVT_AFTR_TRMT],
+    [CLN_ARBOVIRUS_TYPE],
+    [CLN_AVG_NUM_CIG_SMKD_PD],
+    [CLN_AVG_NUM_CIG_SMKD_PD_OTH],
+    [CLN_BODY_MASS_INDEX],
+    [CLN_CARDIAC_DYSFUNC_TYPE],
+    [CLN_CARDIO_DISORDER_IND],
+    [CLN_CARE_STATUS_CLOSE_DT],
+    [CLN_CASE_DIAGNOSIS],
+    [CLN_CHEST_CT_CAVITY],
+    [CLN_CHEST_CT_DT],
+    [CLN_CHEST_CT_MILIARY],
+    [CLN_CHEST_CT_RESULT],
+    [CLN_CHEST_IMAGING_IND],
+    [CLN_CHEST_RAD_CAVITY],
+    [CLN_CHEST_RAD_DT],
+    [CLN_CHEST_RAD_MIILIARY],
+    [CLN_CHEST_STDY_TYPE],
+    [CLN_CLINICAL_SYNDROME],
+    [CLN_CLINICAL_SYNDROME_2],
+    [CLN_CLINICAL_SYNDROME_OTH],
+    [CLN_CLINICAL_SYND_SEC_OTH],
+    [CLN_CONDITION_RESISTANT_TO],
+    [CLN_CORONARY_Z_SCORE],
+    [CLN_COVID_SYMP_ONSET_DT],
+    [CLN_CTT_INV],
+    [CLN_DT_INIT_HLTH_EXM],
+    [CLN_ECHOCARDIOGRAM_RESULT],
+    [CLN_ECHOCARDIOGRAM_RESULT_OTH],
+    [CLN_EKG_ABNORMAL],
+    [CLN_FIRST_CRNARY_ANEUR_DT],
+    [CLN_GASTRO_DISORDER_IND],
+    [CLN_HIST_PREV_ILLNESS],
+    [CLN_HIV_STATUS],
+    [CLN_HOSPITAL_ICU_STAY],
+    [CLN_HepDInfection],
+    [CLN_HepDInfection_OTH],
+    [CLN_ICD_CODES],
+    [CLN_ICD_CODES_OTH],
+    [CLN_ICU_DURATION],
+    [CLN_ICU_DURATION_UNIT],
+    [CLN_INITIAL_RSN_EVALTION],
+    [CLN_INITIAL_RSN_EVALTION_OTH],
+    [CLN_ISOLATION_END_DT],
+    [CLN_ISOLATION_START_DT],
+    [CLN_KNOWN_DEATH_DT],
+    [CLN_LAB_CONF_CURR_COVID],
+    [CLN_LAB_MARKERS_INFLAMMAT],
+    [CLN_LONG_BONE_XRAY_IND],
+    [CLN_MARIJUANA_SMOKE_IND],
+    [CLN_MITRAL_REGURG_TYPE],
+    [CLN_MedsforHep],
+    [CLN_NERV_SYS_DISORDER_IND],
+    [CLN_NEUROSYPHILLIS_IND],
+    [CLN_NO_ALT_PLAUSIBLE_DIAG],
+    [CLN_OTH_CLNCL_FINDING_IND],
+    [CLN_OTH_CLNCL_FINDNG_SPEC],
+    [CLN_OTH_DIAGNOSIS_IND],
+    [CLN_PATIENT_LESS_THAN_12_MNTHS],
+    [CLN_PATIENT_OUTCOME],
+    [CLN_PAT_LT21_YRS_AT_ONSET],
+    [CLN_PAT_REQ_HOSPITAL_IND],
+    [CLN_PRECEDE_COVID_ILL_IND],
+    [CLN_PRE_EXP_PROPHY_IND],
+    [CLN_PRE_EXP_PROPHY_REFER],
+    [CLN_RECEIVED_ECMO_IND],
+    [CLN_RECEIVED_MV_IND],
+    [CLN_RESPIRATORY_DISORDER],
+    [CLN_SCNDRY_DIAGNOSIS_DSC1],
+    [CLN_SCNDRY_DIAGNOSIS_DSC2],
+    [CLN_SCNDRY_DIAGNOSIS_DSC3],
+    [CLN_SKIN_DISORDER_IND],
+    [CLN_SURGERY_TRT_MDR_TB],
+    [CLN_TOTAL_ECMO_DAYS],
+    [CLN_TOTAL_ECMO_DAYS_UNIT],
+    [CLN_TOTAL_MV_DAYS],
+    [CLN_TOTAL_MV_DAYS_UNIT],
+    [CLN_TYPE_1_DIABETES_IND],
+    [CLN_TYPE_2_DIABETES_IND],
+    [CLN_UNIT_ADMIT_DT],
+    [CLN_UNIT_DISCHARGE_DT]
+FROM [RDB_MODERN].[dbo].[D_INV_CLINICAL]
+-- WHERE [D_INV_CLINICAL_KEY] = 3.0
+-- TODO: need AND nbs_question_uid=X
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_CLINICAL')
 ;
 
 -- dbo.D_INV_PREGNANCY_BIRTH | operations: insert
--- Query: 5
--- Step: 2
+-- Query: 7
+-- Steps: 2, 4, 5
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PBI_BIRTH_WEIGHT],
     [PBI_BIRTH_WEIGHT_GRAMS],
     [PBI_BIRTH_WEIGHT_GRAMS_UNIT],
@@ -263,15 +366,125 @@ SELECT
     [PBI_SYPH_TST_28_32_WK_GES],
     [PBI_SYPH_TST_DELIVERY],
     [PBI_TRI_FRST_PRNTAL_VISIT],
-    [PBI_VITAL_STATUS],
-    [nbs_case_answer_uid]
+    [PBI_VITAL_STATUS]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
-WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+-- WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
+;
+
+-- dbo.D_INV_TREATMENT | operations: insert
+-- Query: 8
+-- Steps: 4, 5
+-- Logical comparison marked this identity as not comparison-safe.
+SELECT
+    [CLN_RSLT_CHEST_STDY],
+    [CLN_RSLT_CHEST_STDY_OTH],
+    [TRT_AMIKACIN_IND],
+    [TRT_ANTICOAGULATION_IND],
+    [TRT_ANTICOAGULATION_TXT],
+    [TRT_ANTIPLATELETS_IND],
+    [TRT_ANTIPLATELETS_TXT],
+    [TRT_BEDAQUILINE_IND],
+    [TRT_CAPREOMYCIN_IND],
+    [TRT_CARE_MGMT_TYPE],
+    [TRT_CIPROFLOXACIN_IND],
+    [TRT_CLOFAZIMINE_IND],
+    [TRT_CURR_HIV_PREP_PRPHYLX],
+    [TRT_CYCLOSERINE_IND],
+    [TRT_DELAMANID_IND],
+    [TRT_DISEASE_SITE],
+    [TRT_DISEASE_SITE_OTH],
+    [TRT_ETHAMBUTOL_IND],
+    [TRT_ETHIONAMIDE_IND],
+    [TRT_FIRST_IVIG_IND],
+    [TRT_FRST_BENZPEN_DOSE_TRI],
+    [TRT_FRST_BENZ_PEN_DOSE_DT],
+    [TRT_HEMODIALYSIS_IND],
+    [TRT_HISTORY_TRT],
+    [TRT_HI_FLW_NASAL_CANN_IND],
+    [TRT_IMMUNE_MODULATORS_TXT],
+    [TRT_INITIAL_LTBI_DRUG_REG],
+    [TRT_INITIAL_LTBI_DRUG_REG_OTH],
+    [TRT_INJCTBLE_MED_STOP_DT],
+    [TRT_INTUBATION_IND],
+    [TRT_ISONIAZID_IND],
+    [TRT_KANAMYCIN_IND],
+    [TRT_LEVOFLOXACIN_IND],
+    [TRT_LINEZOLID_IND],
+    [TRT_LO_FLW_NASAL_CANN_IND],
+    [TRT_MALARIA_CHEMOPROPHYLA],
+    [TRT_MALARIA_INFO],
+    [TRT_MALARIA_MEDICATIONS],
+    [TRT_MALARIA_MEDICATIONS_OTH],
+    [TRT_MDR_TRT_START_DT],
+    [TRT_MEDICATION_ADMINISTERED],
+    [TRT_MEDICATION_ADMINISTERE_OTH],
+    [TRT_MEDICATION_START_DATE],
+    [TRT_MONKEYPOX_RX],
+    [TRT_MOTHER_TREATMENT],
+    [TRT_MOTHER_TRT_30D_PRIOR],
+    [TRT_MOVE_DUR_THERAPY],
+    [TRT_MOXIFLOXACIN_IND],
+    [TRT_NON_INVASIVE_VENT_IND],
+    [TRT_OFLOXACIN_IND],
+    [TRT_OTHER_QUINOLONES_IND],
+    [TRT_OTHER_TREATMENT_SPEC],
+    [TRT_OTHER_TRTMNT_SPEC_IND],
+    [TRT_OTH_DRG_REGIMEN_SPEC],
+    [TRT_OTH_DRUG_REGIMEN_IND],
+    [TRT_PARA_AMNSLCYCACD_IND],
+    [TRT_POST_EXP_PROPHYLAXIS],
+    [TRT_PRETOMANID_IND],
+    [TRT_PRIM_RSN_LTBI_NT_ST],
+    [TRT_PRIM_RSN_LTBI_NT_ST_OTH],
+    [TRT_PROPHYLACTIC_RX_RCVD],
+    [TRT_PYRAZINAMIDE_IND],
+    [TRT_RDN_THERAPY_EXT],
+    [TRT_RDN_THERAPY_EXT_OTH],
+    [TRT_REASON_DOSES_MISSED],
+    [TRT_REASON_DOSES_MISSED_OTH],
+    [TRT_RIFABUTIN_IND],
+    [TRT_RIFAMPIN_IND],
+    [TRT_RIFAPENTINE_IND],
+    [TRT_RSN_LTBI_TRT_STOP],
+    [TRT_RSN_LTBI_TRT_STOP_OTH],
+    [TRT_RSN_NT_TRT_RIPE],
+    [TRT_RSN_NT_TRT_RIPE_OTH],
+    [TRT_RSN_THERAPY_STOP],
+    [TRT_RSN_THERAPY_STOP_OTH],
+    [TRT_RX_NBR_DAYS_AFTER_EXP],
+    [TRT_RX_NBR_DAYS_AFTER_EXP_UNIT],
+    [TRT_SECOND_IVIG_IND],
+    [TRT_SEROLOGIC_RESPONSE],
+    [TRT_SPECIFY_SIDE_EFFECT],
+    [TRT_STREPTOMYCIN_IND],
+    [TRT_SURGERY_TRT_MDR_TB_DT],
+    [TRT_SYMPTOMS_RESOLVED_MAL],
+    [TRT_SYMP_AFTR_TRMT],
+    [TRT_TAKEN_AS_PRESCRIBED_M],
+    [TRT_THERAPY_STOP_DT],
+    [TRT_TOTAL_OTH_TRTMNT_DAYS],
+    [TRT_TOTAL_OTH_TRTMNT_DAYS_UNIT],
+    [TRT_TREATMENT_ADMIN_TYPE],
+    [TRT_TREATMENT_DATE],
+    [TRT_TREATMENT_DRUG_IND],
+    [TRT_TREATMENT_END_DT],
+    [TRT_TREATMENT_IND],
+    [TRT_TREATMENT_RECEIVED_IND],
+    [TRT_TREATMENT_STARTED],
+    [TRT_TREATMENT_START_DT],
+    [TRT_TRMT_TKN_AS_PRESCRIBE],
+    [TRT_VASOACTIVE_MED_IND],
+    [TRT_VASOACTIVE_MED_TXT]
+FROM [RDB_MODERN].[dbo].[D_INV_TREATMENT]
+-- WHERE [D_INV_TREATMENT_KEY] = 3.0
+-- TODO: need nbs_question_uid=X
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_TREATMENT')
 ;
 
 -- dbo.D_PATIENT | operations: delete, insert
--- Query: 6
--- Steps: 1, 2
+-- Query: 9
+-- Steps: 1, 2, 4, 5
 -- WHERE clause narrowed to known lookup key: PATIENT_LOCAL_ID
 SELECT
     [PATIENT_ADDED_BY],
@@ -358,9 +571,9 @@ FROM [RDB_MODERN].[dbo].[D_PATIENT]
 WHERE [PATIENT_LOCAL_ID] = N'PSN3400000GA01'
 ;
 
--- dbo.EVENT_METRIC | operations: insert
--- Query: 7
--- Step: 2
+-- dbo.EVENT_METRIC | operations: delete, insert
+-- Query: 10
+-- Steps: 2, 4, 5
 -- WHERE clause narrowed to known lookup key: LOCAL_ID
 SELECT
     [ADD_TIME],
@@ -394,7 +607,7 @@ WHERE [LOCAL_ID] = N'CAS3400017GA01'
 ;
 
 -- dbo.EVENT_METRIC | operations: delete, insert
--- Query: 8
+-- Query: 11
 -- Steps: 1, 2
 -- WHERE clause narrowed to known lookup key: LOCAL_ID
 SELECT
@@ -428,9 +641,9 @@ FROM [RDB_MODERN].[dbo].[EVENT_METRIC]
 WHERE [LOCAL_ID] = N'OBS3400008GA01'
 ;
 
--- dbo.EVENT_METRIC_INC | operations: insert
--- Query: 9
--- Step: 2
+-- dbo.EVENT_METRIC_INC | operations: delete, insert
+-- Query: 12
+-- Steps: 2, 4, 5
 -- WHERE clause narrowed to known lookup key: LOCAL_ID
 SELECT
     [ADD_TIME],
@@ -464,7 +677,7 @@ WHERE [LOCAL_ID] = N'CAS3400017GA01'
 ;
 
 -- dbo.EVENT_METRIC_INC | operations: delete, insert
--- Query: 10
+-- Query: 13
 -- Steps: 1, 2
 -- WHERE clause narrowed to known lookup key: LOCAL_ID
 SELECT
@@ -499,8 +712,8 @@ WHERE [LOCAL_ID] = N'OBS3400008GA01'
 ;
 
 -- dbo.F_STD_PAGE_CASE | operations: insert
--- Query: 11
--- Step: 2
+-- Query: 14
+-- Steps: 2, 4, 5
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADD_DATE_KEY],
@@ -510,7 +723,6 @@ SELECT
     [DELIVERING_MD_KEY],
     [DISPOSITIONED_BY_KEY],
     [D_INVESTIGATION_REPEAT_KEY],
-    [D_INV_ADMINISTRATIVE_KEY],
     [D_INV_CLINICAL_KEY],
     [D_INV_COMPLICATION_KEY],
     [D_INV_CONTACT_KEY],
@@ -554,15 +766,15 @@ SELECT
     [SUPRVSR_OF_FLD_FOLLOW_UP_KEY],
     [SURVEILLANCE_INVESTIGATOR_KEY]
 FROM [RDB_MODERN].[dbo].[F_STD_PAGE_CASE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+-- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+WHERE [D_INV_ADMINISTRATIVE_KEY] = (SELECT D_INV_ADMINISTRATIVE_KEY FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE') AND [CONDITION_KEY] = (SELECT CONDITION_KEY from [RDB_MODERN].[dbo].[nrt_condition_key] WHERE condition_cd=N'10312')
 ;
 
 -- dbo.INV_HIV | operations: insert
--- Query: 12
+-- Query: 15
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_HIV_KEY],
     [HIV_900_RESULT],
     [HIV_900_TEST_IND],
     [HIV_900_TEST_REFERRAL_DT],
@@ -581,12 +793,13 @@ SELECT
     [HIV_SELF_REPORTED_RSLT_900],
     [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[INV_HIV]
-WHERE [D_INV_HIV_KEY] = 1
+-- WHERE [D_INV_HIV_KEY] = 1
+WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM [RDB_MODERN].[dbo].INVESTIGATION WHERE INV_LOCAL_ID = N'CAS3400017GA01')
 ;
 
 -- dbo.INV_SUMM_DATAMART | operations: insert, update
--- Query: 13
--- Step: 2
+-- Query: 16
+-- Steps: 2, 4, 5
 SELECT
     [AGE_REPORTED],
     [AGE_REPORTED_UNIT],
@@ -649,9 +862,9 @@ WHERE [INVESTIGATION_LOCAL_ID] = N'CAS3400017GA01'
   AND [PATIENT_LOCAL_ID] = N'PSN3400000GA01'
 ;
 
--- dbo.INVESTIGATION | operations: insert
--- Query: 14
--- Step: 2
+-- dbo.INVESTIGATION | operations: delete, insert
+-- Query: 17
+-- Steps: 2, 4, 5
 SELECT
     [ADD_TIME],
     [CASE_OID],
@@ -728,29 +941,47 @@ WHERE [INV_LOCAL_ID] = N'CAS3400017GA01'
 ;
 
 -- dbo.L_INV_ADMINISTRATIVE | operations: insert
--- Query: 15
+-- Query: 18
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_ADMINISTRATIVE_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 WHERE [PAGE_CASE_UID] = 3400017.0
 ;
 
+-- dbo.L_INV_CLINICAL | operations: insert
+-- Query: 19
+-- Step: 4
+-- Logical comparison marked this identity as not comparison-safe.
+SELECT
+    [PAGE_CASE_UID]
+FROM [RDB_MODERN].[dbo].[L_INV_CLINICAL]
+WHERE [PAGE_CASE_UID] = 3400017.0
+;
+
 -- dbo.L_INV_PREGNANCY_BIRTH | operations: insert
--- Query: 16
+-- Query: 20
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_PREGNANCY_BIRTH]
 WHERE [PAGE_CASE_UID] = 3400017.0
 ;
 
+-- dbo.L_INV_TREATMENT | operations: insert
+-- Query: 21
+-- Step: 4
+-- Logical comparison marked this identity as not comparison-safe.
+SELECT
+    [PAGE_CASE_UID]
+FROM [RDB_MODERN].[dbo].[L_INV_TREATMENT]
+WHERE [PAGE_CASE_UID] = 3400017.0
+;
+
 -- dbo.LAB100 | operations: insert
--- Query: 17
+-- Query: 22
 -- Step: 1
 SELECT
     [ACCESSION_NBR],
@@ -823,7 +1054,7 @@ WHERE [PERSON_LOCAL_ID] = N'PSN3400000GA01'
 ;
 
 -- dbo.LAB_RESULT_VAL | operations: insert
--- Query: 18
+-- Query: 23
 -- Step: 1
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
@@ -849,7 +1080,7 @@ WHERE [LAB_TEST_UID] = 3400011
 ;
 
 -- dbo.LAB_RPT_USER_COMMENT | operations: insert, update
--- Query: 19
+-- Query: 24
 -- Steps: 1, 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
@@ -863,7 +1094,7 @@ WHERE [LAB_TEST_UID] = 3400008
 ;
 
 -- dbo.LAB_TEST | operations: insert, update
--- Query: 20
+-- Query: 25
 -- Steps: 1, 2
 SELECT
     [ACCESSION_NBR],
@@ -931,11 +1162,10 @@ SELECT
     [TRANSCRIPTIONIST_NAME]
 FROM [RDB_MODERN].[dbo].[LAB_TEST]
 WHERE [LAB_RPT_LOCAL_ID] = N'OBS3400008GA01'
-ORDER BY [LAB_TEST_UID]
 ;
 
 -- dbo.LAB_TEST_RESULT | operations: insert
--- Query: 21
+-- Query: 26
 -- Steps: 1, 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
@@ -955,13 +1185,12 @@ SELECT
     [RESULT_COMMENT_GRP_KEY],
     [SPECIMEN_COLLECTOR_KEY]
 FROM [RDB_MODERN].[dbo].[LAB_TEST_RESULT]
-WHERE [LAB_TEST_UID] in (3400008, 3400011)
-ORDER BY [LAB_TEST_UID]
+WHERE [LAB_TEST_UID] IN (3400008, 3400011)
 ;
 
--- dbo.STD_HIV_DATAMART | operations: insert
--- Query: 22
--- Step: 2
+-- dbo.STD_HIV_DATAMART | operations: insert, update
+-- Query: 27
+-- Steps: 2, 4, 5
 SELECT
     [ADI_900_STATUS],
     [ADI_900_STATUS_CD],
@@ -1216,11 +1445,50 @@ WHERE [INV_LOCAL_ID] = N'CAS3400017GA01'
 ;
 
 -- dbo.TEST_RESULT_GROUPING | operations: insert
--- Query: 23
+-- Query: 28
 -- Step: 1
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [LAB_TEST_UID]
 FROM [RDB_MODERN].[dbo].[TEST_RESULT_GROUPING]
 WHERE [LAB_TEST_UID] = 3400011
+;
+
+-- dbo.TREATMENT | operations: insert
+-- Query: 29
+-- Step: 3
+SELECT
+    [CUSTOM_TREATMENT],
+    [RECORD_STATUS_CD],
+    [TREATMENT_COMMENTS],
+    [TREATMENT_DOSAGE_STRENGTH],
+    [TREATMENT_DOSAGE_STRENGTH_UNIT],
+    [TREATMENT_DRUG],
+    [TREATMENT_DURATION],
+    [TREATMENT_DURATION_UNIT],
+    [TREATMENT_FREQUENCY],
+    [TREATMENT_LOCAL_ID],
+    [TREATMENT_NM],
+    [TREATMENT_OID],
+    [TREATMENT_ROUTE],
+    [TREATMENT_SHARED_IND],
+    [TREATMENT_UID]
+FROM [RDB_MODERN].[dbo].[TREATMENT]
+WHERE [TREATMENT_LOCAL_ID] = N'TRT3400018GA01'
+;
+
+-- dbo.TREATMENT_EVENT | operations: insert
+-- Query: 30
+-- Step: 3
+-- Logical comparison marked this identity as not comparison-safe.
+SELECT
+    [RECORD_STATUS_CD],
+    [TREATMENT_COUNT]
+FROM [RDB_MODERN].[dbo].[TREATMENT_EVENT]
+WHERE [CONDITION_KEY] = 217
+  AND [LDF_GROUP_KEY] = 1
+  AND [MORB_RPT_KEY] = 1
+  AND [TREATMENT_DT_KEY] = 1
+  AND [TREATMENT_PHYSICIAN_KEY] = 2
+  AND [TREATMENT_PROVIDING_ORG_KEY] = 3
 ;

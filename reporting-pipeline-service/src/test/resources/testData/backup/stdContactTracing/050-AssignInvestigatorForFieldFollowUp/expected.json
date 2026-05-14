@@ -14,10 +14,11 @@
     {
       "AGE_REPORTED": 41,
       "AGE_REPORTED_UNIT": "Years",
-      "DISEASE": "Syphilis, Unknown",
-      "DISEASE_CD": "700",
-      "EVENT_DATE": "2026-04-24T00:00:00.000",
-      "EVENT_DATE_TYPE": "Investigation Start Date",
+      "CASE_STATUS": "Confirmed",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "EVENT_DATE": "2026-04-17T00:00:00.000",
+      "EVENT_DATE_TYPE": "Illness Onset Date",
       "INVESTIGATION_LOCAL_ID": "CAS3400017GA01",
       "INVESTIGATION_START_DATE": "2026-04-24T00:00:00.000",
       "JURISDICTION_NAME": "Fulton County",
@@ -34,7 +35,7 @@
       "PATIENT_STREET_ADDRESS_1": "1313 Pine Way",
       "PATIENT_ZIP": "30033",
       "PHC_ADD_TIME": "2026-05-06T22:11:00.673",
-      "PHC_LAST_CHG_TIME": "2026-05-06T22:11:00.673",
+      "PHC_LAST_CHG_TIME": "2026-05-06T22:27:49.370",
       "PROGRAM_AREA_DESCRIPTION": "STD",
       "PROGRAM_JURISDICTION_OID": 1300100015,
       "RACE": "White",
@@ -42,35 +43,63 @@
     }
   ],
   "2": [
-    {}
+    {
+      "CONFIRMATION_METHOD_CD": "LD",
+      "CONFIRMATION_METHOD_DESC": "Laboratory confirmed"
+    }
   ],
   "3": [
     {
-      "ADD_USER_ID": 10009282.0,
-      "CASE_OID": 1300100015.0,
-      "D_CASE_MANAGEMENT_KEY": 2.0,
-      "EPI_LINK_ID": "1310000026",
-      "FL_FUP_FIELD_RECORD_NUM": "1310000026",
-      "INIT_FUP_INITIAL_FOLL_UP": "Surveillance Follow-up",
-      "INIT_FUP_INITIAL_FOLL_UP_CD": "SF",
-      "SURV_INVESTIGATOR_ASSGN_DT": "2026-04-24"
+      "CONFIRMATION_DT": "2026-04-24T00:00:00.000"
     }
   ],
   "4": [
     {
-      "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "nbs_case_answer_uid": 3241
+      "ADD_USER_ID": 10009282.0,
+      "CASE_OID": 1300100015.0,
+      "CA_INIT_INTVWR_ASSGN_DT": "2026-04-25",
+      "CA_INTERVIEWER_ASSIGN_DT": "2026-04-25",
+      "CA_PATIENT_INTV_STATUS": "A - Awaiting",
+      "EPI_LINK_ID": "1310000026",
+      "FLD_FOLL_UP_NOTIFICATION_PLAN": "3",
+      "FL_FUP_DISPOSITION_CD": "C",
+      "FL_FUP_DISPOSITION_DESC": "C - Infected, Brought to Treatment",
+      "FL_FUP_DISPO_DT": "2026-04-25",
+      "FL_FUP_FIELD_RECORD_NUM": "1310000026",
+      "FL_FUP_INIT_ASSGN_DT": "2026-04-25",
+      "FL_FUP_INVESTIGATOR_ASSGN_DT": "2026-04-25",
+      "FL_FUP_NOTIFICATION_PLAN_CD": "3 - Dual",
+      "INIT_FOLL_UP_NOTIFIABLE": "6-Yes, Notifiable",
+      "INIT_FUP_INITIAL_FOLL_UP": "Surveillance Follow-up",
+      "INIT_FUP_INITIAL_FOLL_UP_CD": "SF",
+      "INIT_FUP_NOTIFIABLE_CD": "06",
+      "PAT_INTV_STATUS_CD": "A",
+      "SURV_INVESTIGATOR_ASSGN_DT": "2026-04-24",
+      "SURV_PATIENT_FOLL_UP": "FF",
+      "SURV_PATIENT_FOLL_UP_CD": "Field Follow-up"
     }
   ],
   "5": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
-      "PBI_PATIENT_PREGNANT_WKS": "30",
-      "nbs_case_answer_uid": 3242
+      "ADM_IMM_NTNL_NTFBL_CNDTN": "No"
     }
   ],
   "6": [
+    {
+      "CLN_CASE_DIAGNOSIS": "720 - Syphilis, secondary"
+    }
+  ],
+  "7": [
+    {
+      "PBI_PATIENT_PREGNANT_WKS": "30"
+    }
+  ],
+  "8": [
+    {
+      "TRT_TREATMENT_DATE": "2026-04-20"
+    }
+  ],
+  "9": [
     {
       "PATIENT_ADDED_BY": "Kent, Ariella",
       "PATIENT_ADD_TIME": "2026-05-06T22:04:51.657",
@@ -85,7 +114,7 @@
       "PATIENT_EMAIL": "taylor@example.com",
       "PATIENT_ENTRY_METHOD": "N",
       "PATIENT_FIRST_NAME": "Taylor",
-      "PATIENT_LAST_CHANGE_TIME": "2026-05-06T22:11:00.633",
+      "PATIENT_LAST_CHANGE_TIME": "2026-05-06T22:27:49.347",
       "PATIENT_LAST_NAME": "Swift_fake77gg",
       "PATIENT_LAST_UPDATED_BY": "Kent, Ariella",
       "PATIENT_LOCAL_ID": "PSN3400000GA01",
@@ -150,7 +179,7 @@
       "PATIENT_EMAIL": "taylor@example.com",
       "PATIENT_ENTRY_METHOD": "N",
       "PATIENT_FIRST_NAME": "Taylor",
-      "PATIENT_LAST_CHANGE_TIME": "2026-05-06T22:11:00.643",
+      "PATIENT_LAST_CHANGE_TIME": "2026-05-06T22:27:49.353",
       "PATIENT_LAST_NAME": "Swift_fake77gg",
       "PATIENT_LAST_UPDATED_BY": "Kent, Ariella",
       "PATIENT_LOCAL_ID": "PSN3400000GA01",
@@ -168,112 +197,115 @@
       "PATIENT_ZIP": "30033"
     }
   ],
-  "7": [
-    {
-      "ADD_TIME": "2026-05-06T22:11:00.673",
-      "ADD_USER_ID": 10009282,
-      "ADD_USER_NAME": "Kent, Ariella",
-      "CONDITION_CD": "700",
-      "CONDITION_DESC_TXT": "Syphilis, Unknown",
-      "INVESTIGATION_STATUS_CD": "O",
-      "INVESTIGATION_STATUS_DESC_TXT": "Open",
-      "JURISDICTION_CD": "130001",
-      "JURISDICTION_DESC_TXT": "Fulton County",
-      "LAST_CHG_TIME": "2026-05-06T22:11:00.673",
-      "LAST_CHG_USER_ID": 10009282,
-      "LAST_CHG_USER_NAME": "Kent, Ariella",
-      "LOCAL_ID": "CAS3400017GA01",
-      "LOCAL_PATIENT_ID": "PSN3400000GA01",
-      "PROGRAM_JURISDICTION_OID": 1300100015,
-      "PROG_AREA_CD": "STD",
-      "PROG_AREA_DESC_TXT": "STD",
-      "RECORD_STATUS_CD": "OPEN",
-      "RECORD_STATUS_DESC_TXT": "Open",
-      "RECORD_STATUS_TIME": "2026-05-06T22:11:00.673"
-    }
-  ],
-  "8": [
-    {
-      "ADD_TIME": "2026-05-06T22:04:56.973",
-      "ADD_USER_ID": 10009282,
-      "ADD_USER_NAME": "Kent, Ariella",
-      "ELECTRONIC_IND": "N",
-      "JURISDICTION_CD": "130001",
-      "JURISDICTION_DESC_TXT": "Fulton County",
-      "LAST_CHG_TIME": "2026-05-06T22:11:00.740",
-      "LAST_CHG_USER_ID": 10009282,
-      "LAST_CHG_USER_NAME": "Kent, Ariella",
-      "LOCAL_ID": "OBS3400008GA01",
-      "LOCAL_PATIENT_ID": "PSN3400000GA01",
-      "PROGRAM_JURISDICTION_OID": 1300100015,
-      "PROG_AREA_CD": "STD",
-      "PROG_AREA_DESC_TXT": "STD",
-      "RECORD_STATUS_CD": "PROCESSED",
-      "RECORD_STATUS_DESC_TXT": "Processed",
-      "RECORD_STATUS_TIME": "2026-05-06T22:11:00.740",
-      "STATUS_CD": "D",
-      "STATUS_DESC_TXT": "Completed / Final",
-      "STATUS_TIME": "2026-05-06T22:04:56.827"
-    }
-  ],
-  "9": [
-    {
-      "ADD_TIME": "2026-05-06T22:11:00.673",
-      "ADD_USER_ID": 10009282,
-      "ADD_USER_NAME": "Kent, Ariella",
-      "CONDITION_CD": "700",
-      "CONDITION_DESC_TXT": "Syphilis, Unknown",
-      "INVESTIGATION_STATUS_CD": "O",
-      "INVESTIGATION_STATUS_DESC_TXT": "Open",
-      "JURISDICTION_CD": "130001",
-      "JURISDICTION_DESC_TXT": "Fulton County",
-      "LAST_CHG_TIME": "2026-05-06T22:11:00.673",
-      "LAST_CHG_USER_ID": 10009282,
-      "LAST_CHG_USER_NAME": "Kent, Ariella",
-      "LOCAL_ID": "CAS3400017GA01",
-      "LOCAL_PATIENT_ID": "PSN3400000GA01",
-      "PROGRAM_JURISDICTION_OID": 1300100015,
-      "PROG_AREA_CD": "STD",
-      "PROG_AREA_DESC_TXT": "STD",
-      "RECORD_STATUS_CD": "OPEN",
-      "RECORD_STATUS_DESC_TXT": "Open",
-      "RECORD_STATUS_TIME": "2026-05-06T22:11:00.673"
-    }
-  ],
   "10": [
     {
-      "ADD_TIME": "2026-05-06T22:04:56.973",
+      "ADD_TIME": "2026-05-06T22:11:00.673",
       "ADD_USER_ID": 10009282,
       "ADD_USER_NAME": "Kent, Ariella",
-      "ELECTRONIC_IND": "N",
+      "CASE_CLASS_CD": "C",
+      "CASE_CLASS_DESC_TXT": "Confirmed",
+      "CONDITION_CD": "10312",
+      "CONDITION_DESC_TXT": "Syphilis, secondary",
+      "INVESTIGATION_STATUS_CD": "O",
+      "INVESTIGATION_STATUS_DESC_TXT": "Open",
       "JURISDICTION_CD": "130001",
       "JURISDICTION_DESC_TXT": "Fulton County",
-      "LAST_CHG_TIME": "2026-05-06T22:11:00.740",
+      "LAST_CHG_TIME": "2026-05-06T22:27:49.370",
       "LAST_CHG_USER_ID": 10009282,
       "LAST_CHG_USER_NAME": "Kent, Ariella",
-      "LOCAL_ID": "OBS3400008GA01",
+      "LOCAL_ID": "CAS3400017GA01",
       "LOCAL_PATIENT_ID": "PSN3400000GA01",
       "PROGRAM_JURISDICTION_OID": 1300100015,
       "PROG_AREA_CD": "STD",
       "PROG_AREA_DESC_TXT": "STD",
-      "RECORD_STATUS_CD": "PROCESSED",
-      "RECORD_STATUS_DESC_TXT": "Processed",
-      "RECORD_STATUS_TIME": "2026-05-06T22:11:00.740",
-      "STATUS_CD": "D",
-      "STATUS_DESC_TXT": "Completed / Final",
-      "STATUS_TIME": "2026-05-06T22:04:56.827"
+      "RECORD_STATUS_CD": "OPEN",
+      "RECORD_STATUS_DESC_TXT": "Open",
+      "RECORD_STATUS_TIME": "2026-05-06T22:27:49.370"
     }
   ],
   "11": [
     {
+      "ADD_TIME": "2026-05-06T22:04:56.973",
+      "ADD_USER_ID": 10009282,
+      "ADD_USER_NAME": "Kent, Ariella",
+      "ELECTRONIC_IND": "N",
+      "JURISDICTION_CD": "130001",
+      "JURISDICTION_DESC_TXT": "Fulton County",
+      "LAST_CHG_TIME": "2026-05-06T22:11:00.740",
+      "LAST_CHG_USER_ID": 10009282,
+      "LAST_CHG_USER_NAME": "Kent, Ariella",
+      "LOCAL_ID": "OBS3400008GA01",
+      "LOCAL_PATIENT_ID": "PSN3400000GA01",
+      "PROGRAM_JURISDICTION_OID": 1300100015,
+      "PROG_AREA_CD": "STD",
+      "PROG_AREA_DESC_TXT": "STD",
+      "RECORD_STATUS_CD": "PROCESSED",
+      "RECORD_STATUS_DESC_TXT": "Processed",
+      "RECORD_STATUS_TIME": "2026-05-06T22:11:00.740",
+      "STATUS_CD": "D",
+      "STATUS_DESC_TXT": "Completed / Final",
+      "STATUS_TIME": "2026-05-06T22:04:56.827"
+    }
+  ],
+  "12": [
+    {
+      "ADD_TIME": "2026-05-06T22:11:00.673",
+      "ADD_USER_ID": 10009282,
+      "ADD_USER_NAME": "Kent, Ariella",
+      "CASE_CLASS_CD": "C",
+      "CASE_CLASS_DESC_TXT": "Confirmed",
+      "CONDITION_CD": "10312",
+      "CONDITION_DESC_TXT": "Syphilis, secondary",
+      "INVESTIGATION_STATUS_CD": "O",
+      "INVESTIGATION_STATUS_DESC_TXT": "Open",
+      "JURISDICTION_CD": "130001",
+      "JURISDICTION_DESC_TXT": "Fulton County",
+      "LAST_CHG_TIME": "2026-05-06T22:27:49.370",
+      "LAST_CHG_USER_ID": 10009282,
+      "LAST_CHG_USER_NAME": "Kent, Ariella",
+      "LOCAL_ID": "CAS3400017GA01",
+      "LOCAL_PATIENT_ID": "PSN3400000GA01",
+      "PROGRAM_JURISDICTION_OID": 1300100015,
+      "PROG_AREA_CD": "STD",
+      "PROG_AREA_DESC_TXT": "STD",
+      "RECORD_STATUS_CD": "OPEN",
+      "RECORD_STATUS_DESC_TXT": "Open",
+      "RECORD_STATUS_TIME": "2026-05-06T22:27:49.370"
+    }
+  ],
+  "13": [
+    {
+      "ADD_TIME": "2026-05-06T22:04:56.973",
+      "ADD_USER_ID": 10009282,
+      "ADD_USER_NAME": "Kent, Ariella",
+      "ELECTRONIC_IND": "N",
+      "JURISDICTION_CD": "130001",
+      "JURISDICTION_DESC_TXT": "Fulton County",
+      "LAST_CHG_TIME": "2026-05-06T22:11:00.740",
+      "LAST_CHG_USER_ID": 10009282,
+      "LAST_CHG_USER_NAME": "Kent, Ariella",
+      "LOCAL_ID": "OBS3400008GA01",
+      "LOCAL_PATIENT_ID": "PSN3400000GA01",
+      "PROGRAM_JURISDICTION_OID": 1300100015,
+      "PROG_AREA_CD": "STD",
+      "PROG_AREA_DESC_TXT": "STD",
+      "RECORD_STATUS_CD": "PROCESSED",
+      "RECORD_STATUS_DESC_TXT": "Processed",
+      "RECORD_STATUS_TIME": "2026-05-06T22:11:00.740",
+      "STATUS_CD": "D",
+      "STATUS_DESC_TXT": "Completed / Final",
+      "STATUS_TIME": "2026-05-06T22:04:56.827"
+    }
+  ],
+  "14": [
+    {
       "CLOSED_BY_KEY": 1,
-      "CONDITION_KEY": 217,
+      "CONDITION_KEY": 44,
       "DELIVERING_HOSP_KEY": 1,
       "DELIVERING_MD_KEY": 1,
-      "DISPOSITIONED_BY_KEY": 1,
+      "DISPOSITIONED_BY_KEY": 2,
       "D_INVESTIGATION_REPEAT_KEY": 1.0,
-      "D_INV_ADMINISTRATIVE_KEY": 3,
-      "D_INV_CLINICAL_KEY": 1,
+      "D_INV_CLINICAL_KEY": 3,
       "D_INV_COMPLICATION_KEY": 1,
       "D_INV_CONTACT_KEY": 1,
       "D_INV_DEATH_KEY": 1,
@@ -292,48 +324,52 @@
       "D_INV_SOCIAL_HISTORY_KEY": 1,
       "D_INV_SYMPTOM_KEY": 1,
       "D_INV_TRAVEL_KEY": 1,
-      "D_INV_TREATMENT_KEY": 1,
+      "D_INV_TREATMENT_KEY": 3,
       "D_INV_UNDER_CONDITION_KEY": 1,
       "D_INV_VACCINATION_KEY": 1,
       "FACILITY_FLD_FOLLOW_UP_KEY": 1,
       "GEOCODING_LOCATION_KEY": 1,
       "HOSPITAL_KEY": 1,
-      "INIT_ASGNED_FLD_FOLLOW_UP_KEY": 1,
-      "INIT_ASGNED_INTERVIEWER_KEY": 1,
+      "INIT_ASGNED_FLD_FOLLOW_UP_KEY": 4,
+      "INIT_ASGNED_INTERVIEWER_KEY": 2,
       "INIT_FOLLOW_UP_INVSTGTR_KEY": 3,
-      "INTERVIEWER_ASSIGNED_KEY": 1,
-      "INVESTIGATOR_KEY": 3,
-      "INVSTGTR_FLD_FOLLOW_UP_KEY": 1,
+      "INTERVIEWER_ASSIGNED_KEY": 2,
+      "INVESTIGATOR_KEY": 2,
+      "INVSTGTR_FLD_FOLLOW_UP_KEY": 4,
       "MOTHER_OB_GYN_KEY": 1,
       "ORDERING_FACILITY_KEY": 4,
       "ORG_AS_REPORTER_KEY": 4,
       "PEDIATRICIAN_KEY": 1,
-      "PERSON_AS_REPORTER_KEY": 1,
+      "PERSON_AS_REPORTER_KEY": 6,
       "PHYSICIAN_KEY": 1,
       "PROVIDER_FLD_FOLLOW_UP_KEY": 1,
       "SUPRVSR_OF_CASE_ASSGNMENT_KEY": 1,
-      "SUPRVSR_OF_FLD_FOLLOW_UP_KEY": 1,
+      "SUPRVSR_OF_FLD_FOLLOW_UP_KEY": 2,
       "SURVEILLANCE_INVESTIGATOR_KEY": 3
     }
   ],
-  "12": [
+  "15": [
     {
-      "D_INV_HIV_KEY": 1
     }
   ],
-  "13": [
+  "16": [
     {
       "AGE_REPORTED": 41,
       "AGE_REPORTED_UNIT": "Years",
-      "CURR_PROCESS_STATE": "Surveillance Follow-up",
-      "DISEASE": "Syphilis, Unknown",
-      "DISEASE_CD": "700",
-      "EVENT_DATE": "2026-04-24T00:00:00.000",
-      "EVENT_DATE_TYPE": "Investigation Start Date",
+      "CASE_STATUS": "Confirmed",
+      "CONFIRMATION_DT": "2026-04-24T00:00:00.000",
+      "CONFIRMATION_METHOD": "Laboratory confirmed",
+      "CURR_PROCESS_STATE": "Awaiting Interview",
+      "DIAGNOSIS_DATE": "2026-04-21T00:00:00.000",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "EVENT_DATE": "2026-04-17T00:00:00.000",
+      "EVENT_DATE_TYPE": "Illness Onset Date",
+      "ILLNESS_ONSET_DATE": "2026-04-17T00:00:00.000",
       "INVESTIGATION_CREATED_BY": "Kent, Ariella",
       "INVESTIGATION_CREATE_DATE": "2026-05-06T22:11:00.673",
       "INVESTIGATION_LAST_UPDTD_BY": "Kent, Ariella",
-      "INVESTIGATION_LAST_UPDTD_DATE": "2026-05-06T22:11:00.673",
+      "INVESTIGATION_LAST_UPDTD_DATE": "2026-05-06T22:27:49.370",
       "INVESTIGATION_LOCAL_ID": "CAS3400017GA01",
       "INVESTIGATION_STATUS": "Open",
       "INV_RPT_DT": "2026-05-06T00:00:00.000",
@@ -359,7 +395,7 @@
       "RACE_CALC_DETAILS": "White"
     }
   ],
-  "14": [
+  "17": [
     {
       "ADD_TIME": "2026-05-06T22:11:00.673",
       "CASE_OID": 1300100015,
@@ -368,36 +404,52 @@
       "CASE_TYPE": "I",
       "CASE_UID": 3400017,
       "COINFECTION_ID": "COIN1000XX01",
-      "CURR_PROCESS_STATE": "Surveillance Follow-up",
+      "CURR_PROCESS_STATE": "Awaiting Interview",
+      "DETECTION_METHOD_DESC_TXT": "Self-referral",
+      "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
+      "HSPTLIZD_IND": "No",
+      "ILLNESS_ONSET_DT": "2026-04-17T00:00:00.000",
       "INVESTIGATION_ADDED_BY": "Kent, Ariella",
       "INVESTIGATION_LAST_UPDATED_BY": "Kent, Ariella",
       "INVESTIGATION_STATUS": "Open",
+      "INV_CASE_STATUS": "Confirmed",
       "INV_LOCAL_ID": "CAS3400017GA01",
       "INV_RPT_DT": "2026-05-06T00:00:00.000",
       "INV_SHARE_IND": "T",
       "INV_START_DT": "2026-04-24T00:00:00.000",
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
-      "LAST_CHG_TIME": "2026-05-06T22:11:00.673",
+      "LAST_CHG_TIME": "2026-05-06T22:27:49.370",
+      "PATIENT_AGE_AT_ONSET": 41,
+      "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_PREGNANT_IND": "Yes",
       "PROGRAM_AREA_DESCRIPTION": "STD",
       "RECORD_STATUS_CD": "ACTIVE",
-      "REFERRAL_BASIS": "T1 - Positive Test"
+      "REFERRAL_BASIS": "T1 - Positive Test",
+      "TRANSMISSION_MODE": "Sexually Transmitted"
     }
   ],
-  "15": [
+  "18": [
     {
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "PAGE_CASE_UID": 3400017
+      "PAGE_CASE_UID": 3400017.0
     }
   ],
-  "16": [
+  "19": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
-      "PAGE_CASE_UID": 3400017
+      "PAGE_CASE_UID": 3400017.0
     }
   ],
-  "17": [
+  "20": [
+    {
+      "PAGE_CASE_UID": 3400017.0
+    }
+  ],
+  "21": [
+    {
+      "PAGE_CASE_UID": 3400017.0
+    }
+  ],
+  "22": [
     {
       "ADDR_CD_DESC": "HOUSE",
       "ADDR_USE_CD_DESC": "HOME",
@@ -444,14 +496,14 @@
       "RESULTED_LAB_TEST_CD_DESC": "RPR Titer"
     }
   ],
-  "18": [
+  "23": [
     {
       "LAB_TEST_UID": 3400011,
       "NUMERIC_RESULT": "=1:128",
       "RECORD_STATUS_CD": "ACTIVE"
     }
   ],
-  "19": [
+  "24": [
     {
       "COMMENTS_FOR_ELR_DT": "2026-05-06T22:04:56.837",
       "LAB_TEST_UID": 3400008,
@@ -460,7 +512,7 @@
       "USER_RPT_COMMENTS": "some comments"
     }
   ],
-  "20": [
+  "25": [
     {
       "ELR_IND": "N",
       "JURISDICTION_CD": "130001",
@@ -523,7 +575,7 @@
       "SPECIMEN_SITE": "NI"
     }
   ],
-  "21": [
+  "26": [
     {
       "CONDITION_KEY": 242,
       "COPY_TO_PROVIDER_KEY": 1,
@@ -557,42 +609,65 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     }
   ],
-  "22": [
+  "27": [
     {
       "CALC_5_YEAR_AGE_GROUP": " 9",
       "CASE_RPT_MMWR_WK": 18,
       "CASE_RPT_MMWR_YR": 2026,
+      "CA_INIT_INTVWR_ASSGN_DT": "2026-04-25T00:00:00.000",
+      "CA_INTERVIEWER_ASSIGN_DT": "2026-04-25T00:00:00.000",
+      "CA_PATIENT_INTV_STATUS": "A - Awaiting",
       "COINFECTION_ID": "COIN1000XX01",
-      "CONDITION_CD": "700",
-      "CONDITION_KEY": 217,
-      "CURR_PROCESS_STATE": "Surveillance Follow-up",
+      "CONDITION_CD": "10312",
+      "CONDITION_KEY": 44,
+      "CONFIRMATION_DT": "2026-04-24T00:00:00.000",
+      "CURR_PROCESS_STATE": "Awaiting Interview",
+      "DETECTION_METHOD_DESC_TXT": "Self-referral",
+      "DIAGNOSIS": "720 - Syphilis, secondary",
+      "DIAGNOSIS_CD": "720",
       "EPI_LINK_ID": "1310000026",
       "FACILITY_FLD_FOLLOW_UP_KEY": 1,
       "FIELD_RECORD_NUMBER": "1310000026",
+      "FL_FUP_DISPOSITION": "C - Infected, Brought to Treatment",
+      "FL_FUP_DISPO_DT": "2026-04-25T00:00:00.000",
+      "FL_FUP_INIT_ASSGN_DT": "2026-04-25T00:00:00.000",
+      "FL_FUP_INVESTIGATOR_ASSGN_DT": "2026-04-25T00:00:00.000",
+      "FL_FUP_NOTIFICATION_PLAN": "3 - Dual",
       "HOSPITAL_KEY": 1,
+      "HSPTLIZD_IND": "No",
       "INIT_FUP_INITIAL_FOLL_UP": "Surveillance Follow-up",
       "INIT_FUP_INITIAL_FOLL_UP_CD": "SF",
+      "INIT_FUP_NOTIFIABLE": "06",
       "INVESTIGATION_STATUS": "Open",
       "INVESTIGATOR_CLOSED_KEY": 1,
-      "INVESTIGATOR_CURRENT_KEY": 3,
-      "INVESTIGATOR_CURRENT_QC": "2",
-      "INVESTIGATOR_DISP_FL_FUP_KEY": 1,
-      "INVESTIGATOR_FL_FUP_KEY": 1,
+      "INVESTIGATOR_CURRENT_KEY": 2,
+      "INVESTIGATOR_CURRENT_QC": "1",
+      "INVESTIGATOR_DISP_FL_FUP_KEY": 2,
+      "INVESTIGATOR_DISP_FL_FUP_QC": "1",
+      "INVESTIGATOR_FL_FUP_KEY": 4,
+      "INVESTIGATOR_FL_FUP_QC": "3",
       "INVESTIGATOR_INITIAL_KEY": 3,
       "INVESTIGATOR_INITIAL_QC": "2",
-      "INVESTIGATOR_INIT_FL_FUP_KEY": 1,
-      "INVESTIGATOR_INIT_INTRVW_KEY": 1,
-      "INVESTIGATOR_INTERVIEW_KEY": 1,
+      "INVESTIGATOR_INIT_FL_FUP_KEY": 4,
+      "INVESTIGATOR_INIT_FL_FUP_QC": "3",
+      "INVESTIGATOR_INIT_INTRVW_KEY": 2,
+      "INVESTIGATOR_INIT_INTRVW_QC": "1",
+      "INVESTIGATOR_INTERVIEW_KEY": 2,
+      "INVESTIGATOR_INTERVIEW_QC": "1",
       "INVESTIGATOR_SUPER_CASE_KEY": 1,
-      "INVESTIGATOR_SUPER_FL_FUP_KEY": 1,
+      "INVESTIGATOR_SUPER_FL_FUP_KEY": 2,
+      "INVESTIGATOR_SUPER_FL_FUP_QC": "1",
       "INVESTIGATOR_SURV_KEY": 3,
       "INVESTIGATOR_SURV_QC": "2",
+      "INV_CASE_STATUS": "Confirmed",
       "INV_LOCAL_ID": "CAS3400017GA01",
       "INV_RPT_DT": "2026-05-06T00:00:00.000",
       "INV_START_DT": "2026-04-24T00:00:00.000",
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "ORDERING_FACILITY_KEY": 4,
+      "PATIENT_AGE_AT_ONSET": 41,
+      "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_AGE_REPORTED": "          41 Years",
       "PATIENT_BIRTH_SEX": "Female",
       "PATIENT_CITY": "Atlanta",
@@ -619,13 +694,36 @@
       "PROGRAM_JURISDICTION_OID": 1300100015,
       "REFERRAL_BASIS": "T1 - Positive Test",
       "REPORTING_ORG_KEY": 4,
-      "REPORTING_PROV_KEY": 1,
-      "SURV_INVESTIGATOR_ASSGN_DT": "2026-04-24T00:00:00.000"
+      "REPORTING_PROV_KEY": 6,
+      "SURV_INVESTIGATOR_ASSGN_DT": "2026-04-24T00:00:00.000",
+      "SURV_PATIENT_FOLL_UP": "Field Follow-up",
+      "TRT_TREATMENT_DATE": "2026-04-20"
     }
   ],
-  "23": [
+  "28": [
     {
       "LAB_TEST_UID": 3400011
+    }
+  ],
+  "29": [
+    {
+      "RECORD_STATUS_CD": "ACTIVE",
+      "TREATMENT_DOSAGE_STRENGTH": "2.4",
+      "TREATMENT_DOSAGE_STRENGTH_UNIT": "mu",
+      "TREATMENT_DRUG": "176",
+      "TREATMENT_FREQUENCY": "Once",
+      "TREATMENT_LOCAL_ID": "TRT3400018GA01",
+      "TREATMENT_NM": "Benzathine penicillin G (Bicillin), 2.4 mu, IM, x 1 dose",
+      "TREATMENT_OID": 1,
+      "TREATMENT_ROUTE": "C0556983",
+      "TREATMENT_SHARED_IND": "T",
+      "TREATMENT_UID": 3400018
+    }
+  ],
+  "30": [
+    {
+      "RECORD_STATUS_CD": "ACTIVE",
+      "TREATMENT_COUNT": 1
     }
   ]
 }
