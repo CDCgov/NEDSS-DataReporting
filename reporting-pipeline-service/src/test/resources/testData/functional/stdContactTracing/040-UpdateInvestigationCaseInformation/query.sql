@@ -102,7 +102,6 @@ SELECT
     [CA_INTERVIEWER_ASSIGN_DT],
     [CA_PATIENT_INTV_STATUS],
     [CC_CLOSED_DT],
-    [D_CASE_MANAGEMENT_KEY],
     [EPI_LINK_ID],
     [FIELD_FOLL_UP_OOJ_OUTCOME],
     [FLD_FOLL_UP_EXPECTED_IN],
@@ -215,11 +214,10 @@ SELECT
     [ADM_TRANSNATIONAL_REF],
     [ADM_US_ARRIVAL_DT],
     [ADM_US_BORN],
-    [D_INV_ADMINISTRATIVE_KEY],
-    [IX_DATE],
-    [nbs_case_answer_uid]
+    [IX_DATE]
 FROM [RDB_MODERN].[dbo].[D_INV_ADMINISTRATIVE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+-- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
 ;
 
 -- dbo.D_INV_CLINICAL | operations: insert
@@ -317,11 +315,11 @@ SELECT
     [CLN_TYPE_1_DIABETES_IND],
     [CLN_TYPE_2_DIABETES_IND],
     [CLN_UNIT_ADMIT_DT],
-    [CLN_UNIT_DISCHARGE_DT],
-    [D_INV_CLINICAL_KEY],
-    [nbs_case_answer_uid]
+    [CLN_UNIT_DISCHARGE_DT]
 FROM [RDB_MODERN].[dbo].[D_INV_CLINICAL]
-WHERE [D_INV_CLINICAL_KEY] = 3.0
+-- WHERE [D_INV_CLINICAL_KEY] = 3.0
+-- TODO: need AND nbs_question_uid=X
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_CLINICAL')
 ;
 
 -- dbo.D_INV_PREGNANCY_BIRTH | operations: insert
@@ -329,7 +327,6 @@ WHERE [D_INV_CLINICAL_KEY] = 3.0
 -- Steps: 2, 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PBI_BIRTH_WEIGHT],
     [PBI_BIRTH_WEIGHT_GRAMS],
     [PBI_BIRTH_WEIGHT_GRAMS_UNIT],
@@ -369,10 +366,10 @@ SELECT
     [PBI_SYPH_TST_28_32_WK_GES],
     [PBI_SYPH_TST_DELIVERY],
     [PBI_TRI_FRST_PRNTAL_VISIT],
-    [PBI_VITAL_STATUS],
-    [nbs_case_answer_uid]
+    [PBI_VITAL_STATUS]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
-WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+-- WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
 ;
 
 -- dbo.D_INV_TREATMENT | operations: insert
@@ -479,10 +476,11 @@ SELECT
     [TRT_TREATMENT_START_DT],
     [TRT_TRMT_TKN_AS_PRESCRIBE],
     [TRT_VASOACTIVE_MED_IND],
-    [TRT_VASOACTIVE_MED_TXT],
-    [nbs_case_answer_uid]
+    [TRT_VASOACTIVE_MED_TXT]
 FROM [RDB_MODERN].[dbo].[D_INV_TREATMENT]
-WHERE [D_INV_TREATMENT_KEY] = 3.0
+-- WHERE [D_INV_TREATMENT_KEY] = 3.0
+-- TODO: need nbs_question_uid=X
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_TREATMENT')
 ;
 
 -- dbo.D_PATIENT | operations: delete, insert
@@ -726,7 +724,6 @@ SELECT
     [DELIVERING_MD_KEY],
     [DISPOSITIONED_BY_KEY],
     [D_INVESTIGATION_REPEAT_KEY],
-    [D_INV_ADMINISTRATIVE_KEY],
     [D_INV_CLINICAL_KEY],
     [D_INV_COMPLICATION_KEY],
     [D_INV_CONTACT_KEY],
@@ -770,7 +767,8 @@ SELECT
     [SUPRVSR_OF_FLD_FOLLOW_UP_KEY],
     [SURVEILLANCE_INVESTIGATOR_KEY]
 FROM [RDB_MODERN].[dbo].[F_STD_PAGE_CASE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+-- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+WHERE [D_INV_ADMINISTRATIVE_KEY] = (SELECT D_INV_ADMINISTRATIVE_KEY FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE') AND [CONDITION_KEY] = (SELECT CONDITION_KEY from [RDB_MODERN].[dbo].[nrt_condition_key] WHERE condition_cd=N'10312')
 ;
 
 -- dbo.INV_HIV | operations: insert
@@ -797,7 +795,8 @@ SELECT
     [HIV_SELF_REPORTED_RSLT_900],
     [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[INV_HIV]
-WHERE [D_INV_HIV_KEY] = 1
+- WHERE [D_INV_HIV_KEY] = 1
+WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM [RDB_MODERN].[dbo].INVESTIGATION WHERE INV_LOCAL_ID = N'CAS3400017GA01')
 ;
 
 -- dbo.INV_SUMM_DATAMART | operations: insert, update
@@ -948,7 +947,6 @@ WHERE [INV_LOCAL_ID] = N'CAS3400017GA01'
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_ADMINISTRATIVE_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 WHERE [PAGE_CASE_UID] = 3400017.0
