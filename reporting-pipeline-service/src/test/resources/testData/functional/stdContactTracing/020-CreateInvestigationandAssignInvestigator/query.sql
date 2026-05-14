@@ -727,7 +727,6 @@ WHERE [INV_LOCAL_ID] = N'CAS3400017GA01'
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_ADMINISTRATIVE_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 WHERE [PAGE_CASE_UID] = 3400017.0
