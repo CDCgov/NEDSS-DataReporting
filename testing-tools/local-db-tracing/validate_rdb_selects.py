@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import html
 import json
 import os
@@ -381,8 +382,16 @@ def is_iso_datetime_or_date_string(value: object) -> bool:
     """Check if a value looks like an ISO format date or datetime string."""
     if not isinstance(value, str):
         return False
-    # Matches ISO date (YYYY-MM-DD), ISO datetime (YYYY-MM-DDTHH:MM:SS), or with timezone
-    return bool(re.match(r"^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.[\d]+)?(Z|[+-]\d{2}:?\d{2})?)?$", value))
+
+    candidate = value.strip()
+    if not candidate:
+        return False
+
+    try:
+        datetime.fromisoformat(candidate)
+        return True
+    except ValueError:
+        return False
 
 
 def is_midnight_time(value: str) -> bool:
@@ -397,7 +406,7 @@ def is_midnight_mismatch(expected: object, actual: object) -> bool:
         return False
     if not ("T" in expected and "T" in actual):
         return False  # Only check if both have time components
-    
+
     expected_is_midnight = is_midnight_time(expected)
     actual_is_midnight = is_midnight_time(actual)
     # Return True if one is midnight and the other isn't (they differ)
@@ -448,11 +457,11 @@ def normalize_json_arrays(data: object) -> object:
     """
     if isinstance(data, dict):
         return {key: normalize_json_arrays(value) for key, value in data.items()}
-    
+
     if isinstance(data, list):
         # Normalize each element recursively
         normalized_items = [normalize_json_arrays(item) for item in data]
-        
+
         # Sort arrays if they contain objects (dicts) - sort by JSON representation
         if normalized_items and isinstance(normalized_items[0], dict):
             try:
@@ -460,9 +469,9 @@ def normalize_json_arrays(data: object) -> object:
             except (TypeError, ValueError):
                 # If sorting fails, keep original order
                 pass
-        
+
         return normalized_items
-    
+
     return data
 
 
@@ -471,14 +480,14 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
     # Normalize arrays to ensure consistent ordering for comparison
     expected = normalize_json_arrays(expected)
     actual = normalize_json_arrays(actual)
-    
+
     expected_fields = flatten_json_fields(expected)
     actual_fields = flatten_json_fields(actual)
     field_names = set(expected_fields.keys()) | set(actual_fields.keys())
-    
+
     warning_count = 0
     failure_count = 0
-    
+
     for field_name in field_names:
         expected_has = field_name in expected_fields
         actual_has = field_name in actual_fields
@@ -492,7 +501,7 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
             warning_count += 1
         else:
             failure_count += 1
-    
+
     return warning_count, failure_count
 
 
@@ -511,16 +520,16 @@ def numeric_sort_key(field_name: str) -> tuple:
     Returns a tuple where array indices are integers for proper numeric sorting.
     """
     parts: list = []
-    
+
     # Pattern to match either array indices [N] or field names
     pattern = r'\[(\d+)\]|([^\[\]]+)'
-    
+
     for match in re.finditer(pattern, field_name):
         if match.group(1):  # Array index
             parts.append((1, int(match.group(1))))  # Tuple with 1 for array, then numeric index
         elif match.group(2):  # Field name
             parts.append((0, match.group(2)))  # Tuple with 0 for field, then string
-    
+
     return tuple(parts) if parts else ((0, field_name),)
 
 
@@ -584,7 +593,7 @@ def render_field_comparison_table(
     # Normalize arrays to ensure consistent ordering for comparison
     expected = normalize_json_arrays(expected)
     actual = normalize_json_arrays(actual)
-    
+
     expected_fields = flatten_json_fields(expected)
     actual_fields = flatten_json_fields(actual)
     field_names = sorted(set(expected_fields.keys()) | set(actual_fields.keys()), key=numeric_sort_key)
@@ -678,7 +687,7 @@ def render_markdown_report(
     failing_results = [result for result in results if result["status"] == "fail"]
     warning_results = [result for result in results if result["status"] == "warning"]
     details_results = failing_results + warning_results
-    
+
     if details_results:
         lines.extend(["", "## Details", ""])
         for result in details_results:
@@ -840,7 +849,7 @@ def compare_case(
                 status = "warning"
             else:
                 status = "fail"
-        
+
         result: dict[str, object] = {
             "case_index": case.case_index,
             "label": case.label,
