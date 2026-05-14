@@ -737,7 +737,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_PREGNANCY_BIRTH]
 WHERE [PAGE_CASE_UID] = 3400017.0
