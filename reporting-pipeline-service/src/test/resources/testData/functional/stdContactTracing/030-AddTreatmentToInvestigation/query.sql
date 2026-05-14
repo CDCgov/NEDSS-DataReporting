@@ -209,11 +209,9 @@ SELECT
     [ADM_TRANSNATIONAL_REF],
     [ADM_US_ARRIVAL_DT],
     [ADM_US_BORN],
-    [D_INV_ADMINISTRATIVE_KEY],
-    [IX_DATE],
-    [nbs_case_answer_uid]
+    [IX_DATE]
 FROM [RDB_MODERN].[dbo].[D_INV_ADMINISTRATIVE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
 ;
 
 -- dbo.D_INV_PREGNANCY_BIRTH | operations: insert
@@ -261,10 +259,10 @@ SELECT
     [PBI_SYPH_TST_28_32_WK_GES],
     [PBI_SYPH_TST_DELIVERY],
     [PBI_TRI_FRST_PRNTAL_VISIT],
-    [PBI_VITAL_STATUS],
-    [nbs_case_answer_uid]
+    [PBI_VITAL_STATUS]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
-WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+-- WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
 ;
 
 -- dbo.D_PATIENT | operations: delete, insert
@@ -552,7 +550,8 @@ SELECT
     [SUPRVSR_OF_FLD_FOLLOW_UP_KEY],
     [SURVEILLANCE_INVESTIGATOR_KEY]
 FROM [RDB_MODERN].[dbo].[F_STD_PAGE_CASE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+-- WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+WHERE [D_INV_ADMINISTRATIVE_KEY] = (SELECT D_INV_ADMINISTRATIVE_KEY FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE') AND [CONDITION_KEY] = (SELECT CONDITION_KEY from [RDB_MODERN].[dbo].[nrt_condition_key] WHERE condition_cd=N'700')
 ;
 
 -- dbo.INV_HIV | operations: insert
@@ -579,7 +578,7 @@ SELECT
     [HIV_SELF_REPORTED_RSLT_900],
     [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[INV_HIV]
-WHERE [D_INV_HIV_KEY] = 1
+WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM [RDB_MODERN].[dbo].INVESTIGATION WHERE INV_LOCAL_ID = N'CAS3400017GA01')
 ;
 
 -- dbo.INV_SUMM_DATAMART | operations: insert, update
@@ -730,7 +729,6 @@ WHERE [INV_LOCAL_ID] = N'CAS3400017GA01'
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_ADMINISTRATIVE_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -741,7 +739,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_PREGNANCY_BIRTH]
 WHERE [PAGE_CASE_UID] = 3400017.0
