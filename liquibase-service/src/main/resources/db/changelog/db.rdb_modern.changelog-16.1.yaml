@@ -3161,6 +3161,7 @@ databaseChangeLog:
       id: onboarding-metadata-load
       author: liquibase
       runOnChange: true
+      runInTransaction: false
       changes:
         - sqlFile:
             path: onboarding/000-nrt_metadata_load-001.sql
@@ -3170,6 +3171,7 @@ databaseChangeLog:
       id: onboarding-keys-backfill
       author: liquibase
       runOnChange: true
+      runInTransaction: false
       changes:
         - sqlFile:
             path: onboarding/001-nrt_keys_backfill-001.sql
@@ -3179,6 +3181,7 @@ databaseChangeLog:
       id: onboarding-indexes
       author: liquibase
       runOnChange: true
+      runInTransaction: false
       changes:
         - sqlFile:
             path: onboarding/1000-nrt_indexes-001.sql
