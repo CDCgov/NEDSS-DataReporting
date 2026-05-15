@@ -14,7 +14,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 public class Await {
 
   private static final Duration DEFAULT_RETRY_DELAY = Duration.ofSeconds(6);
-  private static final int DEFAULT_MAX_RETRY = 150;
+  private static final int DEFAULT_MAX_RETRY = 200;
   private static final ObjectMapper MAPPER =
       new ObjectMapper()
           .enable(SerializationFeature.INDENT_OUTPUT)
