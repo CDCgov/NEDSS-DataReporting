@@ -3157,3 +3157,30 @@ databaseChangeLog:
             path: 258-create_rdb_date-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: onboarding-metadata-load
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: onboarding/000-nrt_metadata_load-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: onboarding-keys-backfill
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: onboarding/001-nrt_keys_backfill-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: onboarding-indexes
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: onboarding/1000-nrt_indexes-001.sql
+            splitStatements: true
+            endDelimiter: GO

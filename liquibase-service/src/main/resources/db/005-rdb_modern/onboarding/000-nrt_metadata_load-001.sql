@@ -1,16 +1,3 @@
--- use rdb_modern;
-IF EXISTS(SELECT 1 FROM NBS_ODSE.DBO.NBS_configuration WHERE config_key ='ENV' AND config_value ='UAT')
-    BEGIN
-        USE [rdb_modern];
-        PRINT 'Switched to database [rdb_modern]'
-    END
-ELSE
-    BEGIN
-        USE [rdb];
-        PRINT 'Switched to database [rdb]';
-    END
-
-
 /*ODSE config: dbo.Page_cond_mapping, dbo.NBS_page, dbo.NBS_ui_metadata, dbo.NBS_rdb_metadata, dbo.state_defined_field_metadata, dbo.NBS_configuration, dbo.LOOKUP_QUESTION
 */
 -- these scripts are to bulk load the metadata information from odse to reporting database
@@ -180,7 +167,7 @@ end;
 
 IF OBJECT_ID('dbo.nrt_srte_Lab_result', 'U') IS NOT NULL 
 begin
-	truncate table .dbo.nrt_srte_Lab_result; 
+	truncate table dbo.nrt_srte_Lab_result; 
 	insert into dbo.nrt_srte_Lab_result select * from nbs_srte.dbo.Lab_result;
 end;
 
@@ -342,4 +329,7 @@ DECLARE @condition_cd_list VARCHAR(MAX)
 SELECT @condition_cd_list = STRING_AGG(CAST(CONDITION_CD AS VARCHAR), ',')
 FROM dbo.nrt_srte_Condition_code
 
-EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = @condition_cd_list;
+IF @condition_cd_list IS NOT NULL
+BEGIN
+    EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = @condition_cd_list;
+END
