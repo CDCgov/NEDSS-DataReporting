@@ -191,7 +191,6 @@ WHERE [LOCAL_ID] = N'INT3400019GA01'
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [COMMENT_DATE],
-    [D_INTERVIEW_NOTE_KEY],
     [NBS_ANSWER_UID],
     [USER_COMMENT],
     [USER_FIRST_NAME],

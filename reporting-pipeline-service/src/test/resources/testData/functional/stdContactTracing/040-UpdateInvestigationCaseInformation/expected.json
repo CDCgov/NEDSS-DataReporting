@@ -349,8 +349,6 @@
       "DIAGNOSIS_DATE": "2026-04-21T00:00:00.000",
       "DISEASE": "Syphilis, secondary",
       "DISEASE_CD": "10312",
-      "EVENT_DATE": "2026-04-17T00:00:00.000",
-      "EVENT_DATE_TYPE": "Illness Onset Date",
       "ILLNESS_ONSET_DATE": "2026-04-17T00:00:00.000",
       "INVESTIGATION_CREATED_BY": "Kent, Ariella",
       "INVESTIGATION_CREATE_DATE": "2026-05-06T22:11:00.673",
