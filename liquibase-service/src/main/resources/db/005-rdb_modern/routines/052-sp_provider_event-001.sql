@@ -113,14 +113,9 @@ BEGIN
                                             ON elp.locator_uid = tl.tele_locator_uid
                                         WHERE elp.entity_uid = p.person_uid
                                              AND elp.CLASS_CD = 'TELE'
+                                             AND elp.RECORD_STATUS_CD = 'ACTIVE'
                                              AND tl.phone_nbr_txt IS NOT NULL
-                                             AND (
-                                                (elp.USE_CD = 'WP' AND elp.CD = 'O' AND elp.RECORD_STATUS_CD = 'ACTIVE') -- provider office phone
-                                                OR
-                                                (elp.USE_CD = 'WP' AND elp.CD = 'PH' AND elp.STATUS_CD = 'A') -- provider workplace phone
-                                                OR
-                                                (elp.CD = 'CP') -- provider cell phone
-                                             )
+                                             AND (elp.USE_CD = 'WP' OR elp.CD = 'CP')
                                         FOR json path, INCLUDE_NULL_VALUES) AS phone) AS phone,
                                   -- person email
                                   (SELECT (SELECT tl.tele_locator_uid AS                  [email_tl_uid],
