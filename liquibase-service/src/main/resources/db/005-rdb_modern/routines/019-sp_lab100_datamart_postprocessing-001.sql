@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_lab100_datamart_postprocessing]')
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_lab100_datamart_postprocessing]') 
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
     DROP PROCEDURE [dbo].[sp_lab100_datamart_postprocessing]
 END
-GO
+GO 
 
 CREATE PROCEDURE dbo.[sp_lab100_datamart_postprocessing]
     @labtestuids nvarchar(max), @debug bit = 'false'
