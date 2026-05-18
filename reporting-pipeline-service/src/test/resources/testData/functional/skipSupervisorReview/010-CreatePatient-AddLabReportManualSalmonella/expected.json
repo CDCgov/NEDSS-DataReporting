@@ -117,7 +117,7 @@
             "ADDR_CD_DESC": "HOUSE",
             "ADDR_USE_CD_DESC": "HOME",
             "AGE_REPORTED": 41,
-            "CONDITION_CD": "Salmonellosis",
+            "CONDITION_CD": 50265,
             "CONDITION_SHORT_NM": "Salmonellosis",
             "ELR_IND": "N",
             "EVENT_DATE": "2026-04-01T00:00:00.000",
