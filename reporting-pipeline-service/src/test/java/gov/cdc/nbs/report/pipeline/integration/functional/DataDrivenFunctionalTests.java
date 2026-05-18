@@ -123,10 +123,10 @@ class DataDrivenFunctionalTests extends FunctionalTest {
         String actual = mapper.writeValueAsString(results.get());
         JSONAssert.assertEquals(
             String.format(
-              "Query %d in %s/%s matched expected JSON",
-              i, testDirectory.getFileName(), stepDirectory.getFileName()),
-              expectedResult,
-              actual,
+                "Query %d in %s/%s matched expected JSON",
+                i, testDirectory.getFileName(), stepDirectory.getFileName()),
+            expectedResult,
+            actual,
             JSONCompareMode.LENIENT);
       }
     }
