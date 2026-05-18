@@ -62,7 +62,7 @@ public abstract class UnitTest {
   }
 
   @BeforeAll
-  void setUp() throws Exception {
+  void setUp() {
     synchronized (UnitTest.class) {
       if (!started) {
         if (environment == null) {
@@ -75,7 +75,7 @@ public abstract class UnitTest {
   }
 
   @AfterAll
-  void tearDown() throws Exception {
+  void tearDown() {
     synchronized (UnitTest.class) {
       if (started) {
         if (environment == null) {
