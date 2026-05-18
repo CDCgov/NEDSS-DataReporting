@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_lab100_datamart_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_lab100_datamart_postprocessing]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
     DROP PROCEDURE [dbo].[sp_lab100_datamart_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE dbo.[sp_lab100_datamart_postprocessing]
     @labtestuids nvarchar(max), @debug bit = 'false'
@@ -1189,8 +1189,7 @@ BEGIN
             lt2.LAB_RPT_STATUS,
             lt2.oid_order,
             case
-                when RTRIM(LTRIM(lt2.CONDITION_SHORT_NM))=''
-                    or RTRIM(LTRIM(lt2.CONDITION_SHORT_NM)) is null then lc.condition_cd
+                when lc.condition_cd is not null and RTRIM(LTRIM(lc.condition_cd))<>'' then lc.condition_cd
                 else lt2.CONDITION_CD
                 end as CONDITION_CD,
             lt2.REASON_FOR_TEST_DESC1,
@@ -1361,7 +1360,7 @@ BEGIN
             lt3.oid_order,
             case
                 when TEST_RESULT_VAL_CD   like '%[^0-9]%' and SUBSTRING(TEST_RESULT_VAL_CD,2,1) = '-'
-                    and (lt3.CONDITION_CD='' or lt3.CONDITION_CD is null) then sc.DISEASE_NM
+                    and sc.CONDITION_CD is not null and RTRIM(LTRIM(sc.CONDITION_CD))<>'' then sc.CONDITION_CD
                 else lt3.CONDITION_CD
                 end as CONDITION_CD,
             lt3.REASON_FOR_TEST_DESC1,
