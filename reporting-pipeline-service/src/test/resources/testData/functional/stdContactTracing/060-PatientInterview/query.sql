@@ -5,7 +5,8 @@
 -- Steps: 2, 4, 5, 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [ADT_HSPTL_KEY],
+-- temporary removal for delay
+--    [ADT_HSPTL_KEY],
     [CASE_COUNT],
     [DIAGNOSIS_DT_KEY],
     [GEOCODING_LOCATION_KEY],
@@ -191,7 +192,6 @@ WHERE [LOCAL_ID] = N'INT3400019GA01'
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [COMMENT_DATE],
-    [NBS_ANSWER_UID],
     [USER_COMMENT],
     [USER_FIRST_NAME],
     [USER_LAST_NAME]
@@ -363,7 +363,7 @@ SELECT
     [CLN_UNIT_DISCHARGE_DT]
 FROM [RDB_MODERN].[dbo].[D_INV_CLINICAL]
 --WHERE [D_INV_CLINICAL_KEY] = 3.0
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_CLINICAL')
+WHERE [nbs_case_answer_uid] = (SELECT top 1 nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_CLINICAL')
 ;
 
 -- dbo.D_INV_HIV | operations: insert
@@ -1035,30 +1035,6 @@ SELECT
     [DELIVERING_HOSP_KEY],
     [DELIVERING_MD_KEY],
     [DISPOSITIONED_BY_KEY],
-    [D_INVESTIGATION_REPEAT_KEY],
-    [D_INV_ADMINISTRATIVE_KEY],
-    [D_INV_CLINICAL_KEY],
-    [D_INV_COMPLICATION_KEY],
-    [D_INV_CONTACT_KEY],
-    [D_INV_DEATH_KEY],
-    [D_INV_EPIDEMIOLOGY_KEY],
-    [D_INV_HIV_KEY],
-    [D_INV_ISOLATE_TRACKING_KEY],
-    [D_INV_LAB_FINDING_KEY],
-    [D_INV_MEDICAL_HISTORY_KEY],
-    [D_INV_MOTHER_KEY],
-    [D_INV_OTHER_KEY],
-    [D_INV_PATIENT_OBS_KEY],
-    [D_INV_PLACE_REPEAT_KEY],
-    [D_INV_PREGNANCY_BIRTH_KEY],
-    [D_INV_RESIDENCY_KEY],
-    [D_INV_RISK_FACTOR_KEY],
-    [D_INV_SOCIAL_HISTORY_KEY],
-    [D_INV_SYMPTOM_KEY],
-    [D_INV_TRAVEL_KEY],
-    [D_INV_TREATMENT_KEY],
-    [D_INV_UNDER_CONDITION_KEY],
-    [D_INV_VACCINATION_KEY],
     [FACILITY_FLD_FOLLOW_UP_KEY],
     [GEOCODING_LOCATION_KEY],
     [HOSPITAL_KEY],
@@ -1259,7 +1235,6 @@ WHERE [INV_LOCAL_ID] = N'CAS3400017GA01'
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_ADMINISTRATIVE_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1270,7 +1245,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_CLINICAL_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_CLINICAL]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1281,7 +1255,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_HIV_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_HIV]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1292,7 +1265,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_MEDICAL_HISTORY_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_MEDICAL_HISTORY]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1303,7 +1275,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_PREGNANCY_BIRTH]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1314,7 +1285,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_RISK_FACTOR_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_RISK_FACTOR]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1325,7 +1295,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_SOCIAL_HISTORY_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_SOCIAL_HISTORY]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -1336,7 +1305,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_TREATMENT_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_TREATMENT]
 WHERE [PAGE_CASE_UID] = 3400017.0
