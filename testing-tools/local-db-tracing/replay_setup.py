@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 from tracing_env import load_database_connection_defaults, resolve_server_argument
-from tracing_constants import ALWAYS_REPLACE_COLUMN_NAMES
+from tracing_constants import ALWAYS_REPLACE_COLUMN_NAMES, DO_NOT_REPLACE_COLUMNS_ANY_TABLE, DO_NOT_REPLACE_COLUMNS_BY_TABLE
 from tracing_metadata import fetch_auto_datetime_columns, fetch_column_sql_types
 from tracing_sql import SqlCmdClient, require_sqlcmd
 
@@ -162,23 +162,76 @@ def normalize_column_name(column_token: str) -> str:
     return stripped
 
 
-def replacement_expression(sql_type: str) -> str:
+def value_has_midnight_time(value_token: str) -> bool:
+    """Check if a date/datetime literal has a midnight time component (00:00:00)."""
+    stripped = value_token.strip()
+    # Remove quotes and N prefix if present
+    if stripped.startswith("N'"):
+        stripped = stripped[2:-1]
+    elif stripped.startswith("'"):
+        stripped = stripped[1:-1]
+    else:
+        return False
+    
+    # Check for time component: T or space followed by 00:00:00
+    if 'T' in stripped:
+        # Format: 2026-04-23T00:00:00 or 2026-04-23T00:00:00.000
+        parts = stripped.split('T')
+        if len(parts) == 2 and parts[1].startswith('00:00:00'):
+            return True
+    elif ' ' in stripped:
+        # Format: 2026-04-23 00:00:00 or 2026-04-23 00:00:00.000
+        parts = stripped.split(' ')
+        if len(parts) == 2 and parts[1].startswith('00:00:00'):
+            return True
+    
+    return False
+
+
+def replacement_expression(sql_type: str, has_midnight_time: bool = False) -> str:
+    sql_current_date = "CAST(CURRENT_TIMESTAMP AS date)"
     lowered = sql_type.lower()
     if lowered == "date":
-        return "CAST(CURRENT_TIMESTAMP AS date)"
+        return sql_current_date
     if lowered == "time":
         return "CAST(CURRENT_TIMESTAMP AS time)"
     if lowered.startswith("datetimeoffset"):
+        if has_midnight_time:
+            return f"CAST({sql_current_date} AS datetimeoffset)"
         return "CAST(CURRENT_TIMESTAMP AS datetimeoffset)"
     if lowered.startswith("datetime2"):
+        if has_midnight_time:
+            return f"CAST({sql_current_date} AS datetime2)"
         return "CAST(CURRENT_TIMESTAMP AS datetime2)"
     if lowered.startswith("smalldatetime"):
+        if has_midnight_time:
+            return f"CAST({sql_current_date} AS smalldatetime)"
         return "CAST(CURRENT_TIMESTAMP AS smalldatetime)"
+    if has_midnight_time:
+        return sql_current_date
     return "CURRENT_TIMESTAMP"
 
 
 def should_replace_literal(value_token: str) -> bool:
     return bool(HARDCODED_DATE_LITERAL_PATTERN.match(value_token.strip()))
+
+
+def should_exclude_from_replacement(schema_name: str, table_name: str, column_name: str) -> bool:
+    """Check if a column should be excluded from datetime replacement.
+    
+    Returns True if the column matches either a table-specific or table-agnostic exclusion.
+    """
+    normalized_schema = schema_name.lower()
+    normalized_table = table_name.lower()
+    normalized_column = column_name.lower()
+
+    # Check table-specific exclusion
+    if (normalized_schema, normalized_table, normalized_column) in DO_NOT_REPLACE_COLUMNS_BY_TABLE:
+        return True
+    # Check generic column name exclusion (applies to all tables)
+    if normalized_column in DO_NOT_REPLACE_COLUMNS_ANY_TABLE:
+        return True
+    return False
 
 
 def rewrite_insert_statement(
@@ -203,9 +256,11 @@ def rewrite_insert_statement(
         column_name = normalize_column_name(column_token)
         column_key = (schema_name, table_name, column_name)
         rewritten_value = value_token
-        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and should_replace_literal(value_token):
+        normalized_column_name = column_name.lower()
+        if (column_key in eligible_columns or normalized_column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
             sql_type = column_types.get(column_key, "datetime")
-            rewritten_value = replacement_expression(sql_type)
+            has_midnight = value_has_midnight_time(value_token)
+            rewritten_value = replacement_expression(sql_type, has_midnight)
             replacements += 1
         rewritten_values.append(rewritten_value)
 
@@ -244,9 +299,11 @@ def rewrite_update_statement(
         value_token = assignment_match.group("value")
         column_key = (schema_name, table_name, column_name)
         rewritten_assignment = assignment
-        if (column_key in eligible_columns or column_name in ALWAYS_REPLACE_COLUMN_NAMES) and should_replace_literal(value_token):
+        normalized_column_name = column_name.lower()
+        if (column_key in eligible_columns or normalized_column_name in ALWAYS_REPLACE_COLUMN_NAMES) and not should_exclude_from_replacement(schema_name, table_name, column_name) and should_replace_literal(value_token):
             sql_type = column_types.get(column_key, "datetime")
-            rewritten_assignment = f"[{column_name}] = {replacement_expression(sql_type)}"
+            has_midnight = value_has_midnight_time(value_token)
+            rewritten_assignment = f"[{column_name}] = {replacement_expression(sql_type, has_midnight)}"
             replacements += 1
         rewritten_assignments.append(rewritten_assignment)
 
