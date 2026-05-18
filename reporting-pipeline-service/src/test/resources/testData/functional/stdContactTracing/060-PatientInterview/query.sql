@@ -259,11 +259,10 @@ SELECT
     [ADM_TRANSNATIONAL_REF],
     [ADM_US_ARRIVAL_DT],
     [ADM_US_BORN],
-    [D_INV_ADMINISTRATIVE_KEY],
-    [IX_DATE],
-    [nbs_case_answer_uid]
+    [IX_DATE]
 FROM [RDB_MODERN].[dbo].[D_INV_ADMINISTRATIVE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+--WHERE [D_INV_ADMINISTRATIVE_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE')
 ;
 
 -- dbo.D_INV_CLINICAL | operations: insert
@@ -361,11 +360,10 @@ SELECT
     [CLN_TYPE_1_DIABETES_IND],
     [CLN_TYPE_2_DIABETES_IND],
     [CLN_UNIT_ADMIT_DT],
-    [CLN_UNIT_DISCHARGE_DT],
-    [D_INV_CLINICAL_KEY],
-    [nbs_case_answer_uid]
+    [CLN_UNIT_DISCHARGE_DT]
 FROM [RDB_MODERN].[dbo].[D_INV_CLINICAL]
-WHERE [D_INV_CLINICAL_KEY] = 3.0
+--WHERE [D_INV_CLINICAL_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_CLINICAL')
 ;
 
 -- dbo.D_INV_HIV | operations: insert
@@ -373,7 +371,6 @@ WHERE [D_INV_CLINICAL_KEY] = 3.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_HIV_KEY],
     [HIV_900_RESULT],
     [HIV_900_TEST_IND],
     [HIV_900_TEST_REFERRAL_DT],
@@ -393,10 +390,10 @@ SELECT
     [HIV_REFER_FOR_900_TEST],
     [HIV_RST_PROVIDED_900_RSLT_IND],
     [HIV_SELF_REPORTED_RSLT_900],
-    [HIV_STATE_CASE_ID],
-    [nbs_case_answer_uid]
+    [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[D_INV_HIV]
-WHERE [D_INV_HIV_KEY] = 3
+--WHERE [D_INV_HIV_KEY] = 3
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_HIV')
 ;
 
 -- dbo.D_INV_MEDICAL_HISTORY | operations: insert
@@ -404,7 +401,6 @@ WHERE [D_INV_HIV_KEY] = 3
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_MEDICAL_HISTORY_KEY],
     [MDH_ASPLENIC_IND],
     [MDH_AUTOIMMUNE_DISEASE],
     [MDH_CHRONIC_LIVER_DIS_IND],
@@ -461,10 +457,10 @@ SELECT
     [MDH_TYPE_RENAL_DZ_OTH],
     [MDH_UNDERLYING_COND_OTH],
     [MDH_UNDRLYNG_COND_SPECIFY],
-    [MDH_VIRAL_HEP_B_C_INF],
-    [nbs_case_answer_uid]
+    [MDH_VIRAL_HEP_B_C_INF]
 FROM [RDB_MODERN].[dbo].[D_INV_MEDICAL_HISTORY]
-WHERE [D_INV_MEDICAL_HISTORY_KEY] = 3.0
+--WHERE [D_INV_MEDICAL_HISTORY_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_MEDICAL_HISTORY')
 ;
 
 -- dbo.D_INV_PREGNANCY_BIRTH | operations: insert
@@ -472,7 +468,6 @@ WHERE [D_INV_MEDICAL_HISTORY_KEY] = 3.0
 -- Steps: 2, 4, 5, 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PBI_BIRTH_WEIGHT],
     [PBI_BIRTH_WEIGHT_GRAMS],
     [PBI_BIRTH_WEIGHT_GRAMS_UNIT],
@@ -515,7 +510,8 @@ SELECT
     [PBI_VITAL_STATUS],
     [nbs_case_answer_uid]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
-WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+--WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
 ;
 
 -- dbo.D_INV_RISK_FACTOR | operations: insert
@@ -523,7 +519,6 @@ WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_RISK_FACTOR_KEY],
     [RSK_ADULT_CONG_LIVING_EXP],
     [RSK_ALCOHOLISM],
     [RSK_ANIMAL_CONTACT_IND],
@@ -636,10 +631,10 @@ SELECT
     [RSK_WKPLC_SETTING],
     [RSK_WKPLC_SETTING_CODED],
     [RSK_WKPLC_SETTING_CODED_OTH],
-    [RSK_WORKPLACE_EXP],
-    [nbs_case_answer_uid]
+    [RSK_WORKPLACE_EXP]
 FROM [RDB_MODERN].[dbo].[D_INV_RISK_FACTOR]
-WHERE [D_INV_RISK_FACTOR_KEY] = 3.0
+--WHERE [D_INV_RISK_FACTOR_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_RISK_FACTOR')
 ;
 
 -- dbo.D_INV_SOCIAL_HISTORY | operations: insert
@@ -647,7 +642,6 @@ WHERE [D_INV_RISK_FACTOR_KEY] = 3.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_SOCIAL_HISTORY_KEY],
     [SOC_CURRENT_SMOKER_IND],
     [SOC_FEMALE_PRTNRS_12MO_IND],
     [SOC_FEMALE_PRTNRS_12MO_TTL],
@@ -671,10 +665,10 @@ SELECT
     [SOC_PRTRS_MALE_TRANS_NBR],
     [SOC_SX_PRTNRS_INTNT_12MO_IND],
     [SOC_TRANSGNDR_PRTNRS_12MO_IND],
-    [SOC_TRANSGNDR_PRTNRS_12MO_TTL],
-    [nbs_case_answer_uid]
+    [SOC_TRANSGNDR_PRTNRS_12MO_TTL]
 FROM [RDB_MODERN].[dbo].[D_INV_SOCIAL_HISTORY]
-WHERE [D_INV_SOCIAL_HISTORY_KEY] = 3.0
+--WHERE [D_INV_SOCIAL_HISTORY_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_SOCIAL_HISTORY')
 ;
 
 -- dbo.D_INV_TREATMENT | operations: insert
@@ -684,7 +678,6 @@ WHERE [D_INV_SOCIAL_HISTORY_KEY] = 3.0
 SELECT
     [CLN_RSLT_CHEST_STDY],
     [CLN_RSLT_CHEST_STDY_OTH],
-    [D_INV_TREATMENT_KEY],
     [TRT_AMIKACIN_IND],
     [TRT_ANTICOAGULATION_IND],
     [TRT_ANTICOAGULATION_TXT],
@@ -784,7 +777,8 @@ SELECT
     [TRT_VASOACTIVE_MED_TXT],
     [nbs_case_answer_uid]
 FROM [RDB_MODERN].[dbo].[D_INV_TREATMENT]
-WHERE [D_INV_TREATMENT_KEY] = 3.0
+--WHERE [D_INV_TREATMENT_KEY] = 3.0
+WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_TREATMENT')
 ;
 
 -- dbo.D_PATIENT | operations: delete, insert
@@ -1086,7 +1080,8 @@ SELECT
     [SUPRVSR_OF_FLD_FOLLOW_UP_KEY],
     [SURVEILLANCE_INVESTIGATOR_KEY]
 FROM [RDB_MODERN].[dbo].[F_STD_PAGE_CASE]
-WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+--WHERE [D_INV_ADMINISTRATIVE_KEY] = 3
+WHERE [D_INV_ADMINISTRATIVE_KEY] = (SELECT D_INV_ADMINISTRATIVE_KEY FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001013 AND rdb_table_nm=N'D_INV_ADMINISTRATIVE') AND [CONDITION_KEY] = (SELECT CONDITION_KEY from [RDB_MODERN].[dbo].[nrt_condition_key] WHERE condition_cd=N'10312')
 ;
 
 -- dbo.INV_HIV | operations: insert, update
