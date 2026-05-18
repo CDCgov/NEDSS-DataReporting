@@ -265,6 +265,15 @@ run_place_chain() {
 run_investigation_chain() {
   log "  investigation (foundation 20000100 + v2 20050010)"
   sql_q RDB_MODERN "EXEC dbo.sp_investigation_event @phc_id_list = N'20000100,20050010'" >/dev/null
+  # RTR bug #5b: Tier 1 fixture left nrt_investigation.patient_id NULL on the
+  # foundation Investigation by design (cross-subject UIDs were intentionally
+  # NULL on Tier 1). The downstream Datamart chain (sp_hepatitis_datamart_*
+  # via F_PAGE_CASE) reads nrt_investigation.patient_id directly, and a NULL
+  # there cascades through COALESCE(PATIENT.PATIENT_KEY, 1) to the sentinel
+  # PATIENT_KEY=1 (PATIENT_UID=NULL), which the SP then DELETEs before INSERT.
+  # Point patient_id at the foundation nrt_patient.patient_uid so D_PATIENT
+  # joins resolve to a real row.
+  sql_q RDB_MODERN "UPDATE dbo.nrt_investigation SET patient_id = 20000000 WHERE public_health_case_uid = 20000100" >/dev/null
   sql_q RDB_MODERN "EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'20000100,20050010', @debug = 0" >/dev/null
 }
 
