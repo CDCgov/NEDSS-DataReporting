@@ -93,7 +93,7 @@ dependencies {
     implementation 'com.microsoft.sqlserver:mssql-jdbc:13.4.0.jre11'
     implementation 'ch.qos.logback:logback-classic:1.5.32'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
-    implementation 'com.google.guava:guava:33.5.0-jre'
+    implementation 'com.google.guava:guava:33.6.0-jre'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
 
     compileOnly 'org.projectlombok:lombok'
@@ -101,7 +101,7 @@ dependencies {
     compileOnly 'org.slf4j:slf4j-api'
 
     implementation 'org.modelmapper:modelmapper:3.2.0'
-    implementation 'com.google.guava:guava:33.5.0-jre'
+    implementation 'com.google.guava:guava:33.6.0-jre'
 
     implementation 'io.micrometer:micrometer-core'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
