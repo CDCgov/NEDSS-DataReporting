@@ -5,8 +5,7 @@
 -- Steps: 2, 4, 5, 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
--- temporary removal for delay
---    [ADT_HSPTL_KEY],
+    [ADT_HSPTL_KEY],
     [CASE_COUNT],
     [DIAGNOSIS_DT_KEY],
     [GEOCODING_LOCATION_KEY],
@@ -393,7 +392,7 @@ SELECT
     [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[D_INV_HIV]
 --WHERE [D_INV_HIV_KEY] = 3
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_HIV')
+WHERE [D_INV_HIV_KEY] = (SELECT D_INV_HIV_KEY FROM F_STD_PAGE_CASE)
 ;
 
 -- dbo.D_INV_MEDICAL_HISTORY | operations: insert
@@ -507,8 +506,7 @@ SELECT
     [PBI_SYPH_TST_28_32_WK_GES],
     [PBI_SYPH_TST_DELIVERY],
     [PBI_TRI_FRST_PRNTAL_VISIT],
-    [PBI_VITAL_STATUS],
-    [nbs_case_answer_uid]
+    [PBI_VITAL_STATUS]
 FROM [RDB_MODERN].[dbo].[D_INV_PREGNANCY_BIRTH]
 --WHERE [D_INV_PREGNANCY_BIRTH_KEY] = 3.0
 WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND nbs_question_uid=10001252 AND rdb_table_nm=N'D_INV_PREGNANCY_BIRTH')
@@ -634,7 +632,7 @@ SELECT
     [RSK_WORKPLACE_EXP]
 FROM [RDB_MODERN].[dbo].[D_INV_RISK_FACTOR]
 --WHERE [D_INV_RISK_FACTOR_KEY] = 3.0
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_RISK_FACTOR')
+WHERE [D_INV_RISK_FACTOR_KEY] = (SELECT D_INV_RISK_FACTOR_KEY FROM F_STD_PAGE_CASE)
 ;
 
 -- dbo.D_INV_SOCIAL_HISTORY | operations: insert
@@ -668,7 +666,7 @@ SELECT
     [SOC_TRANSGNDR_PRTNRS_12MO_TTL]
 FROM [RDB_MODERN].[dbo].[D_INV_SOCIAL_HISTORY]
 --WHERE [D_INV_SOCIAL_HISTORY_KEY] = 3.0
-WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_SOCIAL_HISTORY')
+WHERE [D_INV_SOCIAL_HISTORY_KEY] = (SELECT D_INV_SOCIAL_HISTORY_KEY FROM F_STD_PAGE_CASE)
 ;
 
 -- dbo.D_INV_TREATMENT | operations: insert
@@ -774,8 +772,7 @@ SELECT
     [TRT_TREATMENT_START_DT],
     [TRT_TRMT_TKN_AS_PRESCRIBE],
     [TRT_VASOACTIVE_MED_IND],
-    [TRT_VASOACTIVE_MED_TXT],
-    [nbs_case_answer_uid]
+    [TRT_VASOACTIVE_MED_TXT]
 FROM [RDB_MODERN].[dbo].[D_INV_TREATMENT]
 --WHERE [D_INV_TREATMENT_KEY] = 3.0
 WHERE [nbs_case_answer_uid] = (SELECT nbs_case_answer_uid FROM [RDB_MODERN].[dbo].[nrt_page_case_answer] WHERE act_uid=3400017 AND rdb_table_nm=N'D_INV_TREATMENT')
@@ -1065,7 +1062,6 @@ WHERE [D_INV_ADMINISTRATIVE_KEY] = (SELECT D_INV_ADMINISTRATIVE_KEY FROM [RDB_MO
 -- Steps: 2, 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_HIV_KEY],
     [HIV_900_RESULT],
     [HIV_900_TEST_IND],
     [HIV_900_TEST_REFERRAL_DT],
