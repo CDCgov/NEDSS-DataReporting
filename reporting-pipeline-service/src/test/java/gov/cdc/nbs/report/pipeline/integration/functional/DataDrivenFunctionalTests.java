@@ -115,9 +115,19 @@ class DataDrivenFunctionalTests extends FunctionalTest {
         Optional<List<Map<String, Object>>> results =
             Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
 
-        assertThat(results).isPresent();
+        assertThat(results)
+            .withFailMessage(
+                "Query %d in %s/%s did not return results within the time limit",
+                i, testDirectory.getFileName(), stepDirectory.getFileName())
+            .isPresent();
         String actual = mapper.writeValueAsString(results.get());
-        JSONAssert.assertEquals(expectedResult, actual, JSONCompareMode.LENIENT);
+        JSONAssert.assertEquals(
+            String.format(
+              "Query %d in %s/%s matched expected JSON",
+              i, testDirectory.getFileName(), stepDirectory.getFileName()),
+              expectedResult,
+              actual,
+            JSONCompareMode.LENIENT);
       }
     }
   }
