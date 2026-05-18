@@ -391,8 +391,6 @@
     {
       "INTERPRETER_KEY": 1.0,
       "INTERVENTION_SITE_KEY": 1,
-      "IX_INTERVIEWEE_KEY": 6.0,
-      "IX_INTERVIEWER_KEY": 2,
       "NURSE_KEY": 1.0,
       "PHYSICIAN_KEY": 1.0,
       "PROXY_KEY": 1.0
