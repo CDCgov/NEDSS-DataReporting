@@ -886,29 +886,29 @@ BEGIN
 
         SET @dynamiccolumnUpdate=''; 
             
-        SELECT   @dynamiccolumnUpdate= @dynamiccolumnUpdate + 'TBL.[' +  COLUMN_NAME  + '] = NULL ,' 
+        SELECT   @dynamiccolumnUpdate= @dynamiccolumnUpdate + 'TBL.[' +  COLUMN_NAME  + '] = NULL ,'
         FROM  INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'LDF_FOODBORNE'
             AND COLUMN_NAME NOT IN  ('INVESTIGATION_KEY', 'INVESTIGATION_LOCAL_ID', 'PROGRAM_JURISDICTION_OID', 'PATIENT_KEY', 'PATIENT_LOCAL_ID', 'DISEASE_NAME', 'DISEASE_CD')
-            
-        IF LEN(@dynamiccolumnUpdate) > 0
-        BEGIN
-            SET @dynamiccolumnUpdate = SUBSTRING(@dynamiccolumnUpdate, 1, LEN(@dynamiccolumnUpdate) - 1);
 
-            EXEC ('update TBL SET ' +   @dynamiccolumnUpdate + ' FROM  
-            dbo.LDF_FOODBORNE TBL inner join  
-            dbo.INVESTIGATION INV with (nolock) 
+        IF @dynamiccolumnUpdate IS NOT NULL AND @dynamiccolumnUpdate!=''
+
+            BEGIN
+
+            SET  @dynamiccolumnUpdate=substring(@dynamiccolumnUpdate,1,len(@dynamiccolumnUpdate)-1)
+
+
+            EXEC ('update TBL SET ' +   @dynamiccolumnUpdate + ' FROM
+            dbo.LDF_FOODBORNE TBL inner join
+            dbo.INVESTIGATION INV with (nolock)
             ON TBL.INVESTIGATION_KEY = INV.INVESTIGATION_KEY
-            INNER JOIN #LDF_UID_LIST LDF_UID_LIST ON 
+            INNER JOIN #LDF_UID_LIST LDF_UID_LIST ON
             LDF_UID_LIST.VALUE = INV.CASE_UID
-            LEFT JOIN (SELECT DISTINCT INVESTIGATION_UID FROM DBO.LDF_DIMENSIONAL_DATA WITH (NOLOCK)) LDF_DIMENSIONAL_DATA 
+            LEFT JOIN (SELECT DISTINCT INVESTIGATION_UID FROM DBO.LDF_DIMENSIONAL_DATA WITH (NOLOCK)) LDF_DIMENSIONAL_DATA
             ON LDF_DIMENSIONAL_DATA.INVESTIGATION_UID = INV.CASE_UID
             WHERE LDF_DIMENSIONAL_DATA.INVESTIGATION_UID IS NULL;
             ');
-        END
-        ELSE
-        BEGIN
-            SELECT @ROWCOUNT_NO = 0;
-        END
+
+            END
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
         
