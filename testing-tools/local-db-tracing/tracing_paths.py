@@ -59,7 +59,7 @@ def is_excluded_artifact_table(schema_name: str, table_name: str) -> bool:
     if key in EXCLUDED_ARTIFACT_TABLES:
         return True
     return any(
-        key[0] == schema.lower() and key[1].startswith(prefix.lower())
+        key[0] == schema and key[1].startswith(prefix)
         for schema, prefix in EXCLUDED_ARTIFACT_TABLE_PREFIXES
     )
 
