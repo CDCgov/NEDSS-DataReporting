@@ -35,7 +35,7 @@ def infer_core_replay_ignored_tables(
     ignored_tables: set[tuple[str, str]] = set()
     for schema_name, table_name in DEFAULT_CORE_REPLAY_IGNORED_TABLES:
         ignored_tables.add(
-            actual_names_by_lower.get((schema_name.lower(), table_name.lower()), (schema_name, table_name))
+            actual_names_by_lower.get((schema_name, table_name), (schema_name, table_name))
         )
     return ignored_tables
 

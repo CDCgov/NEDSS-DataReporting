@@ -144,6 +144,7 @@ public class PersonTransformers {
         .lastChgTime(p.getLastChgTime())
         .localId(p.getLocalId())
         .maritalStatus(p.getMaritalStatus())
+        .maritalStatusCd(p.getMaritalStatusCd())
         .primaryOccupation(p.getPrimaryOccupation())
         .patientMprUid(p.getPersonParentUid())
         .preferredGender(p.getPreferredGender())

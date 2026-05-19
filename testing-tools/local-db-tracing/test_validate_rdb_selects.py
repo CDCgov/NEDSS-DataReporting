@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import sys
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -51,6 +53,25 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         self.assertIn("USE [RDB_MODERN];", prelude)
         self.assertIn("DECLARE @id bigint = 1;", prelude)
 
+    def test_build_prelude_sql_strips_leading_use_when_requested(self) -> None:
+        sql_text = """
+USE [RDB];
+
+DECLARE @id bigint = 1;
+
+-- dbo.TableA | operations: insert
+SELECT [id] FROM [dbo].[TableA] WHERE [id] = @id FOR JSON PATH;
+-- EXPECTED_ROWS_JSON:
+-- [{"id":1}]
+""".strip()
+
+        statements, cases = validate_rdb_selects.parse_cases(sql_text)
+
+        prelude = validate_rdb_selects.build_prelude_sql(statements, cases[0], strip_leading_use=True)
+
+        self.assertNotIn("USE [RDB];", prelude)
+        self.assertIn("DECLARE @id bigint = 1;", prelude)
+
     def test_compare_case_handles_sql_error_without_raising(self) -> None:
         case = validate_rdb_selects.SelectCase(
             case_index=1,
@@ -93,6 +114,50 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         self.assertEqual(fail_result["status"], "fail")
         self.assertIn("does not match", str(fail_result.get("error")))
 
+    def test_parse_cases_from_expected_json_accepts_plain_selects(self) -> None:
+        sql_text = """
+USE [RDB];
+
+-- dbo.TableA | operations: insert
+SELECT [id] FROM [dbo].[TableA] WHERE [id] = 1;
+
+-- dbo.TableB | operations: insert
+SELECT [id] FROM [dbo].[TableB] WHERE [id] = 2;
+""".strip()
+
+        with TemporaryDirectory() as temp_dir:
+            expected_json_path = Path(temp_dir) / "expected.json"
+            expected_json_path.write_text(
+                json.dumps({"0": [{"id": 1}], "1": [{"id": 2}]}, indent=2),
+                encoding="utf-8",
+            )
+
+            statements, cases = validate_rdb_selects.parse_cases_from_expected_json(sql_text, expected_json_path)
+
+        self.assertEqual(len(statements), 3)
+        self.assertEqual(len(cases), 2)
+        self.assertEqual(cases[0].label, "dbo.TableA | operations: insert")
+        self.assertEqual(cases[0].expected_json, [{"id": 1}])
+        self.assertEqual(cases[1].label, "dbo.TableB | operations: insert")
+        self.assertEqual(cases[1].expected_json, [{"id": 2}])
+
+    def test_compare_case_wraps_plain_select_in_for_json_path(self) -> None:
+        case = validate_rdb_selects.SelectCase(
+            case_index=1,
+            label="plain-select-case",
+            query_sql="SELECT [id] FROM [dbo].[T] WHERE [id] = 1;",
+            query_start_line=5,
+            expected_json=[{"id": 1}],
+        )
+        client = FakeSqlClient([
+            'JSON_F52E2B61-18A1-11d1-B105-00805F49916B\n[{"id":1}]\n',
+        ])
+
+        result = validate_rdb_selects.compare_case(client, "USE [RDB];", case)
+
+        self.assertEqual(result["status"], "pass")
+        self.assertIn("FOR JSON PATH;", client.calls[0])
+
     def test_value_level_diff_highlighting(self) -> None:
         expected = [{"id": 1, "name": "Alice"}]
         actual = [{"id": 2, "name": "Alice"}]
@@ -118,6 +183,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
 
     def test_markdown_report_contains_error_style_and_spans(self) -> None:
         summary = {
+            "database": "RDB_Modern",
             "case_count": 2,
             "pass_count": 1,
             "warning_count": 0,
@@ -152,6 +218,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = @id FOR JSON PATH;
         )
 
         self.assertIn("<style>", report)
+        self.assertIn("# RDB_Modern Select Validation Results", report)
         self.assertIn('.error {', report)
         self.assertIn('.warning {', report)
         self.assertIn('| <span class="ok">Passes</span> | 1 |', report)

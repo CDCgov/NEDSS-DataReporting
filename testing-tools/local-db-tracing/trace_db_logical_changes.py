@@ -10,6 +10,7 @@ from pathlib import Path
 from tracing_capture import (
     disable_managed_tables,
     enable_table_cdc,
+    fetch_cdc_enabled_tables,
     fetch_changes_for_captures,
     fetch_max_lsn,
 )
@@ -223,7 +224,12 @@ def main() -> int:
     print(f"Tables to attempt enabling: {len(to_enable)}")
 
     try:
+        cdc_enabled = fetch_cdc_enabled_tables(client)
         for table in to_enable:
+            if (table.schema_name, table.table_name) in cdc_enabled:
+                skipped_tables.append({"schema_name": table.schema_name, "table_name": table.table_name, "detail": "Already enabled"})
+                print(f"Already enabled: {table.schema_name}.{table.table_name}")
+                continue
             enabled, detail = enable_table_cdc(client, table.schema_name, table.table_name)
             entry = {"schema_name": table.schema_name, "table_name": table.table_name, "detail": detail}
             if enabled:

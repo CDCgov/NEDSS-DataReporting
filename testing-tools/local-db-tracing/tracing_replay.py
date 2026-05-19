@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass
 from datetime import datetime
 
 from tracing_constants import (
@@ -11,6 +12,7 @@ from tracing_constants import (
     DEFAULT_STARTING_UID,
     DEFAULT_UID_BLOCK_SIZE_BY_CLASS,
     GENERIC_LOCAL_ID_PATTERN,
+    NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS,
 )
 from tracing_models import KnownAssociation, UidAllocation, UidGeneratorEntry
 from tracing_paths import (
@@ -34,6 +36,14 @@ LOCAL_ID_EXPRESSION_PATTERN = re.compile(
 )
 VAR_PLUS_OFFSET_PATTERN = re.compile(r"^(?P<left>@[A-Za-z0-9_]+)\s*\+\s*(?P<offset>-?\d+)$")
 OFFSET_PLUS_VAR_PATTERN = re.compile(r"^(?P<offset>-?\d+)\s*\+\s*(?P<right>@[A-Za-z0-9_]+)$")
+
+
+@dataclass(frozen=True)
+class VariableSource:
+    table_key: tuple[str, str]
+    column_name: str
+    row: dict[str, object]
+    step: int | None
 
 
 
@@ -771,6 +781,83 @@ def resolve_variable_reference(
     return resolve_suffix_variable_reference(column_name, value, variable_registry)
 
 
+def lookup_columns_for_variable_source(
+    table_key: tuple[str, str],
+    source_column: str,
+    row: dict[str, object],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+) -> list[str]:
+    excluded_columns = set()
+    if table_key[0].lower() == "dbo" and table_key[1].lower() == "nbs_act_entity":
+        excluded_columns = NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS
+
+    primary_key_columns = [
+        column_name
+        for column_name in primary_keys_by_table.get(table_key, [])
+        if column_name in row
+        and column_name != source_column
+        and column_name.lower() not in excluded_columns
+        and not is_generated_always_column(table_key, column_name, generated_always_columns)
+    ]
+    if primary_key_columns:
+        return primary_key_columns
+
+    return [
+        column_name
+        for column_name in data_columns(row)
+        if column_name != source_column
+        and column_name.lower() not in excluded_columns
+        and not is_generated_always_column(table_key, column_name, generated_always_columns)
+    ]
+
+
+def resolve_variable_lookup_expression(
+    variable_name: str,
+    variable_sources_by_name: dict[str, VariableSource],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_registry: dict[tuple[str, str, str, str], str],
+    foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
+    known_associations: list[KnownAssociation],
+    emit_only_step: int | None,
+) -> str:
+    if emit_only_step is None:
+        return variable_name
+
+    source = variable_sources_by_name.get(variable_name)
+    if source is None or source.step is None or source.step >= emit_only_step:
+        return variable_name
+
+    lookup_columns = lookup_columns_for_variable_source(
+        source.table_key,
+        source.column_name,
+        source.row,
+        primary_keys_by_table,
+        generated_always_columns,
+    )
+    if not lookup_columns:
+        return variable_name
+
+    predicates: list[str] = []
+    for column_name in lookup_columns:
+        value = source.row.get(column_name)
+        if value is None:
+            predicates.append(f"{quote_identifier(column_name)} IS NULL")
+        else:
+            predicates.append(
+                f"{quote_identifier(column_name)} = {sql_value_expression(source.table_key, source.row, column_name, value, None, variable_registry, foreign_keys_by_source, known_associations, primary_keys_by_table, generated_always_columns, variable_sources_by_name, emit_only_step)}"
+            )
+
+    if not predicates:
+        return variable_name
+
+    return (
+        f"(SELECT TOP 1 {quote_identifier(source.column_name)} FROM {quote_identifier(source.table_key[0])}.{quote_identifier(source.table_key[1])} "
+        f"WHERE {' AND '.join(predicates)})"
+    )
+
+
 def local_id_numeric_expression(
     table_key: tuple[str, str],
     row: dict[str, object],
@@ -822,6 +909,10 @@ def sql_value_expression(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str:
     variable_reference = resolve_variable_reference(
         table_key,
@@ -833,7 +924,16 @@ def sql_value_expression(
         known_associations,
     )
     if variable_reference:
-        return variable_reference
+        return resolve_variable_lookup_expression(
+            variable_reference,
+            variable_sources_by_name,
+            primary_keys_by_table,
+            generated_always_columns,
+            variable_registry,
+            foreign_keys_by_source,
+            known_associations,
+            emit_only_step,
+        )
     return sql_literal(value)
 
 
@@ -848,6 +948,10 @@ def sql_replay_assignment_expression(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
     superuser_id: int,
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str:
     if is_user_id_column(column_name):
         return SUPERUSER_ID_VARIABLE
@@ -860,6 +964,10 @@ def sql_replay_assignment_expression(
         variable_registry,
         foreign_keys_by_source,
         known_associations,
+        primary_keys_by_table,
+        generated_always_columns,
+        variable_sources_by_name,
+        emit_only_step,
     )
 
 
@@ -871,11 +979,25 @@ def build_version_lookup_predicates(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str:
     key_columns = [column_name for column_name in primary_keys_by_table.get(table_key, []) if not is_version_column(column_name)]
     if not key_columns:
         key_columns = [column_name for column_name in data_columns(row) if not is_version_column(column_name)]
-    return build_where_clause(table_key, row, key_columns, variable_registry, foreign_keys_by_source, known_associations)
+    return build_where_clause(
+        table_key,
+        row,
+        key_columns,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+        primary_keys_by_table,
+        generated_always_columns,
+        variable_sources_by_name,
+        emit_only_step,
+    )
 
 
 
@@ -890,6 +1012,9 @@ def sql_insert_assignment_expression(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
     superuser_id: int,
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str:
     if is_version_column(column_name) and is_history_table(table_key):
         predicates = build_version_lookup_predicates(
@@ -899,6 +1024,9 @@ def sql_insert_assignment_expression(
             variable_registry,
             foreign_keys_by_source,
             known_associations,
+            generated_always_columns,
+            variable_sources_by_name,
+            emit_only_step,
         )
         return (
             f"(SELECT ISNULL(MAX({quote_identifier(column_name)}), 0) + 1 "
@@ -915,6 +1043,10 @@ def sql_insert_assignment_expression(
         foreign_keys_by_source,
         known_associations,
         superuser_id,
+        primary_keys_by_table,
+        generated_always_columns,
+        variable_sources_by_name,
+        emit_only_step,
     )
 
 
@@ -929,6 +1061,10 @@ def sql_update_assignment_expression(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
     superuser_id: int,
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str:
     if is_version_column(column_name):
         return f"ISNULL({quote_identifier(column_name)}, 0) + 1"
@@ -942,6 +1078,10 @@ def sql_update_assignment_expression(
         foreign_keys_by_source,
         known_associations,
         superuser_id,
+        primary_keys_by_table,
+        generated_always_columns,
+        variable_sources_by_name,
+        emit_only_step,
     )
 
 
@@ -970,6 +1110,10 @@ def build_where_clause(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str:
     predicates: list[str] = []
     for column_name in key_columns:
@@ -978,7 +1122,7 @@ def build_where_clause(
             predicates.append(f"{quote_identifier(column_name)} IS NULL")
         else:
             predicates.append(
-                f"{quote_identifier(column_name)} = {sql_value_expression(table_key, row, column_name, value, None, variable_registry, foreign_keys_by_source, known_associations)}"
+                f"{quote_identifier(column_name)} = {sql_value_expression(table_key, row, column_name, value, None, variable_registry, foreign_keys_by_source, known_associations, primary_keys_by_table, generated_always_columns, variable_sources_by_name, emit_only_step)}"
             )
     return " AND ".join(predicates) if predicates else "1 = 0"
 
@@ -1024,6 +1168,8 @@ def reconstruct_insert_sql(
     id_state: dict[str, int],
     superuser_id: int,
     top_level_declarations: list[str],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str | None:
     row = record.get("row")
     if not isinstance(row, dict):
@@ -1073,6 +1219,12 @@ def reconstruct_insert_sql(
         output_table_name = output_table_name_for_variable(variable_name)
         sql_type = column_sql_types.get((table_key[0], table_key[1], generated_primary_key), "int")
         variable_registry[(table_key[0], table_key[1], generated_primary_key, value_key(generated_value))] = variable_name
+        variable_sources_by_name[variable_name] = VariableSource(
+            table_key=table_key,
+            column_name=generated_primary_key,
+            row=row,
+            step=int(record.get("_step")) if record.get("_step") is not None else None,
+        )
         prelude_lines.extend([
             f"DECLARE {variable_name} {sql_type};",
             f"DECLARE {output_table_name} TABLE ([value] {sql_type});",
@@ -1125,6 +1277,9 @@ def reconstruct_insert_sql(
             foreign_keys_by_source,
             known_associations,
             superuser_id,
+            generated_always_columns,
+            variable_sources_by_name,
+            emit_only_step,
         )
         for column_name in columns
     )
@@ -1152,13 +1307,28 @@ def reconstruct_delete_sql(
     variable_registry: dict[tuple[str, str, str, str], str],
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    generated_always_columns: set[tuple[str, str, str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str | None:
     row = record.get("row")
     if not isinstance(row, dict):
         return None
     table_key = (str(record["schema_name"]), str(record["table_name"]))
     key_columns = select_key_columns(row, primary_key_columns)
-    where_clause = build_where_clause(table_key, row, key_columns, variable_registry, foreign_keys_by_source, known_associations)
+    where_clause = build_where_clause(
+        table_key,
+        row,
+        key_columns,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+        primary_keys_by_table,
+        generated_always_columns,
+        variable_sources_by_name,
+        emit_only_step,
+    )
     return f"DELETE FROM {quote_identifier(str(record['schema_name']))}.{quote_identifier(str(record['table_name']))} WHERE {where_clause};"
 
 
@@ -1173,6 +1343,9 @@ def reconstruct_update_sql(
     foreign_keys_by_source: dict[tuple[str, str, str], tuple[str, str, str]],
     known_associations: list[KnownAssociation],
     superuser_id: int,
+    primary_keys_by_table: dict[tuple[str, str], list[str]],
+    variable_sources_by_name: dict[str, VariableSource],
+    emit_only_step: int | None,
 ) -> str | None:
     before_row = before_record.get("row")
     after_row = after_record.get("row")
@@ -1190,11 +1363,22 @@ def reconstruct_update_sql(
         return None
 
     set_clause = ", ".join(
-        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), replay_now_window, variable_registry, foreign_keys_by_source, known_associations, superuser_id)}"
+        f"{quote_identifier(column_name)} = {sql_update_assignment_expression(table_key, after_row, column_name, after_row.get(column_name), replay_now_window, variable_registry, foreign_keys_by_source, known_associations, superuser_id, primary_keys_by_table, generated_always_columns, variable_sources_by_name, emit_only_step)}"
         for column_name in changed_columns
     )
     key_columns = select_key_columns(before_row, primary_key_columns)
-    where_clause = build_where_clause(table_key, before_row, key_columns, variable_registry, foreign_keys_by_source, known_associations)
+    where_clause = build_where_clause(
+        table_key,
+        before_row,
+        key_columns,
+        variable_registry,
+        foreign_keys_by_source,
+        known_associations,
+        primary_keys_by_table,
+        generated_always_columns,
+        variable_sources_by_name,
+        emit_only_step,
+    )
     return f"UPDATE {quote_identifier(str(after_record['schema_name']))}.{quote_identifier(str(after_record['table_name']))} SET {set_clause} WHERE {where_clause};"
 
 
@@ -1242,6 +1426,7 @@ def reconstruct_sql_statements(
     ]
     pending_updates: dict[tuple[str, str, int | None], dict[str, object]] = {}
     variable_registry: dict[tuple[str, str, str, str], str] = {}
+    variable_sources_by_name: dict[str, VariableSource] = {}
     variable_name_counts: dict[str, int] = {}
     id_state = {"next_value": starting_uid}
     last_table_key: tuple[str, str] | None = None
@@ -1301,6 +1486,8 @@ def reconstruct_sql_statements(
                 id_state,
                 superuser_id,
                 top_level_declarations,
+                variable_sources_by_name,
+                emit_only_step,
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
@@ -1315,6 +1502,10 @@ def reconstruct_sql_statements(
                 variable_registry,
                 foreign_keys_by_source,
                 known_associations,
+                primary_keys_by_table,
+                generated_always_columns,
+                variable_sources_by_name,
+                emit_only_step,
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement
@@ -1344,6 +1535,9 @@ def reconstruct_sql_statements(
                 foreign_keys_by_source,
                 known_associations,
                 superuser_id,
+                primary_keys_by_table,
+                variable_sources_by_name,
+                emit_only_step,
             )
             if sql_statement:
                 tagged = f"-- step: {current_step}\n{sql_statement}" if current_step is not None else sql_statement

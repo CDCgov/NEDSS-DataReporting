@@ -241,6 +241,12 @@ Build step-level functional test artifacts (`setup.sql`, `query.sql`, `expected.
 python local-db-tracing/build_step_test_artifacts.py --setup-step local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/step-3 --logical-step local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/step-3 --test-step reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/030-Investigate-AddTreatmentStartSalmonella
 ```
 
+Replay an existing functional `setup.sql` against ODSE, optionally rewriting only auto-populated datetime/date columns to current-time expressions:
+
+```powershell
+python local-db-tracing/replay-setup.py --setup-sql reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/010-CreatePatient-AddLabReportManualSalmonella/setup.sql --auto-datetime-mode current
+```
+
 Or run it without arguments and enter paths when prompted:
 
 ```powershell

@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.json.JSONException;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -24,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 class DataDrivenUnitTests extends UnitTest {
@@ -77,8 +77,8 @@ class DataDrivenUnitTests extends UnitTest {
    * @throws JSONException
    */
   @ParameterizedTest
-  @Execution(ExecutionMode.CONCURRENT)
   @MethodSource("unitTestDirectoryProvider")
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   void testRunner(Path testDirectory) throws IOException {
     DataSourceTransactionManager transactionManager =
         new DataSourceTransactionManager(adminDataSource);

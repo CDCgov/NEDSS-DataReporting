@@ -338,6 +338,82 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertNotIn("-- STEP", sql)
         self.assertNotIn("-- step:", sql)
 
+    def test_step_specific_sql_rewrites_prior_step_variable_in_where_clause(self) -> None:
+        step1_insert = {
+            "schema_name": "dbo",
+            "table_name": "NBS_act_entity",
+            "operation": "insert",
+            "start_lsn": "0x01",
+            "seqval": "0x01",
+            "operation_code": 2,
+            "_step": 1,
+            "row": {
+                "nbs_act_entity_uid": 9001,
+                "act_uid": 3300008,
+                "entity_uid": 3300013,
+                "type_cd": "SubjOfPHC",
+            },
+        }
+        step2_update_before = {
+            "schema_name": "dbo",
+            "table_name": "NBS_act_entity",
+            "operation": "update_before",
+            "start_lsn": "0x02",
+            "seqval": "0x01",
+            "operation_code": 3,
+            "_step": 2,
+            "row": {
+                "nbs_act_entity_uid": 9001,
+                "act_uid": 3300008,
+                "entity_uid": 3300013,
+                "type_cd": "SubjOfPHC",
+                "last_chg_time": "2026-05-06T22:21:08.813",
+            },
+        }
+        step2_update_after = {
+            "schema_name": "dbo",
+            "table_name": "NBS_act_entity",
+            "operation": "update_after",
+            "start_lsn": "0x02",
+            "seqval": "0x01",
+            "operation_code": 4,
+            "_step": 2,
+            "row": {
+                "nbs_act_entity_uid": 9001,
+                "act_uid": 3300008,
+                "entity_uid": 3300013,
+                "type_cd": "SubjOfPHC",
+                "last_chg_time": "2026-05-06T22:21:08.900",
+            },
+        }
+        nbs_steps = [
+            {"step": 1, "description": "Create NBS act entity"},
+            {"step": 2, "description": "Update NBS act entity"},
+        ]
+
+        sql = "\n".join(
+            reconstruct_sql_statements(
+                [step1_insert, step2_update_before, step2_update_after],
+                {("dbo", "NBS_act_entity"): ["nbs_act_entity_uid"]},
+                {("dbo", "NBS_act_entity"): ["nbs_act_entity_uid"]},
+                {},
+                {("dbo", "NBS_act_entity", "nbs_act_entity_uid"): "bigint", ("dbo", "NBS_act_entity", "act_uid"): "bigint", ("dbo", "NBS_act_entity", "entity_uid"): "bigint", ("dbo", "NBS_act_entity", "type_cd"): "nvarchar(50)", ("dbo", "NBS_act_entity", "last_chg_time"): "datetime"},
+                set(),
+                self.uid_generator_entries,
+                self.known_associations,
+                nbs_steps=nbs_steps,
+                emit_only_step=2,
+            )
+        )
+
+        self.assertIn("-- STEP 2: Update NBS act entity", sql)
+        self.assertIn("SELECT TOP 1 [nbs_act_entity_uid] FROM [dbo].[NBS_act_entity]", sql)
+        self.assertIn("WHERE [nbs_act_entity_uid] = (SELECT TOP 1 [nbs_act_entity_uid] FROM [dbo].[NBS_act_entity]", sql)
+        self.assertNotIn("WHERE [nbs_act_entity_uid] = @dbo_NBS_act_entity_nbs_act_entity_uid", sql)
+        self.assertNotIn("AND [add_time] =", sql)
+        self.assertNotIn("AND [last_chg_time] =", sql)
+        self.assertNotIn("AND [record_status_time] =", sql)
+
     def test_summary_lists_steps_at_top(self) -> None:
         """summary.txt starts with ordered Steps section when nbs_steps provided."""
         manifest = {
