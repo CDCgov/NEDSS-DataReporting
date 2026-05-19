@@ -60,4 +60,6 @@ if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
   echo "Migrations complete"
 else
   echo "Skipping migrations as RUN_MIGRATIONS is not set to true"
+  echo "Hanging process to allow for external migration execution"
+  tail -f /dev/null
 fi
