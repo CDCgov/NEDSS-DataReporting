@@ -57,6 +57,6 @@ COPY liquibase-service/src/main/resources/db/001-master/02_onboarding_script_dat
 WORKDIR /liquibase/changelog
 USER liquibase
 
-COPY --chown=liquibase migrate.sh .
+COPY --chown=liquibase liquibase-service/migrate.sh .
 
 CMD ["./migrate.sh"]
