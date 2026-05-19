@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.json.JSONException;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -79,7 +77,6 @@ class DataDrivenUnitTests extends UnitTest {
    * @throws JSONException
    */
   @ParameterizedTest
-  @Execution(ExecutionMode.CONCURRENT)
   @MethodSource("unitTestDirectoryProvider")
   @Transactional(propagation = Propagation.NOT_SUPPORTED)
   void testRunner(Path testDirectory) throws IOException {
