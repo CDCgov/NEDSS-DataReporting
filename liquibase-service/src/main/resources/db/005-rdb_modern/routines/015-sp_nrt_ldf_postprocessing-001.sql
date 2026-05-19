@@ -871,7 +871,7 @@ BEGIN
             ld.label_txt,
             ld.ldf_oid,
             ld.nnd_ind,
-            ld.metadata_record_status_cd
+            ld.record_status_cd
         into #tmp_ldf_data
         from dbo.nrt_ldf_data ld
                  left join dbo.nrt_ldf_data_key nldk with (nolock) ON ld.ldf_uid = nldk.ldf_uid and ld.business_object_uid = nldk.business_object_uid
@@ -1014,7 +1014,7 @@ BEGIN
           ,label_txt = ld.label_txt
           ,ldf_oid = ld.ldf_oid
           ,nnd_ind = ld.nnd_ind
-          ,record_status_cd = ld.metadata_record_status_cd
+          ,record_status_cd = ld.record_status_cd
         FROM #tmp_ldf_data ld
                  inner join dbo.ldf_data k with (nolock) ON ld.ldf_data_key = k.ldf_data_key
             and ld.ldf_group_key = k.ldf_group_key
@@ -1140,7 +1140,7 @@ BEGIN
              ,tld.label_txt
              ,tld.ldf_oid
              ,tld.nnd_ind
-             ,tld.metadata_record_status_cd
+             ,tld.record_status_cd
         FROM #tmp_ldf_data tld
                  join dbo.nrt_ldf_data_key k with (nolock) on tld.ldf_uid = k.ldf_uid
             and tld.business_object_uid = k.business_object_uid
