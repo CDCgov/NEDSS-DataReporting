@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
   # Run migrations
   echo "Starting migrations"
