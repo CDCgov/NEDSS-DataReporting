@@ -31,6 +31,7 @@ COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
+COPY liquibase-service/src/main/resources/db/005-rdb_modern/onboarding /liquibase/changelog
 
 
 #Set the Working Directory
@@ -39,5 +40,3 @@ WORKDIR /liquibase/changelog
 USER liquibase
 
 CMD ["sh", "-c", "tail -f /dev/null"]
-
-
