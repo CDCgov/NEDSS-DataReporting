@@ -40,6 +40,11 @@ VALUES
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
 
+-- RTR bug #5b: see multi_condition_investigations.sql for rationale.
+UPDATE dbo.nrt_investigation
+   SET patient_id = 20000000
+ WHERE public_health_case_uid = 22000200;
+
 EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22000200', @debug = 0;
 
 -- Author nrt_ldf_data answer rows for the first 5 Tetanus LDFs.

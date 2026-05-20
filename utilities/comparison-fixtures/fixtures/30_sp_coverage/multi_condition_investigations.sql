@@ -120,6 +120,16 @@ VALUES
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
 
+-- RTR bug #5b: point patient_id at the foundation nrt_patient.patient_uid
+-- so downstream Datamart SPs (sp_hepatitis_datamart_* etc. via F_PAGE_CASE)
+-- resolve to a real D_PATIENT row instead of falling back to the sentinel
+-- PATIENT_KEY=1 (PATIENT_UID=NULL) which the SPs then DELETE before INSERT.
+UPDATE dbo.nrt_investigation
+   SET patient_id = 20000000
+ WHERE public_health_case_uid IN
+       (22000010, 22000020, 22000030, 22000040, 22000050,
+        22000060, 22000070, 22000080, 22000090, 22000100);
+
 -- Run sp_nrt_investigation_postprocessing to flow these into INVESTIGATION.
 EXEC dbo.sp_nrt_investigation_postprocessing
     @id_list = N'22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100',
