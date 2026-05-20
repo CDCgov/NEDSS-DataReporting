@@ -19,7 +19,7 @@ with `DATABASE_VERSION=6.0.18.1`.
 | [02](./02_sp_contact_record_event/) | `sp_contact_record_event` references `nbs_odse.dbo.fn_get_value_by_cd_codeset` (function lives in `RDB_MODERN.dbo`) | **Already fixed on main** via PR #769 (commit `a0dbf3be`). | `069-sp_contact_record_event-001.sql:69` |
 | [03](./03_morb_rpt_user_comment/) | `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816 | **PR #837 open** on branch `aw/app-471/bug-3`. | `016-sp_nrt_morbidity_report_postprocessing-001.sql:802-816` |
 | [04](./04_provider_postprocessing_typo/) | `sp_nrt_provider_postprocessing` line 564 typo: `#PATIENT_UPDATE_LIST` should be `#PROVIDER_UPDATE_LIST` | **Merged on main** (PR #826, commit `92a56d42`). | `003-sp_nrt_provider_postprocessing-001.sql:564` |
-| [05](./05_tmp_f_page_case_family/) | **TWO bugs**: (5a) `sp_hepatitis_datamart_postprocessing` logs incorrect row_count for #TMP_F_PAGE_CASE due to `IF @debug` resetting `@@ROWCOUNT` (logging-only); (5b) `nrt_investigation.patient_id NULL` cascades through PATIENT sentinel into a `DELETE WHERE PATIENT_UID IS NULL` (fixture-side; actual blocker for HEPATITIS_DATAMART) | High (5b blocks HEPATITIS_DATAMART population) | `013-sp_hepatitis_datamart_postprocessing-001.sql:108-111, 2149` + fixture `nrt_investigation` |
+| [05](./05_tmp_f_page_case_family/) | **TWO bugs**: (5a) `sp_hepatitis_datamart_postprocessing` logs incorrect row_count for #TMP_F_PAGE_CASE due to `IF @debug` resetting `@@ROWCOUNT` (logging-only); (5b) `nrt_investigation.patient_id NULL` cascades through PATIENT sentinel into a `DELETE WHERE PATIENT_UID IS NULL` (fixture-side; actual blocker for HEPATITIS_DATAMART) | 5b **resolved** on `aw/odse-test-seed` (fixture-side; no PR — orchestrator + Tier 3 variants now set `patient_id`). 5a still open. | `013-sp_hepatitis_datamart_postprocessing-001.sql:108-111, 2149` + fixture `nrt_investigation` |
 | [06](./06_ldf_data_truncation/) | `sp_nrt_ldf_postprocessing` maps `metadata_record_status_cd` ('LDF_PROCESSED', 13 chars) into `LDF_DATA.RECORD_STATUS_CD` (varchar(8) with CHECK constraint for 'ACTIVE'/'INACTIVE'). **Wrong source column**, not a width oversight. | **Merged on main** (PR #827, commit `bb882115`). | `015-sp_nrt_ldf_postprocessing-001.sql:863, 1006, 1132` |
 | [07](./07_ldf_dimensional_data_zero/) | `sp_nrt_ldf_dimensional_data_postprocessing` early-RETURN guard misclassifies intentionally-filtered ldf_uids as "missing NRT records" + a latent INNER/LEFT JOIN inconsistency | High (LDF_DIMENSIONAL_DATA never populates; cascades to all per-condition LDF tables) | `265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql:136-158, 648` |
 | [08](./08_ldf_tetanus_substring/) | **6-instance family**: unguarded `SUBSTRING(s, 1, LEN(s)-1)` idiom across 6 per-condition LDF datamart SPs fails when no dynamic columns added yet | Medium (each fires on first invocation against empty per-condition LDF table) | `285:603, 290:893, 295:627, 300:833, 305:1105, 320:594` (the `*-sp_ldf_*_datamart_postprocessing-001.sql` files) |
@@ -64,24 +64,20 @@ investigation**. Worth noting because they reshape the picture:
 | #2 | Fixed on main | PR #769 (commit `a0dbf3be`), pre-dates this investigation. |
 | #3 | PR #837 open on `aw/app-471/bug-3`. | RTR fix, query rewrite: replaced self-defeating join with staging-side walk via `nrt_morbidity_observation.followup_observation_uid` CSV filtered to `obs_domain_cd_st_1 = 'C_Result'`. Stays inside RDB_MODERN (no cross-DB ODSE read — see STRATEGY.md convention). |
 | #4 | Merged on main | PR #826 (commit `92a56d42`). |
-| #5a | Open — local branch `aw/app-471/bug-5`; no PR yet. | RTR fix, line swap — capture `@@ROWCOUNT` before debug SELECT. Logging-only; no behavioral impact. |
-| #5b | Open — fixture-side orchestrator change committed only on `aw/app-471/bug-5`. | Needs merge into `aw/odse-test-seed`. Single highest-ROI unlock for HEPATITIS_DATAMART (0 → 1 row in end-to-end merge). |
+| #5a | Open — local branch `aw/app-471/bug-5`; no PR yet. | RTR fix, line swap — capture `@@ROWCOUNT` before debug SELECT. Logging-only; no behavioral impact. Plan: open as a standalone PR off a fresh branch from main. |
+| #5b | Resolved on `aw/odse-test-seed` — fixture-side; no PR. | Foundation patient_id UPDATE in `merge_and_verify.sh`; same UPDATE extended to the 10 multi-condition + 1 Tetanus Tier 3 variants. End-to-end uplift: HEPATITIS_DATAMART 0→1, COVID_CASE_DATAMART 0→1, BMIRD_STREP_PNEUMO_DATAMART 0→1, F_PAGE_CASE 1→6. |
 | #6 | Merged on main | PR #827 (commit `bb882115`). |
 | #7 | PR #839 open on `aw/app-471/bug-7`. | RTR fix, two-line: early-RETURN guard misclassification + INNER→LEFT JOIN harmonization. Unblocks LDF_DIMENSIONAL_DATA. |
 | #8 | PR #840 open on `aw/app-471/bug-8`. | RTR fix, mechanical: apply existing guard pattern at 6 unguarded `SUBSTRING(s, 1, LEN(s)-1)` sites. |
 
-### Recommended order for remaining work
+### Remaining work
 
-1. **#5b** (merge `aw/app-471/bug-5`'s orchestrator change into
-   `aw/odse-test-seed`). One-line change to `merge_and_verify.sh`;
-   unblocks HEPATITIS_DATAMART end-to-end. See
-   `coverage/coverage_hep_datamart_investigation.md` for the full
-   reconciliation against the older Tier 3 hypotheses.
-2. **#7** (RTR fix) — opens the LDF cascade.
-3. **#8** (RTR fix) — must follow #7; the SUBSTRING defect fires on
-   first invocation against per-condition LDF tables that are still
-   empty until #7 lands.
-4. **#5a** (RTR fix) — logging-only; low priority but trivial.
+- **#5a** — open a fresh branch off `main`, cherry-pick the one-line
+  `@@ROWCOUNT` swap, open as a standalone PR. Logging-only, low
+  stakes but uncontroversial.
+- Wait for PRs #837, #839, #840 to merge to `main`. Once a new
+  baseline image cuts that includes them, remove their branches from
+  `apply_pending_pr_routines()` in `merge_and_verify.sh`.
 
 ### Headline reframing from the HEPATITIS_DATAMART investigation
 
