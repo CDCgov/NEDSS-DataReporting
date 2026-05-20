@@ -15,12 +15,12 @@ with `DATABASE_VERSION=6.0.18.1`.
 
 | # | Bug | Severity | Files affected |
 | --- | --- | --- | --- |
-| [01](./01_sp_get_date_dim/) | `sp_get_date_dim` references nonexistent `dbo.rdb_date_temp`; also has an inverted-IF logic bug | High (SP unrunnable; documented setup path is broken) | `014-sp_get_date_dim-001.sql` |
-| [02](./02_sp_contact_record_event/) | `sp_contact_record_event` references `nbs_odse.dbo.fn_get_value_by_cd_codeset` (function lives in `RDB_MODERN.dbo`) | High (SP unrunnable on every input) | `069-sp_contact_record_event-001.sql:69` |
+| [01](./01_sp_get_date_dim/) | `sp_get_date_dim` references nonexistent `dbo.rdb_date_temp`; also has an inverted-IF logic bug | **Resolved — non-issue.** RDB_DATE is correctly populated by seeds in normal environments; SP is not on the live path. Separate seed-correction PR in-flight. | `014-sp_get_date_dim-001.sql` |
+| [02](./02_sp_contact_record_event/) | `sp_contact_record_event` references `nbs_odse.dbo.fn_get_value_by_cd_codeset` (function lives in `RDB_MODERN.dbo`) | **Already fixed on main** via PR #769 (commit `a0dbf3be`). | `069-sp_contact_record_event-001.sql:69` |
 | [03](./03_morb_rpt_user_comment/) | `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816 | Medium (silent — table never populates) | `016-sp_nrt_morbidity_report_postprocessing-001.sql:802-816` |
-| [04](./04_provider_postprocessing_typo/) | `sp_nrt_provider_postprocessing` line 564 typo: `#PATIENT_UPDATE_LIST` should be `#PROVIDER_UPDATE_LIST` | Low/latent (UPDATE-with-diff path only) | `003-sp_nrt_provider_postprocessing-001.sql:564` |
+| [04](./04_provider_postprocessing_typo/) | `sp_nrt_provider_postprocessing` line 564 typo: `#PATIENT_UPDATE_LIST` should be `#PROVIDER_UPDATE_LIST` | **Merged on main** (PR #826, commit `92a56d42`). | `003-sp_nrt_provider_postprocessing-001.sql:564` |
 | [05](./05_tmp_f_page_case_family/) | **TWO bugs**: (5a) `sp_hepatitis_datamart_postprocessing` logs incorrect row_count for #TMP_F_PAGE_CASE due to `IF @debug` resetting `@@ROWCOUNT` (logging-only); (5b) `nrt_investigation.patient_id NULL` cascades through PATIENT sentinel into a `DELETE WHERE PATIENT_UID IS NULL` (fixture-side; actual blocker for HEPATITIS_DATAMART) | High (5b blocks HEPATITIS_DATAMART population) | `013-sp_hepatitis_datamart_postprocessing-001.sql:108-111, 2149` + fixture `nrt_investigation` |
-| [06](./06_ldf_data_truncation/) | `sp_nrt_ldf_postprocessing` maps `metadata_record_status_cd` ('LDF_PROCESSED', 13 chars) into `LDF_DATA.RECORD_STATUS_CD` (varchar(8) with CHECK constraint for 'ACTIVE'/'INACTIVE'). **Wrong source column**, not a width oversight. | High (latent in baseline; manifests on first LDF data flow) | `015-sp_nrt_ldf_postprocessing-001.sql:863, 1006, 1132` |
+| [06](./06_ldf_data_truncation/) | `sp_nrt_ldf_postprocessing` maps `metadata_record_status_cd` ('LDF_PROCESSED', 13 chars) into `LDF_DATA.RECORD_STATUS_CD` (varchar(8) with CHECK constraint for 'ACTIVE'/'INACTIVE'). **Wrong source column**, not a width oversight. | **Merged on main** (PR #827, commit `bb882115`). | `015-sp_nrt_ldf_postprocessing-001.sql:863, 1006, 1132` |
 | [07](./07_ldf_dimensional_data_zero/) | `sp_nrt_ldf_dimensional_data_postprocessing` early-RETURN guard misclassifies intentionally-filtered ldf_uids as "missing NRT records" + a latent INNER/LEFT JOIN inconsistency | High (LDF_DIMENSIONAL_DATA never populates; cascades to all per-condition LDF tables) | `265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql:136-158, 648` |
 | [08](./08_ldf_tetanus_substring/) | **6-instance family**: unguarded `SUBSTRING(s, 1, LEN(s)-1)` idiom across 6 per-condition LDF datamart SPs fails when no dynamic columns added yet | Medium (each fires on first invocation against empty per-condition LDF table) | `285:603, 290:893, 295:627, 300:833, 305:1105, 320:594` (the `*-sp_ldf_*_datamart_postprocessing-001.sql` files) |
 
@@ -56,41 +56,51 @@ investigation**. Worth noting because they reshape the picture:
    per-condition LDF datamart SPs (and 3 already-guarded sites — the
    pattern is known but inconsistently applied).
 
-## Suggested triage order
+## Current status (2026-05-19)
 
-After investigation, the corrected priority is:
+| # | Status | Notes |
+| --- | --- | --- |
+| #1 | Resolved — non-issue | RDB_DATE is correctly populated by seeds in normal environments; the SP is not on the live path. Separate seed-correction PR in-flight. |
+| #2 | Fixed on main | PR #769 (commit `a0dbf3be`), pre-dates this investigation. |
+| #3 | Open — local branch `aw/app-471/bug-3` pushed; no PR yet. | RTR fix, query rewrite (self-defeating join → two-hop act_relationship traversal). |
+| #4 | Merged on main | PR #826 (commit `92a56d42`). |
+| #5a | Open — local branch `aw/app-471/bug-5`; no PR yet. | RTR fix, line swap — capture `@@ROWCOUNT` before debug SELECT. Logging-only; no behavioral impact. |
+| #5b | Open — fixture-side orchestrator change committed only on `aw/app-471/bug-5`. | Needs merge into `aw/odse-test-seed`. Single highest-ROI unlock for HEPATITIS_DATAMART (0 → 1 row in end-to-end merge). |
+| #6 | Merged on main | PR #827 (commit `bb882115`). |
+| #7 | Open — local branch `aw/app-471/bug-7` pushed; no PR yet. | RTR fix, two-line: early-RETURN guard misclassification + INNER→LEFT JOIN harmonization. Unblocks LDF_DIMENSIONAL_DATA. |
+| #8 | Open — local branch `aw/app-471/bug-8` pushed; no PR yet. | RTR fix, mechanical: apply existing guard pattern at 6 unguarded `SUBSTRING(s, 1, LEN(s)-1)` sites. |
 
-1. **#5b (fixture-side)** — fastest unlock for HEPATITIS_DATAMART. Add
-   `UPDATE nrt_investigation SET patient_id = <real-patient-uid> WHERE
-   public_health_case_uid = 20000100` to the orchestrator. Once this
-   is fixed, the actual reason the other 9 condition datamarts are
-   empty becomes investigable (each likely has its own variant of
-   this fixture-side issue).
+### Recommended order for remaining work
 
-2. **#7 (RTR fix, two-line)** — unblocks all per-condition LDF tables
-   (LDF_TETANUS, LDF_HEPATITIS, etc.) for fixtures with valid LDF
-   answers.
+1. **#5b** (merge `aw/app-471/bug-5`'s orchestrator change into
+   `aw/odse-test-seed`). One-line change to `merge_and_verify.sh`;
+   unblocks HEPATITIS_DATAMART end-to-end. See
+   `coverage/coverage_hep_datamart_investigation.md` for the full
+   reconciliation against the older Tier 3 hypotheses.
+2. **#7** (RTR fix) — opens the LDF cascade.
+3. **#8** (RTR fix) — must follow #7; the SUBSTRING defect fires on
+   first invocation against per-condition LDF tables that are still
+   empty until #7 lands.
+4. **#3** (RTR fix).
+5. **#5a** (RTR fix) — logging-only; low priority but trivial.
 
-3. **#8 (RTR fix, 6 sites mechanical)** — even after #7 is fixed, the
-   6 unguarded SUBSTRING sites will fire on first invocation against
-   empty per-condition LDF tables. Apply the existing guard pattern
-   (already used at 3 other sites) to the 6 vulnerable sites.
+### Headline reframing from the HEPATITIS_DATAMART investigation
 
-4. **#1, #2** (RTR fix, one-line each) — both are "SP cannot run"
-   blockers; one-line fixes.
+The "transaction-isolation bug blocks the entire 10-SP
+condition-datamart family" hypothesis in `coverage_tier_3.md` did
+not survive investigation:
 
-5. **#6** (RTR fix, two-line) — change the SP's source column from
-   `metadata_record_status_cd` to `record_status_cd` at lines 863 + 1006.
-
-6. **#3** (RTR fix, query rewrite) — self-defeating join in
-   `sp_d_morbidity_report_postprocessing`; replace with two-hop
-   act_relationship traversal.
-
-7. **#5a** (RTR fix, line swap) — logging-only; no behavior impact
-   beyond fixing the row_count log entry.
-
-8. **#4** (RTR fix, one-line) — latent on UPDATE-with-diff path; low
-   priority.
+- There is no isolation bug. The two symptoms cited were (a) bug 5a
+  (logging-only `@@ROWCOUNT` reset) and (b) bug 5b (fixture-side NULL
+  cascade through `COALESCE(PATIENT.PATIENT_KEY, 1)` → sentinel
+  PATIENT_UID NULL → SP's `DELETE WHERE PATIENT_UID IS NULL`).
+- Only `sp_hepatitis_datamart_postprocessing` references
+  `#TMP_F_PAGE_CASE`. The 9 other condition datamarts (TB, COVID,
+  STD/HIV, BMIRD, Pertussis, Measles, Rubella, Var, CRS) do not
+  share a single shared blocker — each has its own coverage gap
+  (PAM fact data missing, observation answers missing, F_PAGE_CASE
+  form_cd exclusions, etc.). Documented per-datamart in
+  `coverage/coverage_hep_datamart_investigation.md`.
 
 ## How to run a repro
 
@@ -117,10 +127,15 @@ SQLCMDPASSWORD=PizzaIsGood33! sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -i
   (bug #1 has 2 issues; bug #5 has 2 issues; bug #7 has 2 issues;
   bug #8 has 6 instances). Several "single bug" entries in the index
   expand to multiple fixes.
-- **3 isolation-blocked tables** (HEPATITIS_DATAMART, LDF_DIMENSIONAL_DATA,
-  LDF_TETANUS) traced to specific root causes; the 9 other condition
+- **Coverage state of the originally-blocked tables**:
+  HEPATITIS_DATAMART unblocks at 0 → 1 row once #5b's orchestrator
+  change is merged into `aw/odse-test-seed`; LDF_DIMENSIONAL_DATA and
+  LDF_TETANUS unblock once #7 + #8 land. The 9 other condition
   datamarts (TB, COVID, STD/HIV, BMIRD, Pertussis, Measles, Rubella,
-  Var, CRS) need follow-on investigation.
+  Var, CRS) are blocked by separate per-condition coverage gaps
+  (PAM data, observation answers, F_PAGE_CASE form_cd exclusions),
+  not a shared bug — see
+  `coverage/coverage_hep_datamart_investigation.md`.
 
 ## Context
 

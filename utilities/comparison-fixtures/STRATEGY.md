@@ -123,6 +123,53 @@ constraints and skip any `generated_always_type IN (1,2)` columns
 postprocessing SP but not visible in the event SP's JSON projection, prefer
 the postprocessing SP as ground truth.
 
+### Convention: postprocessing SPs read NRT staging only — never ODSE
+
+**Load-bearing architectural invariant** (verified against the entire
+`liquibase-service/src/main/resources/db/005-rdb_modern/routines/` tree,
+2026-05-19):
+
+- **`sp_*_event` SPs read `nbs_odse.dbo.*` directly** — that is their
+  whole job. They project ODSE rows into JSON for downstream NRT
+  staging. The 11 files that contain `FROM nbs_odse.dbo.*` /
+  `JOIN nbs_odse.dbo.*` are all `*_event` SPs (e.g.
+  `sp_observation_event`, `sp_investigation_event`,
+  `sp_patient_event`, etc.) plus `sp_user_report_permissions`.
+- **`sp_nrt_*_postprocessing` SPs (and `sp_d_*` and `sp_*_datamart_*`
+  variants) read RDB_MODERN-side staging only — `nrt_*` tables and
+  `#tmp_*` temp tables derived from them. Zero references to
+  `nbs_odse.dbo.*` in the postprocessing layer.** The CSV columns
+  on NRT staging rows (e.g. `nrt_morbidity_observation.followup_observation_uid`,
+  `nrt_observation.associated_phc_uids`) are the upstream debezium
+  projection of the act_relationship / participation graph and are
+  how postprocessing walks edges without re-traversing ODSE.
+
+**Implications for agents proposing RTR fixes (Tier 3, bug investigations,
+SP rewrites):**
+
+- If you find yourself wanting to `JOIN nbs_odse.dbo.act_relationship`
+  or any other `nbs_odse.dbo.*` table inside a `sp_nrt_*_postprocessing`
+  or `sp_d_*` SP, **stop and look for the staging-side projection**.
+  The upstream NRT row almost certainly carries a CSV column or a
+  pre-joined value that collapses the graph walk you were about to
+  perform via cross-DB read. The CSV idiom looks like
+  `CROSS APPLY string_split(<csv_col>, ',') AS x` joined to
+  `#morb_obs_reference` / equivalent and filtered by
+  `obs_domain_cd_st_1` (or analogous role-code column).
+- Cross-DB joins to ODSE from postprocessing SPs will be bounced in
+  RTR review on architectural grounds, regardless of whether the
+  query is correct. Match the layer's convention.
+- **Exception:** the event SPs themselves. If you are editing
+  `sp_*_event`, cross-DB ODSE reads are the norm.
+
+This convention was reinforced by bug #3
+(`sp_d_morbidity_report_postprocessing` user-comment query): the
+first fix attempted a two-hop `nbs_odse.dbo.act_relationship`
+traversal; the second-iteration fix uses the staging CSV
+`followup_observation_uid` already projected by NRT. The second
+fix is the one that landed. See
+`bugs/03_morb_rpt_user_comment/pr.md`.
+
 Datamart SPs (Hepatitis_Datamart, Std_Hiv_Datamart, dyn_dm_*, etc.) have no
 `_event` partner — they read from already-populated RDB_MODERN dimensions and
 are invoked directly after Tier 1 / Tier 2 are merged.

@@ -1,7 +1,7 @@
 # Bug #6: LDF_DATA.RECORD_STATUS_CD truncation
 
-**Status**: Confirmed via live repro.
-**Severity**: High (latent in baseline; manifests on first LDF data flow).
+**Status**: **Merged on main** (PR #827, commit `bb882115`).
+**Severity (historical)**: High (latent in baseline; manifests on first LDF data flow).
 **Surfaced by**: comparison-fixtures Tier 3 LDF answers (Tetanus) fixture.
 
 ## Bug

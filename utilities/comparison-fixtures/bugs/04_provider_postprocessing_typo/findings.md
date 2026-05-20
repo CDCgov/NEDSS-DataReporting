@@ -1,7 +1,7 @@
 # Bug #4: sp_nrt_provider_postprocessing line 564 typo
 
-**Status**: Confirmed via static analysis + live repro.
-**Severity**: Low/latent (only fires on UPDATE-with-diff path; INSERT-only flows never trip it).
+**Status**: **Merged on main** (PR #826, commit `92a56d42`).
+**Severity (historical)**: Low/latent (only fires on UPDATE-with-diff path; INSERT-only flows never trip it).
 **Surfaced by**: comparison-fixtures Tier 1 Provider canary static-extract pass.
 
 ## Bug

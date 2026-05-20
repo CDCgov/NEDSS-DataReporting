@@ -1,7 +1,7 @@
 # Bug #1: sp_get_date_dim references nonexistent dbo.rdb_date_temp
 
-**Status**: Confirmed. SP unrunnable on every invocation.
-**Severity**: High (RDB_DATE calendar dim cannot be populated via documented path).
+**Status**: **Resolved — non-issue in normal environments** (2026-05-19). In all normal working environments `RDB_DATE` is correctly populated by the database seeds, so `sp_get_date_dim` is never invoked on the path observed here. A separate PR is in-flight to correct the seed path. The defects below are real, but the SP itself is dead code on the live path. See `pr.md` for the no-PR resolution.
+**Severity (historical)**: High (RDB_DATE calendar dim cannot be populated via documented path).
 **Surfaced by**: comparison-fixtures Tier 2 inv_notification agent.
 
 ## Source
