@@ -1,5 +1,7 @@
 # Bug #3 — `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816
 
+**Status**: **Resolved — fix on branch `aw/app-471/bug-3` (commit `a32456a8`), PR pending.** Rewritten to walk Order → C_Result via the staging CSV `nrt_morbidity_observation.followup_observation_uid` (no cross-DB read of `nbs_odse.dbo.act_relationship`, consistent with the postprocessing-SP-reads-NRT-only convention now documented in `STRATEGY.md`).
+
 ## TL;DR
 
 `MORB_RPT_USER_COMMENT` can never populate. The SP step "Generating

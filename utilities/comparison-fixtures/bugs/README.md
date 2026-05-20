@@ -17,7 +17,7 @@ with `DATABASE_VERSION=6.0.18.1`.
 | --- | --- | --- | --- |
 | [01](./01_sp_get_date_dim/) | `sp_get_date_dim` references nonexistent `dbo.rdb_date_temp`; also has an inverted-IF logic bug | **Resolved — non-issue.** RDB_DATE is correctly populated by seeds in normal environments; SP is not on the live path. Separate seed-correction PR in-flight. | `014-sp_get_date_dim-001.sql` |
 | [02](./02_sp_contact_record_event/) | `sp_contact_record_event` references `nbs_odse.dbo.fn_get_value_by_cd_codeset` (function lives in `RDB_MODERN.dbo`) | **Already fixed on main** via PR #769 (commit `a0dbf3be`). | `069-sp_contact_record_event-001.sql:69` |
-| [03](./03_morb_rpt_user_comment/) | `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816 | Medium (silent — table never populates) | `016-sp_nrt_morbidity_report_postprocessing-001.sql:802-816` |
+| [03](./03_morb_rpt_user_comment/) | `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816 | **Resolved — fix on branch `aw/app-471/bug-3` (commit `a32456a8`), PR pending.** | `016-sp_nrt_morbidity_report_postprocessing-001.sql:802-816` |
 | [04](./04_provider_postprocessing_typo/) | `sp_nrt_provider_postprocessing` line 564 typo: `#PATIENT_UPDATE_LIST` should be `#PROVIDER_UPDATE_LIST` | **Merged on main** (PR #826, commit `92a56d42`). | `003-sp_nrt_provider_postprocessing-001.sql:564` |
 | [05](./05_tmp_f_page_case_family/) | **TWO bugs**: (5a) `sp_hepatitis_datamart_postprocessing` logs incorrect row_count for #TMP_F_PAGE_CASE due to `IF @debug` resetting `@@ROWCOUNT` (logging-only); (5b) `nrt_investigation.patient_id NULL` cascades through PATIENT sentinel into a `DELETE WHERE PATIENT_UID IS NULL` (fixture-side; actual blocker for HEPATITIS_DATAMART) | High (5b blocks HEPATITIS_DATAMART population) | `013-sp_hepatitis_datamart_postprocessing-001.sql:108-111, 2149` + fixture `nrt_investigation` |
 | [06](./06_ldf_data_truncation/) | `sp_nrt_ldf_postprocessing` maps `metadata_record_status_cd` ('LDF_PROCESSED', 13 chars) into `LDF_DATA.RECORD_STATUS_CD` (varchar(8) with CHECK constraint for 'ACTIVE'/'INACTIVE'). **Wrong source column**, not a width oversight. | **Merged on main** (PR #827, commit `bb882115`). | `015-sp_nrt_ldf_postprocessing-001.sql:863, 1006, 1132` |
@@ -62,7 +62,7 @@ investigation**. Worth noting because they reshape the picture:
 | --- | --- | --- |
 | #1 | Resolved — non-issue | RDB_DATE is correctly populated by seeds in normal environments; the SP is not on the live path. Separate seed-correction PR in-flight. |
 | #2 | Fixed on main | PR #769 (commit `a0dbf3be`), pre-dates this investigation. |
-| #3 | Open — local branch `aw/app-471/bug-3` pushed; no PR yet. | RTR fix, query rewrite (self-defeating join → two-hop act_relationship traversal). |
+| #3 | Resolved — fix on branch `aw/app-471/bug-3` (commit `a32456a8`), PR pending. | RTR fix, query rewrite: replaced self-defeating join with staging-side walk via `nrt_morbidity_observation.followup_observation_uid` CSV filtered to `obs_domain_cd_st_1 = 'C_Result'`. Stays inside RDB_MODERN (no cross-DB ODSE read — see STRATEGY.md convention). |
 | #4 | Merged on main | PR #826 (commit `92a56d42`). |
 | #5a | Open — local branch `aw/app-471/bug-5`; no PR yet. | RTR fix, line swap — capture `@@ROWCOUNT` before debug SELECT. Logging-only; no behavioral impact. |
 | #5b | Open — fixture-side orchestrator change committed only on `aw/app-471/bug-5`. | Needs merge into `aw/odse-test-seed`. Single highest-ROI unlock for HEPATITIS_DATAMART (0 → 1 row in end-to-end merge). |
@@ -81,8 +81,7 @@ investigation**. Worth noting because they reshape the picture:
 3. **#8** (RTR fix) — must follow #7; the SUBSTRING defect fires on
    first invocation against per-condition LDF tables that are still
    empty until #7 lands.
-4. **#3** (RTR fix).
-5. **#5a** (RTR fix) — logging-only; low priority but trivial.
+4. **#5a** (RTR fix) — logging-only; low priority but trivial.
 
 ### Headline reframing from the HEPATITIS_DATAMART investigation
 
