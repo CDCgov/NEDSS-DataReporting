@@ -3178,6 +3178,16 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: onboarding-rdb-date-seed
+      author: liquibase
+      runOnChange: true
+      runInTransaction: false
+      changes:
+        - sqlFile:
+            path: onboarding/002-rdb_date_seed_if_empty-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: onboarding-indexes
       author: liquibase
       runOnChange: true
