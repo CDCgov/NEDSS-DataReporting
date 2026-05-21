@@ -180,6 +180,11 @@ GO
 DECLARE @superuser_id_2 bigint = 10009282;
 DECLARE @tb_full_phc_uid_2 bigint = 22001000;
 
+-- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column. We want
+-- our allocated UIDs (22001100+) for stable cross-fixture references,
+-- so flip IDENTITY_INSERT for the duration of this INSERT block.
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+
 INSERT INTO [dbo].[nbs_case_answer]
     ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
      [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
@@ -252,6 +257,8 @@ VALUES
     (22001112, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'PHC2', 1080, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
+
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
 
 GO
 
