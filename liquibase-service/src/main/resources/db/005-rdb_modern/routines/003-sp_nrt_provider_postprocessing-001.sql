@@ -561,7 +561,7 @@ BEGIN
                    +morbidity_datamart_update
                    +std_hiv_datamart_update
                    +hep100_datamart_update as update_count
-                    FROM #PATIENT_UPDATE_LIST
+                    FROM #PROVIDER_UPDATE_LIST
                     FOR JSON PATH
                 ), 500)
                 );
