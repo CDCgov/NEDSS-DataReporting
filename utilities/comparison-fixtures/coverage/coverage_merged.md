@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-21 04:55:39 PDT
+Generated: 2026-05-21 05:09:10 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -30,11 +30,11 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.antimicrobial_group | 1 | 1 | **1/1** |
 | dbo.bmird_multi_value_field_group | 2 | 1 | **1/1** |
 | dbo.bmird_strep_pneumo_datamart | 2 | 140 | 69/140 |
-| dbo.case_count | 21 | 15 | 13/15 |
+| dbo.case_count | 22 | 15 | 13/15 |
 | dbo.case_lab_datamart | 20 | 35 | 9/35 |
 | dbo.condition | 269 | 15 | 14/15 |
 | dbo.confirmation_method | 3 | 3 | **3/3** |
-| dbo.confirmation_method_group | 24 | 3 | **3/3** |
+| dbo.confirmation_method_group | 25 | 3 | **3/3** |
 | dbo.covid_case_datamart | 2 | 383 | 53/383 |
 | dbo.covid_contact_datamart | 0 | 94 | 0/94 |
 | dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
@@ -80,8 +80,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_vaccination | 3 | 21 | **21/21** |
 | dbo.d_var_pam | 1 | 129 | 25/129 |
 | dbo.etl_dq_log | 108 | 15 | 14/15 |
-| dbo.event_metric | 28 | 28 | **28/28** |
-| dbo.event_metric_inc | 29 | 28 | **28/28** |
+| dbo.event_metric | 29 | 28 | **28/28** |
+| dbo.event_metric_inc | 30 | 28 | **28/28** |
 | dbo.f_contact_record_case | 2 | 11 | **11/11** |
 | dbo.f_interview_case | 2 | 10 | **10/10** |
 | dbo.f_page_case | 6 | 35 | 33/35 |
@@ -94,9 +94,9 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.hepatitis_datamart | 1 | 209 | 26/209 |
 | dbo.inv_hiv | 3 | 19 | 17/19 |
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
-| dbo.investigation | 24 | 71 | **71/71** |
+| dbo.investigation | 25 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 24453 | 15 | 14/15 |
+| dbo.job_flow_log | 24464 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
