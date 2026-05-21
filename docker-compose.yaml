@@ -165,21 +165,3 @@ services:
       kafka-connect:
         condition: service_healthy
 
-  sas:
-    image: ghcr.io/cdcent/nbs7-sas-linux:v1.0.4
-    profiles: [sas]
-    platform: linux/amd64
-    ports:
-      - 2323:2323
-    environment:
-      - db_host=nbs-mssql
-      - rdb_user=sa
-      - rdb_pass=PizzaIsGood33!
-      - odse_user=sa
-      - odse_pass=PizzaIsGood33!
-      - sas_user_pass=n3dss4dm1n
-      - sas_encoding=latin1
-      - ADDITIONAL_SAS_FLAGS=-DEBUG
-    depends_on:
-      nbs-mssql:
-        condition: service_healthy
