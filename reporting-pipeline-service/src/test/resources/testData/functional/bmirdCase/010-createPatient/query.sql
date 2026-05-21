@@ -1,13 +1,6 @@
+-- reporting-pipeline-service/src/test/resources/testData/functional/bmirdCase/010-createPatient/query.sql
 USE [RDB_MODERN];
 
--- Generated from paired tracing artifacts.
--- Source summary: testing-tools/local-db-tracing/output/20260520-135900-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/summary.txt
--- Logical changes: testing-tools/local-db-tracing/output/20260520-135900-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/logical-changes.json
-
--- dbo.D_PATIENT | operations: insert
--- Query: 0
--- Step: 1
--- WHERE clause narrowed to known lookup key: PATIENT_LOCAL_ID
 SELECT
     [PATIENT_ADDED_BY],
     [PATIENT_ADDL_GENDER_INFO],
@@ -90,5 +83,4 @@ SELECT
     [PATIENT_WITHIN_CITY_LIMITS],
     [PATIENT_ZIP]
 FROM [dbo].[D_PATIENT]
-WHERE [PATIENT_LOCAL_ID] = N'PSN12345544332216GA01'
-FOR JSON PATH;
+WHERE [PATIENT_LOCAL_ID] = N'PSN10067003GA01';
