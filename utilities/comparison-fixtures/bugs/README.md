@@ -1,10 +1,11 @@
 # RTR bugs surfaced by the comparison-fixtures project
 
-This directory contains 8 bug investigations produced by the
+This directory contains 9 bug investigations produced by the
 comparison-fixtures project's end-to-end merged-fixture run. Each
 subdirectory has:
 
-- `repro.sql` — self-contained SQL script demonstrating the bug
+- `repro.sql` — self-contained SQL script demonstrating the bug (where
+  applicable; some bugs are documented from in-orchestrator triggers)
 - `findings.md` — investigation report with hypotheses tested,
   root cause (where determined), and suggested fix
 
@@ -23,6 +24,7 @@ with `DATABASE_VERSION=6.0.18.1`.
 | [06](./06_ldf_data_truncation/) | `sp_nrt_ldf_postprocessing` maps `metadata_record_status_cd` ('LDF_PROCESSED', 13 chars) into `LDF_DATA.RECORD_STATUS_CD` (varchar(8) with CHECK constraint for 'ACTIVE'/'INACTIVE'). **Wrong source column**, not a width oversight. | **Merged on main** (PR #827, commit `bb882115`). | `015-sp_nrt_ldf_postprocessing-001.sql:863, 1006, 1132` |
 | [07](./07_ldf_dimensional_data_zero/) | `sp_nrt_ldf_dimensional_data_postprocessing` early-RETURN guard misclassifies intentionally-filtered ldf_uids as "missing NRT records" + a latent INNER/LEFT JOIN inconsistency | High (LDF_DIMENSIONAL_DATA never populates; cascades to all per-condition LDF tables) | `265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql:136-158, 648` |
 | [08](./08_ldf_tetanus_substring/) | **6-instance family**: unguarded `SUBSTRING(s, 1, LEN(s)-1)` idiom across 6 per-condition LDF datamart SPs fails when no dynamic columns added yet | Medium (each fires on first invocation against empty per-condition LDF table) | `285:603, 290:893, 295:627, 300:833, 305:1105, 320:594` (the `*-sp_ldf_*_datamart_postprocessing-001.sql` files) |
+| [09](./09_dyn_dm_unpivot_type/) | `sp_dyn_dm_repeatvarch_postprocessing` step 16 dynamic UNPIVOT raises Msg 8167 ("type of column EPI_CNTRY_OF_EXP conflicts with other columns in the UNPIVOT list") because repeat-block column types in `nrt_metadata_columns` are heterogeneous and the SP doesn't CAST before unpivoting | Medium (blocks every `DM_INV_<DATAMART>` wide table; surfaces when orchestrator's Step 9 invokes `sp_dyn_dm_main_postprocessing` for HEPATITIS_A_ACUTE) | `205-sp_dyn_dm_repeatvarch_postprocessing-001.sql:531-557` |
 
 ## Surprises during investigation
 
@@ -56,7 +58,7 @@ investigation**. Worth noting because they reshape the picture:
    per-condition LDF datamart SPs (and 3 already-guarded sites — the
    pattern is known but inconsistently applied).
 
-## Current status (2026-05-19)
+## Current status (2026-05-21)
 
 | # | Status | Notes |
 | --- | --- | --- |
@@ -64,20 +66,27 @@ investigation**. Worth noting because they reshape the picture:
 | #2 | Fixed on main | PR #769 (commit `a0dbf3be`), pre-dates this investigation. |
 | #3 | PR #837 open on `aw/app-471/bug-3`. | RTR fix, query rewrite: replaced self-defeating join with staging-side walk via `nrt_morbidity_observation.followup_observation_uid` CSV filtered to `obs_domain_cd_st_1 = 'C_Result'`. Stays inside RDB_MODERN (no cross-DB ODSE read — see STRATEGY.md convention). |
 | #4 | Merged on main | PR #826 (commit `92a56d42`). |
-| #5a | Open — local branch `aw/app-471/bug-5`; no PR yet. | RTR fix, line swap — capture `@@ROWCOUNT` before debug SELECT. Logging-only; no behavioral impact. Plan: open as a standalone PR off a fresh branch from main. |
-| #5b | Resolved on `aw/odse-test-seed` — fixture-side; no PR. | Foundation patient_id UPDATE in `merge_and_verify.sh`; same UPDATE extended to the 10 multi-condition + 1 Tetanus Tier 3 variants. End-to-end uplift: HEPATITIS_DATAMART 0→1, COVID_CASE_DATAMART 0→1, BMIRD_STREP_PNEUMO_DATAMART 0→1, F_PAGE_CASE 1→6. |
+| #5a | **Squashed on `aw/odse-test-seed`** (no separate PR). | RTR fix, line swap — capture `@@ROWCOUNT` before debug SELECT. Logging-only; no behavioral impact. |
+| #5b | Resolved on `aw/odse-test-seed` — fixture-side; no PR. | patient_id authored inline (literal `20000000`) on every Tier 1 and Tier 3 `nrt_investigation` row that drives the Datamart chain. Orchestrator UPDATE workaround removed. End-to-end uplift: HEPATITIS_DATAMART 0→1, F_PAGE_CASE 1→6. |
 | #6 | Merged on main | PR #827 (commit `bb882115`). |
-| #7 | PR #839 open on `aw/app-471/bug-7`. | RTR fix, two-line: early-RETURN guard misclassification + INNER→LEFT JOIN harmonization. Unblocks LDF_DIMENSIONAL_DATA. |
-| #8 | PR #840 open on `aw/app-471/bug-8`. | RTR fix, mechanical: apply existing guard pattern at 6 unguarded `SUBSTRING(s, 1, LEN(s)-1)` sites. |
+| #7 | **Squashed on `aw/odse-test-seed`** as `[SQUASH bug-7]` commit. Was PR #839 (approved). | RTR fix, two-line: early-RETURN guard misclassification + INNER→LEFT JOIN harmonization. Unblocks LDF_DIMENSIONAL_DATA. |
+| #8 | **Squashed on `aw/odse-test-seed`** as `[SQUASH bug-8]` commit. Was PR #840 (approved). | RTR fix, mechanical: apply existing guard pattern at 6 unguarded `SUBSTRING(s, 1, LEN(s)-1)` sites. |
+| #9 | **Open** — documented; no fix attempted. | Dynamic UNPIVOT type-conflict in dyn_dm chain. Suggested fix: wrap each column in `CAST(<col> AS nvarchar(max))` in the dynamic SELECT before UNPIVOT. Need to confirm whether heterogeneous repeat-block column types are a baseline-data defect or a latent SP defect that prod dodges via uniform metadata. |
 
 ### Remaining work
 
-- **#5a** — open a fresh branch off `main`, cherry-pick the one-line
-  `@@ROWCOUNT` swap, open as a standalone PR. Logging-only, low
-  stakes but uncontroversial.
-- Wait for PRs #837, #839, #840 to merge to `main`. Once a new
-  baseline image cuts that includes them, remove their branches from
-  `apply_pending_pr_routines()` in `merge_and_verify.sh`.
+- **#3** — PR #837 still open upstream; squashed onto `aw/odse-test-seed`
+  as `[SQUASH bug-3]` so the branch is self-contained. Re-rebase onto
+  main once #837 merges.
+- **#5a** — squashed onto `aw/odse-test-seed`. No separate PR pursued
+  per user direction.
+- **#7 + #8** — squashed onto `aw/odse-test-seed`. PRs #839/#840 were
+  approved but never merged; re-rebase if they land upstream.
+- **#9** — open. Investigate whether heterogeneous repeat-block column
+  types in `nrt_metadata_columns` are a baseline-data defect (would
+  not affect prod) or a latent SP defect (would). Suggested fix:
+  wrap each column in `CAST(<col> AS nvarchar(max))` inside the
+  dynamic SELECT before UNPIVOT. See `09_dyn_dm_unpivot_type/findings.md`.
 
 ### Headline reframing from the HEPATITIS_DATAMART investigation
 
@@ -117,11 +126,12 @@ SQLCMDPASSWORD=PizzaIsGood33! sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -i
 
 ## Total scope
 
-- **8 bug categories** investigated
-- **At least 11 distinct SP-level defects** identified across them
+- **9 bug categories** investigated
+- **At least 12 distinct SP-level defects** identified across them
   (bug #1 has 2 issues; bug #5 has 2 issues; bug #7 has 2 issues;
-  bug #8 has 6 instances). Several "single bug" entries in the index
-  expand to multiple fixes.
+  bug #8 has 6 instances; bug #9 is one SP defect with broad
+  impact across the dyn_dm datamart family). Several "single bug"
+  entries in the index expand to multiple fixes.
 - **Coverage state of the originally-blocked tables**:
   HEPATITIS_DATAMART unblocks at 0 → 1 row once #5b's orchestrator
   change is merged into `aw/odse-test-seed`; LDF_DIMENSIONAL_DATA and

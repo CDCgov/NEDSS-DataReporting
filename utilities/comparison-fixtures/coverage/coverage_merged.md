@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-21 00:31:04 PDT
+Generated: 2026-05-21 01:24:37 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 48
-- Partially covered (some columns populated): 23
-- Empty (table exists, 0 rows): 46
+- Fully covered (all columns populated for at least one row): 58
+- Partially covered (some columns populated): 27
+- Empty (table exists, 0 rows): 32
 - Missing (table not present in live RDB_MODERN): 1
 
-- Total columns across in-scope tables: 4604
-- Columns with ≥1 populated row: 1004
-- Overall column coverage: 21.8%
+- Total columns across in-scope tables: 4608
+- Columns with ≥1 populated row: 1140
+- Overall column coverage: 24.7%
 
 ## Per-table coverage
 
@@ -28,44 +28,44 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | ----- | ---- | ---------- | -------------- |
 | dbo.aggregate_report_datamart | 0 | 42 | 0/42 |
 | dbo.antimicrobial_group | 1 | 1 | **1/1** |
-| dbo.bmird_multi_value_field_group | 1 | 1 | **1/1** |
-| dbo.bmird_strep_pneumo_datamart | 1 | 140 | 36/140 |
-| dbo.case_count | 12 | 15 | 13/15 |
-| dbo.case_lab_datamart | 12 | 35 | 9/35 |
+| dbo.bmird_multi_value_field_group | 2 | 1 | **1/1** |
+| dbo.bmird_strep_pneumo_datamart | 2 | 140 | 69/140 |
+| dbo.case_count | 14 | 15 | 13/15 |
+| dbo.case_lab_datamart | 14 | 35 | 9/35 |
 | dbo.condition | 269 | 15 | 14/15 |
 | dbo.confirmation_method | 3 | 3 | **3/3** |
-| dbo.confirmation_method_group | 15 | 3 | **3/3** |
+| dbo.confirmation_method_group | 17 | 3 | **3/3** |
 | dbo.covid_case_datamart | 1 | 383 | 28/383 |
 | dbo.covid_contact_datamart | 0 | 94 | 0/94 |
 | dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
 | dbo.covid_lab_datamart | 0 | 129 | 0/129 |
 | dbo.covid_vaccination_datamart | 1 | 60 | 10/60 |
-| dbo.d_addl_risk | 0 | 6 | 0/6 |
-| dbo.d_addl_risk_group | 1 | 1 | **1/1** |
+| dbo.d_addl_risk | 1 | 6 | **6/6** |
+| dbo.d_addl_risk_group | 2 | 1 | **1/1** |
 | dbo.d_case_management | 0 | 67 | 0/67 |
 | dbo.d_contact_record | 3 | 66 | 42/66 |
-| dbo.d_disease_site | 0 | 6 | 0/6 |
-| dbo.d_disease_site_group | 1 | 1 | **1/1** |
-| dbo.d_gt_12_reas | 0 | 6 | 0/6 |
-| dbo.d_gt_12_reas_group | 1 | 1 | **1/1** |
-| dbo.d_hc_prov_ty_3 | 0 | 6 | 0/6 |
-| dbo.d_hc_prov_ty_3_group | 1 | 1 | **1/1** |
+| dbo.d_disease_site | 1 | 6 | **6/6** |
+| dbo.d_disease_site_group | 2 | 1 | **1/1** |
+| dbo.d_gt_12_reas | 1 | 6 | **6/6** |
+| dbo.d_gt_12_reas_group | 2 | 1 | **1/1** |
+| dbo.d_hc_prov_ty_3 | 1 | 6 | **6/6** |
+| dbo.d_hc_prov_ty_3_group | 2 | 1 | **1/1** |
 | dbo.d_interview | 2 | 24 | 18/24 |
 | dbo.d_interview_note | 2 | 7 | **7/7** |
 | dbo.d_inv_place_repeat | 1 | 42 | 1/42 |
 | dbo.d_investigation_repeat | 2 | 244 | 1/244 |
 | dbo.d_ldf_meta_data | 2620 | 14 | 12/14 |
-| dbo.d_move_cntry | 0 | 6 | 0/6 |
-| dbo.d_move_cntry_group | 1 | 1 | **1/1** |
-| dbo.d_move_cnty | 0 | 6 | 0/6 |
-| dbo.d_move_cnty_group | 1 | 1 | **1/1** |
-| dbo.d_move_state | 0 | 6 | 0/6 |
-| dbo.d_move_state_group | 1 | 1 | **1/1** |
-| dbo.d_moved_where | 0 | 6 | 0/6 |
-| dbo.d_moved_where_group | 1 | 1 | **1/1** |
+| dbo.d_move_cntry | 1 | 6 | 5/6 |
+| dbo.d_move_cntry_group | 2 | 1 | **1/1** |
+| dbo.d_move_cnty | 1 | 6 | **6/6** |
+| dbo.d_move_cnty_group | 2 | 1 | **1/1** |
+| dbo.d_move_state | 1 | 6 | **6/6** |
+| dbo.d_move_state_group | 2 | 1 | **1/1** |
+| dbo.d_moved_where | 1 | 6 | **6/6** |
+| dbo.d_moved_where_group | 2 | 1 | **1/1** |
 | dbo.d_organization | 8 | 30 | **30/30** |
-| dbo.d_out_of_cntry | 0 | 6 | 0/6 |
-| dbo.d_out_of_cntry_group | 1 | 1 | **1/1** |
+| dbo.d_out_of_cntry | 1 | 6 | 5/6 |
+| dbo.d_out_of_cntry_group | 2 | 1 | **1/1** |
 | dbo.d_patient | 5 | 81 | **81/81** |
 | dbo.d_pcr_source | 0 | 6 | 0/6 |
 | dbo.d_pcr_source_group | 1 | 1 | **1/1** |
@@ -73,20 +73,20 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_provider | 13 | 34 | **34/34** |
 | dbo.d_rash_loc_gen | 0 | 6 | 0/6 |
 | dbo.d_rash_loc_gen_group | 1 | 1 | **1/1** |
-| dbo.d_smr_exam_ty | 0 | 6 | 0/6 |
-| dbo.d_smr_exam_ty_group | 1 | 1 | **1/1** |
-| dbo.d_tb_hiv | 0 | 6 | 0/6 |
-| dbo.d_tb_pam | 0 | 166 | 0/166 |
+| dbo.d_smr_exam_ty | 1 | 6 | **6/6** |
+| dbo.d_smr_exam_ty_group | 2 | 1 | **1/1** |
+| dbo.d_tb_hiv | 1 | 6 | **6/6** |
+| dbo.d_tb_pam | 1 | 166 | 9/166 |
 | dbo.d_vaccination | 3 | 21 | **21/21** |
 | dbo.d_var_pam | 0 | 129 | 0/129 |
 | dbo.etl_dq_log | 0 | 15 | 0/15 |
-| dbo.event_metric | 19 | 28 | **28/28** |
-| dbo.event_metric_inc | 20 | 28 | **28/28** |
+| dbo.event_metric | 21 | 28 | **28/28** |
+| dbo.event_metric_inc | 22 | 28 | **28/28** |
 | dbo.f_contact_record_case | 2 | 11 | **11/11** |
 | dbo.f_interview_case | 2 | 10 | **10/10** |
 | dbo.f_page_case | 6 | 35 | 33/35 |
 | dbo.f_std_page_case | 0 | 52 | 0/52 |
-| dbo.f_tb_pam | 0 | 20 | 0/20 |
+| dbo.f_tb_pam | 1 | 20 | **20/20** |
 | dbo.f_vaccination | 2 | 6 | **6/6** |
 | dbo.f_var_pam | 0 | 12 | 0/12 |
 | dbo.hep_multi_value_field_group | 1 | 1 | **1/1** |
@@ -94,9 +94,9 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.hepatitis_datamart | 1 | 209 | 26/209 |
 | dbo.inv_hiv | 1 | 19 | 1/19 |
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
-| dbo.investigation | 15 | 71 | **71/71** |
+| dbo.investigation | 17 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 22724 | 15 | 14/15 |
+| dbo.job_flow_log | 24330 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat_inc | 0 | 2 | 0/2 |
@@ -115,7 +115,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.ldf_group | 2 | 2 | **2/2** |
 | dbo.ldf_hepatitis | 0 | 7 | 0/7 |
 | dbo.ldf_mumps | 0 | 7 | 0/7 |
-| dbo.ldf_tetanus | 0 | 7 | 0/7 |
+| dbo.ldf_tetanus | 1 | 11 | 10/11 |
 | dbo.ldf_vaccine_prevent_diseases | 1 | 8 | **8/8** |
 | dbo.lookup_table_n_rept | 0 | 2 | 0/2 |
 | dbo.morb_rpt_user_comment | 1 | 8 | **8/8** |
@@ -148,7 +148,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 ## Categorization
 
-### Fully covered (48)
+### Fully covered (58)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -156,14 +156,21 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.bmird_multi_value_field_group
 - dbo.confirmation_method
 - dbo.confirmation_method_group
+- dbo.d_addl_risk
 - dbo.d_addl_risk_group
+- dbo.d_disease_site
 - dbo.d_disease_site_group
+- dbo.d_gt_12_reas
 - dbo.d_gt_12_reas_group
+- dbo.d_hc_prov_ty_3
 - dbo.d_hc_prov_ty_3_group
 - dbo.d_interview_note
 - dbo.d_move_cntry_group
+- dbo.d_move_cnty
 - dbo.d_move_cnty_group
+- dbo.d_move_state
 - dbo.d_move_state_group
+- dbo.d_moved_where
 - dbo.d_moved_where_group
 - dbo.d_organization
 - dbo.d_out_of_cntry_group
@@ -172,12 +179,15 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.d_place
 - dbo.d_provider
 - dbo.d_rash_loc_gen_group
+- dbo.d_smr_exam_ty
 - dbo.d_smr_exam_ty_group
+- dbo.d_tb_hiv
 - dbo.d_vaccination
 - dbo.event_metric
 - dbo.event_metric_inc
 - dbo.f_contact_record_case
 - dbo.f_interview_case
+- dbo.f_tb_pam
 - dbo.f_vaccination
 - dbo.hep_multi_value_field_group
 - dbo.investigation
@@ -201,7 +211,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.treatment_event
 - dbo.user_profile
 
-### Partially covered (23)
+### Partially covered (27)
 
 Tables with rows but at least one column never populated. These are the
 candidates for Tier 3 gap-driven coverage work.
@@ -217,6 +227,9 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.d_inv_place_repeat
 - dbo.d_investigation_repeat
 - dbo.d_ldf_meta_data
+- dbo.d_move_cntry
+- dbo.d_out_of_cntry
+- dbo.d_tb_pam
 - dbo.f_page_case
 - dbo.hepatitis_datamart
 - dbo.inv_hiv
@@ -226,11 +239,12 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.lab_test_result
 - dbo.ldf_data
 - dbo.ldf_dimensional_data
+- dbo.ldf_tetanus
 - dbo.morbidity_report_datamart
 - dbo.summary_case_group
 - dbo.test_result_grouping
 
-### Empty (46)
+### Empty (32)
 
 Tables that exist in RDB_MODERN but have zero rows after the merged
 chain runs. Most are datamart-side fact tables that depend on Merge
@@ -240,25 +254,12 @@ contract step 9 (Datamart SPs — out of scope for v1).
 - dbo.covid_contact_datamart
 - dbo.covid_lab_celr_datamart
 - dbo.covid_lab_datamart
-- dbo.d_addl_risk
 - dbo.d_case_management
-- dbo.d_disease_site
-- dbo.d_gt_12_reas
-- dbo.d_hc_prov_ty_3
-- dbo.d_move_cntry
-- dbo.d_move_cnty
-- dbo.d_move_state
-- dbo.d_moved_where
-- dbo.d_out_of_cntry
 - dbo.d_pcr_source
 - dbo.d_rash_loc_gen
-- dbo.d_smr_exam_ty
-- dbo.d_tb_hiv
-- dbo.d_tb_pam
 - dbo.d_var_pam
 - dbo.etl_dq_log
 - dbo.f_std_page_case
-- dbo.f_tb_pam
 - dbo.f_var_pam
 - dbo.hep100
 - dbo.inv_summ_datamart
@@ -269,7 +270,6 @@ contract step 9 (Datamart SPs — out of scope for v1).
 - dbo.ldf_foodborne
 - dbo.ldf_hepatitis
 - dbo.ldf_mumps
-- dbo.ldf_tetanus
 - dbo.lookup_table_n_rept
 - dbo.organization_ldf_group
 - dbo.patient_ldf_group

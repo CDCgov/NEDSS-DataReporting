@@ -1225,6 +1225,10 @@ populated by this edge.
 | --- | --- | --- |
 | 22000000 - 22000999 | `multi_condition_investigations` (10 stubs, one per condition) | **allocated**. nrt_investigation-only shortcut rows for TB / Varicella / Mumps / Pertussis / Measles / Rubella / COVID-19 / Syphilis / HIV / Strep pneumoniae. |
 | 22001000 - 22001999 | `tb_investigation_full_chain` (full ODSE + NBS_case_answer chain for TB) | **allocated**. See block detail below. |
+| 22002000 - 22002999 | `varicella_investigation_full_chain` (full ODSE + NBS_case_answer chain for Varicella) | **allocated**. See block detail below. |
+| 22003000 - 22003999 | `covid_investigation_full_chain` (full ODSE + NBS_case_answer chain for COVID-19) | **allocated**. See block detail below. |
+| 22004000 - 22004999 | `std_hiv_investigation_full_chain` (full ODSE + Tier 2 + dimensional D_INV_* chain for STD Syphilis primary) | **allocated**. See block detail below. |
+| 22005000 - 22005999 | `bmird_investigation_full_chain` (full ODSE + nrt_investigation_observation graph for BMIRD Strep pneumo invasive) | **allocated**. See block detail below. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
@@ -1255,3 +1259,185 @@ It populates **24 of 26** TB-PAM cluster RDB_MODERN tables (every
 d_topic dim + group + D_TB_PAM + F_TB_PAM + TB_DATAMART + TB_HIV_DATAMART).
 The 2 remaining (`TB_PAM_LDF`, plus the per-topic-empty group sentinel)
 require separate LDF-flagged answer rows — Phase 2 LDF work.
+
+### Tier 3 — Varicella Investigation full chain (22002000 - 22002999)
+
+Allocated by Tier 3 varicella_investigation_full_chain agent. Source:
+`fixtures/30_sp_coverage/varicella_investigation_full_chain.sql`.
+Coverage report: `coverage/coverage_varicella_full_chain.md`.
+
+| UID | Symbolic | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22002000 | var_full_phc_uid | `act.act_uid`, `public_health_case.public_health_case_uid`, `nrt_investigation.public_health_case_uid`, `nrt_investigation.nac_page_case_uid`, `nrt_page_case_answer.act_uid` (all 25 answer rows) | The single Varicella Investigation full-chain anchor. condition_cd `10030` Varicella (Chickenpox), prog_area_cd `GCD`, investigation_form_cd `INV_FORM_VAR`. Adds the populated-PAM-answers path alongside the existing 22000020 stub's no-answers path. |
+| 22002001 | var_full_case_mgmt_uid | `case_management.case_management_uid` (IDENTITY-inserted) | Per Tier 1 v2 Investigation shape. |
+| 22002100..22002124 | (25 VAR answer rows: VAR101, VAR103, VAR105, VAR111, VAR113, VAR122, VAR123, VAR126, VAR128, VAR129, VAR135, VAR139, VAR143, VAR150, VAR154, VAR156, VAR158, VAR170, VAR171, VAR174, VAR176, VAR178, VAR180, VAR188, VAR195) | `nbs_case_answer.nbs_case_answer_uid` + `nrt_page_case_answer.nbs_case_answer_uid` | A curated minimum-viable set proving the D_VAR_PAM wide-pivot + D_RASH_LOC_GEN (VAR105 → 'Trunk') + D_PCR_SOURCE (VAR176 → 'Scab') paths work end-to-end. |
+
+Unused UIDs: 22002002..22002099, 22002125..22002999 (974 UIDs reserved).
+Do not allocate from this range outside of the
+varicella_investigation_full_chain agent.
+
+This fixture writes:
+- 1 row to `NBS_ODSE.dbo.act` (act_uid=22002000)
+- 1 row to `NBS_ODSE.dbo.public_health_case` (public_health_case_uid=22002000)
+- 1 row to `NBS_ODSE.dbo.act_id` (act_uid=22002000, act_id_seq=1)
+- 1 row to `NBS_ODSE.dbo.case_management` (case_management_uid=22002001, IDENTITY_INSERT)
+- 25 rows to `NBS_ODSE.dbo.nbs_case_answer` (act_uid=22002000)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation` (public_health_case_uid=22002000)
+- 25 rows to `RDB_MODERN.dbo.nrt_page_case_answer` (act_uid=22002000)
+
+It populates **5 of 8** Varicella-PAM cluster RDB_MODERN tables at
+Tier-1-isolation (D_VAR_PAM, D_RASH_LOC_GEN(+group), D_PCR_SOURCE(+group)).
+F_VAR_PAM and VAR_DATAMART populate at orchestrator Step 9 (gated on
+EVENT_METRIC for var_datamart); the parent agent must extend the
+orchestrator's PHC_UIDS to include 22002000 — see
+`coverage/coverage_varicella_full_chain.md` ORCH_TODO section.
+VAR_PAM_LDF remains 0 (requires LDF-flagged answer rows — Phase 2 LDF
+work).
+
+### Tier 3 — COVID-19 Investigation full chain (22003000 - 22003999)
+
+Allocated by Tier 3 covid_investigation_full_chain agent. Source:
+`fixtures/30_sp_coverage/covid_investigation_full_chain.sql`. Coverage
+report: `coverage/coverage_covid_full_chain.md`.
+
+| UID | Symbolic | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22003000 | covid_full_phc_uid | `act.act_uid`, `public_health_case.public_health_case_uid`, `nrt_investigation.public_health_case_uid`, `nrt_investigation.nac_page_case_uid`, `nrt_page_case_answer.act_uid` (all 22 answer rows) | The single COVID Investigation full-chain anchor. condition_cd `11065` 2019 Novel Coronavirus, prog_area_cd `COV` (matching the stub convention; SRTE canonical is `GCD` — see coverage report SRTE_GAP), investigation_form_cd `PG_COVID-19_v1.1`. Adds the discrete + Type-3 repeating-block answers path alongside the existing 22000070 stub's no-answers path. |
+| 22003001 | covid_full_case_mgmt_uid | `case_management.case_management_uid` (IDENTITY-inserted) | Per Tier 1 v2 Investigation shape. |
+| 22003100..22003121 | (22 nbs_case_answer + nrt_page_case_answer pairs) | `nbs_case_answer.nbs_case_answer_uid` + `nrt_page_case_answer.nbs_case_answer_uid` | One per COVID datamart-column-mapped question: 9 symptoms (FEVER, CHILLS_RIGORS, FATIGUE_MALAISE, HEADACHE, MYALGIA, ALT_MENTAL_STATUS, NAUSEA, DIARRHEA, ABDOMINAL_PAIN — all SNOMED-coded), 2 disposition (HOSPITAL_ICU_STAY, US_HC_WORKER_IND), 6 exposure (TRAVEL_DOMESTICALLY, TRAVEL_INTERNATIONAL, CRUISE_TRAVEL_EXP, AIR_TRAVEL_EXP, WORKPLACE_EXP, ANIMAL_EXPOSURE_IND), 3 Type-3 labs (TEST_TYPE, TEST_RESULT, PERFORMING_LAB_TYPE — `answer_group_seq_nbr='1'` → `_1` repeating-block columns), 2 comorbidity/status (HYPERTENSION, Symptomatic). |
+
+Unused UIDs: 22003002..22003099, 22003122..22003999 (978 UIDs
+reserved). Do not allocate from this range outside of the
+covid_investigation_full_chain agent.
+
+This fixture writes:
+- 1 row to `NBS_ODSE.dbo.act` (act_uid=22003000)
+- 1 row to `NBS_ODSE.dbo.public_health_case` (public_health_case_uid=22003000)
+- 1 row to `NBS_ODSE.dbo.act_id` (act_uid=22003000, act_id_seq=1)
+- 1 row to `NBS_ODSE.dbo.case_management` (case_management_uid=22003001, IDENTITY_INSERT)
+- 22 rows to `NBS_ODSE.dbo.nbs_case_answer` (act_uid=22003000)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation` (public_health_case_uid=22003000)
+- 22 rows to `RDB_MODERN.dbo.nrt_page_case_answer` (act_uid=22003000)
+
+It populates **1 of 5** COVID datamart tables (COVID_CASE_DATAMART
+with 53/383 columns non-NULL, up from 28 with the stub alone). The 4
+remaining (COVID_CONTACT_DATAMART, COVID_LAB_DATAMART,
+COVID_LAB_CELR_DATAMART, COVID_VACCINATION_DATAMART) require
+additional Tier 3 inputs (COVID-coded labs / vaccinations / contacts
+linked to the Investigation) — Phase 2 follow-on.
+
+**Orchestrator pending action**: add 22003000 to `PHC_UIDS` in
+`scripts/merge_and_verify.sh` line 446 so Step 9 picks up this
+Investigation for `sp_covid_case_datamart_postprocessing`. Otherwise
+the SP-tail-EXEC's effect persists but the merged run won't
+re-execute against the full PHC list.
+
+### Tier 3 — STD Syphilis Investigation full chain (22004000 - 22004999)
+
+Allocated by Tier 3 std_hiv_investigation_full_chain agent. Source:
+`fixtures/30_sp_coverage/std_hiv_investigation_full_chain.sql`. Coverage
+report: `coverage/coverage_std_hiv_full_chain.md`.
+
+| UID | Symbolic | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22004000 | std_full_phc_uid | `act.act_uid`, `public_health_case.public_health_case_uid`, `nrt_investigation.public_health_case_uid`, `nrt_investigation_case_management.public_health_case_uid`, `nrt_investigation_confirmation.public_health_case_uid`, `L_INV_*.PAGE_CASE_UID` (5 link rows) | The single STD Syphilis-primary full-chain anchor. condition_cd `10311` Syphilis, primary; prog_area_cd `STD`; investigation_form_cd `PG_STD_Investigation` (the FORM_CD that v_nrt_nbs_page maps to DATAMART_NM='STD' for the dyn_dm chain). Adds the populated-CASE_MANAGEMENT + populated-D_INV_* path alongside the existing 22000080 Syphilis stub's no-CASE_MANAGEMENT path. |
+| 22004001 | std_full_case_mgmt_uid | `case_management.case_management_uid` (IDENTITY-inserted) | Per Tier 1 v2 Investigation shape. Required so the f_std_page_case SP's INNER predicate at line 97 (`nicm.CASE_MANAGEMENT_UID is not null`) admits this PHC row. |
+| 22004100 | D_INV_HIV_KEY | `D_INV_HIV.D_INV_HIV_KEY` | Hand-authored dimension row; populates 16/22 HIV_* columns. |
+| 22004110 | D_INV_ADMINISTRATIVE_KEY | `D_INV_ADMINISTRATIVE.D_INV_ADMINISTRATIVE_KEY` | Populates 4/58 ADM_* columns. |
+| 22004120 | D_INV_CLINICAL_KEY | `D_INV_CLINICAL.D_INV_CLINICAL_KEY` | Populates 7/93 CLN_* columns. |
+| 22004130 | D_INV_EPIDEMIOLOGY_KEY | `D_INV_EPIDEMIOLOGY.D_INV_EPIDEMIOLOGY_KEY` | Populates 1/154 EPI_* columns (EPI_CNTRY_USUAL_RESID). |
+| 22004140 | D_INV_COMPLICATION_KEY | `D_INV_COMPLICATION.D_INV_COMPLICATION_KEY` | Populates 2/33 CMP_* columns. |
+
+Unused UIDs: 22004002..22004099, 22004101..22004109, 22004111..22004119,
+22004121..22004129, 22004131..22004139, 22004141..22004999 (~960 UIDs
+reserved). Do not allocate from this range outside of the
+std_hiv_investigation_full_chain agent. Reserved for future expansion:
+broader D_INV_* column coverage; sibling HIV-pediatric full-chain
+(condition 10561, currently stubbed at 22000090); congenital syphilis
+(condition 10316, PG_Congenital_Syphilis_Investigation — a separate
+form, not part of STD_HIV_GROUP coinfection_grp_cd).
+
+This fixture writes:
+- 1 row to `NBS_ODSE.dbo.act` (act_uid=22004000)
+- 1 row to `NBS_ODSE.dbo.public_health_case` (public_health_case_uid=22004000)
+- 1 row to `NBS_ODSE.dbo.act_id` (act_uid=22004000, act_id_seq=1)
+- 1 row to `NBS_ODSE.dbo.case_management` (case_management_uid=22004001, IDENTITY_INSERT)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation` (public_health_case_uid=22004000)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation_case_management` (public_health_case_uid=22004000)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation_confirmation` (public_health_case_uid=22004000)
+- 1 row each to `RDB_MODERN.dbo.D_INV_HIV / D_INV_ADMINISTRATIVE / D_INV_CLINICAL / D_INV_EPIDEMIOLOGY / D_INV_COMPLICATION`
+- 1 row each to `RDB_MODERN.dbo.L_INV_HIV / L_INV_ADMINISTRATIVE / L_INV_CLINICAL / L_INV_EPIDEMIOLOGY / L_INV_COMPLICATION`
+
+After this fixture applies, the chain unblocks (verified live 2026-05-21):
+- `INVESTIGATION` +1 row
+- `CONFIRMATION_METHOD_GROUP` +1 row (via sp_nrt_investigation_postprocessing's
+  DELETE-then-INSERT cycle reading nrt_investigation_confirmation)
+- `F_STD_PAGE_CASE` +1 row (after orchestrator Step 9 invokes
+  `sp_f_std_page_case_postprocessing`)
+- `INV_HIV` +1 row
+- `STD_HIV_DATAMART` +1 row (after Step 9 invokes
+  `sp_std_hiv_datamart_postprocessing`)
+
+**Orchestrator pending actions** (Phase 2 follow-on, NOT this fixture's
+responsibility):
+1. Add 22004000 to `PHC_UIDS` in `scripts/merge_and_verify.sh` line 446
+   so Step 9 picks up this Investigation for `sp_std_hiv_datamart_postprocessing`,
+   `sp_f_std_page_case_postprocessing`, and the dyn_dm STD chain.
+2. Fix orchestrator bug at line 475: `sp_f_std_page_case_postprocessing`
+   is invoked with `@phc_ids = N'...'` — the SP's actual parameter is
+   `@phc_id_list`. The 2>/dev/null masks the silent failure; the SP
+   never runs in the orchestrated path. See report deliverable for
+   detail.
+
+### Tier 3 — BMIRD (Strep pneumo) Investigation full chain (22005000 - 22005999)
+
+Allocated by Tier 3 bmird_investigation_full_chain agent. Source:
+`fixtures/30_sp_coverage/bmird_investigation_full_chain.sql`. Coverage
+report: `coverage/coverage_bmird_full_chain.md`.
+
+| UID | Symbolic | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22005000 | bmird_full_phc_uid | `act.act_uid`, `public_health_case.public_health_case_uid`, `nrt_investigation.public_health_case_uid`, `nrt_investigation.nac_page_case_uid`, `nrt_investigation_observation.public_health_case_uid` (all 24 observation rows) | The single BMIRD Strep pneumoniae invasive full-chain anchor. condition_cd `11717`, prog_area_cd `BMIRD`, investigation_form_cd `INV_FORM_BMDSP`. Adds the populated-BMD-answers path alongside the existing 22000100 stub's no-answers path. |
+| 22005001 | bmird_full_case_mgmt_uid | `case_management.case_management_uid` (IDENTITY-inserted) | Per Tier 1 v2 Investigation shape. |
+| 22005100..22005112 | (13 BMIRD_Case coded feeders) | `nrt_observation.observation_uid` + `nrt_investigation_observation.branch_id` + `nrt_observation_coded.observation_uid` | One per BMD coded question (BMD120 BACTERIAL_SPECIES_ISOLATED → '11717', BMD100 ABCCASE → 'Y', BMD137 OXACILLIN_INTERPRETATION → 'R', BMD138 PNEUVACC_RECEIVED_IND → 'Y', BMD131 CULTURE_SEROTYPE → '19A', etc.). |
+| 22005120..22005123 | (4 BMIRD_Case text feeders) | `nrt_observation.observation_uid` + `nrt_observation_txt.observation_uid` | One per BMD text question (BMD119 TYPES_OF_OTHER_INFECTION, BMD123 STERILE_SITE_OTHER, BMD298 OTHNONSTER, BMD299 OTHSEROTYPE). |
+| 22005130 | (1 BMIRD_Case numeric feeder) | `nrt_observation.observation_uid` + `nrt_observation_numeric.observation_uid` | BMD136 OXACILLIN_ZONE_SIZE → 22 mm. |
+| 22005140..22005141 | (2 BMIRD_Case date feeders) | `nrt_observation.observation_uid` + `nrt_observation_date.observation_uid` | BMD141 FIRST_ADDITIONAL_SPECIMEN_DT, BMD143 SECOND_ADDITIONAL_SPECIMEN_DT. |
+| 22005150..22005153 | (4 BMIRD_Multi_Value_field feeders) | `nrt_observation.observation_uid` + `nrt_observation_coded.observation_uid` | One per BMD multi-value question routed by `nrt_srte_IMRDBMapping.RDB_table='BMIRD_Multi_Value_field'` (BMD118 TYPES_OF_INFECTIONS → 'BACTEREM' → 'Bacteremia without focus', BMD127 UNDERLYING_CONDITION_NM → 'DM' → 'Diabetes Mellitus', BMD125 NON_STERILE_SITE → 'SINUS', BMD142 STREP_PNEUMO_1_CULTURE_SITES → 'BLOOD'). |
+
+Unused UIDs: 22005002..22005099, 22005113..22005119, 22005124..22005129,
+22005131..22005139, 22005142..22005149, 22005154..22005999 (961 UIDs
+reserved). Do not allocate from this range outside of the
+bmird_investigation_full_chain agent. Reserved for: more BMD/INV
+question rows to broaden BMIRD_Case column coverage; Antimicrobial
+batch-entry observations to populate ANTIMICROBIAL columns +
+ANTIMICROBIAL_AGENT_TESTED_1..8 pivot columns; LDF_BMIRD via
+LDF_DIMENSIONAL_DATA seed rows.
+
+This fixture writes:
+- 1 row to `NBS_ODSE.dbo.act` (act_uid=22005000)
+- 1 row to `NBS_ODSE.dbo.public_health_case` (public_health_case_uid=22005000)
+- 1 row to `NBS_ODSE.dbo.act_id` (act_uid=22005000, act_id_seq=1)
+- 1 row to `NBS_ODSE.dbo.case_management` (case_management_uid=22005001, IDENTITY_INSERT)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation` (public_health_case_uid=22005000)
+- 24 rows to `RDB_MODERN.dbo.nrt_observation` (observation_uid 22005100-22005153)
+- 24 rows to `RDB_MODERN.dbo.nrt_investigation_observation` (linking each to PHC)
+- 17 rows to `RDB_MODERN.dbo.nrt_observation_coded`
+- 4 rows to `RDB_MODERN.dbo.nrt_observation_txt`
+- 1 row to `RDB_MODERN.dbo.nrt_observation_numeric`
+- 2 rows to `RDB_MODERN.dbo.nrt_observation_date`
+- 1 sentinel seed to `RDB_MODERN.dbo.LDF_GROUP` (KEY=1, idempotent IF NOT EXISTS)
+  — required by BMIRD_Case FK on LDF_GROUP_KEY.
+
+It populates **3 of 5** BMIRD-cluster RDB_MODERN tables (BMIRD_Case +
+BMIRD_STREP_PNEUMO_DATAMART + BMIRD_MULTI_VALUE_FIELD). The 2
+remaining (`ANTIMICROBIAL`, `LDF_BMIRD`) require additional fixture
+work — Antimicrobial needs root-observation + branch_id structure for
+batch-entry observations (out of scope for v1; reserve 22005200-22005299
+UID range); LDF_BMIRD needs LDF_DIMENSIONAL_DATA seed rows.
+
+**Orchestrator integration** (applied alongside this fixture):
+1. Add 22005000 to `PHC_UIDS` in `scripts/merge_and_verify.sh` line 446
+   so Step 9 picks up this Investigation for `sp_bmird_case_datamart_postprocessing`,
+   `sp_bmird_strep_pneumo_datamart_postprocessing`, and
+   `sp_ldf_bmird_datamart_postprocessing`. **Done in same commit.**
