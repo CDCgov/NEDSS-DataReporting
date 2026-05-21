@@ -1,0 +1,38 @@
+{
+  "0": [
+    {
+      "row_count": 14976
+    }
+  ],
+  "1": [
+    {
+        "DATE_MM_DD_YYYY": null,
+        "DAY_OF_WEEK": null,
+        "DAY_NBR_IN_CLNDR_MON": null,
+        "DAY_NBR_IN_CLNDR_YR": null,
+        "WK_NBR_IN_CLNDR_MON": null,
+        "WK_NBR_IN_CLNDR_YR": null,
+        "CLNDR_MON_NAME": null,
+        "CLNDR_MON_IN_YR": null,
+        "CLNDR_QRTR": null,
+        "CLNDR_YR": null,
+        "DATE_KEY": 1
+    }
+  ],
+  "2": [
+    {
+      "DATE_KEY": 2
+    }
+  ],
+  "3": [
+    {
+      "DATE_KEY": 14976
+    }
+  ],
+  "4": [
+    {
+      "count_rows": 14976,
+      "count_distinct_rows": 14976
+    }
+  ]
+}
