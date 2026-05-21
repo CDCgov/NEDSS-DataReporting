@@ -1,6 +1,6 @@
 # RTR bugs surfaced by the comparison-fixtures project
 
-This directory contains 10 bug investigations produced by the
+This directory contains 11 bug investigations produced by the
 comparison-fixtures project's end-to-end merged-fixture run. Each
 subdirectory has:
 
@@ -26,6 +26,7 @@ with `DATABASE_VERSION=6.0.18.1`.
 | [08](./08_ldf_tetanus_substring/) | **6-instance family**: unguarded `SUBSTRING(s, 1, LEN(s)-1)` idiom across 6 per-condition LDF datamart SPs fails when no dynamic columns added yet | Medium (each fires on first invocation against empty per-condition LDF table) | `285:603, 290:893, 295:627, 300:833, 305:1105, 320:594` (the `*-sp_ldf_*_datamart_postprocessing-001.sql` files) |
 | [09](./09_dyn_dm_unpivot_type/) | `sp_dyn_dm_repeatvarch_postprocessing` step 16 dynamic UNPIVOT raises Msg 8167 ("type of column EPI_CNTRY_OF_EXP conflicts with other columns in the UNPIVOT list") because repeat-block column types in `nrt_metadata_columns` are heterogeneous and the SP doesn't CAST before unpivoting | Medium (blocks every `DM_INV_<DATAMART>` wide table; surfaces when orchestrator's Step 9 invokes `sp_dyn_dm_main_postprocessing` for HEPATITIS_A_ACUTE) | `205-sp_dyn_dm_repeatvarch_postprocessing-001.sql:531-557` |
 | [10](./10_sld_investigation_repeat_key_alloc/) | `sp_sld_investigation_repeat_postprocessing` surrogate-key allocation: `LOOKUP_TABLE_N_REPT.D_REPT_KEY` is INT NOT NULL with no DEFAULT/IDENTITY, the INSERT supplies only `PAGE_CASE_UID`, the column ends up as `1`, and that 1 is then filtered out by `WHERE D_INVESTIGATION_REPEAT_KEY != 1` at line 1349. New dim rows stage correctly but never reach `D_INVESTIGATION_REPEAT`. | High (blocks every new row in `D_INVESTIGATION_REPEAT`, which is the dim for repeating-block dynamic columns). Suggested fix: IDENTITY column on LOOKUP_TABLE_N_REPT, or ROW_NUMBER()-derived key inside the SP. | `010-sp_sld_investigation_repeat_postprocessing-001.sql:1146, 1349` |
+| [11](./11_aggregate_report_datamart_schema_mismatch/) | `sp_aggregate_report_datamart_postprocessing` dynamic UPDATE references column `NOTIFICATION_UPD_DT_KEY` which `AGGREGATE_REPORT_DATAMART` does not have (table has only `NOTIFICATION_STATUS` and `NOTIFICATION_LOCAL_ID`). Msg 207 inside the SP's try/catch is silently swallowed; AGGREGATE_REPORT_DATAMART never populates. | Medium (blocks AGGREGATE_REPORT_DATAMART entirely; affects any aggregate report; likely never exercised in normal individual-case production flows). Suggested fix: add `NOTIFICATION_UPD_DT_KEY` column to AGGREGATE_REPORT_DATAMART (mirrors summary_report_case structure), OR remove that column reference from the SP's UPDATE/INSERT statements. | `050-sp_aggregate_report_datamart_postprocessing-001.sql:187, 268, 286` |
 
 ## Surprises during investigation
 
@@ -74,6 +75,7 @@ investigation**. Worth noting because they reshape the picture:
 | #8 | **Squashed on `aw/odse-test-seed`** as `[SQUASH bug-8]` commit. Was PR #840 (approved). | RTR fix, mechanical: apply existing guard pattern at 6 unguarded `SUBSTRING(s, 1, LEN(s)-1)` sites. |
 | #9 | **Open** — documented; no fix attempted. | Dynamic UNPIVOT type-conflict in dyn_dm chain. Suggested fix: wrap each column in `CAST(<col> AS nvarchar(max))` in the dynamic SELECT before UNPIVOT. Need to confirm whether heterogeneous repeat-block column types are a baseline-data defect or a latent SP defect that prod dodges via uniform metadata. |
 | #10 | **Open** — documented; no fix attempted. | sp_sld_investigation_repeat_postprocessing surrogate-key allocation defaults D_REPT_KEY=1 → filtered out by WHERE != 1 → no new D_INVESTIGATION_REPEAT rows. Two suggested fixes (IDENTITY column or ROW_NUMBER()-derived key); option 2 preferred since it requires no schema change. |
+| #11 | **Open** — documented; no fix attempted. | sp_aggregate_report_datamart references column NOTIFICATION_UPD_DT_KEY that target table doesn't have. SP/schema mismatch. Surfaced during overnight loop 2026-05-21 iter 5; fixture is correct but blocked by this SP defect. |
 
 ### Remaining work
 
@@ -159,12 +161,13 @@ SQLCMDPASSWORD=PizzaIsGood33! sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -i
 
 ## Total scope
 
-- **10 bug categories** investigated, plus 3 additional issues
+- **11 bug categories** investigated, plus 3-4 additional issues
   flagged but not promoted to their own bugs/ directories (BMIRD
-  INSERT dedup; CMG sentinel duplication; COVID row-size warning)
-- **At least 13 distinct SP-level defects** identified across them
+  INSERT dedup; CMG sentinel duplication; COVID row-size warning;
+  Pertussis SP @@ROWCOUNT-after-IF same pattern as bug 5a)
+- **At least 14 distinct SP-level defects** identified across them
   (bug #1 has 2 issues; bug #5 has 2 issues; bug #7 has 2 issues;
-  bug #8 has 6 instances; bugs #9 and #10 each have one SP defect
+  bug #8 has 6 instances; bugs #9, #10, #11 each have one SP defect
   with broad impact). Several "single bug" entries in the index
   expand to multiple fixes.
 - **Coverage state of the originally-blocked tables**:

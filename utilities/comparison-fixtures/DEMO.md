@@ -92,12 +92,12 @@ Point at the comment block describing the 9-step Merge contract. Then:
 head -12 coverage/coverage_merged.md
 ```
 
-Read out the numbers (as of 2026-05-21 final run):
+Read out the numbers (as of 2026-05-21 overnight loop end):
 - In-scope target tables: 118
-- Fully covered: **65** (up from 48 at start of today)
-- Partially covered: **32** (up from 23)
-- Empty: **20** (down from 46)
-- Overall column coverage: **33.9%** (up from 21.8%, +562 columns / +56%)
+- Fully covered: **66** (up from 48 at start of yesterday's session)
+- Partially covered: **34** (up from 23)
+- Empty: **17** (down from 46)
+- Overall column coverage: **39.9%** (up from 21.8%, +838 columns / +83%)
 
 Quick wins to point at — Phase-2 unblocks from today:
 
@@ -123,20 +123,21 @@ Talking points:
 ls bugs/
 ```
 
-Visually: 10 bug investigation directories.
+Visually: 11 bug investigation directories.
 
 ```bash
 cat bugs/README.md | head -30
 ```
 
-> "We found 10 RTR bugs documented in bugs/, plus 2 more surfaced
-> today during Phase-2 work (BMIRD INSERT-without-dedup; CMG
-> sentinel duplication). Five merged upstream; three squashed into
-> this branch as standalone fixes; the rest documented with repros.
+> "We found 11 RTR bugs documented in bugs/, plus 2 more surfaced
+> during Phase-2 work (BMIRD INSERT-without-dedup; CMG sentinel
+> duplication). Five merged upstream; three squashed into this
+> branch as standalone fixes; the rest documented with repros.
 > They range from one-line logging defects (bug 5a: `IF @debug`
 > resetting `@@ROWCOUNT`) to architectural (bug 9: dynamic UNPIVOT
 > assumes uniform column types; bug 10: sp_sld_investigation_repeat
-> surrogate-key allocation defaults to 1 and gets filtered out)."
+> surrogate-key allocation defaults to 1; bug 11: sp_aggregate_report
+> references a column that doesn't exist in the target table)."
 
 ### 6. What's next (~30s) — talk only
 

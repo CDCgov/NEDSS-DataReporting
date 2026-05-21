@@ -9,13 +9,13 @@ comparison test against MasterETL.
 End-to-end `scripts/merge_and_verify.sh` against 118 in-scope RDB_MODERN
 target tables:
 
-- **Fully covered: 65** (every column populated for at least one row)
-- **Partially covered: 32**
-- **Empty: 20**
+- **Fully covered: 66** (every column populated for at least one row)
+- **Partially covered: 34**
+- **Empty: 17**
 - **Missing from live schema: 1** (`job_batch_rebuild_log` — not in baseline 6.0.18.1)
-- **Overall column coverage: 33.9%** (1566 / 4615 columns)
-- **10 RTR bugs surfaced and documented** (5 merged upstream, 3 squashed
-  on this branch, 2 documented with repros for follow-up)
+- **Overall column coverage: 39.9%** (1842 / 4615 columns)
+- **11 RTR bugs surfaced and documented** (5 merged upstream, 3 squashed
+  on this branch, 3 documented with repros for follow-up)
 
 Wall-clock for the full pipeline: ~5 min from `docker compose down -v`.
 Zero external dependencies beyond the baseline image.

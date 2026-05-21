@@ -541,11 +541,18 @@ Captured here so they don't get lost as we focus on v1:
 
 ## Progress log
 
-### 2026-05-21 — Phase 2 fanout
+### 2026-05-21 — Phase 2 fanout + overnight autonomous loop
 
-Coverage: **21.8% → 33.9% column coverage** (1004 → 1566 cols
-populated; 48 → 65 fully covered tables; 46 → 20 empty). Wall-clock
-~5 min for the full pipeline; zero errors in the final run.
+Coverage: **21.8% → 39.9% column coverage** (1004 → 1842 cols
+populated; 48 → 66 fully covered tables; 46 → 17 empty). Wall-clock
+~5 min for the full pipeline; zero errors in the final run. Split
+into two sessions: the daytime Phase-2 fanout landed 33.9% (TB +
+STD/HIV + BMIRD + Var + COVID + d_investigation_repeat fixtures);
+the overnight autonomous loop added 7 more iterations to land at
+39.9% (case_management + summary_report_case + aggregate_report
+fixtures + 2 LDF answer chains + a broad nrt_investigation
+enrichment UPDATE pattern that lifted covid/tb/var datamarts by
+30+ cols each). See SESSION_SUMMARY.md for the full overnight log.
 
 **Built today**:
 - `catalog/odse_unknown_tables.md` — 94-table classification of the
@@ -573,13 +580,14 @@ populated; 48 → 65 fully covered tables; 46 → 20 empty). Wall-clock
 - `DEMO.md` — live-demo cheat-sheet with terminal commands + talking
   points.
 
-**Bugs surfaced (10 total)**:
+**Bugs surfaced (11 total)**:
 - 5 fixed upstream via separate PRs (bugs #1, #2, #4, #6, plus
   #769 pre-dated the project)
 - 3 squashed onto this branch as standalone commits (bugs #3, #5a,
   #7, #8) since upstream PRs stalled
-- 2 documented with repros for follow-up (bugs #9 dyn_dm UNPIVOT;
-  #10 sp_sld_investigation_repeat surrogate-key)
+- 3 documented with repros for follow-up (bugs #9 dyn_dm UNPIVOT;
+  #10 sp_sld_investigation_repeat surrogate-key; #11
+  sp_aggregate_report_datamart schema mismatch)
 - 3 additional issues noted in `bugs/README.md` but not promoted to
   their own dirs (BMIRD INSERT dedup; CMG sentinel duplication;
   COVID_CASE_DATAMART varchar(2000) row-size warning)
