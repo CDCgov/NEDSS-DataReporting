@@ -312,7 +312,7 @@ GO
 -- fixture; the LINK_REQUIRED entries cover dimension/datamart columns
 -- that depend on those connective rows downstream.
 INSERT INTO [dbo].[nrt_investigation]
-    ([public_health_case_uid], [program_jurisdiction_oid],
+    ([public_health_case_uid], [patient_id], [program_jurisdiction_oid],
      [local_id], [shared_ind], [outbreak_name],
      [investigation_status], [inv_case_status], [case_type_cd], [txt],
      [jurisdiction_cd], [jurisdiction_nm],
@@ -357,210 +357,212 @@ VALUES
 -- 'STD', cd '10110', case_type_cd 'I', shared_ind 'F', record_status_cd
 -- 'ACTIVE', investigation_status_cd 'O' — propagate those.
     (20000100,                            -- 1  public_health_case_uid
-     NULL,                                -- 2  program_jurisdiction_oid
-     N'CAS20000100GA01',                  -- 3  local_id
-     N'F',                                -- 4  shared_ind
-     NULL,                                -- 5  outbreak_name
-     NULL,                                -- 6  investigation_status
-     NULL,                                -- 7  inv_case_status
-     N'I',                                -- 8  case_type_cd
-     NULL,                                -- 9  txt
-     N'1',                                -- 10 jurisdiction_cd (foundation '1' has no match in jurisdiction_code; jurisdiction_nm stays NULL)
-     NULL,                                -- 11 jurisdiction_nm
-     NULL,                                -- 12 earliest_rpt_to_phd_dt
-     NULL,                                -- 13 effective_from_time
-     NULL,                                -- 14 effective_to_time
-     NULL,                                -- 15 rpt_form_cmplt_time
-     NULL,                                -- 16 activity_from_time
-     NULL,                                -- 17 rpt_src_cd_desc
-     NULL,                                -- 18 rpt_to_county_time
-     NULL,                                -- 19 rpt_to_state_time
-     NULL,                                -- 20 mmwr_week
-     NULL,                                -- 21 mmwr_year
-     NULL,                                -- 22 disease_imported_ind
-     NULL,                                -- 23 imported_from_country
-     NULL,                                -- 24 imported_from_state
-     NULL,                                -- 25 imported_from_county
-     NULL,                                -- 26 imported_city_desc_txt
-     NULL,                                -- 27 earliest_rpt_to_cdc_dt
-     NULL,                                -- 28 rpt_source_cd
-     NULL,                                -- 29 imported_country_cd
-     NULL,                                -- 30 imported_state_cd
-     NULL,                                -- 31 imported_county_cd
-     NULL,                                -- 32 import_frm_city_cd
-     NULL,                                -- 33 diagnosis_time
-     NULL,                                -- 34 hospitalized_admin_time
-     NULL,                                -- 35 hospitalized_discharge_time
-     NULL,                                -- 36 hospitalized_duration_amt
-     NULL,                                -- 37 outbreak_ind
-     NULL,                                -- 38 outbreak_ind_val
-     NULL,                                -- 39 hospitalized_ind
-     NULL,                                -- 40 hospitalized_ind_cd
-     NULL,                                -- 41 city_county_case_nbr
-     NULL,                                -- 42 transmission_mode_cd
-     NULL,                                -- 43 transmission_mode
-     N'ACTIVE',                           -- 44 record_status_cd
-     NULL,                                -- 45 pregnant_ind_cd
-     NULL,                                -- 46 pregnant_ind
-     NULL,                                -- 47 die_frm_this_illness_ind
-     NULL,                                -- 48 day_care_ind
-     NULL,                                -- 49 day_care_ind_cd
-     NULL,                                -- 50 food_handler_ind_cd
-     NULL,                                -- 51 food_handler_ind
-     NULL,                                -- 52 deceased_time
-     NULL,                                -- 53 pat_age_at_onset
-     NULL,                                -- 54 pat_age_at_onset_unit_cd
-     NULL,                                -- 55 pat_age_at_onset_unit
-     NULL,                                -- 56 investigator_assigned_time
-     NULL,                                -- 57 detection_method_desc_txt
-     NULL,                                -- 58 effective_duration_amt
-     NULL,                                -- 59 effective_duration_unit_cd
-     NULL,                                -- 60 illness_duration_unit
-     NULL,                                -- 61 contact_inv_txt
-     NULL,                                -- 62 contact_inv_priority
-     NULL,                                -- 63 infectious_from_date
-     NULL,                                -- 64 infectious_to_date
-     NULL,                                -- 65 contact_inv_status
-     NULL,                                -- 66 activity_to_time
-     NULL,                                -- 67 program_area_description
-     10009282,                            -- 68 add_user_id
-     N'Foundation, Superuser',            -- 69 add_user_name
-     '2026-04-01T00:00:00',               -- 70 add_time
-     10009282,                            -- 71 last_chg_user_id
-     N'Foundation, Superuser',            -- 72 last_chg_user_name
-     '2026-04-01T00:00:00',               -- 73 last_chg_time
-     NULL,                                -- 74 referral_basis_cd
-     NULL,                                -- 75 referral_basis
-     NULL,                                -- 76 curr_process_state
-     NULL,                                -- 77 inv_priority_cd
-     NULL,                                -- 78 coinfection_id
-     NULL,                                -- 79 legacy_case_id
-     NULL,                                -- 80 curr_process_state_cd
-     N'O',                                -- 81 investigation_status_cd (foundation 'O')
-     NULL,                                -- 82 outcome_cd
-     NULL,                                -- 83 disease_imported_cd
-     N'EVN',                              -- 84 mood_cd
-     N'CASE',                             -- 85 class_cd
-     NULL,                                -- 86 case_class_cd (foundation case_class_cd is NULL)
-     N'10110',                            -- 87 cd
-     N'Foundation investigation',         -- 88 cd_desc_txt
-     N'STD',                              -- 89 prog_area_cd
-     NULL,                                -- 90 inv_state_case_id
-     NULL,                                -- 91 investigation_form_cd
-     NULL,                                -- 92 outbreak_name_desc
-     NULL,                                -- 93 investigator_assigned_datetime
-     NULL,                                -- 94 case_management_uid
-     '2026-04-01T00:00:00',               -- 95 status_time
-     '2026-04-01T00:00:00',               -- 96 record_status_time
-     N'ACTIVE',                           -- 97 raw_record_status_cd
-     NULL,                                -- 98 batch_id
-     NULL,                                -- 99 rpt_cnty_cd
-     NULL),                               -- 100 notes
+     @foundation_patient_uid,             -- 2  patient_id (foundation Patient; required by HEPATITIS_DATAMART chain — sentinel-key cascade otherwise deletes the row pre-INSERT)
+     NULL,                                -- 3  program_jurisdiction_oid
+     N'CAS20000100GA01',                  -- 4  local_id
+     N'F',                                -- 5  shared_ind
+     NULL,                                -- 6  outbreak_name
+     NULL,                                -- 7  investigation_status
+     NULL,                                -- 8  inv_case_status
+     N'I',                                -- 9  case_type_cd
+     NULL,                                -- 10 txt
+     N'1',                                -- 11 jurisdiction_cd (foundation '1' has no match in jurisdiction_code; jurisdiction_nm stays NULL)
+     NULL,                                -- 12 jurisdiction_nm
+     NULL,                                -- 13 earliest_rpt_to_phd_dt
+     NULL,                                -- 14 effective_from_time
+     NULL,                                -- 15 effective_to_time
+     NULL,                                -- 16 rpt_form_cmplt_time
+     NULL,                                -- 17 activity_from_time
+     NULL,                                -- 18 rpt_src_cd_desc
+     NULL,                                -- 19 rpt_to_county_time
+     NULL,                                -- 20 rpt_to_state_time
+     NULL,                                -- 21 mmwr_week
+     NULL,                                -- 22 mmwr_year
+     NULL,                                -- 23 disease_imported_ind
+     NULL,                                -- 24 imported_from_country
+     NULL,                                -- 25 imported_from_state
+     NULL,                                -- 26 imported_from_county
+     NULL,                                -- 27 imported_city_desc_txt
+     NULL,                                -- 28 earliest_rpt_to_cdc_dt
+     NULL,                                -- 29 rpt_source_cd
+     NULL,                                -- 30 imported_country_cd
+     NULL,                                -- 31 imported_state_cd
+     NULL,                                -- 32 imported_county_cd
+     NULL,                                -- 33 import_frm_city_cd
+     NULL,                                -- 34 diagnosis_time
+     NULL,                                -- 35 hospitalized_admin_time
+     NULL,                                -- 36 hospitalized_discharge_time
+     NULL,                                -- 37 hospitalized_duration_amt
+     NULL,                                -- 38 outbreak_ind
+     NULL,                                -- 39 outbreak_ind_val
+     NULL,                                -- 40 hospitalized_ind
+     NULL,                                -- 41 hospitalized_ind_cd
+     NULL,                                -- 42 city_county_case_nbr
+     NULL,                                -- 43 transmission_mode_cd
+     NULL,                                -- 44 transmission_mode
+     N'ACTIVE',                           -- 45 record_status_cd
+     NULL,                                -- 46 pregnant_ind_cd
+     NULL,                                -- 47 pregnant_ind
+     NULL,                                -- 48 die_frm_this_illness_ind
+     NULL,                                -- 49 day_care_ind
+     NULL,                                -- 50 day_care_ind_cd
+     NULL,                                -- 51 food_handler_ind_cd
+     NULL,                                -- 52 food_handler_ind
+     NULL,                                -- 53 deceased_time
+     NULL,                                -- 54 pat_age_at_onset
+     NULL,                                -- 55 pat_age_at_onset_unit_cd
+     NULL,                                -- 56 pat_age_at_onset_unit
+     NULL,                                -- 57 investigator_assigned_time
+     NULL,                                -- 58 detection_method_desc_txt
+     NULL,                                -- 59 effective_duration_amt
+     NULL,                                -- 60 effective_duration_unit_cd
+     NULL,                                -- 61 illness_duration_unit
+     NULL,                                -- 62 contact_inv_txt
+     NULL,                                -- 63 contact_inv_priority
+     NULL,                                -- 64 infectious_from_date
+     NULL,                                -- 65 infectious_to_date
+     NULL,                                -- 66 contact_inv_status
+     NULL,                                -- 67 activity_to_time
+     NULL,                                -- 68 program_area_description
+     10009282,                            -- 69 add_user_id
+     N'Foundation, Superuser',            -- 70 add_user_name
+     '2026-04-01T00:00:00',               -- 71 add_time
+     10009282,                            -- 72 last_chg_user_id
+     N'Foundation, Superuser',            -- 73 last_chg_user_name
+     '2026-04-01T00:00:00',               -- 74 last_chg_time
+     NULL,                                -- 75 referral_basis_cd
+     NULL,                                -- 76 referral_basis
+     NULL,                                -- 77 curr_process_state
+     NULL,                                -- 78 inv_priority_cd
+     NULL,                                -- 79 coinfection_id
+     NULL,                                -- 80 legacy_case_id
+     NULL,                                -- 81 curr_process_state_cd
+     N'O',                                -- 82 investigation_status_cd (foundation 'O')
+     NULL,                                -- 83 outcome_cd
+     NULL,                                -- 84 disease_imported_cd
+     N'EVN',                              -- 85 mood_cd
+     N'CASE',                             -- 86 class_cd
+     NULL,                                -- 87 case_class_cd (foundation case_class_cd is NULL)
+     N'10110',                            -- 88 cd
+     N'Foundation investigation',         -- 89 cd_desc_txt
+     N'STD',                              -- 90 prog_area_cd
+     NULL,                                -- 91 inv_state_case_id
+     NULL,                                -- 92 investigation_form_cd
+     NULL,                                -- 93 outbreak_name_desc
+     NULL,                                -- 94 investigator_assigned_datetime
+     NULL,                                -- 95 case_management_uid
+     '2026-04-01T00:00:00',               -- 96 status_time
+     '2026-04-01T00:00:00',               -- 97 record_status_time
+     N'ACTIVE',                           -- 98 raw_record_status_cd
+     NULL,                                -- 99 batch_id
+     NULL,                                -- 100 rpt_cnty_cd
+     NULL),                               -- 101 notes
 -- v2 Investigation (UID 20050010): every column populated to maximize
 -- INVESTIGATION coverage for the populated path. Codes mirror v2
 -- public_health_case row. *_cd vs *-resolved-text columns are paired
 -- (e.g., outbreak_ind 'Y' / outbreak_ind_val 'Yes' from YNU lookup
 -- via INV150).
     (20050010,                            -- 1  public_health_case_uid
-     20050010,                            -- 2  program_jurisdiction_oid
-     N'CAS20050010GA01',                  -- 3  local_id
-     N'T',                                -- 4  shared_ind
-     N'V2 Hepatitis Outbreak',            -- 5  outbreak_name
-     N'Open',                             -- 6  investigation_status
-     N'Confirmed',                        -- 7  inv_case_status
-     N'I',                                -- 8  case_type_cd
-     N'Tier 1 v2 investigation comments — exercises every INV_COMMENTS column.', -- 9  txt
-     N'130001',                           -- 10 jurisdiction_cd (Fulton County — verified in jurisdiction_code)
-     N'Fulton County',                    -- 11 jurisdiction_nm
-     '2026-04-06T00:00:00',               -- 12 earliest_rpt_to_phd_dt
-     '2026-04-01T00:00:00',               -- 13 effective_from_time
-     '2026-04-15T00:00:00',               -- 14 effective_to_time
-     '2026-04-04T00:00:00',               -- 15 rpt_form_cmplt_time
-     '2026-04-01T00:00:00',               -- 16 activity_from_time
-     N'Private Physician Office',         -- 17 rpt_src_cd_desc
-     '2026-04-05T00:00:00',               -- 18 rpt_to_county_time
-     '2026-04-06T00:00:00',               -- 19 rpt_to_state_time
-     N'14',                               -- 20 mmwr_week
-     N'2026',                             -- 21 mmwr_year
-     N'Indigenous',                       -- 22 disease_imported_ind
-     N'United States',                    -- 23 imported_from_country
-     N'Georgia',                          -- 24 imported_from_state
-     N'Fulton County',                    -- 25 imported_from_county
-     N'Atlanta',                          -- 26 imported_city_desc_txt
-     '2026-04-07T00:00:00',               -- 27 earliest_rpt_to_cdc_dt
-     N'PP',                               -- 28 rpt_source_cd
-     N'840',                              -- 29 imported_country_cd
-     N'13',                               -- 30 imported_state_cd
-     N'13121',                            -- 31 imported_county_cd
-     N'13',                               -- 32 import_frm_city_cd
-     '2026-04-03T00:00:00',               -- 33 diagnosis_time
-     '2026-04-03T00:00:00',               -- 34 hospitalized_admin_time
-     '2026-04-08T00:00:00',               -- 35 hospitalized_discharge_time
-     5,                                   -- 36 hospitalized_duration_amt
-     N'Y',                                -- 37 outbreak_ind
-     N'Yes',                              -- 38 outbreak_ind_val
-     N'Yes',                              -- 39 hospitalized_ind
-     N'Y',                                -- 40 hospitalized_ind_cd
-     N'CCN-V2-01',                        -- 41 city_county_case_nbr
-     N'B',                                -- 42 transmission_mode_cd
-     N'Bloodborne',                       -- 43 transmission_mode
-     N'ACTIVE',                           -- 44 record_status_cd
-     N'Y',                                -- 45 pregnant_ind_cd
-     N'Yes',                              -- 46 pregnant_ind
-     N'Yes',                              -- 47 die_frm_this_illness_ind
-     N'No',                               -- 48 day_care_ind
-     N'N',                                -- 49 day_care_ind_cd
-     N'N',                                -- 50 food_handler_ind_cd
-     N'No',                               -- 51 food_handler_ind
-     '2026-04-09T00:00:00',               -- 52 deceased_time (populated on v2 to exercise INVESTIGATION_DEATH_DATE; foundation row exhibits null path)
-     N'45',                               -- 53 pat_age_at_onset
-     N'Y',                                -- 54 pat_age_at_onset_unit_cd
-     N'Years',                            -- 55 pat_age_at_onset_unit
-     '2026-04-02T00:00:00',               -- 56 investigator_assigned_time
-     N'Active Surveillance',              -- 57 detection_method_desc_txt
-     N'15',                               -- 58 effective_duration_amt
-     N'D',                                -- 59 effective_duration_unit_cd
-     N'Days',                             -- 60 illness_duration_unit
-     N'Tier 1 v2 contact investigation comments', -- 61 contact_inv_txt
-     N'HIGH',                             -- 62 contact_inv_priority
-     '2026-04-01T00:00:00',               -- 63 infectious_from_date
-     '2026-04-15T00:00:00',               -- 64 infectious_to_date
-     N'O',                                -- 65 contact_inv_status
-     '2026-04-30T00:00:00',               -- 66 activity_to_time
-     N'Hepatitis',                        -- 67 program_area_description
-     10009282,                            -- 68 add_user_id
-     N'Foundation, Superuser',            -- 69 add_user_name
-     '2026-04-01T00:00:00',               -- 70 add_time
-     10009282,                            -- 71 last_chg_user_id
-     N'Foundation, Superuser',            -- 72 last_chg_user_name
-     '2026-04-01T00:00:00',               -- 73 last_chg_time
-     N'AI',                               -- 74 referral_basis_cd
-     N'Awaiting Interview',               -- 75 referral_basis
-     N'Open',                             -- 76 curr_process_state
-     N'HIGH',                             -- 77 inv_priority_cd
-     N'COINF-V2-01',                      -- 78 coinfection_id
-     N'LEGACY-CASE-V2-01',                -- 79 legacy_case_id
-     N'OPEN-NEW',                         -- 80 curr_process_state_cd
-     N'O',                                -- 81 investigation_status_cd
-     N'Y',                                -- 82 outcome_cd
-     N'IND',                              -- 83 disease_imported_cd
-     N'EVN',                              -- 84 mood_cd
-     N'CASE',                             -- 85 class_cd
-     N'C',                                -- 86 case_class_cd (PHC_CLASS 'Confirmed')
-     N'10110',                            -- 87 cd
-     N'Hepatitis A, acute',               -- 88 cd_desc_txt
-     N'HEP',                              -- 89 prog_area_cd
-     N'V2-STATE-CASE-01',                 -- 90 inv_state_case_id
-     N'PG_Hepatitis_A_Acute_Investigation', -- 91 investigation_form_cd
-     N'Hepatitis Outbreak',               -- 92 outbreak_name_desc
-     '2026-04-02T00:00:00',               -- 93 investigator_assigned_datetime
-     20050011,                            -- 94 case_management_uid
-     '2026-04-01T00:00:00',               -- 95 status_time
-     '2026-04-01T00:00:00',               -- 96 record_status_time
-     N'ACTIVE',                           -- 97 raw_record_status_cd
-     1,                                   -- 98 batch_id
-     N'13121',                            -- 99 rpt_cnty_cd
-     N'Tier 1 v2 phc note text');         -- 100 notes
+     @foundation_patient_uid,             -- 2  patient_id (foundation Patient; required by HEPATITIS_DATAMART chain — see foundation row comment)
+     20050010,                            -- 3  program_jurisdiction_oid
+     N'CAS20050010GA01',                  -- 4  local_id
+     N'T',                                -- 5  shared_ind
+     N'V2 Hepatitis Outbreak',            -- 6  outbreak_name
+     N'Open',                             -- 7  investigation_status
+     N'Confirmed',                        -- 8  inv_case_status
+     N'I',                                -- 9  case_type_cd
+     N'Tier 1 v2 investigation comments — exercises every INV_COMMENTS column.', -- 10 txt
+     N'130001',                           -- 11 jurisdiction_cd (Fulton County — verified in jurisdiction_code)
+     N'Fulton County',                    -- 12 jurisdiction_nm
+     '2026-04-06T00:00:00',               -- 13 earliest_rpt_to_phd_dt
+     '2026-04-01T00:00:00',               -- 14 effective_from_time
+     '2026-04-15T00:00:00',               -- 15 effective_to_time
+     '2026-04-04T00:00:00',               -- 16 rpt_form_cmplt_time
+     '2026-04-01T00:00:00',               -- 17 activity_from_time
+     N'Private Physician Office',         -- 18 rpt_src_cd_desc
+     '2026-04-05T00:00:00',               -- 19 rpt_to_county_time
+     '2026-04-06T00:00:00',               -- 20 rpt_to_state_time
+     N'14',                               -- 21 mmwr_week
+     N'2026',                             -- 22 mmwr_year
+     N'Indigenous',                       -- 23 disease_imported_ind
+     N'United States',                    -- 24 imported_from_country
+     N'Georgia',                          -- 25 imported_from_state
+     N'Fulton County',                    -- 26 imported_from_county
+     N'Atlanta',                          -- 27 imported_city_desc_txt
+     '2026-04-07T00:00:00',               -- 28 earliest_rpt_to_cdc_dt
+     N'PP',                               -- 29 rpt_source_cd
+     N'840',                              -- 30 imported_country_cd
+     N'13',                               -- 31 imported_state_cd
+     N'13121',                            -- 32 imported_county_cd
+     N'13',                               -- 33 import_frm_city_cd
+     '2026-04-03T00:00:00',               -- 34 diagnosis_time
+     '2026-04-03T00:00:00',               -- 35 hospitalized_admin_time
+     '2026-04-08T00:00:00',               -- 36 hospitalized_discharge_time
+     5,                                   -- 37 hospitalized_duration_amt
+     N'Y',                                -- 38 outbreak_ind
+     N'Yes',                              -- 39 outbreak_ind_val
+     N'Yes',                              -- 40 hospitalized_ind
+     N'Y',                                -- 41 hospitalized_ind_cd
+     N'CCN-V2-01',                        -- 42 city_county_case_nbr
+     N'B',                                -- 43 transmission_mode_cd
+     N'Bloodborne',                       -- 44 transmission_mode
+     N'ACTIVE',                           -- 45 record_status_cd
+     N'Y',                                -- 46 pregnant_ind_cd
+     N'Yes',                              -- 47 pregnant_ind
+     N'Yes',                              -- 48 die_frm_this_illness_ind
+     N'No',                               -- 49 day_care_ind
+     N'N',                                -- 50 day_care_ind_cd
+     N'N',                                -- 51 food_handler_ind_cd
+     N'No',                               -- 52 food_handler_ind
+     '2026-04-09T00:00:00',               -- 53 deceased_time (populated on v2 to exercise INVESTIGATION_DEATH_DATE; foundation row exhibits null path)
+     N'45',                               -- 54 pat_age_at_onset
+     N'Y',                                -- 55 pat_age_at_onset_unit_cd
+     N'Years',                            -- 56 pat_age_at_onset_unit
+     '2026-04-02T00:00:00',               -- 57 investigator_assigned_time
+     N'Active Surveillance',              -- 58 detection_method_desc_txt
+     N'15',                               -- 59 effective_duration_amt
+     N'D',                                -- 60 effective_duration_unit_cd
+     N'Days',                             -- 61 illness_duration_unit
+     N'Tier 1 v2 contact investigation comments', -- 62 contact_inv_txt
+     N'HIGH',                             -- 63 contact_inv_priority
+     '2026-04-01T00:00:00',               -- 64 infectious_from_date
+     '2026-04-15T00:00:00',               -- 65 infectious_to_date
+     N'O',                                -- 66 contact_inv_status
+     '2026-04-30T00:00:00',               -- 67 activity_to_time
+     N'Hepatitis',                        -- 68 program_area_description
+     10009282,                            -- 69 add_user_id
+     N'Foundation, Superuser',            -- 70 add_user_name
+     '2026-04-01T00:00:00',               -- 71 add_time
+     10009282,                            -- 72 last_chg_user_id
+     N'Foundation, Superuser',            -- 73 last_chg_user_name
+     '2026-04-01T00:00:00',               -- 74 last_chg_time
+     N'AI',                               -- 75 referral_basis_cd
+     N'Awaiting Interview',               -- 76 referral_basis
+     N'Open',                             -- 77 curr_process_state
+     N'HIGH',                             -- 78 inv_priority_cd
+     N'COINF-V2-01',                      -- 79 coinfection_id
+     N'LEGACY-CASE-V2-01',                -- 80 legacy_case_id
+     N'OPEN-NEW',                         -- 81 curr_process_state_cd
+     N'O',                                -- 82 investigation_status_cd
+     N'Y',                                -- 83 outcome_cd
+     N'IND',                              -- 84 disease_imported_cd
+     N'EVN',                              -- 85 mood_cd
+     N'CASE',                             -- 86 class_cd
+     N'C',                                -- 87 case_class_cd (PHC_CLASS 'Confirmed')
+     N'10110',                            -- 88 cd
+     N'Hepatitis A, acute',               -- 89 cd_desc_txt
+     N'HEP',                              -- 90 prog_area_cd
+     N'V2-STATE-CASE-01',                 -- 91 inv_state_case_id
+     N'PG_Hepatitis_A_Acute_Investigation', -- 92 investigation_form_cd
+     N'Hepatitis Outbreak',               -- 93 outbreak_name_desc
+     '2026-04-02T00:00:00',               -- 94 investigator_assigned_datetime
+     20050011,                            -- 95 case_management_uid
+     '2026-04-01T00:00:00',               -- 96 status_time
+     '2026-04-01T00:00:00',               -- 97 record_status_time
+     N'ACTIVE',                           -- 98 raw_record_status_cd
+     1,                                   -- 99 batch_id
+     N'13121',                            -- 100 rpt_cnty_cd
+     N'Tier 1 v2 phc note text');         -- 101 notes
 
 -- nrt_investigation_confirmation: drives the confirmation-method pivot
 -- in the postprocessing SP (lines 713-732, 802-855). Two rows: one for

@@ -41,8 +41,13 @@
 
 USE [RDB_MODERN];
 
+-- patient_id = 20000000 (foundation Patient) on every variant so the
+-- HEPATITIS_DATAMART chain's COALESCE(PATIENT.PATIENT_KEY, 1) → sentinel
+-- → DELETE WHERE PATIENT_UID IS NULL path doesn't drop the row pre-INSERT.
+-- See fixtures/10_subjects/investigation.sql for the same convention on
+-- Tier 1.
 INSERT INTO [dbo].[nrt_investigation]
-    ([public_health_case_uid], [local_id], [shared_ind], [case_type_cd],
+    ([public_health_case_uid], [patient_id], [local_id], [shared_ind], [case_type_cd],
      [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
      [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
      [investigation_form_cd], [case_management_uid],
@@ -50,85 +55,75 @@ INSERT INTO [dbo].[nrt_investigation]
      [add_time], [last_chg_time], [investigation_status_cd])
 VALUES
     -- TB
-    (22000010, N'CAS22000010GA01', N'F', N'I',
+    (22000010, 20000000, N'CAS22000010GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10220', N'Tuberculosis', N'TB',
      N'INV_FORM_RVCT', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Varicella
-    (22000020, N'CAS22000020GA01', N'F', N'I',
+    (22000020, 20000000, N'CAS22000020GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10030', N'Varicella (Chickenpox)', N'VAC',
      N'INV_FORM_VAR', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Mumps
-    (22000030, N'CAS22000030GA01', N'F', N'I',
+    (22000030, 20000000, N'CAS22000030GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10180', N'Mumps', N'VAC',
      N'PG_Mumps_Investigation', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Pertussis
-    (22000040, N'CAS22000040GA01', N'F', N'I',
+    (22000040, 20000000, N'CAS22000040GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10190', N'Pertussis', N'VAC',
      N'PG_Pertussis_Investigation', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Measles
-    (22000050, N'CAS22000050GA01', N'F', N'I',
+    (22000050, 20000000, N'CAS22000050GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10140', N'Measles (Rubeola)', N'VAC',
      N'PG_Measles_(PB)', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Rubella
-    (22000060, N'CAS22000060GA01', N'F', N'I',
+    (22000060, 20000000, N'CAS22000060GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10200', N'Rubella', N'VAC',
      N'INV_FORM_RUB', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- COVID-19
-    (22000070, N'CAS22000070GA01', N'F', N'I',
+    (22000070, 20000000, N'CAS22000070GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'11065', N'2019 Novel Coronavirus', N'COV',
      N'PG_COVID-19_v1.1', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Syphilis primary (STD family)
-    (22000080, N'CAS22000080GA01', N'F', N'I',
+    (22000080, 20000000, N'CAS22000080GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10311', N'Syphilis, primary', N'STD',
      N'PG_STD_Investigation', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- HIV pediatric
-    (22000090, N'CAS22000090GA01', N'F', N'I',
+    (22000090, 20000000, N'CAS22000090GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10561', N'HIV Infection, pediatric', N'HIV',
      N'INV_FORM_GEN', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O'),
     -- Strep pneumoniae invasive (BMIRD family)
-    (22000100, N'CAS22000100GA01', N'F', N'I',
+    (22000100, 20000000, N'CAS22000100GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'11717', N'Strep pneumoniae, invasive', N'BMIRD',
      N'INV_FORM_BMDSP', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
-
--- RTR bug #5b: point patient_id at the foundation nrt_patient.patient_uid
--- so downstream Datamart SPs (sp_hepatitis_datamart_* etc. via F_PAGE_CASE)
--- resolve to a real D_PATIENT row instead of falling back to the sentinel
--- PATIENT_KEY=1 (PATIENT_UID=NULL) which the SPs then DELETE before INSERT.
-UPDATE dbo.nrt_investigation
-   SET patient_id = 20000000
- WHERE public_health_case_uid IN
-       (22000010, 22000020, 22000030, 22000040, 22000050,
-        22000060, 22000070, 22000080, 22000090, 22000100);
 
 -- Run sp_nrt_investigation_postprocessing to flow these into INVESTIGATION.
 EXEC dbo.sp_nrt_investigation_postprocessing

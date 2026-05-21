@@ -24,26 +24,24 @@
 
 USE [RDB_MODERN];
 
--- Add Tetanus Investigation variant
+-- Add Tetanus Investigation variant.
+-- patient_id = 20000000 (foundation Patient) so the downstream Datamart
+-- chain doesn't drop the row via the sentinel-key cascade —
+-- see fixtures/10_subjects/investigation.sql for the convention.
 INSERT INTO [dbo].[nrt_investigation]
-    ([public_health_case_uid], [local_id], [shared_ind], [case_type_cd],
+    ([public_health_case_uid], [patient_id], [local_id], [shared_ind], [case_type_cd],
      [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
      [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
      [investigation_form_cd], [case_management_uid],
      [status_time], [record_status_time], [raw_record_status_cd],
      [add_time], [last_chg_time], [investigation_status_cd])
 VALUES
-    (22000200, N'CAS22000200GA01', N'F', N'I',
+    (22000200, 20000000, N'CAS22000200GA01', N'F', N'I',
      N'130001', N'ACTIVE', N'EVN', N'CASE',
      N'C', N'10210', N'Tetanus', N'VAC',
      N'INV_FORM_GEN', NULL,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
-
--- RTR bug #5b: see multi_condition_investigations.sql for rationale.
-UPDATE dbo.nrt_investigation
-   SET patient_id = 20000000
- WHERE public_health_case_uid = 22000200;
 
 EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22000200', @debug = 0;
 
