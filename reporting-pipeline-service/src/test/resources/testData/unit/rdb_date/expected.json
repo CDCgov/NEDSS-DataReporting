@@ -33,8 +33,7 @@
   ],
   "4": [
     {
-      "count_rows": 14976,
-      "count_distinct_rows": 14976
+      "no_duplicates": 1
     }
   ]
 }

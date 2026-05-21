@@ -21,6 +21,6 @@ where DATE_MM_DD_YYYY is not NULL
 ORDER BY DATE_MM_DD_YYYY desc;
 
 -- No duplicate keys:
-SELECT COUNT(*) as count_rows, COUNT(DISTINCT DATE_KEY) as count_distinct_rows
+SELECT CASE WHEN COUNT(*) = COUNT(DISTINCT DATE_KEY) THEN 1 ELSE 0 END as no_duplicates
 FROM RDB_MODERN.dbo.RDB_DATE
 ;
