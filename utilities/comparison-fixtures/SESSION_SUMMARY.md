@@ -37,11 +37,18 @@ upstream RTR fixes: probably 43-45%.
 | 8 | COVID contact + nrt_contact_answer for PHC 22003000 | **+1.5pp, +71 cols** | 0e6f7b62 |
 | 9 | Vaccination enrichment (defensive, no movement) | 0pp | 360548a1 |
 
-7 iterations, 6 committed (1 still authored but had to fix mid-iter).
-Several apply attempts with errors that were diagnosed and fixed
-in-iter (IDENTITY_INSERT column count, varchar width truncation,
-NULL=NULL trap, alphabetical apply order with cross-fixture
-dependencies).
+9 iterations, all committed. Several apply attempts with errors that
+were diagnosed and fixed in-iter (IDENTITY_INSERT column count,
+varchar width truncation, NULL=NULL trap, alphabetical apply order
+with cross-fixture dependencies, nrt_contact_answer column naming
+answer_val/answer_code vs answer_txt).
+
+Late-session: METHODOLOGY.md §Phase 0 expanded from ~75 words to
+~360 with the static-analysis story spelled out (extraction patterns,
+static-vs-live rationale, dynamic-SQL `@tgt_table_nm` caveat, "118
+means RTR-writers only" framing, canonical-scope claim with the
+precise 1913/4621 denominator). Source-checked against
+prompts/phase_0_target_columns.md.
 
 ## Biggest wins of the night
 
