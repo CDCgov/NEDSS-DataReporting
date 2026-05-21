@@ -357,7 +357,7 @@ VALUES
 -- 'STD', cd '10110', case_type_cd 'I', shared_ind 'F', record_status_cd
 -- 'ACTIVE', investigation_status_cd 'O' — propagate those.
     (20000100,                            -- 1  public_health_case_uid
-     @foundation_patient_uid,             -- 2  patient_id (foundation Patient; required by HEPATITIS_DATAMART chain — sentinel-key cascade otherwise deletes the row pre-INSERT)
+     20000000,                            -- 2  patient_id (foundation Patient; required by HEPATITIS_DATAMART chain — sentinel-key cascade otherwise deletes the row pre-INSERT)
      NULL,                                -- 3  program_jurisdiction_oid
      N'CAS20000100GA01',                  -- 4  local_id
      N'F',                                -- 5  shared_ind
@@ -463,7 +463,7 @@ VALUES
 -- (e.g., outbreak_ind 'Y' / outbreak_ind_val 'Yes' from YNU lookup
 -- via INV150).
     (20050010,                            -- 1  public_health_case_uid
-     @foundation_patient_uid,             -- 2  patient_id (foundation Patient; required by HEPATITIS_DATAMART chain — see foundation row comment)
+     20000000,                            -- 2  patient_id (foundation Patient; required by HEPATITIS_DATAMART chain — see foundation row comment)
      20050010,                            -- 3  program_jurisdiction_oid
      N'CAS20050010GA01',                  -- 4  local_id
      N'T',                                -- 5  shared_ind
