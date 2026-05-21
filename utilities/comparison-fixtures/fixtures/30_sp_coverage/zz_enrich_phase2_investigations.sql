@@ -98,10 +98,20 @@ UPDATE [dbo].[nrt_investigation]
        record_status_time              = COALESCE(record_status_time,         '2026-04-01T00:00:00')
  WHERE public_health_case_uid IN (
        22001000, 22002000, 22003000, 22004000, 22005000,
-       22007000, 22008000, 22009000, 22010000);
+       22007000, 22008000, 22009000, 22010000,
+       -- Also enrich the multi_condition_investigations.sql stubs.
+       -- They're Tier 3 (not foundation/Tier 1) so safe to update;
+       -- the stubs share the same fields (nothing condition-specific
+       -- here).
+       22000010, 22000020, 22000030, 22000040, 22000050,
+       22000060, 22000070, 22000080, 22000090, 22000100,
+       -- Tetanus stub from ldf_answers_tetanus.sql
+       22000200,
+       -- d_investigation_repeat Pertussis (only mmwr was set)
+       22006000);
 
 -- Re-run sp_nrt_investigation_postprocessing to flow these column
 -- updates into INVESTIGATION dimension.
 EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22001000,22002000,22003000,22004000,22005000,22007000,22008000,22009000,22010000',
+    @id_list = N'22001000,22002000,22003000,22004000,22005000,22007000,22008000,22009000,22010000,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22006000',
     @debug = 0;
