@@ -183,63 +183,6 @@ run_infrastructure_sps() {
 }
 
 # --------------------------------------------------------------------
-# Step 2.5 — Apply pending-PR routine fixes
-# --------------------------------------------------------------------
-#
-# The baseline docker image (DATABASE_VERSION=6.0.18.1) ships SP versions
-# that pre-date several RTR fixes under review. Until those PRs merge to
-# main and a new image is cut, pull each pending routine from its bug
-# branch via `git show` and apply it to the freshly-restored DB so Tier 3
-# fixtures and the datamart chain can execute cleanly.
-#
-# Remove a branch from this list once its PR merges and the baseline
-# image is refreshed.
-
-apply_pending_pr_routines() {
-  log "Step 2.5: apply pending-PR routine fixes"
-  local routines=(
-    # PR #837 (bug-3): morbidity user-comment join via NRT staging CSV
-    "aw/app-471/bug-3:liquibase-service/src/main/resources/db/005-rdb_modern/routines/016-sp_nrt_morbidity_report_postprocessing-001.sql"
-    # PR #839 (bug-7): sp_nrt_ldf_dimensional_data_postprocessing
-    "aw/app-471/bug-7:liquibase-service/src/main/resources/db/005-rdb_modern/routines/265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql"
-    # PR #840 (bug-8): SUBSTRING guards across 6 per-condition LDF datamart SPs
-    "aw/app-471/bug-8:liquibase-service/src/main/resources/db/005-rdb_modern/routines/285-sp_ldf_bmird_datamart_postprocessing-001.sql"
-    "aw/app-471/bug-8:liquibase-service/src/main/resources/db/005-rdb_modern/routines/290-sp_ldf_foodborne_datamart_postprocessing-001.sql"
-    "aw/app-471/bug-8:liquibase-service/src/main/resources/db/005-rdb_modern/routines/295-sp_ldf_mumps_datamart_postprocessing-001.sql"
-    "aw/app-471/bug-8:liquibase-service/src/main/resources/db/005-rdb_modern/routines/300-sp_ldf_tetanus_datamart_postprocessing-001.sql"
-    "aw/app-471/bug-8:liquibase-service/src/main/resources/db/005-rdb_modern/routines/305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql"
-    "aw/app-471/bug-8:liquibase-service/src/main/resources/db/005-rdb_modern/routines/320-sp_ldf_hepatitis_datamart_postprocessing-001.sql"
-    # bug-5a (this branch, no separate PR): swap @@ROWCOUNT capture before
-    # IF @debug block in sp_hepatitis_datamart_postprocessing so step 3's
-    # job_flow_log row_count reflects the actual temp-table population
-    "aw/odse-test-seed:liquibase-service/src/main/resources/db/005-rdb_modern/routines/013-sp_hepatitis_datamart_postprocessing-001.sql"
-  )
-
-  local tmp_dir
-  tmp_dir=$(mktemp -d)
-  trap "rm -rf '$tmp_dir'" RETURN
-
-  for spec in "${routines[@]}"; do
-    local branch="${spec%%:*}"
-    local path="${spec#*:}"
-    local fname
-    fname=$(basename "$path")
-    local outfile="$tmp_dir/$fname"
-
-    if ! git -C "$NEDSS_DR_ROOT" show "$branch:$path" > "$outfile" 2>/dev/null; then
-      log "  skip (branch '$branch' not present): $fname"
-      continue
-    fi
-
-    log "  apply: $branch -> $fname"
-    if ! $SQLCMD_BASE -d RDB_MODERN -i "$outfile" -b >/dev/null 2>&1; then
-      printf '\033[1;31m[merge ERROR]\033[0m failed to apply %s from %s\n' "$fname" "$branch" >&2
-      return 1
-    fi
-  done
-}
-
-# --------------------------------------------------------------------
 # Step 3 — Foundation
 # --------------------------------------------------------------------
 
@@ -627,7 +570,6 @@ main() {
   if [[ $SKIP_RESET -eq 0 ]]; then
     reset_baseline
     run_infrastructure_sps
-    apply_pending_pr_routines
   else
     log "Skipping baseline reset (--skip-reset)"
   fi
