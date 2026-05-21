@@ -21,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 @DataJpaTest()
@@ -32,6 +33,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public abstract class UnitTest {
 
   private static final Logger log = LoggerFactory.getLogger(UnitTest.class);
+  private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(log);
   private static final File base = new File("../docker-compose.yaml");
 
   private static boolean started = false;
@@ -53,13 +55,14 @@ public abstract class UnitTest {
     }
     environment =
         new ComposeContainer(composeFiles)
-            .withServices("nbs-mssql")
+            .withServices("nbs-mssql", "liquibase")
             .waitingFor("nbs-mssql", Wait.forHealthcheck())
-            .withServices("liquibase")
             .waitingFor(
                 "liquibase",
                 Wait.forLogMessage(".*Migrations complete.*\\n", 1)
                     .withStartupTimeout(Duration.ofMinutes(10)))
+            .withLogConsumer("nbs-mssql", consumer)
+            .withLogConsumer("liquibase", consumer)
             // Set the maximum startup timeout all the waits set are bounded to
             .withStartupTimeout(Duration.ofMinutes(10));
   }

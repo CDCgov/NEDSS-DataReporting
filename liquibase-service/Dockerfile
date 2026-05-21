@@ -1,16 +1,35 @@
+# Fetcher stage to download and extract sqlcmd
+FROM alpine:3.23 AS fetcher
+
+# Install dependencies for downloading and extracting
+RUN apk add --no-cache curl tar bzip2
+
+# Define the build-time variable provided by Docker
+ARG TARGETARCH
+ARG SQLCMD_VERSION=1.9.0
+
+# Map Docker's architecture names to the naming convention used in go-sqlcmd releases
+# Docker uses 'amd64' and 'arm64', but we need to ensure they match the URL
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+        export ARCH="arm64"; \
+    else \
+        export ARCH="amd64"; \
+    fi && \
+    curl -L "https://github.com/microsoft/go-sqlcmd/releases/download/v${SQLCMD_VERSION}/sqlcmd-linux-${ARCH}.tar.bz2" -o sqlcmd.tar.bz2 \
+    && tar -xjf sqlcmd.tar.bz2 \
+    && chmod +x sqlcmd
+
 FROM liquibase/liquibase:5.0.2-alpine
 
 USER root
 
-RUN apk add --no-cache wget unzip
+# Dependencies for Microsoft ODBC Driver
+RUN apk add --no-cache ca-certificates libc6-compat && \
+    lpm add mssql --global
 
-RUN wget "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip" && \
-  unzip awscliv2.zip && rm -rf awscliv2.zip && \
-  ./aws/install
-
+COPY --from=fetcher /sqlcmd /usr/local/bin/sqlcmd
 
 #Copy sources
-
 #changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
 #master
@@ -33,10 +52,13 @@ COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/ch
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/onboarding /liquibase/changelog
 
+# Onboarding
+COPY liquibase-service/src/main/resources/db/001-master/02_onboarding_script_data_load/ /liquibase/changelog/02-onboarding/
 
 #Set the Working Directory
 WORKDIR /liquibase/changelog
-
 USER liquibase
 
-CMD ["sh", "-c", "tail -f /dev/null"]
+COPY --chown=liquibase liquibase-service/migrate.sh .
+
+CMD ["./migrate.sh"]
