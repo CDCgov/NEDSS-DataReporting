@@ -90,7 +90,8 @@ split it across iterations using "Resume notes" below.
 (append one line per iteration; format: `T+Xh Ym | iter N | <action>
 | coverage X.X% (Δ +Y) | commit <hash>` or `| reverted | reason`)
 
-T+0h 25m | iter 1 | Pertussis full-chain (UID 22007000) | 33.9% (Δ 0pp) | committed | PERTUSSIS_CASE not in scope; fixture populated 2 out-of-scope tables (Pertussis_Suspected_Source_Fld, Pertussis_Treatment_Field). Net headline 0pp. See coverage_pertussis_full_chain.md for full notes.
+T+0h 25m | iter 1 | Pertussis full-chain (UID 22007000) | 33.9% (Δ 0pp) | committed 6fd2929b | PERTUSSIS_CASE not in scope; fixture populated 2 out-of-scope tables (Pertussis_Suspected_Source_Fld, Pertussis_Treatment_Field). Net headline 0pp. See coverage_pertussis_full_chain.md for full notes.
+T+1h 03m | iter 2 | LDF answers Mumps + Foodborne | 34.2% (Δ +0.3pp, +13 cols) | committed | ldf_foodborne 0/12 -> 11/12 (major: schema widened 7->12 by dynamic ALTER, 11 cols populated); ldf_dimensional_data 12/16 -> 14/16; ldf_data 5 -> 15 rows; ldf_group 2 -> 4 rows. ldf_mumps stayed 0/7 (cause TBD, deferred per LOOP rules). ldf_bmird + ldf_hepatitis cannot populate without baseline metadata seeding (0 LDF entries for their condition_cds).
 
 ## Key insight from iter 1
 

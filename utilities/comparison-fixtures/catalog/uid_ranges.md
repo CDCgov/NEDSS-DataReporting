@@ -1485,3 +1485,4 @@ end-to-end for every PHC_UIDS member that has repeating-block answers.
 Without it, future fixture-authored Investigations with repeating-block
 data will silently drop those answers in the orchestrated run.
 | 22007000-22007999 | Pertussis full chain | 30 observations (20 coded + 1 txt + 1 num + 7 date) attached to PHC 22007000 via nrt_investigation_observation 'InvFrmQ' edges. Mirrors BMIRD template. Net headline coverage: 0pp (PERTUSSIS_CASE not in rtr_target_columns.md scope) but populates out-of-scope PERTUSSIS_SUSPECTED_SOURCE_FLD and PERTUSSIS_TREATMENT_FIELD. |
+| 22008000-22008999 | LDF Foodborne | New Salmonellosis (10470) Investigation. 5 nrt_ldf_data rows on this PHC + 5 more on Mumps stub (22000030). Unlocked ldf_foodborne (0/12 -> 11/12) and grew ldf_dimensional_data + ldf_group. ldf_mumps stayed empty (cause TBD). |
