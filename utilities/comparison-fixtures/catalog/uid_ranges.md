@@ -1220,3 +1220,38 @@ populated by this edge.
 ## Tier 3 — Gap-driven SP coverage (22000000 - 22099999)
 
 *Allocations made by Tier 3 agents (only on reported gaps).*
+
+| Range | Agent / fixture | Status |
+| --- | --- | --- |
+| 22000000 - 22000999 | `multi_condition_investigations` (10 stubs, one per condition) | **allocated**. nrt_investigation-only shortcut rows for TB / Varicella / Mumps / Pertussis / Measles / Rubella / COVID-19 / Syphilis / HIV / Strep pneumoniae. |
+| 22001000 - 22001999 | `tb_investigation_full_chain` (full ODSE + NBS_case_answer chain for TB) | **allocated**. See block detail below. |
+
+### Tier 3 — TB Investigation full chain (22001000 - 22001999)
+
+Allocated by Tier 3 tb_investigation_full_chain agent. Source:
+`fixtures/30_sp_coverage/tb_investigation_full_chain.sql`. Coverage
+report: `coverage/coverage_tb_full_chain.md`.
+
+| UID | Symbolic | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22001000 | tb_full_phc_uid | `act.act_uid`, `public_health_case.public_health_case_uid`, `nrt_investigation.public_health_case_uid`, `nrt_investigation.nac_page_case_uid`, `nrt_page_case_answer.act_uid` (all 23 answer rows) | The single TB Investigation full-chain anchor. condition_cd `10220` Tuberculosis, prog_area_cd `TB`, investigation_form_cd `INV_FORM_RVCT`. Adds the populated-PAM-answers path alongside the existing 22000010 stub's no-answers path. |
+| 22001001 | tb_full_case_mgmt_uid | `case_management.case_management_uid` (IDENTITY-inserted) | Per Tier 1 v2 Investigation shape. |
+| 22001100..22001112 | (13 d_topic feeders) | `nbs_case_answer.nbs_case_answer_uid` + `nrt_page_case_answer.nbs_case_answer_uid` | One per excluded-from-TB-PAM-pivot TUB question (TUB119, TUB129, TUB154, TUB155, TUB156, TUB167, TUB225, TUB228, TUB229, TUB230, TUB235, TUB237, TUB114). |
+| 22001113..22001122 | (10 D_TB_PAM main-pivot feeders) | `nbs_case_answer.nbs_case_answer_uid` + `nrt_page_case_answer.nbs_case_answer_uid` | A curated 10-question minimum-viable set proving the wide D_TB_PAM pivot path works end-to-end. The remaining ~150 TUB questions are deferred to fixture-completeness Phase 2. |
+
+Unused UIDs: 22001002..22001099, 22001123..22001999 (978 UIDs reserved). Do not allocate
+from this range outside of the tb_investigation_full_chain agent.
+
+This fixture writes:
+- 1 row to `NBS_ODSE.dbo.act` (act_uid=22001000)
+- 1 row to `NBS_ODSE.dbo.public_health_case` (public_health_case_uid=22001000)
+- 1 row to `NBS_ODSE.dbo.act_id` (act_uid=22001000, act_id_seq=1)
+- 1 row to `NBS_ODSE.dbo.case_management` (case_management_uid=22001001, IDENTITY_INSERT)
+- 13 rows to `NBS_ODSE.dbo.nbs_case_answer` (act_uid=22001000)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation` (public_health_case_uid=22001000)
+- 23 rows to `RDB_MODERN.dbo.nrt_page_case_answer` (act_uid=22001000)
+
+It populates **24 of 26** TB-PAM cluster RDB_MODERN tables (every
+d_topic dim + group + D_TB_PAM + F_TB_PAM + TB_DATAMART + TB_HIV_DATAMART).
+The 2 remaining (`TB_PAM_LDF`, plus the per-topic-empty group sentinel)
+require separate LDF-flagged answer rows — Phase 2 LDF work.
