@@ -26,6 +26,7 @@ FROM RDB_MODERN.dbo.RDB_DATE
 ;
 
 -- No duplicate dates:
-SELECT CASE WHEN COUNT(*) = COUNT(DISTINCT DATE_MM_DD_YYYY) THEN 1 ELSE 0 END as no_duplicates
+-- Need to add 1 because in SQL Server, COUNT(DISTINCT DATE_MM_DD_YYYY) does not count NULL.
+SELECT CASE WHEN COUNT(*) = (COUNT(DISTINCT DATE_MM_DD_YYYY)+1) THEN 1 ELSE 0 END as no_duplicates
 FROM RDB_MODERN.dbo.RDB_DATE
 ;
