@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-21 05:09:10 PDT
+Generated: 2026-05-21 05:47:59 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -19,8 +19,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4621
-- Columns with ≥1 populated row: 1710
-- Overall column coverage: 37.0%
+- Columns with ≥1 populated row: 1842
+- Overall column coverage: 39.9%
 
 ## Per-table coverage
 
@@ -35,7 +35,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.condition | 269 | 15 | 14/15 |
 | dbo.confirmation_method | 3 | 3 | **3/3** |
 | dbo.confirmation_method_group | 25 | 3 | **3/3** |
-| dbo.covid_case_datamart | 2 | 383 | 53/383 |
+| dbo.covid_case_datamart | 2 | 383 | 87/383 |
 | dbo.covid_contact_datamart | 0 | 94 | 0/94 |
 | dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
 | dbo.covid_lab_datamart | 0 | 129 | 0/129 |
@@ -96,7 +96,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
 | dbo.investigation | 25 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 24464 | 15 | 14/15 |
+| dbo.job_flow_log | 24475 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
@@ -135,14 +135,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.std_hiv_datamart | 2 | 248 | 135/248 |
 | dbo.summary_case_group | 2 | 2 | **2/2** |
 | dbo.summary_report_case | 1 | 12 | 11/12 |
-| dbo.tb_datamart | 2 | 318 | 61/318 |
-| dbo.tb_hiv_datamart | 2 | 322 | 65/322 |
+| dbo.tb_datamart | 2 | 318 | 95/318 |
+| dbo.tb_hiv_datamart | 2 | 322 | 99/322 |
 | dbo.tb_pam_ldf | 0 | 3 | 0/3 |
 | dbo.test_result_grouping | 2 | 3 | 2/3 |
 | dbo.treatment | 4 | 16 | **16/16** |
 | dbo.treatment_event | 3 | 11 | **11/11** |
 | dbo.user_profile | 11 | 8 | **8/8** |
-| dbo.var_datamart | 2 | 231 | 61/231 |
+| dbo.var_datamart | 2 | 231 | 91/231 |
 | dbo.var_pam_ldf | 0 | 3 | 0/3 |
 
 
