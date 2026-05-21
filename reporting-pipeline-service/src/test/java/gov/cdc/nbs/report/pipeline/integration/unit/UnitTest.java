@@ -56,9 +56,12 @@ public abstract class UnitTest {
             .withServices("nbs-mssql")
             .waitingFor("nbs-mssql", Wait.forHealthcheck())
             .withServices("liquibase")
-            .waitingFor("liquibase", Wait.forLogMessage(".*Migrations complete.*\\n", 1))
+            .waitingFor(
+                "liquibase",
+                Wait.forLogMessage(".*Migrations complete.*\\n", 1)
+                    .withStartupTimeout(Duration.ofMinutes(10)))
             // Set the maximum startup timeout all the waits set are bounded to
-            .withStartupTimeout(Duration.ofMinutes(5));
+            .withStartupTimeout(Duration.ofMinutes(10));
   }
 
   @BeforeAll
