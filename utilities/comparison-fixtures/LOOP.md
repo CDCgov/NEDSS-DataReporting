@@ -104,7 +104,8 @@ T+3h 16m | iter 6 (attempt 2) | zz_enrich_phase2_investigations.sql (renamed to 
 T+3h 19m | iter 7 | Extended zz_enrich UPDATE to cover 12 more stub PHCs | 39.9% (Δ 0pp) | defensive commit d396a706 | Stubs got enriched in nrt_investigation, but condition datamart row counts unchanged. No regression. Kept the change as defensive groundwork.
 T+3h 31m | docs+SESSION_SUMMARY refresh | committed 533e39f4 | README/DEMO/STRATEGY/bugs/README all bumped to 39.9% / 11 bugs.
 T+3h 47m | iter 8 (att 1) | zz_covid_contact.sql v1 | apply failed | CTT_EXPOSURE_TYPE not a nrt_contact column. SP reads from nrt_contact_answer.
-T+3h 53m | iter 8 (att 2) | added nrt_contact_answer rows (answer_val/answer_code, not answer_txt) | 41.4% (Δ +1.5pp, +71 cols) | SUCCESS | covid_contact_datamart 0/94 -> 1 row, 71/94 cols. Huge yield from 1 contact + 4 answer rows.
+T+3h 53m | iter 8 (att 2) | added nrt_contact_answer rows (answer_val/answer_code, not answer_txt) | 41.4% (Δ +1.5pp, +71 cols) | SUCCESS commit 0e6f7b62 | covid_contact_datamart 0/94 -> 1 row, 71/94 cols.
+T+4h 24m | iter 9 | zz_enrich_vaccination.sql — UPDATE 20 cols on the v2 nrt_vaccination row (20110010) | 41.4% (Δ 0pp) | defensive | covid_vaccination_datamart unchanged at 10/60. The SP reads from D_VACCINATION (already 21/21) and D_PATIENT/D_PROVIDER/D_ORG dim tables, not directly from nrt_vaccination. The remaining 50 NULL cols probably depend on join paths we haven't unblocked. No regression; fixture kept as groundwork.
 
 ## Key insight from iter 1
 
