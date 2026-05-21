@@ -57,8 +57,9 @@ dependencies).
    wasn't being invoked by the orchestrator; added it. Then authored
    a rich 67-col-wide nrt_investigation_case_management UPDATE pattern.
    d_case_management 0→62/67.
-3. **Iter 2 (+0.3pp, +13 cols)** — LDF Foodborne lit up via the
-   ldf_answers_tetanus template applied to condition 10470.
+3. **Iter 8 (+1.5pp, +71 cols)** — COVID contact + 4 nrt_contact_answer
+   rows. covid_contact_datamart 0/94 → 71/94 from just 1 contact row
+   plus 4 exposure-type answer rows. High yield per row.
 
 ## Lessons surfaced
 

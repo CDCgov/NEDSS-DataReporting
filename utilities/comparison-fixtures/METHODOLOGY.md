@@ -32,11 +32,51 @@ NBS_ODSE  →  CDC → nrt_* staging  →  sp_*_event (JSON projection)
 Two reverse-engineering passes seeded everything else:
 
 1. **Phase 0 — RDB_MODERN target column catalog.** Static analysis of
-   every routine in `005-rdb_modern/routines/` extracts the set of
-   `(table, column)` pairs *any* RTR SP writes. Output:
-   `catalog/rtr_target_columns.md`. This is the canonical scope — every
-   later coverage report is measured against it. 118 in-scope tables,
-   ~4,600 columns.
+   every routine in `005-rdb_modern/routines/` (130 .sql files) extracts
+   the set of `(table, column)` pairs *any* RTR SP writes. Output:
+   `catalog/rtr_target_columns.md`. **118 in-scope tables; 4,621 total
+   columns; 3,593 statically-extracted write pairs.** The headline
+   "41.4% column coverage" in `coverage/coverage_merged.md` is exactly
+   1,913 / 4,621 measured against this catalog — a fraction of *this
+   file*, not of "everything RDB_MODERN could be." That definition is
+   load-bearing for the whole project.
+
+   **Extraction method.** We grepped `INSERT INTO`, `UPDATE … SET`,
+   `MERGE [INTO]`, and `SELECT … INTO` against the routines tree —
+   `INSERT` alone undercounts because RTR uses all four patterns
+   (postprocessing SPs prefer `MERGE`; datamart SPs prefer
+   `UPDATE … FROM`). Pure `FROM`-clause references were filtered
+   out, so the catalog reflects writes only. `nrt_*`, `tmp_*`,
+   `#temp`, and `@table_var` targets are reported separately as
+   intermediate, not as in-scope coverage targets.
+
+   **Why static and not live introspection.** The SP code is the
+   source of truth for what RTR is *capable* of writing, independent
+   of whether any production data has yet exercised those paths. A
+   live `INFORMATION_SCHEMA` / row-count introspection would
+   understate the target by exactly the coverage gap we are trying
+   to measure — unexercised CASE branches would silently drop out
+   of scope. Static extraction is the only method that surfaces them.
+
+   **Dynamic-SQL caveat.** Datamart SPs that build their `INSERT` as
+   `'INSERT INTO dbo.' + @tgt_table_nm + …` can't be statically
+   resolved from the `INSERT` text — the target is a runtime
+   parameter. For these (17 SPs, including
+   `sp_dyn_dm_createdm_postprocessing` and the per-condition
+   `sp_<cond>_case_datamart_postprocessing` family) we walked the
+   `DECLARE @tgt_table_nm` at the top of each SP, or the row in
+   `nrt_datamart_metadata` it joins against, to resolve the table.
+   These appear in the catalog as `<dynamic:@tgt_table_nm>`
+   placeholders (15 distinct). Column lists are not statically
+   derivable; the dynamic-datamart chain is verified post-hoc by
+   inspecting the materialized tables after a run.
+
+   **What 118 means.** Not every RDB_MODERN table — only the ones
+   some RTR SP writes. Tables MasterETL writes that RTR does not
+   are out of scope by construction; they surface as legitimate
+   diff findings in the comparison tool, not as fixture gaps.
+   `catalog/odse_unknown_tables.md` bucket (a) — 22 MasterETL-only
+   tables — makes this category explicit.
 2. **Phase B — Edge-type catalog.** Enumerate from live baseline SRTE
    every legal `type_cd` for the connective tables (`act_relationship`,
    `participation`, `nbs_act_entity`, `entity_locator_participation`,
