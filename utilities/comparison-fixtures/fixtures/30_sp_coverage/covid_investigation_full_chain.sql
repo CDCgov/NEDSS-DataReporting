@@ -213,6 +213,17 @@ GO
 DECLARE @superuser_id_2 bigint = 10009282;
 DECLARE @covid_full_phc_uid_2 bigint = 22003000;
 
+-- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column. We want
+-- our allocated UIDs (22003100+) for stable cross-fixture references,
+-- so flip IDENTITY_INSERT for the duration of this INSERT block.
+-- (Restored from quarantine 2026-05-21: missing IDENTITY_INSERT was the
+-- sole cause of the merged-pipeline TB regression — when this fixture
+-- failed mid-apply, scripts/merge_and_verify.sh's `set -euo pipefail`
+-- aborted Step 8 before TB's tail-EXECs ran, leaving D_TB_PAM/F_TB_PAM
+-- at 0. Adding IDENTITY_INSERT matches the TB-fixture convention from
+-- commit a7757dbc.)
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+
 INSERT INTO [dbo].[nbs_case_answer]
     ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
      [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
@@ -316,6 +327,8 @@ VALUES
     (22003121, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001027, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
+
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
 
 GO
 

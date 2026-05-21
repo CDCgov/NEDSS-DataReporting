@@ -443,7 +443,7 @@ apply_tier_3_fixtures() {
 #   Treatment:     20000150, 20100010, 20100020
 #   Interview:     20000140, 20090010
 
-readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22004000,22005000'
+readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22002000,22003000,22004000,22005000'
 readonly PAT_UIDS='20000000,20020010,20020020'
 readonly PRV_UIDS='20000010,20010010'
 readonly ORG_UIDS='20000020,20030010'
@@ -497,6 +497,15 @@ run_datamart_sps() {
   run_dm_sp sp_nrt_case_count_postprocessing               "@phc_id_list = N'$PHC_UIDS'"
   run_dm_sp sp_event_metric_datamart_postprocessing        "@phc_uids = N'$PHC_UIDS', @obs_uids = N'$OBS_UIDS', @notif_uids = N'$NOTIF_UIDS', @ct_uids = N'$CT_UIDS', @vax_uids = N'$VAC_UIDS', @debug = 0"
 
+  # PAM fact tables — MUST run before the condition-specific datamarts
+  # (sp_tb_datamart_postprocessing reads F_TB_PAM; sp_var_datamart_postprocessing
+  # reads F_VAR_PAM; sp_tb_hiv_datamart_postprocessing reads TB_DATAMART which
+  # depends on F_TB_PAM). Bug #10: previously these ran AFTER the datamarts,
+  # causing TB_DATAMART / TB_HIV_DATAMART (and likely VAR_DATAMART) to produce
+  # 0 rows because their #PATIENT/#PROVIDER etc. temp tables INNER JOIN F_TB_PAM.
+  run_dm_sp sp_f_tb_pam_postprocessing                     "@phc_id_list = N'$PHC_UIDS', @debug = 0"
+  run_dm_sp sp_f_var_pam_postprocessing                    "@phc_id_list = N'$PHC_UIDS', @debug = 0"
+
   # Condition-specific datamarts (will no-op without matching conditions)
   run_dm_sp sp_std_hiv_datamart_postprocessing             "@phc_id = N'$PHC_UIDS', @debug = 0"
   run_dm_sp sp_var_datamart_postprocessing                 "@phc_uids = N'$PHC_UIDS', @debug = 0"
@@ -508,10 +517,6 @@ run_datamart_sps() {
   run_dm_sp sp_rubella_case_datamart_postprocessing        "@phc_uids = N'$PHC_UIDS', @debug = 0"
   run_dm_sp sp_crs_case_datamart_postprocessing            "@phc_uids = N'$PHC_UIDS', @debug = 0"
   run_dm_sp sp_measles_case_datamart_postprocessing        "@phc_uids = N'$PHC_UIDS', @debug = 0"
-
-  # PAM fact tables
-  run_dm_sp sp_f_tb_pam_postprocessing                     "@phc_id_list = N'$PHC_UIDS', @debug = 0"
-  run_dm_sp sp_f_var_pam_postprocessing                    "@phc_id_list = N'$PHC_UIDS', @debug = 0"
 
   # COVID datamarts (condition-gated to COVID; no-op for v1)
   run_dm_sp sp_covid_case_datamart_postprocessing          "@phc_uids = N'$PHC_UIDS', @debug = 0"

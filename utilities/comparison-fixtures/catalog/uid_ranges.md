@@ -1229,6 +1229,7 @@ populated by this edge.
 | 22003000 - 22003999 | `covid_investigation_full_chain` (full ODSE + NBS_case_answer chain for COVID-19) | **allocated**. See block detail below. |
 | 22004000 - 22004999 | `std_hiv_investigation_full_chain` (full ODSE + Tier 2 + dimensional D_INV_* chain for STD Syphilis primary) | **allocated**. See block detail below. |
 | 22005000 - 22005999 | `bmird_investigation_full_chain` (full ODSE + nrt_investigation_observation graph for BMIRD Strep pneumo invasive) | **allocated**. See block detail below. |
+| 22006000 - 22006999 | `d_investigation_repeat` (full ODSE + nrt_page_case_answer repeating-block chain for Pertussis form) | **allocated**. See block detail below. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
@@ -1441,3 +1442,45 @@ UID range); LDF_BMIRD needs LDF_DIMENSIONAL_DATA seed rows.
    so Step 9 picks up this Investigation for `sp_bmird_case_datamart_postprocessing`,
    `sp_bmird_strep_pneumo_datamart_postprocessing`, and
    `sp_ldf_bmird_datamart_postprocessing`. **Done in same commit.**
+
+### Tier 3 — d_investigation_repeat full chain (22006000 - 22006999)
+
+Allocated by Tier 3 d_investigation_repeat agent. Source:
+`fixtures/30_sp_coverage/d_investigation_repeat.sql`. Coverage
+report: `coverage/coverage_d_investigation_repeat.md`.
+
+| UID | Symbolic | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22006000 | inv_rept_phc_uid | `act.act_uid`, `public_health_case.public_health_case_uid`, `nrt_investigation.public_health_case_uid`, `nrt_investigation.nac_page_case_uid`, `nrt_page_case_answer.act_uid` (all 24 answer rows) | The single Pertussis-form Investigation full-chain anchor for `sp_sld_investigation_repeat_postprocessing`. condition_cd `10190` Pertussis, prog_area_cd `VAC`, investigation_form_cd `PG_Pertussis_Investigation` — NOT in the SP's form_cd exclusion list at line 84. Adds the populated-repeating-block path alongside the existing 22000040 Pertussis stub's no-answers path. |
+| 22006001 | inv_rept_case_mgmt_uid | `case_management.case_management_uid` (IDENTITY-inserted) | Per Tier 1 v2 Investigation shape. |
+| 22006100..22006123 | (24 nbs_case_answer + nrt_page_case_answer pairs) | `nbs_case_answer.nbs_case_answer_uid` + `nrt_page_case_answer.nbs_case_answer_uid` | One per repeating-block answer. Layout: 2 BLOCK_NMs (TRAVEL_BLOCK, EXPOSURE_BLOCK) × 3 answer_group_seq_nbr values × 4 data types (TEXT, CODED, DATE, NUMERIC) = 24 rows. Each row carries a unique RDB_COLUMN_NM so the SP's dynamic ALTER TABLE loop widens D_INVESTIGATION_REPEAT by 8 new columns. Fictional `nbs_question_uid` values (22006001..22006014) — the SP does not FK-validate against `nbs_question`. |
+
+Unused UIDs: 22006002..22006099, 22006015..22006099, 22006124..22006999
+(~975 UIDs reserved). Do not allocate from this range outside of the
+d_investigation_repeat agent. Reserved for: more BLOCK_NMs, more
+answer_group_seq_nbr values (e.g., N=10 to exercise off-by-one logic in
+pivots), additional data-type variants like DATETIME or PART.
+
+This fixture writes:
+- 1 row to `NBS_ODSE.dbo.act` (act_uid=22006000)
+- 1 row to `NBS_ODSE.dbo.public_health_case` (public_health_case_uid=22006000)
+- 1 row to `NBS_ODSE.dbo.act_id` (act_uid=22006000, act_id_seq=1)
+- 1 row to `NBS_ODSE.dbo.case_management` (case_management_uid=22006001, IDENTITY_INSERT)
+- 24 rows to `NBS_ODSE.dbo.nbs_case_answer` (act_uid=22006000)
+- 1 row to `RDB_MODERN.dbo.nrt_investigation` (public_health_case_uid=22006000)
+- 24 rows to `RDB_MODERN.dbo.nrt_page_case_answer` (act_uid=22006000)
+
+After this fixture applies and its tail-EXEC runs, the chain unblocks:
+- `d_investigation_repeat`: 2 → 8 rows (+6 new dim rows; 1 PHC × 2 blocks × 3 seq) AND +8 dynamically-added RDB_COLUMN_NM columns (was 1/244, now ~11/252)
+- `lookup_table_n_rept`: 0 → 1 row (was 0/2)
+- `l_investigation_repeat_inc`: 0 → 6 rows (was 0/2)
+- `l_investigation_repeat`: 1 → 7 rows (sentinel + 6 new)
+
+**Orchestrator pending action** (Phase 2 follow-on, NOT this fixture's
+responsibility): Neither `scripts/merge_and_verify.sh` nor
+`sp_dyn_dm_main_postprocessing` invoke `sp_sld_investigation_repeat_postprocessing`
+or its wrapper `sp_page_builder_postprocessing @rdb_table_name='D_INVESTIGATION_REPEAT'`.
+Add a Step 8.5 invocation so the merged-fixture run populates the dim
+end-to-end for every PHC_UIDS member that has repeating-block answers.
+Without it, future fixture-authored Investigations with repeating-block
+data will silently drop those answers in the orchestrated run.

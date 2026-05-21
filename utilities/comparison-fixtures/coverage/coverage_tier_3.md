@@ -296,3 +296,59 @@ candidates — they're either MasterETL-only writes (legitimate diff
 findings against RTR), or datamart-SP-driven (Merge step 9, deferred),
 or genuinely uninvestigated. Documented for follow-up; not addressed
 in v1.
+
+## Orchestrator-ordering fix: PAM fact tables before condition datamarts (2026-05-21)
+
+**Symptom**: After Phase-2 TB fixture work landed, `TB_DATAMART` and
+`TB_HIV_DATAMART` stayed at 0 rows even though `F_TB_PAM`, `D_TB_PAM`,
+all 12 d_topic dims, and `INVESTIGATION` (case_uid=22001000) were
+populated correctly.
+
+**Root cause**: `scripts/merge_and_verify.sh` Step 9 invoked
+`sp_tb_datamart_postprocessing` (line 503) and
+`sp_tb_hiv_datamart_postprocessing` (line 504) BEFORE
+`sp_f_tb_pam_postprocessing` (line 513). The TB datamart SP's
+`#PATIENT/#PROVIDER/#PHYSICIAN/#REPORTER/#ORG_REPORTER/#HOSPITAL`
+temp tables all `INNER JOIN [dbo].F_TB_PAM` (see
+`255-sp_tb_datamart_postprocessing-001.sql:117-204`), so with F_TB_PAM
+empty at invocation time, every temp table downstream had 0 rows and
+the final `INSERT INTO TB_DATAMART` got 0 rows. `sp_tb_hiv_datamart_postprocessing`
+then `INNER JOIN`s `TB_DATAMART` (line 166), so it also produced 0.
+
+Confirmed by `job_flow_log` ordering (batch_ids on the live DB):
+`F_TB_PAM POST-Processing` ran at 08:34:09; `TB_DATAMART POST-Processing`
+ran 6 seconds earlier at 08:34:03 with `#PATIENT TABLE = 0 rows`.
+
+**Verdict**: orchestrator bug, not an RTR bug. The SPs themselves are
+correct DELETE-then-INSERT (re-running them is idempotent for the same
+@phc_id_list scope).
+
+**Fix applied on `aw/odse-test-seed`**: moved
+`sp_f_tb_pam_postprocessing` and `sp_f_var_pam_postprocessing` from
+lines 513-514 to immediately before the condition-specific datamart
+block (now executes before `sp_std_hiv_datamart_postprocessing` at
+line 501). The same ordering bug almost certainly affected
+`VAR_DATAMART` (whose SP also reads `F_VAR_PAM`); moving both PAM
+fact-table SPs together addresses both.
+
+**Post-fix verification**: re-ran `sp_tb_datamart_postprocessing` and
+`sp_tb_hiv_datamart_postprocessing` against the existing populated
+F_TB_PAM. Result: `TB_DATAMART` populated 2 rows, `TB_HIV_DATAMART`
+populated 2 rows.
+
+**Note**: the 2-row count (instead of 1) is a separate, pre-existing
+RTR defect that was previously documented in
+`coverage/coverage_tb_full_chain.md` Gaps section as "TB_DATAMART
+INSERT-only path; no UPDATE" (later refined: the SP does have a
+correct DELETE-then-INSERT guard at lines 1700-1735). The actual
+mechanism is over-broad `LEFT JOIN notification_event ne ON
+tdi.person_key = ne.patient_key` (line 1525) which fans the row out
+across every notification the patient has across all investigations
+(not just this Investigation's notification). The TB Patient is the
+foundation Patient (PERSON_KEY=3) which has notification_event rows
+for NOTIFICATION_KEY=2 (Hep A foundation) and NOTIFICATION_KEY=3
+(Hep A v2). The join should also constrain by INVESTIGATION_KEY
+(via `nrt_investigation_notification` or `notification`-keyed walk).
+Not fixed here — out of scope for the orchestrator-ordering fix; the
+0→2 row uplift is the primary deliverable. Filed for follow-up in
+the `coverage_tb_full_chain.md` Gaps section.
