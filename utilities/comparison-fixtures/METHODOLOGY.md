@@ -134,12 +134,14 @@ depend on `runOnChange` checksum diffing against a baked image.
 ## Bug discovery as a byproduct
 
 Authoring fixtures that exercise every column path inevitably surfaces
-SPs that don't behave the way their column comments suggest. **Nine
+SPs that don't behave the way their column comments suggest. **Ten
 RTR bugs surfaced to date** (5 fixed upstream, 3 squashed on this
-branch, 1 open). Each is documented in `bugs/<N>_<slug>/findings.md`
-with a minimal repro. They range from trivial (`IF @debug` resetting
-`@@ROWCOUNT` and zeroing job_flow_log row counts; column-name typos;
-SUBSTRING-with-empty-string crashes) to architectural (postprocessing
-SPs that try to traverse ODSE through the NRT staging boundary;
-dynamic UNPIVOTs that assume uniform column types). See
-[`bugs/README.md`](./bugs/README.md) for the rolling status table.
+branch, 2 documented with repros for follow-up). Each is documented
+in `bugs/<N>_<slug>/findings.md` with a minimal repro. They range
+from trivial (`IF @debug` resetting `@@ROWCOUNT` and zeroing
+job_flow_log row counts; column-name typos; SUBSTRING-with-empty-string
+crashes) to architectural (postprocessing SPs that try to traverse
+ODSE through the NRT staging boundary; dynamic UNPIVOTs that assume
+uniform column types; surrogate-key allocations that default to a
+filtered-out sentinel). See [`bugs/README.md`](./bugs/README.md) for
+the rolling status table.

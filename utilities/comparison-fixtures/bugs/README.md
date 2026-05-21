@@ -1,6 +1,6 @@
 # RTR bugs surfaced by the comparison-fixtures project
 
-This directory contains 9 bug investigations produced by the
+This directory contains 10 bug investigations produced by the
 comparison-fixtures project's end-to-end merged-fixture run. Each
 subdirectory has:
 
@@ -25,6 +25,7 @@ with `DATABASE_VERSION=6.0.18.1`.
 | [07](./07_ldf_dimensional_data_zero/) | `sp_nrt_ldf_dimensional_data_postprocessing` early-RETURN guard misclassifies intentionally-filtered ldf_uids as "missing NRT records" + a latent INNER/LEFT JOIN inconsistency | High (LDF_DIMENSIONAL_DATA never populates; cascades to all per-condition LDF tables) | `265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql:136-158, 648` |
 | [08](./08_ldf_tetanus_substring/) | **6-instance family**: unguarded `SUBSTRING(s, 1, LEN(s)-1)` idiom across 6 per-condition LDF datamart SPs fails when no dynamic columns added yet | Medium (each fires on first invocation against empty per-condition LDF table) | `285:603, 290:893, 295:627, 300:833, 305:1105, 320:594` (the `*-sp_ldf_*_datamart_postprocessing-001.sql` files) |
 | [09](./09_dyn_dm_unpivot_type/) | `sp_dyn_dm_repeatvarch_postprocessing` step 16 dynamic UNPIVOT raises Msg 8167 ("type of column EPI_CNTRY_OF_EXP conflicts with other columns in the UNPIVOT list") because repeat-block column types in `nrt_metadata_columns` are heterogeneous and the SP doesn't CAST before unpivoting | Medium (blocks every `DM_INV_<DATAMART>` wide table; surfaces when orchestrator's Step 9 invokes `sp_dyn_dm_main_postprocessing` for HEPATITIS_A_ACUTE) | `205-sp_dyn_dm_repeatvarch_postprocessing-001.sql:531-557` |
+| [10](./10_sld_investigation_repeat_key_alloc/) | `sp_sld_investigation_repeat_postprocessing` surrogate-key allocation: `LOOKUP_TABLE_N_REPT.D_REPT_KEY` is INT NOT NULL with no DEFAULT/IDENTITY, the INSERT supplies only `PAGE_CASE_UID`, the column ends up as `1`, and that 1 is then filtered out by `WHERE D_INVESTIGATION_REPEAT_KEY != 1` at line 1349. New dim rows stage correctly but never reach `D_INVESTIGATION_REPEAT`. | High (blocks every new row in `D_INVESTIGATION_REPEAT`, which is the dim for repeating-block dynamic columns). Suggested fix: IDENTITY column on LOOKUP_TABLE_N_REPT, or ROW_NUMBER()-derived key inside the SP. | `010-sp_sld_investigation_repeat_postprocessing-001.sql:1146, 1349` |
 
 ## Surprises during investigation
 
@@ -72,6 +73,7 @@ investigation**. Worth noting because they reshape the picture:
 | #7 | **Squashed on `aw/odse-test-seed`** as `[SQUASH bug-7]` commit. Was PR #839 (approved). | RTR fix, two-line: early-RETURN guard misclassification + INNER→LEFT JOIN harmonization. Unblocks LDF_DIMENSIONAL_DATA. |
 | #8 | **Squashed on `aw/odse-test-seed`** as `[SQUASH bug-8]` commit. Was PR #840 (approved). | RTR fix, mechanical: apply existing guard pattern at 6 unguarded `SUBSTRING(s, 1, LEN(s)-1)` sites. |
 | #9 | **Open** — documented; no fix attempted. | Dynamic UNPIVOT type-conflict in dyn_dm chain. Suggested fix: wrap each column in `CAST(<col> AS nvarchar(max))` in the dynamic SELECT before UNPIVOT. Need to confirm whether heterogeneous repeat-block column types are a baseline-data defect or a latent SP defect that prod dodges via uniform metadata. |
+| #10 | **Open** — documented; no fix attempted. | sp_sld_investigation_repeat_postprocessing surrogate-key allocation defaults D_REPT_KEY=1 → filtered out by WHERE != 1 → no new D_INVESTIGATION_REPEAT rows. Two suggested fixes (IDENTITY column or ROW_NUMBER()-derived key); option 2 preferred since it requires no schema change. |
 
 ### Remaining work
 
@@ -87,6 +89,37 @@ investigation**. Worth noting because they reshape the picture:
   not affect prod) or a latent SP defect (would). Suggested fix:
   wrap each column in `CAST(<col> AS nvarchar(max))` inside the
   dynamic SELECT before UNPIVOT. See `09_dyn_dm_unpivot_type/findings.md`.
+- **#10** — open. Fix the D_REPT_KEY surrogate-key allocation in
+  `sp_sld_investigation_repeat_postprocessing`. Preferred fix is
+  ROW_NUMBER() inside the SP (no schema change). Once fixed, also
+  add a Step 8.5 invocation of the SP to `merge_and_verify.sh` —
+  currently nothing in the orchestrated chain writes to
+  `D_INVESTIGATION_REPEAT`. See
+  `10_sld_investigation_repeat_key_alloc/findings.md`.
+
+### Additional issues surfaced today but not yet promoted to bugs/
+
+These were noted by Phase-2 agents during fixture authoring; not
+serious enough to file as their own bugs but worth tracking:
+
+- **BMIRD INSERT-without-dedup-guard** in
+  `140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql` —
+  re-runs against the same PHC append rather than DELETE-then-INSERT.
+  Same shape as the (pre-existing) `notification_event` over-broad join
+  in `sp_tb_datamart_postprocessing` line 1525. Medium severity.
+- **CMG sentinel duplication** in `005-sp_nrt_investigation_postprocessing-001.sql`
+  lines 714-732, 849-858 — every Investigation gets a sentinel
+  (KEY=1, NULL) confirmation-method-group row even without an
+  `nrt_investigation_confirmation` staging row. Doubles
+  `STD_HIV_DATAMART` rows on a `SELECT DISTINCT INVESTIGATION_KEY,
+  CONFIRMATION_DT` join. Worked around in STD/HIV fixture by
+  authoring a real `nrt_investigation_confirmation` row.
+- **COVID_CASE_DATAMART varchar(2000) row-size warning** — the SP
+  emits ~440 `ALTER TABLE ... ADD <col> varchar(2000)` statements,
+  exceeding SQL Server's 8060-byte row limit. INSERTs currently
+  succeed because few columns populate; would hard-fail under denser
+  data. Low/medium severity. Recommended fix: `varchar(MAX)` or
+  pivot wide answers into a child table.
 
 ### Headline reframing from the HEPATITIS_DATAMART investigation
 
@@ -126,12 +159,14 @@ SQLCMDPASSWORD=PizzaIsGood33! sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -i
 
 ## Total scope
 
-- **9 bug categories** investigated
-- **At least 12 distinct SP-level defects** identified across them
+- **10 bug categories** investigated, plus 3 additional issues
+  flagged but not promoted to their own bugs/ directories (BMIRD
+  INSERT dedup; CMG sentinel duplication; COVID row-size warning)
+- **At least 13 distinct SP-level defects** identified across them
   (bug #1 has 2 issues; bug #5 has 2 issues; bug #7 has 2 issues;
-  bug #8 has 6 instances; bug #9 is one SP defect with broad
-  impact across the dyn_dm datamart family). Several "single bug"
-  entries in the index expand to multiple fixes.
+  bug #8 has 6 instances; bugs #9 and #10 each have one SP defect
+  with broad impact). Several "single bug" entries in the index
+  expand to multiple fixes.
 - **Coverage state of the originally-blocked tables**:
   HEPATITIS_DATAMART unblocks at 0 → 1 row once #5b's orchestrator
   change is merged into `aw/odse-test-seed`; LDF_DIMENSIONAL_DATA and

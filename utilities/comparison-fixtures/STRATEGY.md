@@ -538,3 +538,75 @@ Captured here so they don't get lost as we focus on v1:
   the comparison test runs, columns in MasterETL-only tables
   will diff as "RDB has rows, RDB_MODERN doesn't" — that's a
   legitimate finding about RTR coverage gaps, not a fixture bug.
+
+## Progress log
+
+### 2026-05-21 — Phase 2 fanout
+
+Coverage: **21.8% → 33.9% column coverage** (1004 → 1566 cols
+populated; 48 → 65 fully covered tables; 46 → 20 empty). Wall-clock
+~5 min for the full pipeline; zero errors in the final run.
+
+**Built today**:
+- `catalog/odse_unknown_tables.md` — 94-table classification of the
+  teammate's ODSE-unknown TODO above (resolves action items 1-2 of
+  the Phase 2 follow-on). 22 MasterETL-only, 38 datamart-SP-driven,
+  34 Tier-1/Tier-2 reachable.
+- Phase-2 full-chain fixtures for TB, COVID, Varicella, STD/HIV
+  (Syphilis primary), BMIRD (Strep pneumoniae invasive) — see
+  `fixtures/30_sp_coverage/*_investigation_full_chain.sql`. Each
+  authors a full ODSE `act` + `public_health_case` + `act_id` +
+  `case_management` chain, the `nrt_investigation` staging row, and
+  the family-specific `nbs_case_answer` rows that drive the dim
+  cluster downstream.
+- `d_investigation_repeat.sql` — Tier 3 fixture for the largest
+  partial dim. Schema widened 244 → 252 cols via the SP's dynamic
+  ALTER TABLE loop; full population blocked by bug #10.
+- Orchestrator improvements: liquibase image rebuild on reset
+  (working-tree routines reach the running DB without depending on
+  `runOnChange` checksums); dynamic-datamart chain wired into Step 9
+  via runtime discovery against `v_nrt_nbs_page`; Step 9 ordering
+  fix (PAM fact SPs run before condition datamarts); `db_lock.sh`
+  for parallel-agent DB coordination.
+- `METHODOLOGY.md` — distilled "how we built this" writeup for
+  outside readers (NBS/RTR-fluent).
+- `DEMO.md` — live-demo cheat-sheet with terminal commands + talking
+  points.
+
+**Bugs surfaced (10 total)**:
+- 5 fixed upstream via separate PRs (bugs #1, #2, #4, #6, plus
+  #769 pre-dated the project)
+- 3 squashed onto this branch as standalone commits (bugs #3, #5a,
+  #7, #8) since upstream PRs stalled
+- 2 documented with repros for follow-up (bugs #9 dyn_dm UNPIVOT;
+  #10 sp_sld_investigation_repeat surrogate-key)
+- 3 additional issues noted in `bugs/README.md` but not promoted to
+  their own dirs (BMIRD INSERT dedup; CMG sentinel duplication;
+  COVID_CASE_DATAMART varchar(2000) row-size warning)
+
+**Bugfix on aw/odse-test-seed orchestrator** (not RTR bugs):
+- bug-5a inline `@@ROWCOUNT` swap (squashed)
+- `sp_f_std_page_case_postprocessing @phc_ids → @phc_id_list` typo
+- Step 9 PAM-fact ordering fix
+
+**Deferred / out of scope for v1**:
+- The remaining condition families (Pertussis, Measles, Rubella,
+  Mumps, Tetanus LDF) — lower yield per agent-day; available as
+  templates from the 5 that landed.
+- The repeating-block cardinality N=1, N=10 variants.
+- LDF breadth (multiple LDFs per type, multi-select coded LDFs).
+- The MasterETL-side Phase-0 mirror.
+- The actual comparison-tool diff harness (modeled on NEDSS-DataCompare).
+
+### Next session priorities
+
+1. Bug #10 (sp_sld_investigation_repeat surrogate-key) — unlocks
+   `D_INVESTIGATION_REPEAT` (252 cols).
+2. Bug #9 (dyn_dm UNPIVOT) — unlocks the `DM_INV_*` family.
+3. MasterETL-side coverage analysis — required before the diff tool
+   can produce meaningful output.
+4. The comparison tool itself.
+
+Realistic ceiling on fixture-authorable coverage is **40-45%**
+before further progress requires upstream RTR fixes or a pivot to
+the diff tool.

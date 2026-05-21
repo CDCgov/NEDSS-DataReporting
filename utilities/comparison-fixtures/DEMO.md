@@ -123,7 +123,7 @@ Talking points:
 ls bugs/
 ```
 
-Visually: 9 bug investigation directories.
+Visually: 10 bug investigation directories.
 
 ```bash
 cat bugs/README.md | head -30
