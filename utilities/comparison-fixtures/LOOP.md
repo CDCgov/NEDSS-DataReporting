@@ -91,7 +91,10 @@ split it across iterations using "Resume notes" below.
 | coverage X.X% (Δ +Y) | commit <hash>` or `| reverted | reason`)
 
 T+0h 25m | iter 1 | Pertussis full-chain (UID 22007000) | 33.9% (Δ 0pp) | committed 6fd2929b | PERTUSSIS_CASE not in scope; fixture populated 2 out-of-scope tables (Pertussis_Suspected_Source_Fld, Pertussis_Treatment_Field). Net headline 0pp. See coverage_pertussis_full_chain.md for full notes.
-T+1h 03m | iter 2 | LDF answers Mumps + Foodborne | 34.2% (Δ +0.3pp, +13 cols) | committed | ldf_foodborne 0/12 -> 11/12 (major: schema widened 7->12 by dynamic ALTER, 11 cols populated); ldf_dimensional_data 12/16 -> 14/16; ldf_data 5 -> 15 rows; ldf_group 2 -> 4 rows. ldf_mumps stayed 0/7 (cause TBD, deferred per LOOP rules). ldf_bmird + ldf_hepatitis cannot populate without baseline metadata seeding (0 LDF entries for their condition_cds).
+T+1h 03m | iter 2 | LDF answers Mumps + Foodborne | 34.2% (Δ +0.3pp, +13 cols) | committed 11a8c143 | ldf_foodborne 0/12 -> 11/12 (major: schema widened 7->12 by dynamic ALTER, 11 cols populated); ldf_dimensional_data 12/16 -> 14/16; ldf_data 5 -> 15 rows; ldf_group 2 -> 4 rows. ldf_mumps stayed 0/7 (cause TBD, deferred per LOOP rules). ldf_bmird + ldf_hepatitis cannot populate without baseline metadata seeding (0 LDF entries for their condition_cds).
+T+1h 25m | iter 3 (attempt 1) | case_management staging fixture + sp_nrt_case_management_postprocessing wired into Step 9 | apply failed (Msg 10709 VALUES col count mismatch 61/63 vs 62) | Rewrote with minimal INSERT + UPDATE pattern.
+T+1h 46m | iter 3 (attempt 2) | case_management staging — minimal INSERT then rich UPDATE | apply failed (Msg 2628 truncation 'EHARS-FAKE-001' > varchar(10)) | Validated all column widths via INFORMATION_SCHEMA; rewrote with all values fitting their column max length.
+T+1h 50m | iter 3 (attempt 3) | case_management staging — width-validated values | 36.7% (Δ +2.5pp, +119 cols) | success | d_case_management 0/67 -> 3 rows, 62/67 cols. Headline jumped from 34.2% to 36.7%. Note: extra +57 cols beyond d_case_management came from other downstream effects of the SP run (other dims that join CM data).
 
 ## Key insight from iter 1
 

@@ -471,6 +471,10 @@ run_datamart_sps() {
   log "Step 9: datamart SPs (40 SPs, condition-gated; only Hep-related populate with v1 single-condition fan-out)"
 
   # Investigation-PHC fact assembly (foundational for downstream datamarts)
+  # Case management dim — reads nrt_investigation_case_management staging
+  # (authored by Phase-2 fixtures); populates D_CASE_MANAGEMENT.
+  run_dm_sp sp_nrt_case_management_postprocessing          "@id_list = N'$PHC_UIDS', @debug = 0"
+
   run_dm_sp sp_f_page_case_postprocessing                  "@phc_ids = N'$PHC_UIDS', @debug = 0"
   run_dm_sp sp_f_std_page_case_postprocessing              "@phc_id_list = N'$PHC_UIDS', @debug = 0" 2>/dev/null
 
