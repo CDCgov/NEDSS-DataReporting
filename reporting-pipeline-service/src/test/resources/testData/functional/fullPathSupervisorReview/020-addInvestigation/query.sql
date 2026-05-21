@@ -847,7 +847,9 @@ WHERE
 			[RDB_MODERN].[dbo].[CONDITION]
 		WHERE
 			CONDITION_DESC = 'Hepatitis A, acute'
-	);
+	)
+  AND ADD_DATE_KEY IS NOT NULL 
+  AND LAST_CHG_DATE_KEY IS NOT NULL;
 
 -- Query 14: Verify HEPATITIS_DATAMART entry is created
 SELECT
