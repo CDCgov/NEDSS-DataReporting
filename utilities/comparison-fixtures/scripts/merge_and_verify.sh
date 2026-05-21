@@ -443,7 +443,7 @@ apply_tier_3_fixtures() {
 #   Treatment:     20000150, 20100010, 20100020
 #   Interview:     20000140, 20090010
 
-readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22005000'
+readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22004000,22005000'
 readonly PAT_UIDS='20000000,20020010,20020020'
 readonly PRV_UIDS='20000010,20010010'
 readonly ORG_UIDS='20000020,20030010'
@@ -472,7 +472,7 @@ run_datamart_sps() {
 
   # Investigation-PHC fact assembly (foundational for downstream datamarts)
   run_dm_sp sp_f_page_case_postprocessing                  "@phc_ids = N'$PHC_UIDS', @debug = 0"
-  run_dm_sp sp_f_std_page_case_postprocessing              "@phc_ids = N'$PHC_UIDS', @debug = 0" 2>/dev/null
+  run_dm_sp sp_f_std_page_case_postprocessing              "@phc_id_list = N'$PHC_UIDS', @debug = 0" 2>/dev/null
 
   # Hepatitis (condition_cd='10110' is Hep A acute — these will populate)
   run_dm_sp sp_hepatitis_datamart_postprocessing           "@phc_id = N'$PHC_UIDS', @debug = 0"
