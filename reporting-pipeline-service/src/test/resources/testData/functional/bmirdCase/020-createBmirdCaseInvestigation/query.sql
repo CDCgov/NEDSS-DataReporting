@@ -1,13 +1,8 @@
-USE [RDB_MODERN];
 
--- Generated from paired tracing artifacts.
--- Source summary: testing-tools/local-db-tracing/output/20260520-135900-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/summary.txt
--- Logical changes: testing-tools/local-db-tracing/output/20260520-135900-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/logical-changes.json
 
 -- dbo.ANTIMICROBIAL | operations: insert
 -- Query: 0
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ANTIMICROBIAL_AGENT_TESTED_IND],
@@ -15,25 +10,23 @@ SELECT
     [MIC_VALUE],
     [SUSCEPTABILITY_METHOD],
     [S_I_R_U_RESULT]
-FROM [dbo].[ANTIMICROBIAL]
+FROM [RDB_MODERN].[dbo].[ANTIMICROBIAL]
 WHERE [ANTIMICROBIAL_GRP_KEY] = 2
   AND [ANTIMICROBIAL_KEY] = 2
-FOR JSON PATH;
+;
 
 -- dbo.ANTIMICROBIAL_GROUP | operations: insert
 -- Query: 1
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT *
-FROM [dbo].[ANTIMICROBIAL_GROUP]
+FROM [RDB_MODERN].[dbo].[ANTIMICROBIAL_GROUP]
 WHERE [ANTIMICROBIAL_GRP_KEY] = 2
-FOR JSON PATH;
+;
 
 -- dbo.BMIRD_CASE | operations: insert
 -- Query: 2
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ABCCASE],
@@ -118,6 +111,7 @@ SELECT
     [INTRAPARTUM_ANTIBIOTICS_REASON],
     [INTRAPARTUM_FEVER_RECORD_TIME],
     [INV_PATIENT_CHART_NBR],
+    [INV_ASSIGNED_DT_KEY],
     [LAST_PRENATAL_CARE_VISIT_DT],
     [LAST_PRENATAL_CARE_VISIT_EGA],
     [MEMBRANE_RUPTURE_DTTIME],
@@ -192,27 +186,16 @@ SELECT
     [WEIGHT_IN_OUNCES],
     [WEIGHT_IN_POUNDS],
     [WEIGHT_UNKNOWN]
-FROM [dbo].[BMIRD_CASE]
-WHERE [ADT_HSPTL_KEY] = 1
-  AND [ANTIMICROBIAL_GRP_KEY] = 2
-  AND [BMIRD_MULTI_VAL_GRP_KEY] = 3
-  AND [CONDITION_KEY] = 153
-  AND [DAYCARE_FACILITY_KEY] = 1
-  AND [INVESTIGATION_KEY] = 5
-  AND [INVESTIGATOR_KEY] = 3
-  AND [INV_ASSIGNED_DT_KEY] = 1
-  AND [LDF_GROUP_KEY] = 1
-  AND [NURSING_HOME_KEY] = 1
-  AND [PATIENT_KEY] = 8
-  AND [PHYSICIAN_KEY] = 10
-  AND [REPORTER_KEY] = 3
-  AND [RPT_SRC_ORG_KEY] = 3
-FOR JSON PATH;
+FROM [RDB_MODERN].[dbo].[BMIRD_CASE]
+WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM RDB_MODERN.dbo.INVESTIGATION WHERE CASE_UID = '12345544332241')
+AND [INVESTIGATOR_KEY] > 1
+AND [PHYSICIAN_KEY] > 1
+AND [REPORTER_KEY] > 1
+;
 
 -- dbo.BMIRD_MULTI_VALUE_FIELD | operations: insert
 -- Query: 3
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [AFTER_ADM_GBS_CULTURE_SITES],
@@ -230,20 +213,41 @@ SELECT
     [TYPES_OF_INFECTIONS],
     [TYPE_OF_INSURANCE],
     [UNDERLYING_CONDITION_NM]
-FROM [dbo].[BMIRD_MULTI_VALUE_FIELD]
-WHERE [BMIRD_MULTI_VAL_FIELD_KEY] = 3
-  AND [BMIRD_MULTI_VAL_GRP_KEY] = 3
-FOR JSON PATH;
+FROM [RDB_MODERN].[dbo].[BMIRD_MULTI_VALUE_FIELD]
+WHERE [BMIRD_MULTI_VAL_GRP_KEY] = (
+    SELECT TOP (1) bc.[BMIRD_MULTI_VAL_GRP_KEY]
+    FROM [RDB_MODERN].[dbo].[BMIRD_CASE] bc
+    WHERE bc.[INVESTIGATION_KEY] = (
+        SELECT TOP (1) i.[INVESTIGATION_KEY]
+        FROM [RDB_MODERN].[dbo].[INVESTIGATION] i
+        WHERE i.[CASE_UID] = '12345544332241'
+        ORDER BY i.[INVESTIGATION_KEY] DESC
+    )
+    ORDER BY bc.[BMIRD_MULTI_VAL_GRP_KEY] DESC
+)
+ORDER BY [BMIRD_MULTI_VAL_FIELD_KEY] ASC
+;
 
 -- dbo.BMIRD_MULTI_VALUE_FIELD_GROUP | operations: insert
 -- Query: 4
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
-SELECT *
-FROM [dbo].[BMIRD_MULTI_VALUE_FIELD_GROUP]
-WHERE [BMIRD_MULTI_VAL_GRP_KEY] = 3
-FOR JSON PATH;
+-- The corresponding assertion expects BMIRD_MULTI_VAL_GRP_KEY_GT_1 to be 1 and not 0 (1= true,0=false) depending on the CASE result
+SELECT
+    CASE WHEN [BMIRD_MULTI_VAL_GRP_KEY] > 1 THEN 1 ELSE 0 END [BMIRD_MULTI_VAL_GRP_KEY_GT_1]
+FROM [RDB_MODERN].[dbo].[BMIRD_MULTI_VALUE_FIELD_GROUP]
+WHERE [BMIRD_MULTI_VAL_GRP_KEY] = (
+    SELECT TOP (1) bc.[BMIRD_MULTI_VAL_GRP_KEY]
+    FROM [RDB_MODERN].[dbo].[BMIRD_CASE] bc
+    WHERE bc.[INVESTIGATION_KEY] = (
+        SELECT TOP (1) i.[INVESTIGATION_KEY]
+        FROM [RDB_MODERN].[dbo].[INVESTIGATION] i
+        WHERE i.[CASE_UID] = '12345544332241'
+        ORDER BY i.[INVESTIGATION_KEY] DESC
+    )
+    ORDER BY bc.[BMIRD_MULTI_VAL_GRP_KEY] DESC
+)
+;
 
 -- dbo.BMIRD_STREP_PNEUMO_DATAMART | operations: insert
 -- Query: 5
@@ -388,15 +392,14 @@ SELECT
     [UNDERLYING_CONDITION_IND],
     [VACCINE_CONJUGATE],
     [VACCINE_POLYSACCHARIDE]
-FROM [dbo].[BMIRD_STREP_PNEUMO_DATAMART]
+FROM [RDB_MODERN].[dbo].[BMIRD_STREP_PNEUMO_DATAMART]
 WHERE [INVESTIGATION_LOCAL_ID] = N'CAS12345544332241GA01'
   AND [PATIENT_LOCAL_ID] = N'PSN12345544332211GA01'
-FOR JSON PATH;
+;
 
 -- dbo.CASE_COUNT | operations: insert
 -- Query: 6
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADT_HSPTL_KEY],
@@ -406,16 +409,9 @@ SELECT
     [INVESTIGATION_COUNT],
     [INV_RPT_DT_KEY],
     [INV_START_DT_KEY]
-FROM [dbo].[CASE_COUNT]
-WHERE [CONDITION_KEY] = 153
-  AND [INVESTIGATION_KEY] = 5
-  AND [INVESTIGATOR_KEY] = 3
-  AND [INV_ASSIGNED_DT_KEY] = 1
-  AND [PATIENT_KEY] = 8
-  AND [PHYSICIAN_KEY] = 10
-  AND [REPORTER_KEY] = 3
-  AND [RPT_SRC_ORG_KEY] = 3
-FOR JSON PATH;
+FROM [RDB_MODERN].[dbo].[CASE_COUNT]
+WHERE [INVESTIGATION_KEY] = (SELECT INVESTIGATION_KEY FROM RDB_MODERN.dbo.INVESTIGATION WHERE CASE_UID = '12345544332241')
+;
 
 -- dbo.CASE_LAB_DATAMART | operations: insert
 -- Query: 7
@@ -455,22 +451,28 @@ SELECT
     [PROGRAM_JURISDICTION_OID],
     [RACE],
     [REPORTING_SOURCE]
-FROM [dbo].[CASE_LAB_DATAMART]
+FROM [RDB_MODERN].[dbo].[CASE_LAB_DATAMART]
 WHERE [INVESTIGATION_LOCAL_ID] = N'CAS12345544332241GA01'
   AND [PATIENT_LOCAL_ID] = N'PSN12345544332211GA01'
-FOR JSON PATH;
+;
 
 -- dbo.CONFIRMATION_METHOD_GROUP | operations: insert
 -- Query: 8
 -- Step: 2
--- Identity strategy is fallback_primary_key; review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
+-- The corresponding assertion expects CONFIRMATION_METHOD_KEY_GT_1 to be 1 and not 0 (1= true,0=false) depending on the CASE result
 SELECT
+    CASE WHEN [CONFIRMATION_METHOD_KEY] > 1 THEN 1 ELSE 0 END AS [CONFIRMATION_METHOD_KEY_GT_1],
     [CONFIRMATION_DT]
-FROM [dbo].[CONFIRMATION_METHOD_GROUP]
-WHERE [CONFIRMATION_METHOD_KEY] = 5
-  AND [INVESTIGATION_KEY] = 5
-FOR JSON PATH;
+FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD_GROUP]
+WHERE [INVESTIGATION_KEY] = (
+    SELECT TOP (1) i.[INVESTIGATION_KEY]
+    FROM [RDB_MODERN].[dbo].[INVESTIGATION] i
+    WHERE i.[CASE_UID] = '12345544332241'
+    ORDER BY i.[INVESTIGATION_KEY] DESC
+ )
+ ORDER BY [CONFIRMATION_METHOD_KEY] ASC
+ ;
 
 -- dbo.D_PATIENT | operations: delete, insert
 -- Query: 9
@@ -557,9 +559,9 @@ SELECT
     [PATIENT_UNK_ETHNIC_RSN],
     [PATIENT_WITHIN_CITY_LIMITS],
     [PATIENT_ZIP]
-FROM [dbo].[D_PATIENT]
+FROM [RDB_MODERN].[dbo].[D_PATIENT]
 WHERE [PATIENT_LOCAL_ID] = N'PSN12345544332211GA01'
-FOR JSON PATH;
+;
 
 -- dbo.INV_SUMM_DATAMART | operations: insert, update
 -- Query: 10
@@ -621,10 +623,10 @@ SELECT
     [PROGRAM_JURISDICTION_OID],
     [RACE_CALCULATED],
     [RACE_CALC_DETAILS]
-FROM [dbo].[INV_SUMM_DATAMART]
+FROM [RDB_MODERN].[dbo].[INV_SUMM_DATAMART]
 WHERE [INVESTIGATION_LOCAL_ID] = N'CAS12345544332241GA01'
   AND [PATIENT_LOCAL_ID] = N'PSN12345544332211GA01'
-FOR JSON PATH;
+;
 
 -- dbo.INVESTIGATION | operations: insert
 -- Query: 11
@@ -700,6 +702,6 @@ SELECT
     [RPT_SRC_CD],
     [RPT_SRC_CD_DESC],
     [TRANSMISSION_MODE]
-FROM [dbo].[INVESTIGATION]
+FROM [RDB_MODERN].[dbo].[INVESTIGATION]
 WHERE [INV_LOCAL_ID] = N'CAS12345544332241GA01'
-FOR JSON PATH;
+;

@@ -1,6 +1,9 @@
--- reporting-pipeline-service/src/test/resources/testData/functional/bmirdCase/010-createPatient/query.sql
-USE [RDB_MODERN];
 
+
+-- dbo.D_PATIENT | operations: insert
+-- Query: 0
+-- Step: 1
+-- WHERE clause narrowed to known lookup key: PATIENT_LOCAL_ID
 SELECT
     [PATIENT_ADDED_BY],
     [PATIENT_ADDL_GENDER_INFO],
@@ -82,5 +85,6 @@ SELECT
     [PATIENT_UNK_ETHNIC_RSN],
     [PATIENT_WITHIN_CITY_LIMITS],
     [PATIENT_ZIP]
-FROM [dbo].[D_PATIENT]
-WHERE [PATIENT_LOCAL_ID] = N'PSN10067003GA01';
+FROM [RDB_MODERN].[dbo].[D_PATIENT]
+WHERE [PATIENT_LOCAL_ID] = N'PSN12345544332211GA01'
+;

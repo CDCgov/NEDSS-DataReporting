@@ -9,7 +9,9 @@
     }
   ],
   "1": [
-    {}
+    {
+      "ANTIMICROBIAL_GRP_KEY": 2
+    }
   ],
   "2": [
     {
@@ -29,18 +31,33 @@
       "UNDERLYING_CONDITION_IND": "No",
       "UNDER_1_MONTH_IND": "No",
       "WEIGHT_IN_OUNCES": 5,
-      "WEIGHT_IN_POUNDS": 167
+      "WEIGHT_IN_POUNDS": 167,
+      "INV_ASSIGNED_DT_KEY": 13290
     }
   ],
   "3": [
     {
+      "AFTER_ADM_GBS_CULTURE_SITES": null,
+      "GBS_1ST_CULTURE_SITES": null,
+      "GBS_2ND_CULTURE_SITES": null,
+      "HOW_WAS_CASE_IDENTIFIED": null,
       "NON_STERILE_SITE": "Middle ear",
+      "OTHERBUG2": null,
+      "OTHER_PRIOR_CONDITION_IND": null,
+      "PAST_SIGNIFICANT_MEDICAL_HIST": null,
+      "PCR_SOURCE": null,
       "STERILE_SITE": "Bone",
-      "TYPES_OF_INFECTIONS": "Cellulitis"
+      "STREP_PNEUMO_1_CULTURE_SITES": null,
+      "STREP_PNEUMO_2_CULTURE_SITES": null,
+      "TYPES_OF_INFECTIONS": "Cellulitis",
+      "TYPE_OF_INSURANCE": null,
+      "UNDERLYING_CONDITION_NM": null
     }
   ],
   "4": [
-    {}
+    {
+      "BMIRD_MULTI_VAL_GRP_KEY_GT_1": 1
+    }
   ],
   "5": [
     {
@@ -53,13 +70,13 @@
       "DIE_FRM_THIS_ILLNESS_IND": "No",
       "DISEASE": "Streptococcus pneumoniae, invasive disease (IPD)",
       "DISEASE_CD": "11723",
-      "EARLIEST_RPT_TO_CNTY_DT": "2026-05-18T00:00:00",
-      "EARLIEST_RPT_TO_STATE_DT": "2026-05-20T00:00:00",
-      "EVENT_DATE": "2026-05-16T00:00:00",
+      "EARLIEST_RPT_TO_CNTY_DT": "2026-05-18T00:00:00.000",
+      "EARLIEST_RPT_TO_STATE_DT": "2026-05-20T00:00:00.000",
+      "EVENT_DATE": "2026-05-16T00:00:00.000",
       "EVENT_DATE_TYPE": "Illness Onset Date",
       "HOSPITALIZED": "No",
-      "ILLNESS_END_DATE": "2026-05-20T00:00:00",
-      "ILLNESS_ONSET_DATE": "2026-05-16T00:00:00",
+      "ILLNESS_END_DATE": "2026-05-20T00:00:00.000",
+      "ILLNESS_ONSET_DATE": "2026-05-16T00:00:00.000",
       "INVESTIGATION_LOCAL_ID": "CAS12345544332241GA01",
       "MIC_SIGN_1": "<",
       "MIC_VALUE_1": "                                           3.00000",
@@ -69,7 +86,7 @@
       "OXACILLIN_INTERPRETATION": "R<20mm(possibly resistant)",
       "OXACILLIN_ZONE_SIZE": 2,
       "PATIENT_CURRENT_SEX": "Male",
-      "PATIENT_DOB": "1978-01-18T00:00:00",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
       "PATIENT_FIRST_NAME": "Obi Wan",
       "PATIENT_LAST_NAME": "Kenobi",
       "PATIENT_LOCAL_ID": "PSN12345544332211GA01",
@@ -119,13 +136,13 @@
       "CASE_STATUS": "Probable",
       "DISEASE": "Streptococcus pneumoniae, invasive disease (IPD)",
       "DISEASE_CD": "11723",
-      "EVENT_DATE": "2026-05-16T00:00:00",
+      "EVENT_DATE": "2026-05-16T00:00:00.000",
       "EVENT_DATE_TYPE": "Illness Onset Date",
       "INVESTIGATION_LOCAL_ID": "CAS12345544332241GA01",
-      "INVESTIGATION_START_DATE": "2026-05-17T00:00:00",
+      "INVESTIGATION_START_DATE": "2026-05-17T00:00:00.000",
       "JURISDICTION_NAME": "Clayton County",
       "PATIENT_CURRENT_SEX": "Male",
-      "PATIENT_DOB": "1978-01-18T00:00:00",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
       "PATIENT_FIRST_NM": "Obi Wan",
       "PATIENT_LAST_NM": "Kenobi",
       "PATIENT_LOCAL_ID": "PSN12345544332211GA01",
@@ -139,7 +156,10 @@
     }
   ],
   "8": [
-    {}
+    {
+      "CONFIRMATION_METHOD_KEY_GT_1" : 1,
+      "CONFIRMATION_DT": null
+    }
   ],
   "9": [
     {
@@ -147,7 +167,7 @@
       "PATIENT_ADD_TIME": "2026-05-20T17:52:20.203",
       "PATIENT_COUNTRY": "United States",
       "PATIENT_CURRENT_SEX": "Male",
-      "PATIENT_DOB": "1978-01-18T00:00:00",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
       "PATIENT_ENTRY_METHOD": "N",
       "PATIENT_FIRST_NAME": "Obi Wan",
       "PATIENT_LAST_CHANGE_TIME": "2026-05-20T17:57:03.677",
@@ -167,7 +187,7 @@
       "PATIENT_AGE_REPORTED_UNIT": "Years",
       "PATIENT_COUNTRY": "United States",
       "PATIENT_CURRENT_SEX": "Male",
-      "PATIENT_DOB": "1978-01-18T00:00:00",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
       "PATIENT_ENTRY_METHOD": "N",
       "PATIENT_FIRST_NAME": "Obi Wan",
       "PATIENT_LAST_CHANGE_TIME": "2026-05-20T17:57:03.690",
@@ -189,24 +209,24 @@
       "CONFIRMATION_METHOD": "Clinical diagnosis (non-laboratory confirmed)",
       "DISEASE": "Streptococcus pneumoniae, invasive disease (IPD) (",
       "DISEASE_CD": "11723",
-      "EARLIEST_RPT_TO_CNTY_DT": "2026-05-18T00:00:00",
-      "EARLIEST_RPT_TO_STATE_DT": "2026-05-20T00:00:00",
-      "EVENT_DATE": "2026-05-16T00:00:00",
+      "EARLIEST_RPT_TO_CNTY_DT": "2026-05-18T00:00:00.000",
+      "EARLIEST_RPT_TO_STATE_DT": "2026-05-20T00:00:00.000",
+      "EVENT_DATE": "2026-05-16T00:00:00.000",
       "EVENT_DATE_TYPE": "Illness Onset Date",
-      "ILLNESS_ONSET_DATE": "2026-05-16T00:00:00",
+      "ILLNESS_ONSET_DATE": "2026-05-16T00:00:00.000",
       "INVESTIGATION_CREATED_BY": "Kent, Ariella",
       "INVESTIGATION_CREATE_DATE": "2026-05-20T17:57:03.777",
       "INVESTIGATION_LAST_UPDTD_BY": "Kent, Ariella",
       "INVESTIGATION_LAST_UPDTD_DATE": "2026-05-20T17:57:03.777",
       "INVESTIGATION_LOCAL_ID": "CAS12345544332241GA01",
       "INVESTIGATION_STATUS": "Open",
-      "INV_RPT_DT": "2026-05-17T00:00:00",
-      "INV_START_DT": "2026-05-17T00:00:00",
+      "INV_RPT_DT": "2026-05-17T00:00:00.000",
+      "INV_START_DT": "2026-05-17T00:00:00.000",
       "JURISDICTION_NM": "Clayton County",
       "MMWR_WEEK": 20,
       "MMWR_YEAR": 2026,
       "PATIENT_CURRENT_SEX": "Male",
-      "PATIENT_DOB": "1978-01-18T00:00:00",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
       "PATIENT_FIRST_NAME": "Obi Wan",
       "PATIENT_LAST_NAME": "Kenobi",
       "PATIENT_LOCAL_ID": "PSN12345544332211GA01",
@@ -227,20 +247,20 @@
       "CASE_UID": 12345544332241,
       "DIE_FRM_THIS_ILLNESS_IND": "No",
       "DISEASE_IMPORTED_IND": "Indigenous",
-      "EARLIEST_RPT_TO_CNTY_DT": "2026-05-18T00:00:00",
-      "EARLIEST_RPT_TO_STATE_DT": "2026-05-20T00:00:00",
+      "EARLIEST_RPT_TO_CNTY_DT": "2026-05-18T00:00:00.000",
+      "EARLIEST_RPT_TO_STATE_DT": "2026-05-20T00:00:00.000",
       "HSPTLIZD_IND": "No",
-      "ILLNESS_END_DT": "2026-05-20T00:00:00",
-      "ILLNESS_ONSET_DT": "2026-05-16T00:00:00",
+      "ILLNESS_END_DT": "2026-05-20T00:00:00.000",
+      "ILLNESS_ONSET_DT": "2026-05-16T00:00:00.000",
       "INVESTIGATION_ADDED_BY": "Kent, Ariella",
       "INVESTIGATION_LAST_UPDATED_BY": "Kent, Ariella",
       "INVESTIGATION_STATUS": "Open",
-      "INV_ASSIGNED_DT": "2026-05-20T00:00:00",
+      "INV_ASSIGNED_DT": "2026-05-20T00:00:00.000",
       "INV_CASE_STATUS": "Probable",
       "INV_LOCAL_ID": "CAS12345544332241GA01",
-      "INV_RPT_DT": "2026-05-17T00:00:00",
+      "INV_RPT_DT": "2026-05-17T00:00:00.000",
       "INV_SHARE_IND": "T",
-      "INV_START_DT": "2026-05-17T00:00:00",
+      "INV_START_DT": "2026-05-17T00:00:00.000",
       "INV_STATE_CASE_ID": "OBI1K",
       "JURISDICTION_CD": "130006",
       "JURISDICTION_NM": "Clayton County",
