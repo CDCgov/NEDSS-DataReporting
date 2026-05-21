@@ -92,20 +92,26 @@ Point at the comment block describing the 9-step Merge contract. Then:
 head -12 coverage/coverage_merged.md
 ```
 
-Read out the numbers:
+Read out the numbers (as of 2026-05-21 final run):
 - In-scope target tables: 118
-- Fully covered: **<N>**
-- Partially covered: **<N>**
-- Empty: **<N>**
-- Overall column coverage: **<X.X>%**
+- Fully covered: **59** (up from 48 at start of today)
+- Partially covered: **28** (up from 23)
+- Empty: **30** (down from 46)
+- Overall column coverage: **27.9%** (up from 21.8%, +282 columns)
 
-Quick win to point at:
+Quick wins to point at — Phase-2 unblocks from today:
 
 ```bash
-grep -E "tb_datamart|d_tb_pam|d_disease_site|d_addl_risk" coverage/coverage_merged.md
+grep -E "f_tb_pam|d_disease_site|d_addl_risk|bmird_strep|std_hiv_datamart|inv_hiv|f_std_page_case" coverage/coverage_merged.md
 ```
 
-(TB cluster: most rows are TB Phase-2 unblocks landed today.)
+Talking points:
+- `f_tb_pam`: **20/20** (full) — TB PAM fact table, was 0
+- `d_disease_site` + `d_addl_risk`: **6/6** each — TB-PAM cluster dims, were 0
+- `f_std_page_case`: **52/52** (full) — STD/HIV fact, was 0 (orchestrator typo fix)
+- `std_hiv_datamart`: **78/248** — Syphilis primary chain
+- `bmird_strep_pneumo_datamart`: **69/140** — BMIRD chain
+- `inv_hiv`: **17/19** — HIV columns
 
 ### 5. Bugs as a byproduct (~45s) — pane B then A
 
@@ -119,12 +125,14 @@ Visually: 9 bug investigation directories.
 cat bugs/README.md | head -30
 ```
 
-> "We found 9 RTR bugs that production happy-path data wouldn't hit.
-> Five merged upstream, three squashed into this branch as standalone
-> fixes, one still open. They range from one-line logging defects
-> (bug 5a: `IF @debug` resetting `@@ROWCOUNT`) to architectural
-> (bug 9: dynamic UNPIVOT assumes uniform column types across
-> investigation forms — surfaces when running the dyn_dm chain)."
+> "We found 9 RTR bugs documented in bugs/, plus 2 more surfaced
+> today during Phase-2 fanout (BMIRD INSERT-without-dedup; CMG
+> sentinel duplication). Five merged upstream; three squashed into
+> this branch as standalone fixes; the rest documented with repros.
+> They range from one-line logging defects (bug 5a: `IF @debug`
+> resetting `@@ROWCOUNT`) to architectural (bug 9: dynamic UNPIVOT
+> assumes uniform column types — surfaces when running the dyn_dm
+> chain)."
 
 ### 6. What's next (~30s) — talk only
 
