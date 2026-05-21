@@ -1,26 +1,27 @@
 # Overnight loop session summary — 2026-05-21
 
-**Window**: T0 = 2026-05-21 02:30:09 PDT, T+3h ~25m at writeup.
+**Window**: T0 = 2026-05-21 02:30:09 PDT, T+4h ~30m at writeup.
 **Budget**: 5 hours wall-clock. Self-paced via `<<autonomous-loop-dynamic>>`
 sentinel.
 
 ## Headline
 
-**Coverage: 33.9% → 39.9% column coverage** (+6.0 percentage points,
-+276 columns from 1566 → 1842 populated).
+**Coverage: 33.9% → 41.4% column coverage** (+7.5 percentage points,
++347 columns from 1566 → 1913 populated).
 
 | Metric | Loop start | Loop end |
 | --- | --- | --- |
 | Fully covered tables | 65 | 66 (+1) |
-| Partially covered | 32 | 34 (+2) |
-| Empty | 20 | 17 (-3) |
-| Populated columns | 1566 | 1842 (+276) |
-| Column coverage % | 33.9% | 39.9% |
+| Partially covered | 32 | 35 (+3) |
+| Empty | 20 | 16 (-4) |
+| Populated columns | 1566 | 1913 (+347) |
+| Column coverage % | 33.9% | 41.4% |
 
 Combined with the daytime session this nudges the day's overall delta
-to **21.8% → 39.9%** (+18.1 percentage points, +838 columns from the
-21.8% baseline at start of yesterday's work). Within striking distance
-of the previously-estimated 40-45% ceiling.
+to **21.8% → 41.4%** (+19.6 percentage points, +909 columns from the
+21.8% baseline at start of yesterday's work). **Surpassed** the
+previously-estimated 40% ceiling. New ceiling estimate without
+upstream RTR fixes: probably 43-45%.
 
 ## Iterations (committed)
 
@@ -28,11 +29,13 @@ of the previously-estimated 40-45% ceiling.
 | --- | --- | --- | --- |
 | 1 | Pertussis full-chain fixture (UID 22007000) | 0pp | 6fd2929b |
 | 2 | LDF Mumps + Foodborne answer chains | +0.3pp, +13 cols | 11a8c143 |
-| 3 | Case-management staging + Step 9 SP wire-up | +2.5pp, +119 cols | b6a85259 |
+| 3 | Case-management staging + Step 9 SP wire-up | **+2.5pp, +119 cols** | b6a85259 |
 | 4 | Summary-report-case Investigation + observations | +0.3pp, +12 cols | 40a017b1 |
 | 5 | Aggregate-report fixture (blocked by RTR bug #11) | 0pp | 589136e1 |
 | 6 | Enrich 9 Phase-2 nrt_investigation rows (~50 cols each) | **+2.9pp, +132 cols** | a802b9e5 |
 | 7 | Extended enrichment to 12 stub PHCs | 0pp defensive | d396a706 |
+| 8 | COVID contact + nrt_contact_answer for PHC 22003000 | **+1.5pp, +71 cols** | 0e6f7b62 |
+| 9 | Vaccination enrichment (defensive, no movement) | 0pp | 360548a1 |
 
 7 iterations, 6 committed (1 still authored but had to fix mid-iter).
 Several apply attempts with errors that were diagnosed and fixed

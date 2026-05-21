@@ -95,9 +95,9 @@ head -12 coverage/coverage_merged.md
 Read out the numbers (as of 2026-05-21 overnight loop end):
 - In-scope target tables: 118
 - Fully covered: **66** (up from 48 at start of yesterday's session)
-- Partially covered: **34** (up from 23)
-- Empty: **17** (down from 46)
-- Overall column coverage: **39.9%** (up from 21.8%, +838 columns / +83%)
+- Partially covered: **35** (up from 23)
+- Empty: **16** (down from 46)
+- Overall column coverage: **41.4%** (up from 21.8%, +909 columns / +90%)
 
 Quick wins to point at — Phase-2 unblocks from today:
 

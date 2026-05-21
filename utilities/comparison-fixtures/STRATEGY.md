@@ -543,16 +543,18 @@ Captured here so they don't get lost as we focus on v1:
 
 ### 2026-05-21 — Phase 2 fanout + overnight autonomous loop
 
-Coverage: **21.8% → 39.9% column coverage** (1004 → 1842 cols
-populated; 48 → 66 fully covered tables; 46 → 17 empty). Wall-clock
+Coverage: **21.8% → 41.4% column coverage** (1004 → 1913 cols
+populated; 48 → 66 fully covered tables; 46 → 16 empty). Wall-clock
 ~5 min for the full pipeline; zero errors in the final run. Split
 into two sessions: the daytime Phase-2 fanout landed 33.9% (TB +
 STD/HIV + BMIRD + Var + COVID + d_investigation_repeat fixtures);
-the overnight autonomous loop added 7 more iterations to land at
-39.9% (case_management + summary_report_case + aggregate_report
-fixtures + 2 LDF answer chains + a broad nrt_investigation
-enrichment UPDATE pattern that lifted covid/tb/var datamarts by
-30+ cols each). See SESSION_SUMMARY.md for the full overnight log.
+the overnight autonomous loop added 9 more iterations to land at
+41.4% — including case_management + summary_report_case +
+aggregate_report fixtures + 2 LDF answer chains + a broad
+nrt_investigation enrichment UPDATE pattern (lifted covid/tb/var
+datamarts by 30+ cols each) + a COVID contact fixture (lifted
+covid_contact_datamart 0→71/94). See SESSION_SUMMARY.md for the
+full overnight log.
 
 **Built today**:
 - `catalog/odse_unknown_tables.md` — 94-table classification of the

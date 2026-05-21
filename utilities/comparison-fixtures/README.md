@@ -10,10 +10,10 @@ End-to-end `scripts/merge_and_verify.sh` against 118 in-scope RDB_MODERN
 target tables:
 
 - **Fully covered: 66** (every column populated for at least one row)
-- **Partially covered: 34**
-- **Empty: 17**
+- **Partially covered: 35**
+- **Empty: 16**
 - **Missing from live schema: 1** (`job_batch_rebuild_log` — not in baseline 6.0.18.1)
-- **Overall column coverage: 39.9%** (1842 / 4615 columns)
+- **Overall column coverage: 41.4%** (1913 / 4615 columns)
 - **11 RTR bugs surfaced and documented** (5 merged upstream, 3 squashed
   on this branch, 3 documented with repros for follow-up)
 
