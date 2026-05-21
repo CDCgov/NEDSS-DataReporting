@@ -1,7 +1,8 @@
 # Overnight autonomous loop — APP-471 coverage push
 
-**Started**: 2026-05-21 (timestamp recorded on first iteration)
-**Budget**: 5 hours wall-clock. **Hard stop** at T+5h00m.
+**Started**: 2026-05-21 02:30:09 PDT
+**Hard stop**: 2026-05-21 07:30:09 PDT (T+5h00m)
+**Budget**: 5 hours wall-clock.
 **Goal**: Push RDB_MODERN column coverage as high as possible without:
 - Fixing RTR bugs (document only)
 - Squashing / rebasing / amending commits (linear history only)
@@ -88,6 +89,37 @@ split it across iterations using "Resume notes" below.
 
 (append one line per iteration; format: `T+Xh Ym | iter N | <action>
 | coverage X.X% (Δ +Y) | commit <hash>` or `| reverted | reason`)
+
+T+0h 25m | iter 1 | Pertussis full-chain (UID 22007000) | 33.9% (Δ 0pp) | committed | PERTUSSIS_CASE not in scope; fixture populated 2 out-of-scope tables (Pertussis_Suspected_Source_Fld, Pertussis_Treatment_Field). Net headline 0pp. See coverage_pertussis_full_chain.md for full notes.
+
+## Key insight from iter 1
+
+**Condition-specific case tables for Measles/Rubella/Mumps are
+ALMOST CERTAINLY also out of scope.** Verified manually that
+`pertussis_case_datamart` does not exist in the live schema; only
+`PERTUSSIS_CASE` does (also not in `rtr_target_columns.md`).
+
+**For iter 2+, check before authoring**:
+```sh
+grep -iE "^- (dbo\.)?<table>" catalog/rtr_target_columns.md
+# Or:
+grep -E "(dbo\.)?<table>" coverage/coverage_merged.md
+```
+
+**Re-prioritize queue**:
+- **Skip** Measles/Rubella/Mumps full-chain fixtures (likely 0pp each).
+  Verify with the grep above first; if any IS in scope, do that one.
+- **Promote** the LDF chains — they're definitively in scope:
+  `ldf_bmird`, `ldf_foodborne`, `ldf_hepatitis`, `ldf_mumps`,
+  `ldf_tetanus`, `ldf_vaccine_prevent_diseases` (42 cols across 6
+  tables, all 0/7 right now). The bug-7 fix is squashed on this
+  branch so `LDF_DIMENSIONAL_DATA` should populate; the Tetanus LDF
+  fixture is the working template.
+- **Also promote** answer expansion for partially-covered datamarts
+  (covid_case_datamart 53/383, std_hiv_datamart 78/248,
+  bmird_strep_pneumo_datamart 69/140). Each could add ~30-50 cols by
+  reading the SP's WHERE filter list and adding the missing
+  observation rows.
 
 ## Resume notes
 
