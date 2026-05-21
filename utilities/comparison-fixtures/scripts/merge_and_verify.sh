@@ -94,8 +94,17 @@ sql_i() {
 # --------------------------------------------------------------------
 
 reset_baseline() {
-  log "Step 1: docker compose down -v && up -d nbs-mssql liquibase"
-  ( cd "$NEDSS_DR_ROOT" && docker compose down -v >/dev/null 2>&1 && docker compose up -d nbs-mssql liquibase >/dev/null 2>&1 )
+  log "Step 1: docker compose down -v && build liquibase && up -d nbs-mssql liquibase"
+  # Rebuild the liquibase image so it picks up working-tree changes to
+  # routines / changelogs / functions / etc. The Dockerfile.local COPYs
+  # those files in at build time, so without an explicit rebuild a stale
+  # cached image would ship the pre-edit SPs and our routine fixes
+  # wouldn't reach the DB. Layer cache stays hot for unchanged files;
+  # full rebuilds are ~20s.
+  ( cd "$NEDSS_DR_ROOT" \
+      && docker compose down -v >/dev/null 2>&1 \
+      && docker compose build liquibase >/dev/null 2>&1 \
+      && docker compose up -d nbs-mssql liquibase >/dev/null 2>&1 )
 
   log "Waiting for liquibase migrations..."
   local timeout=600
