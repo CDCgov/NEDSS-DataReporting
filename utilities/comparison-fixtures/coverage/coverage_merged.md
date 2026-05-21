@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-21 05:53:45 PDT
+Generated: 2026-05-21 06:52:19 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -14,13 +14,13 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 - In-scope target tables: 118
 - Fully covered (all columns populated for at least one row): 66
-- Partially covered (some columns populated): 34
-- Empty (table exists, 0 rows): 17
+- Partially covered (some columns populated): 35
+- Empty (table exists, 0 rows): 16
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4621
-- Columns with ≥1 populated row: 1842
-- Overall column coverage: 39.9%
+- Columns with ≥1 populated row: 1913
+- Overall column coverage: 41.4%
 
 ## Per-table coverage
 
@@ -36,7 +36,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.confirmation_method | 3 | 3 | **3/3** |
 | dbo.confirmation_method_group | 25 | 3 | **3/3** |
 | dbo.covid_case_datamart | 2 | 383 | 87/383 |
-| dbo.covid_contact_datamart | 0 | 94 | 0/94 |
+| dbo.covid_contact_datamart | 1 | 94 | 71/94 |
 | dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
 | dbo.covid_lab_datamart | 0 | 129 | 0/129 |
 | dbo.covid_vaccination_datamart | 1 | 60 | 10/60 |
@@ -219,7 +219,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.treatment_event
 - dbo.user_profile
 
-### Partially covered (34)
+### Partially covered (35)
 
 Tables with rows but at least one column never populated. These are the
 candidates for Tier 3 gap-driven coverage work.
@@ -229,6 +229,7 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.case_lab_datamart
 - dbo.condition
 - dbo.covid_case_datamart
+- dbo.covid_contact_datamart
 - dbo.covid_vaccination_datamart
 - dbo.d_case_management
 - dbo.d_contact_record
@@ -259,14 +260,13 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.test_result_grouping
 - dbo.var_datamart
 
-### Empty (17)
+### Empty (16)
 
 Tables that exist in RDB_MODERN but have zero rows after the merged
 chain runs. Most are datamart-side fact tables that depend on Merge
 contract step 9 (Datamart SPs — out of scope for v1).
 
 - dbo.aggregate_report_datamart
-- dbo.covid_contact_datamart
 - dbo.covid_lab_celr_datamart
 - dbo.covid_lab_datamart
 - dbo.hep100
