@@ -528,6 +528,26 @@ run_datamart_sps() {
   run_dm_sp sp_ldf_foodborne_datamart_postprocessing       "@phc_id_list = N'$PHC_UIDS', @debug = 0"
   run_dm_sp sp_ldf_tetanus_datamart_postprocessing         "@phc_id_list = N'$PHC_UIDS', @debug = 0"
   run_dm_sp sp_ldf_vaccine_prevent_diseases_datamart_postprocessing "@phc_id_list = N'$PHC_UIDS', @debug = 0"
+
+  # Dynamic-datamart chain (sp_dyn_dm_main → invest_form / case_mgmt /
+  # page_builder / provider / org / repeat* / createdm / dimension_update).
+  # Populates DM_INV_<DATAMART_NAME> wide tables. Each datamart is keyed
+  # to a specific FORM_CD via v_nrt_nbs_page; only Investigations whose
+  # investigation_form_cd matches a row in that view will participate.
+  # For v1: HEPATITIS_A_ACUTE (Hep A v2 + foundation) and STD (Syphilis
+  # primary stub) populate. Other DATAMART_NMs (HEPATITIS_B_*, HIV,
+  # ARBO_HUMAN, etc.) require Investigations with the corresponding
+  # PG_*_Investigation form_cd — Phase 2 fixture additions.
+  log "  dyn_dm chain — discover applicable datamarts via v_nrt_nbs_page"
+  local dm_names
+  dm_names=$(sql_q RDB_MODERN "SET NOCOUNT ON; SELECT DISTINCT v.DATAMART_NM FROM dbo.nrt_investigation i JOIN dbo.v_nrt_nbs_page v ON v.FORM_CD = i.investigation_form_cd ORDER BY v.DATAMART_NM" 2>/dev/null | tr -d '\r' | awk 'NF && !/^-/ && !/^$/ && !/rows affected/ && !/Changed database/ {print $1}')
+  if [[ -z "$dm_names" ]]; then
+    log "    (no Investigations match a v_nrt_nbs_page DATAMART_NM — skipping dyn_dm chain)"
+  else
+    for dm in $dm_names; do
+      run_dm_sp sp_dyn_dm_main_postprocessing "@datamart_name = N'$dm', @phc_id_list = N'$PHC_UIDS', @debug = 'false'"
+    done
+  fi
 }
 
 # --------------------------------------------------------------------
