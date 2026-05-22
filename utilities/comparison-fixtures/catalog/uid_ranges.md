@@ -1230,6 +1230,10 @@ populated by this edge.
 | 22004000 - 22004999 | `std_hiv_investigation_full_chain` (full ODSE + Tier 2 + dimensional D_INV_* chain for STD Syphilis primary) | **allocated**. See block detail below. |
 | 22005000 - 22005999 | `bmird_investigation_full_chain` (full ODSE + nrt_investigation_observation graph for BMIRD Strep pneumo invasive) | **allocated**. See block detail below. |
 | 22006000 - 22006999 | `d_investigation_repeat` (full ODSE + nrt_page_case_answer repeating-block chain for Pertussis form) | **allocated**. See block detail below. |
+| 22007000 - 22007999 | `zz_covid_case_datamart_enrich` (extra nrt_page_case_answer answers for existing COVID PHC 22003000 to lift COVID_CASE_DATAMART column coverage) | **reserved 2026-05-22**. Parallel agent A. |
+| 22008000 - 22008999 | `zz_hepatitis_datamart_enrich` (full ODSE + answers chain for a Hep A Investigation to lift HEPATITIS_DATAMART column coverage) | **reserved 2026-05-22**. Parallel agent B. |
+| 22009000 - 22009999 | `zz_var_datamart_enrich` (extra answers for existing Varicella PHC 22002000 to lift VAR_DATAMART column coverage beyond the curated 25-question set) | **reserved 2026-05-22**. Parallel agent C. |
+| 22010000 - 22010999 | `zz_d_inv_place_repeat_enrich` (repeating-block place-of-exposure answers to populate D_INV_PLACE_REPEAT baseline columns) | **reserved 2026-05-22**. Parallel agent D. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
