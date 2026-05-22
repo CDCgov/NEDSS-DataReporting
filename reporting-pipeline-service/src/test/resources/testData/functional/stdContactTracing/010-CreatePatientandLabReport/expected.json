@@ -242,7 +242,7 @@
     {
       "CONDITION_KEY": 1,
       "COPY_TO_PROVIDER_KEY": 1,
-      "LAB_RPT_DT_KEY": 1,
+      "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 3400011,
       "LDF_GROUP_KEY": 1,
@@ -258,7 +258,7 @@
     {
       "CONDITION_KEY": 242,
       "COPY_TO_PROVIDER_KEY": 1,
-      "LAB_RPT_DT_KEY": 1,
+      "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
       "LAB_TEST_UID": 3400008,
       "LDF_GROUP_KEY": 1,
