@@ -1,3 +1,11 @@
+-- bug #9 fix: ensure QUOTED_IDENTIFIER is ON when this SP is compiled.
+-- The dynamic UNPIVOT step uses SELECT INTO with computed/typed columns,
+-- which requires QI ON.  liquibase applies routines with QI ON by
+-- default, but sqlcmd-driven re-applies inherit the session default
+-- (typically OFF), which causes Msg 1934 at execution time.
+SET QUOTED_IDENTIFIER ON;
+GO
+
 IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatvarch_postprocessing]')
                                       AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
@@ -457,6 +465,26 @@ and copying the values that were for the corresponding user_defined_column_nm fo
         if @debug = 'true'
             SELECT 'RDB_COLUMN_COMMA_LIST_SELECT',@RDB_COLUMN_COMMA_LIST_SELECT ;
 
+        -- bug #9 fix: build a third variant that wraps each column in
+        -- CAST(... AS nvarchar(max)) AS <col>.  Used in the step 16
+        -- UNPIVOT inner SELECT below.  SQL Server's UNPIVOT requires
+        -- every column in the IN list to share a single type; metadata-
+        -- declared repeat-block columns are heterogeneous in baseline
+        -- (e.g. EPI_CNTRY_OF_EXP varchar(N) vs varchar(M)) which raises
+        -- Msg 8167.  Recasting every column to nvarchar(max) before the
+        -- UNPIVOT IN list resolves to that uniform type harmonizes them
+        -- without changing the downstream behavior (#tmp_DynDm_REPEAT_BLOCK_OUT.COL1
+        -- is already declared varchar(max), so the value flows through
+        -- unchanged).
+        DECLARE @RDB_COLUMN_CAST_LIST VARCHAR(MAX);
+        SET  @RDB_COLUMN_CAST_LIST = null;
+
+        SELECT @RDB_COLUMN_CAST_LIST = COALESCE(@RDB_COLUMN_CAST_LIST+',' ,'') + 'CAST('+RDB_COLUMN_NM+' AS nvarchar(max)) '+RDB_COLUMN_NM
+        FROM  #tmp_DynDm_D_INV_REPEAT_METADATA_distinct;
+
+        if @debug = 'true'
+            SELECT 'RDB_COLUMN_CAST_LIST',@RDB_COLUMN_CAST_LIST ;
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -540,10 +568,15 @@ and copying the values that were for the corresponding user_defined_column_nm fo
 
 
 
+        -- bug #9 fix: project each repeat-block column with an explicit
+        -- CAST(... AS nvarchar(max)) so the UNPIVOT IN list sees a
+        -- uniform type.  Otherwise Msg 8167 fires when the source
+        -- columns have heterogeneous varchar lengths in
+        -- nrt_metadata_columns.
         SET @sql = ' insert into #tmp_DynDm_REPEAT_BLOCK_OUT ' +
                    ' select  INVESTIGATION_KEY, BLOCK_NM as BLOCK_NM_REPEAT_BLOCK_OUT, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_REPEAT_BLOCK_OUT,variable as RDB_COLUMN_NM_REPEAT_BLOCK_OUT,value as COL1 '+
                    ' from ( '+
-                   ' select INVESTIGATION_KEY, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, '+ @RDB_COLUMN_COMMA_LIST +
+                   ' select INVESTIGATION_KEY, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, '+ @RDB_COLUMN_CAST_LIST +
                    ' from  '+@tmp_DynDm_REPEAT_BLOCK+
                    ' ) as t '+
                    ' unpivot ( '+
