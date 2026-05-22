@@ -1,9 +1,7 @@
 # Bug #10 — sp_sld_investigation_repeat_postprocessing: broken D_REPT_KEY surrogate-key allocation
 
-**Status**: Surfaced 2026-05-21 by Agent A while authoring the
-`d_investigation_repeat` Phase-2 Tier 3 fixture. Not yet fixed. Real
-RTR bug; blocks the `D_INVESTIGATION_REPEAT` dim from gaining new rows
-through normal fixture-authored data.
+**Status**: Surfaced 2026-05-21 by Agent A. **FIXED 2026-05-22** on
+`aw/odse-test-seed` (commit `99ef3517`).
 
 ## Symptom
 
@@ -108,16 +106,66 @@ run the SP. Check job_flow_log for the
 `'INSERT INTO D_INVESTIGATION_REPEAT'` row_count — the former says N,
 the latter says 0.
 
-## Architectural follow-on
+## Architectural follow-on (DONE in commit `99ef3517`)
 
-Once this bug is fixed, `merge_and_verify.sh` should add a Step 8.5
-between Tier 3 fixtures and Step 9 datamarts:
+Step 8.5 added to `merge_and_verify.sh`:
 
 ```sh
-sql_q RDB_MODERN "EXEC dbo.sp_sld_investigation_repeat_postprocessing \
-  @batch_id = <ts>, @phc_id_list = N'$PHC_UIDS', @debug = 0"
+run_sld_investigation_repeat() {
+  log "Step 8.5: populate D_INVESTIGATION_REPEAT via sp_sld_investigation_repeat_postprocessing"
+  local batch_id
+  batch_id=$(date +%y%m%d%H%M%S)
+  sql_q RDB_MODERN "EXEC dbo.sp_sld_investigation_repeat_postprocessing @batch_id = $batch_id, @phc_id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || { ... }
+}
 ```
 
-so the repeating-block dim populates as part of the canonical merged
-run. Until the bug lands, no point invoking it (it'd just produce
-LOOKUP_TABLE_N_REPT rows that go nowhere).
+The dim now populates as part of the canonical merged run.  Future
+fixtures that author repeating-block answers will see their data flow
+through to D_INVESTIGATION_REPEAT automatically.
+
+## Fix details (the actual landed fix)
+
+The hypothesis in the original "Root cause" section above turned out
+to be slightly off — D_REPT_KEY *is* an IDENTITY(1,1) column on
+`LOOKUP_TABLE_N_REPT`, not a NOT NULL column without a default.  The
+issue is more subtle:
+
+- On a fresh DB, IDENT_CURRENT('LOOKUP_TABLE_N_REPT') = 1.
+- The SP's first INSERT yields `D_REPT_KEY = 1` (the identity's
+  starting value).
+- That 1 propagates through `L_INVESTIGATION_REPEAT_INC` and gets
+  filtered out by `WHERE D_INVESTIGATION_REPEAT_KEY != 1` at the
+  final dim INSERT (line 1349) — the filter is correct (skip the
+  sentinel) but the new row's auto-assigned key collides with it.
+
+Fix: reseed the identity to `max(2, MAX(D_INV_REPEAT_KEY)+1)` after
+the `DELETE FROM dbo.LOOKUP_TABLE_N_REPT` and before the INSERT.
+DBCC CHECKIDENT semantics depend on table state:
+- empty table: next inserted value = new_reseed_value
+- non-empty: next = new_reseed_value + 1
+Because we DELETE before reseed, the table is empty and the next
+INSERT gets exactly `@reseed_to`.  Choosing `max(2, MAX(key)+1)`
+avoids the sentinel and avoids collisions with any prior non-sentinel
+key.
+
+Also pinned `SET QUOTED_IDENTIFIER ON; GO` at the top of the file —
+same lesson as bug #9 — so sqlcmd-driven re-applies don't break the
+embedded dynamic SQL.
+
+## Verification (post-fix)
+
+Full merge_and_verify with Step 8.5 active:
+- `D_INVESTIGATION_REPEAT`: 2 sentinels → 8 rows (+6 dim rows).
+- Column coverage: 1/252 → 12/256 (width grew 252→256 because the
+  SP's dynamic ALTER TABLE step now reaches the column-add path).
+- All 6 new rows have `D_INVESTIGATION_REPEAT_KEY = 2` and
+  `PAGE_CASE_UID = 22006000` (Pertussis fixture).
+- Headline coverage: 41.4% → 41.5% (+0.1pp / +7 cols populated).
+
+Side-effect: `LOOKUP_TABLE_N_REPT` and `L_INVESTIGATION_REPEAT_INC`
+now correctly end at 0 rows post-run (they're transient staging tables
+that the SP DELETEs at the start of each invocation).  Previously
+they held 1 row each as a side-effect of the SP bailing mid-run.
+This transitions them from "fully covered" to "empty" in the
+coverage report — a reporting artifact; the underlying behavior is
+correct.
