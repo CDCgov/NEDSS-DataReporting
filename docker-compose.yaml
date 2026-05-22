@@ -31,6 +31,7 @@ services:
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
+    profiles: [nbs6] # Only start if nbs6 profile is enabled
     depends_on:
       nbs-mssql:
         condition: service_healthy
@@ -41,15 +42,15 @@ services:
 
   sas:
     image: ghcr.io/cdcent/nbs7-sas-linux:v1.0.4
-    profiles: [sas] # Only start if sas profile is enabled
+    profiles: [nbs6] # Only start if nbs6 profile is enabled
     platform: linux/amd64
     ports:
       - 2323:2323
     environment:
       - db_host=nbs-mssql
-      - rdb_user=sa
+      - rdb_user=${DB_USER:-sa}
       - rdb_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
-      - odse_user=sa
+      - odse_user=${DB_USER:-sa}
       - odse_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - sas_user_pass=n3dss4dm1n
       - sas_encoding=latin1
