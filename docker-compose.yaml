@@ -31,7 +31,6 @@ services:
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
-    profiles: [nbs6] # Only start if nbs6 profile is enabled
     depends_on:
       nbs-mssql:
         condition: service_healthy
@@ -42,7 +41,7 @@ services:
 
   sas:
     image: ghcr.io/cdcent/nbs7-sas-linux:v1.0.4
-    profiles: [nbs6] # Only start if nbs6 profile is enabled
+    profiles: [sas] # Only start if sas profile is enabled
     platform: linux/amd64
     ports:
       - 2323:2323
@@ -55,6 +54,7 @@ services:
       - sas_user_pass=n3dss4dm1n
       - sas_encoding=latin1
       - ADDITIONAL_SAS_FLAGS=-DEBUG
+      - PATH=$PATH:/opt/mssql-tools18/bin
     depends_on:
       nbs-mssql:
         condition: service_healthy
