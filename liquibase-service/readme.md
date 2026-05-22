@@ -23,7 +23,7 @@ Run the three scripts located under the following directory manually. This creat
 ---
 #### 2. Deploy Database Objects (Liquibase or Manual)
 
-For each database ([001-master](src/main/resources/db/001-master),[002-srte](src/main/resources/db/002-srte), [003-odse](src/main/resources/db/003-odse), [004-rdb](src/main/resources/db/004-rdb), [005-rdb_modern](src/main/resources/db/005-rdb_modern)), deploy the following object types:
+For each database ([001-master](src/main/resources/db/001-master),[002-srte](src/main/resources/db/002-srte), [003-odse](src/main/resources/db/003-odse), [005-rdb_modern](src/main/resources/db/005-rdb_modern)), deploy the following object types:
 
 - `tables/`
 - `views/`
@@ -49,7 +49,7 @@ Automated deployment using Liquibase ensures consistent and traceable changes to
 - [Liquibase Deployment](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/liquibase)
   - Reporting Database:
       - RDB: If RDB is selected as the default reporting database, please ensure that scripts for [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) are run against the `RDB` database server.
-      - RDB_MODERN: If RDB_MODERN is selected as the reporting database, please run both scripts under [db.rdb.changelog-16.1.yaml](changelog/db.rdb.changelog-16.1.yaml) with the `RDB` server_name and [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) with `RDB_MODERN` server_name.
+      - RDB_MODERN: If RDB_MODERN is selected as the reporting database, please ensure that scripts for [db.rdb_modern.changelog-16.1.yaml](changelog/db.rdb_modern.changelog-16.1.yaml) are run against the `RDB_MODERN` database server.
 
       ```sql
       --Last script executed should be 999-<database_name>_database_object_permission_grants-001.sql.
@@ -114,9 +114,6 @@ liquibase-service/
 │           │   │   ├── functions/
 │           │   │   ├── routines/
 │           │   │   ├── views/
-│           │   ├── 004-rdb/
-│           │   │   ├── routines/
-│           │   │   ├── tables/
 │           │   ├── 005-rdb_modern/
 │           │   │   ├── functions/
 │           │   │   ├── remove/
