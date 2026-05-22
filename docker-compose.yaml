@@ -164,4 +164,3 @@ services:
         condition: service_healthy
       kafka-connect:
         condition: service_healthy
-
