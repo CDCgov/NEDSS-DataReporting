@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-21 06:57:39 PDT
+Generated: 2026-05-22 08:03:55 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 66
+- Fully covered (all columns populated for at least one row): 64
 - Partially covered (some columns populated): 35
-- Empty (table exists, 0 rows): 16
+- Empty (table exists, 0 rows): 18
 - Missing (table not present in live RDB_MODERN): 1
 
-- Total columns across in-scope tables: 4621
-- Columns with ≥1 populated row: 1913
-- Overall column coverage: 41.4%
+- Total columns across in-scope tables: 4625
+- Columns with ≥1 populated row: 1920
+- Overall column coverage: 41.5%
 
 ## Per-table coverage
 
@@ -53,7 +53,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_interview | 2 | 24 | 18/24 |
 | dbo.d_interview_note | 2 | 7 | **7/7** |
 | dbo.d_inv_place_repeat | 1 | 42 | 1/42 |
-| dbo.d_investigation_repeat | 2 | 252 | 1/252 |
+| dbo.d_investigation_repeat | 8 | 256 | 12/256 |
 | dbo.d_ldf_meta_data | 2620 | 14 | 12/14 |
 | dbo.d_move_cntry | 1 | 6 | 5/6 |
 | dbo.d_move_cntry_group | 2 | 1 | **1/1** |
@@ -96,10 +96,10 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
 | dbo.investigation | 25 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 24475 | 15 | 14/15 |
+| dbo.job_flow_log | 24589 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
-| dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
+| dbo.l_investigation_repeat_inc | 0 | 2 | 0/2 |
 | dbo.lab_result_comment | 1 | 6 | **6/6** |
 | dbo.lab_result_val | 1 | 20 | **20/20** |
 | dbo.lab_rpt_user_comment | 1 | 8 | **8/8** |
@@ -117,7 +117,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.ldf_mumps | 0 | 7 | 0/7 |
 | dbo.ldf_tetanus | 1 | 11 | 10/11 |
 | dbo.ldf_vaccine_prevent_diseases | 1 | 8 | **8/8** |
-| dbo.lookup_table_n_rept | 1 | 2 | **2/2** |
+| dbo.lookup_table_n_rept | 0 | 2 | 0/2 |
 | dbo.morb_rpt_user_comment | 1 | 8 | **8/8** |
 | dbo.morbidity_report | 3 | 30 | **30/30** |
 | dbo.morbidity_report_datamart | 2 | 133 | 78/133 |
@@ -148,7 +148,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 ## Categorization
 
-### Fully covered (66)
+### Fully covered (64)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -196,7 +196,6 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.hep_multi_value_field_group
 - dbo.investigation
 - dbo.l_investigation_repeat
-- dbo.l_investigation_repeat_inc
 - dbo.lab_result_comment
 - dbo.lab_result_val
 - dbo.lab_rpt_user_comment
@@ -204,7 +203,6 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.ldf_datamart_column_ref
 - dbo.ldf_group
 - dbo.ldf_vaccine_prevent_diseases
-- dbo.lookup_table_n_rept
 - dbo.morb_rpt_user_comment
 - dbo.morbidity_report
 - dbo.morbidity_report_event
@@ -260,7 +258,7 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.test_result_grouping
 - dbo.var_datamart
 
-### Empty (16)
+### Empty (18)
 
 Tables that exist in RDB_MODERN but have zero rows after the merged
 chain runs. Most are datamart-side fact tables that depend on Merge
@@ -271,11 +269,13 @@ contract step 9 (Datamart SPs — out of scope for v1).
 - dbo.covid_lab_datamart
 - dbo.hep100
 - dbo.inv_summ_datamart
+- dbo.l_investigation_repeat_inc
 - dbo.lab100
 - dbo.lab101
 - dbo.ldf_bmird
 - dbo.ldf_hepatitis
 - dbo.ldf_mumps
+- dbo.lookup_table_n_rept
 - dbo.organization_ldf_group
 - dbo.patient_ldf_group
 - dbo.provider_ldf_group

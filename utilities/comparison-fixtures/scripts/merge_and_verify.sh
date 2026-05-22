@@ -467,6 +467,27 @@ run_dm_sp() {
   }
 }
 
+# --------------------------------------------------------------------
+# Step 8.5 — Populate D_INVESTIGATION_REPEAT for all PHC_UIDS
+# --------------------------------------------------------------------
+#
+# Reads from S_INVESTIGATION_REPEAT (populated by page-builder upstream)
+# and writes D_INVESTIGATION_REPEAT + L_INVESTIGATION_REPEAT_INC +
+# LOOKUP_TABLE_N_REPT.  Was previously not in the orchestrated chain
+# (nothing in Step 9 invokes it); see bugs/10_*/findings.md
+# "Architectural follow-on".
+#
+# Runs AFTER Tier 3 fixtures so any repeating-block answers authored
+# by Tier 3 are visible to the SP.
+run_sld_investigation_repeat() {
+  log "Step 8.5: populate D_INVESTIGATION_REPEAT via sp_sld_investigation_repeat_postprocessing"
+  local batch_id
+  batch_id=$(date +%y%m%d%H%M%S)
+  sql_q RDB_MODERN "EXEC dbo.sp_sld_investigation_repeat_postprocessing @batch_id = $batch_id, @phc_id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || {
+    log "    (errored or no-op — see job_flow_log)"
+  }
+}
+
 run_datamart_sps() {
   log "Step 9: datamart SPs (40 SPs, condition-gated; only Hep-related populate with v1 single-condition fan-out)"
 
@@ -625,6 +646,7 @@ main() {
   apply_tier_2_fixtures
   rerun_tier_1_chains
   apply_tier_3_fixtures
+  run_sld_investigation_repeat
   run_datamart_sps
 
   print_coverage_summary
