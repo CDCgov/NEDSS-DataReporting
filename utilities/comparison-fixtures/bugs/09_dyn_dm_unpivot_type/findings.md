@@ -1,8 +1,8 @@
 # Bug #9 — sp_dyn_dm_repeatvarch_postprocessing: UNPIVOT type conflict
 
 **Status**: Surfaced 2026-05-21 during work to extend orchestrator
-Step 9 with the `sp_dyn_dm_*` chain. Not yet investigated in depth;
-no fix attempted. Orchestrator catches the error and continues.
+Step 9 with the `sp_dyn_dm_*` chain. **FIXED 2026-05-21** on
+`aw/odse-test-seed` (commit `a88e40e5`).
 
 ## Symptom
 
@@ -88,14 +88,40 @@ this bug is resolved, every `DM_INV_*` table will appear as "RDB has
 rows, RDB_MODERN doesn't" in the diff — a false-positive coverage gap
 that hides any real RTR/MasterETL divergence in these tables.
 
-## Suggested fix path
+## Fix landed (commit a88e40e5)
 
-1. Read `nrt_metadata_columns WHERE TABLE_NM LIKE '%REPEAT%' AND
-   DATAMART_NM = 'HEPATITIS_A_ACUTE'` to confirm column-type heterogeneity.
-2. If heterogeneous: amend the SP's dynamic SQL to wrap each column
-   reference in `CAST(<col> AS nvarchar(max))`. The UNPIVOT then sees
-   a uniform `nvarchar(max)` IN list.
-3. Run repro to confirm `DM_INV_HEPATITIS_A_ACUTE` populates.
-4. Add to `bugs/README.md`.
+Same pattern existed in **three** SPs, all fixed:
+- `205-sp_dyn_dm_repeatvarch_postprocessing`: build
+  `@RDB_COLUMN_CAST_LIST` with `CAST(<col> AS nvarchar(max))`, use in
+  inner SELECT before UNPIVOT.
+- `235-sp_dyn_dm_repeatnumeric_postprocessing`: same; the output
+  column COL1 is `varchar(max)` so nvarchar(max) flows through
+  unchanged.
+- `210-sp_dyn_dm_repeatdate_postprocessing`: TRY_CAST (not CAST) to
+  DATE — output column is `dateColumn DATE`, TRY_CAST handles
+  non-date strings gracefully.
 
-Repro and SP source paths logged for future follow-up.
+Also added `SET QUOTED_IDENTIFIER ON; GO` at the top of each file.
+Liquibase applies routines with QI ON by default; sqlcmd-driven
+re-applies inherit the session default (typically OFF), which makes
+the dynamic SELECT INTO inside the SPs raise Msg 1934 at execution
+time. Pinning QI ON in the file makes the SP behavior independent
+of the applying tool.
+
+Verified: `sp_dyn_dm_main_postprocessing @datamart_name =
+'HEPATITIS_A_ACUTE'` now runs to `SP_COMPLETE` in dyn_dm_main +
+createdm + invest_clear sub-SPs. No Msg 8167.
+
+## What didn't move (yet)
+
+`DM_INV_HEPATITIS_A_ACUTE` itself stays at 0 rows because v1/v2 Hep A
+Investigations don't have repeating-block answer data. A future
+fixture authoring repeat-block answers would populate it. That table
+also isn't in the 118-table in-scope catalog.
+
+The downstream in-scope `D_INV_*` dims (D_INV_CLINICAL,
+D_INV_EPIDEMIOLOGY, D_INV_LAB_FINDING, D_INV_ADMINISTRATIVE) populate
+from a different upstream path (`sp_dyn_dm_page_builder_d_inv_postprocessing`
+called repeatedly from dyn_dm_main). Those SPs are now unblocked from
+the previous error too; whether they populate depends on richer
+nrt_page_case_answer data we have for Hep A.
