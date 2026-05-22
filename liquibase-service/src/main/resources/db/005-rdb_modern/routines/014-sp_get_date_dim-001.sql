@@ -10,55 +10,134 @@ CREATE PROCEDURE dbo.sp_get_date_dim @start int, @end int
 AS
 BEGIN
 
+    SET LANGUAGE us_english;
 
-    -- get the first day of the start year
-    declare @start_dt datetime =  DATEFROMPARTS(@start, 1, 1)
+    DECLARE @StartDate date = DATEFROMPARTS(@start, 1, 1);
+    DECLARE @EndDate   date = DATEFROMPARTS(@end, 12, 31);
+    DECLARE @CurrentDate date = @StartDate;
 
--- get the last day of the end year
-    declare @end_dt datetime = DATEFROMPARTS(@end, 12, 31)
+    -- Add the NULL/unknown date row if missing
+    IF NOT EXISTS (
+        SELECT 1
+        FROM [dbo].[RDB_DATE]
+        WHERE [DATE_KEY] = 1
+    )
+    BEGIN
+        INSERT INTO [dbo].[RDB_DATE] (
+            [DATE_MM_DD_YYYY],
+            [DAY_OF_WEEK],
+            [DAY_NBR_IN_CLNDR_MON],
+            [DAY_NBR_IN_CLNDR_YR],
+            [WK_NBR_IN_CLNDR_MON],
+            [WK_NBR_IN_CLNDR_YR],
+            [CLNDR_MON_NAME],
+            [CLNDR_MON_IN_YR],
+            [CLNDR_QRTR],
+            [CLNDR_YR],
+            [DATE_KEY]
+        )
+        VALUES (
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1
+        );
+    END;
 
-    declare @date datetime = @start_dt
+    WHILE @CurrentDate <= @EndDate
+    BEGIN
+        DECLARE @DayOfYear int;
+        DECLARE @DateKey numeric(18, 0);
 
--- this is a default row with key as 1
-    declare @date_key int = 1
+        DECLARE @YearStart date;
+        DECLARE @MonthStart date;
+        DECLARE @FirstSaturdayInYear date;
+        DECLARE @FirstSaturdayInMonth date;
+        DECLARE @DaysUntilFirstSaturdayInYear int;
+        DECLARE @DaysUntilFirstSaturdayInMonth int;
+        DECLARE @SaturdaysInYearToDate int;
+        DECLARE @SaturdaysInMonthToDate int;
+        DECLARE @YearWeek int;
+        DECLARE @MonthWeek int;
 
--- insert a default row with key as 1
-    if not exists (select * from dbo.rdb_date_temp where date_key=@date_key)
-        Insert into dbo.rdb_date_temp(date_key) select @date_key
+        SET @DayOfYear = DATEPART(DAYOFYEAR, @CurrentDate);
 
---loop through each date
-    while  @start_dt <= @end_dt
-        begin
-            set @date = @start_dt
-            -- get the next key
-            set @date_key = @date_key + 1
+        /*
+            Legacy RDB_DATE week rule:
 
-            insert into dbo.rdb_date_temp
-            select DATEADD(dd, 0, DATEDIFF(dd, 0, @date))  DATE_MM_DD_YYYY
-                 ,DATENAME(dw,@date) DAY_OF_WEEK -- Friday
-                 ,day(@date) DAY_NBR_IN_CLNDR_MON
-                 ,DATEPART(dayofyear, @date) DAY_NBR_IN_CLNDR_YR
-                 ,DATEDIFF(WEEK, DATEADD(MONTH, DATEDIFF(MONTH, 0, @date), 0), @date) + 1 WK_NBR_IN_CLNDR_MON
-                 ,DATEPART(week, @date) WK_NBR_IN_CLNDR_YR
-                 ,DATENAME(month,@date) CLNDR_MON_NAME
-                 ,month(@date) CLNDR_MON_IN_YR
-                 ,DATEPART(QUARTER, @date)  CLNDR_QRTR
-                 ,DATENAME(year,@date) CLNDR_YR
-                 ,@date_key
+            Week 1 exists before the first Saturday.
+            Each Saturday increments the week number.
+            If Jan 1 / month 1 starts on Saturday, that day is week 2.
+        */
 
--- get the next date
-            set @start_dt = @start_dt + 1
+        SET @YearStart = DATEFROMPARTS(YEAR(@CurrentDate), 1, 1);
+        SET @MonthStart = DATEFROMPARTS(YEAR(@CurrentDate), MONTH(@CurrentDate), 1);
 
-            IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'RDB_DATE' and xtype = 'U')
-                select DISTINCT DATE_KEY, DATE_MM_DD_YYYY, DAY_OF_WEEK, DAY_NBR_IN_CLNDR_MON, DAY_NBR_IN_CLNDR_YR, WK_NBR_IN_CLNDR_MON, WK_NBR_IN_CLNDR_YR, CLNDR_MON_NAME, CLNDR_MON_IN_YR, CLNDR_QRTR, CLNDR_YR
-                into #temp_date
-                from dbo.rdb_date_temp;
+        -- 1900-01-06 was a Saturday
+        SET @DaysUntilFirstSaturdayInYear =
+            (7 - ((DATEDIFF(DAY, CONVERT(date, '1900-01-06'), @YearStart) % 7 + 7) % 7)) % 7;
 
-            INSERT INTO dbo.RDB_DATE
-            (DATE_KEY,DATE_MM_DD_YYYY, DAY_OF_WEEK, DAY_NBR_IN_CLNDR_MON, DAY_NBR_IN_CLNDR_YR, WK_NBR_IN_CLNDR_MON, WK_NBR_IN_CLNDR_YR, CLNDR_MON_NAME, CLNDR_MON_IN_YR, CLNDR_QRTR, CLNDR_YR)
-            select DATE_KEY, DATE_MM_DD_YYYY, DAY_OF_WEEK, DAY_NBR_IN_CLNDR_MON, DAY_NBR_IN_CLNDR_YR, WK_NBR_IN_CLNDR_MON, WK_NBR_IN_CLNDR_YR, CLNDR_MON_NAME, CLNDR_MON_IN_YR, CLNDR_QRTR, CLNDR_YR
-            from #temp_date;
+        SET @FirstSaturdayInYear =
+            DATEADD(DAY, @DaysUntilFirstSaturdayInYear, @YearStart);
 
-        end
+        IF @CurrentDate < @FirstSaturdayInYear
+            SET @SaturdaysInYearToDate = 0;
+        ELSE
+            SET @SaturdaysInYearToDate =
+                (DATEDIFF(DAY, @FirstSaturdayInYear, @CurrentDate) / 7) + 1;
+
+        SET @YearWeek = @SaturdaysInYearToDate + 1;
+
+
+        SET @DaysUntilFirstSaturdayInMonth =
+            (7 - ((DATEDIFF(DAY, CONVERT(date, '1900-01-06'), @MonthStart) % 7 + 7) % 7)) % 7;
+
+        SET @FirstSaturdayInMonth =
+            DATEADD(DAY, @DaysUntilFirstSaturdayInMonth, @MonthStart);
+
+        IF @CurrentDate < @FirstSaturdayInMonth
+            SET @SaturdaysInMonthToDate = 0;
+        ELSE
+            SET @SaturdaysInMonthToDate =
+                (DATEDIFF(DAY, @FirstSaturdayInMonth, @CurrentDate) / 7) + 1;
+
+        SET @MonthWeek = @SaturdaysInMonthToDate + 1;
+
+        -- DATE_KEY 1 is the NULL row, so 1990-01-01 starts at DATE_KEY 2
+        SET @DateKey = DATEDIFF(DAY, CONVERT(date, '1990-01-01'), @CurrentDate) + 2;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM [dbo].[RDB_DATE]
+            WHERE [DATE_KEY] = @DateKey
+        )
+        BEGIN
+            INSERT INTO [dbo].[RDB_DATE] (
+                [DATE_MM_DD_YYYY],
+                [DAY_OF_WEEK],
+                [DAY_NBR_IN_CLNDR_MON],
+                [DAY_NBR_IN_CLNDR_YR],
+                [WK_NBR_IN_CLNDR_MON],
+                [WK_NBR_IN_CLNDR_YR],
+                [CLNDR_MON_NAME],
+                [CLNDR_MON_IN_YR],
+                [CLNDR_QRTR],
+                [CLNDR_YR],
+                [DATE_KEY]
+            )
+            VALUES (
+                CONVERT(datetime, @CurrentDate),
+                DATENAME(WEEKDAY, @CurrentDate),
+                DAY(@CurrentDate),
+                @DayOfYear,
+                @MonthWeek,
+                @YearWeek,
+                DATENAME(MONTH, @CurrentDate),
+                MONTH(@CurrentDate),
+                DATEPART(QUARTER, @CurrentDate),
+                YEAR(@CurrentDate),
+                @DateKey
+            );
+        END;
+
+        SET @CurrentDate = DATEADD(DAY, 1, @CurrentDate);
+    END;
 
 end
