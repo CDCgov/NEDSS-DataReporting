@@ -24,31 +24,6 @@
 docker compose up -d
 ```
 
-### Populate RDB_DATE
-Currently, the stored procedure that populates `RDB_DATE` on RDB_MODERN does not work and is not expected for STLT use. However, for local development we need this table to have the same records as legacy RDB. This is an important step because there are datamarts and other tables that are dependent on the `RDB_DATE` table.
-
-1. In the SAS container execute `MasterEtl` if you haven't already done so at least once.
-2. On your local RDB_MODERN database execute the following sql
-```sql
-INSERT INTO RDB_MODERN.dbo.RDB_DATE (DATE_MM_DD_YYYY, DAY_OF_WEEK, DAY_NBR_IN_CLNDR_MON, DAY_NBR_IN_CLNDR_YR,
-                                    WK_NBR_IN_CLNDR_MON, WK_NBR_IN_CLNDR_YR, CLNDR_MON_NAME, CLNDR_MON_IN_YR,
-                                    CLNDR_QRTR, CLNDR_YR, DATE_KEY)
-SELECT src.DATE_MM_DD_YYYY, src.DAY_OF_WEEK, src.DAY_NBR_IN_CLNDR_MON, src.DAY_NBR_IN_CLNDR_YR,
-       src.WK_NBR_IN_CLNDR_MON, src.WK_NBR_IN_CLNDR_YR, src.CLNDR_MON_NAME, src.CLNDR_MON_IN_YR,
-       src.CLNDR_QRTR, src.CLNDR_YR, src.DATE_KEY
-FROM RDB.dbo.RDB_DATE src
-WHERE NOT EXISTS (
-  SELECT 1
-  FROM RDB_MODERN.dbo.RDB_DATE tgt
-  WHERE tgt.DATE_KEY = src.DATE_KEY
-);
-  ```
-3. Verify `RDB_MODERN.dbo.RDB_DATE` contains the same number of records as `RDB.dbo.RDB_DATE`.
-```sql
-SELECT COUNT(*) FROM RDB.dbo.RDB_DATE;
-SELECT COUNT(*) FROM RDB_MODERN.dbo.RDB_DATE;
-```
-
 ### Verifying functionality
 
 1. Log into [NBS 6](http://localhost:7003/nbs/login) using the user: `superuser`. No password is required
