@@ -46,6 +46,8 @@ PRINT '[zz_ldf_flagged_answers] start';
 -- INVESTIGATION_KEY/TB_PAM_UID/add_time). The SP ALTER TABLEs the
 -- target table to add missing cols at runtime, so any unique names work.
 -- ---------------------------------------------------------------------
+-- Note: refresh_datetime + max_datetime are GENERATED ALWAYS (system
+-- versioning period cols); they cannot appear in an explicit INSERT.
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid = 22019001)
 BEGIN
     INSERT INTO dbo.nrt_page_case_answer
@@ -53,7 +55,7 @@ BEGIN
          nbs_question_uid, rdb_table_nm, rdb_column_nm, answer_txt,
          investigation_form_cd, question_identifier, data_location, question_label,
          data_type, code_set_group_id, last_chg_time, record_status_cd,
-         refresh_datetime, max_datetime, part_type_cd, batch_id,
+         part_type_cd, batch_id,
          datamart_column_nm, ldf_status_cd, nca_add_time, nuim_record_status_cd)
     VALUES
     -- TB row 1: LDF custom column "TB_LDF_RISK_OCC" — text answer
@@ -61,7 +63,7 @@ BEGIN
      22019001, 'TB_PAM_LDF', 'TB_LDF_RISK_OCC', 'Healthcare Worker',
      'INV_FORM_RVCT', 'TB_LDF_RISK_OCC', 'NBS_LDF.TB_RISK_OCC', 'Occupational risk (LDF)',
      'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', 'LDF', 1,
+     'LDF', 1,
      'TB_LDF_RISK_OCC', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
 
     -- TB row 2: LDF custom column "TB_LDF_TRAVEL_CTRY" — text answer
@@ -69,7 +71,7 @@ BEGIN
      22019002, 'TB_PAM_LDF', 'TB_LDF_TRAVEL_CTRY', 'Mexico',
      'INV_FORM_RVCT', 'TB_LDF_TRAVEL_CTRY', 'NBS_LDF.TB_TRAVEL_CTRY', 'Travel country (LDF)',
      'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', 'LDF', 1,
+     'LDF', 1,
      'TB_LDF_TRAVEL_CTRY', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
 
     -- TB row 3: LDF custom column "TB_LDF_CONTACT_TYPE"
@@ -77,7 +79,7 @@ BEGIN
      22019003, 'TB_PAM_LDF', 'TB_LDF_CONTACT_TYPE', 'Household',
      'INV_FORM_RVCT', 'TB_LDF_CONTACT_TYPE', 'NBS_LDF.TB_CONTACT_TYPE', 'Contact type (LDF)',
      'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', 'LDF', 1,
+     'LDF', 1,
      'TB_LDF_CONTACT_TYPE', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active');
     PRINT '[zz_ldf_flagged_answers] inserted 3 TB LDF-flagged answers';
 END
@@ -94,28 +96,28 @@ BEGIN
          nbs_question_uid, rdb_table_nm, rdb_column_nm, answer_txt,
          investigation_form_cd, question_identifier, data_location, question_label,
          data_type, code_set_group_id, last_chg_time, record_status_cd,
-         refresh_datetime, max_datetime, part_type_cd, batch_id,
+         part_type_cd, batch_id,
          datamart_column_nm, ldf_status_cd, nca_add_time, nuim_record_status_cd)
     VALUES
     (22002000, 22019011, 22019011, 22019011,
      22019011, 'VAR_PAM_LDF', 'VAR_LDF_OUTBREAK_ID', 'OB-2026-001',
      'INV_FORM_VAR', 'VAR_LDF_OUTBREAK_ID', 'NBS_LDF.VAR_OB_ID', 'Outbreak ID (LDF)',
      'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', 'LDF', 1,
+     'LDF', 1,
      'VAR_LDF_OUTBREAK_ID', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
 
     (22002000, 22019012, 22019012, 22019012,
      22019012, 'VAR_PAM_LDF', 'VAR_LDF_SCHOOL_NM', 'Lincoln Elementary',
      'INV_FORM_VAR', 'VAR_LDF_SCHOOL_NM', 'NBS_LDF.VAR_SCHOOL', 'School name (LDF)',
      'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', 'LDF', 1,
+     'LDF', 1,
      'VAR_LDF_SCHOOL_NM', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
 
     (22002000, 22019013, 22019013, 22019013,
      22019013, 'VAR_PAM_LDF', 'VAR_LDF_GRADE', '3rd grade',
      'INV_FORM_VAR', 'VAR_LDF_GRADE', 'NBS_LDF.VAR_GRADE', 'Grade level (LDF)',
      'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', 'LDF', 1,
+     'LDF', 1,
      'VAR_LDF_GRADE', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active');
     PRINT '[zz_ldf_flagged_answers] inserted 3 VAR LDF-flagged answers';
 END
