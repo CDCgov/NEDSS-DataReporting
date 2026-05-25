@@ -251,7 +251,7 @@ BEGIN
         N'Y',                       -- PATIENT_SYMPTOMATIC_IND
         N'Y',                       -- PATIENT_JUNDICED_IND
         N'N',                       -- PATIENT_PREGNANT_IND
-        NULL,                       -- PATIENT_PREGNANCY_DUE_DT
+        '2026-12-01',               -- PATIENT_PREGNANCY_DUE_DT
         N'United States',           -- PLACE_OF_BIRTH
         N'CHART-22008500',          -- INV_PATIENT_CHART_NBR
         -- Hep A epi
@@ -273,14 +273,14 @@ BEGIN
         N'Y',                       -- HEP_A_VACC_RECEIVED_IND
         N'2',                       -- HEP_A_VACC_RECEIVED_DOSE
         2024,                       -- HEP_A_VACC_LAST_RECEIVED_YR
-        N'N',                       -- IMMUNE_GLOBULIN_RECEIVED_IND
-        NULL,                       -- GLOBULIN_LAST_RECEIVED_YR
+        N'Y',                       -- IMMUNE_GLOBULIN_RECEIVED_IND
+        '2024-06-01',               -- GLOBULIN_LAST_RECEIVED_YR (datetime in HEPATITIS_CASE)
         N'Household contact',       -- HEPA_OTHER_CONTACT_TYPE
         -- Hep B risk / vaccination / contacts
         N'N',                       -- HEP_B_CONTACTED_IND
         N'N/A',                     -- HEP_B_OTHER_CONTACT_TYPE
         N'N',                       -- HEPB_STD_TREATED_IND
-        NULL,                       -- HEPB_STD_LAST_TREATMENT_YR
+        2022,                       -- HEPB_STD_LAST_TREATMENT_YR
         N'N',                       -- STREET_DRUG_INJECTED_IN6WKMON
         N'N',                       -- STREET_DRUG_USED_IN6WKMON
         N'0',                       -- HEPB_FEMALE_SEX_PARTNER_NBR
@@ -288,7 +288,7 @@ BEGIN
         N'N',                       -- HEMODIALYSIS_IN_LAST_6WKMON
         N'N',                       -- BLOOD_CONTAMINATION_IN6WKMON
         N'N',                       -- HEPB_BLOOD_RECEIVED_IN6WKMON
-        NULL,                       -- HEPB_BLOOD_RECEIVED_DT
+        '2025-09-01',               -- HEPB_BLOOD_RECEIVED_DT
         N'N',                       -- OUTPATIENT_IV_INFUSION_IN6WKMO
         N'N',                       -- BLOOD_EXPOSURE_IN_LAST6WKMON
         N'None',                    -- BLOOD_EXPOSURE_IN6WKMON_OTHER
@@ -306,9 +306,9 @@ BEGIN
         N'N',                       -- LONGTERMCARE_RESIDENT_IN6WKMON
         N'N',                       -- B_INCARCERATED24PLUSHRSIN6WKMO
         N'N',                       -- B_INCARCERATED_6PLUS_MON_IND
-        NULL,                       -- B_LAST6PLUSMON_INCARCERATE_YR
-        NULL,                       -- BLAST6PLUSMO_INCARCERATEPERIOD
-        NULL,                       -- B_LAST_INCARCERATE_PERIOD_UNIT
+        2018,                       -- B_LAST6PLUSMON_INCARCERATE_YR
+        6,                          -- BLAST6PLUSMO_INCARCERATEPERIOD
+        N'Months',                  -- B_LAST_INCARCERATE_PERIOD_UNIT
         N'Y',                       -- HEP_B_VACC_RECEIVED_IND
         N'3',                       -- HEP_B_VACC_SHOT_RECEIVED_NBR
         2023,                       -- HEP_B_VACC_LAST_RECEIVED_YR
@@ -332,7 +332,7 @@ BEGIN
         N'N',                       -- HEMODIALYSIS_IN_LAST_2WK6MO
         N'N',                       -- BLOOD_CONTAMINATION_IN_2WK6MO
         N'N',                       -- HEPC_BLOOD_RECEIVED_IN_2WK6MO
-        NULL,                       -- HEPC_BLOOD_RECEIVED_DT
+        '2024-10-01',               -- HEPC_BLOOD_RECEIVED_DT
         N'N',                       -- BLOOD_EXPOSURE_IN_LAST2WK6MO
         N'None',                    -- BLOOD_EXPOSURE_IN2WK6MO_OTHER
         N'N',                       -- DEN_WORK_OR_SURGERY_IN2WK6MO
@@ -343,12 +343,12 @@ BEGIN
         N'0',                       -- HEPC_FEMALE_SEX_PARTNER_NBR
         N'0',                       -- HEPC_MALE_SEX_PARTNER_NBR
         N'N',                       -- C_INCARCERATED_6PLUS_MON_IND
-        NULL,                       -- C_LAST6PLUSMON_INCARCERATE_YR
-        NULL,                       -- CLAST6PLUSMO_INCARCERATEPERIOD
-        NULL,                       -- C_LAST_INCARCERATE_PERIOD_UNIT
+        2019,                       -- C_LAST6PLUSMON_INCARCERATE_YR
+        7,                          -- CLAST6PLUSMO_INCARCERATEPERIOD
+        N'Months',                  -- C_LAST_INCARCERATE_PERIOD_UNIT
         N'None',                    -- HEPC_INCARCERATE_FACILITY_TYPE
         N'N',                       -- HEPC_STD_TREATED_IND
-        NULL,                       -- HEPC_STD_LAST_TREATMENT_YR
+        2021,                       -- HEPC_STD_LAST_TREATMENT_YR
         N'N',                       -- HEPC_MED_DEN_EMPLOYEE_IND
         N'N',                       -- OUTPATIENT_IV_INFUSIONIN2WK6MO
         -- Lifetime / cross-cutting risk fields
