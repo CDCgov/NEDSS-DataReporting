@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-24 23:42:22 PDT
+Generated: 2026-05-24 23:48:53 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 73
-- Partially covered (some columns populated): 30
-- Empty (table exists, 0 rows): 14
+- Fully covered (all columns populated for at least one row): 78
+- Partially covered (some columns populated): 33
+- Empty (table exists, 0 rows): 6
 - Missing (table not present in live RDB_MODERN): 1
 
-- Total columns across in-scope tables: 4627
-- Columns with ≥1 populated row: 3708
-- Overall column coverage: 80.1%
+- Total columns across in-scope tables: 4636
+- Columns with ≥1 populated row: 3870
+- Overall column coverage: 83.5%
 
 ## Per-table coverage
 
@@ -34,10 +34,10 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.case_lab_datamart | 20 | 35 | 9/35 |
 | dbo.condition | 269 | 15 | 14/15 |
 | dbo.confirmation_method | 3 | 3 | **3/3** |
-| dbo.confirmation_method_group | 26 | 3 | **3/3** |
+| dbo.confirmation_method_group | 27 | 3 | **3/3** |
 | dbo.covid_case_datamart | 2 | 383 | 234/383 |
 | dbo.covid_contact_datamart | 2 | 94 | 93/94 |
-| dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
+| dbo.covid_lab_celr_datamart | 1 | 101 | 84/101 |
 | dbo.covid_lab_datamart | 1 | 129 | 124/129 |
 | dbo.covid_vaccination_datamart | 2 | 60 | **60/60** |
 | dbo.d_addl_risk | 3 | 6 | **6/6** |
@@ -93,10 +93,10 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.hep100 | 1 | 187 | 184/187 |
 | dbo.hepatitis_datamart | 2 | 209 | 140/209 |
 | dbo.inv_hiv | 3 | 19 | **19/19** |
-| dbo.inv_summ_datamart | 0 | 58 | 0/58 |
-| dbo.investigation | 27 | 71 | **71/71** |
+| dbo.inv_summ_datamart | 20 | 58 | 48/58 |
+| dbo.investigation | 28 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 29673 | 15 | 14/15 |
+| dbo.job_flow_log | 30019 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
@@ -108,13 +108,13 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.lab100 | 3 | 69 | 61/69 |
 | dbo.lab101 | 0 | 46 | 0/46 |
 | dbo.ldf_bmird | 0 | 7 | 0/7 |
-| dbo.ldf_data | 15 | 17 | 9/17 |
+| dbo.ldf_data | 24 | 17 | 9/17 |
 | dbo.ldf_datamart_column_ref | 2662 | 8 | **8/8** |
-| dbo.ldf_dimensional_data | 10 | 16 | 14/16 |
+| dbo.ldf_dimensional_data | 23 | 16 | 14/16 |
 | dbo.ldf_foodborne | 1 | 12 | 11/12 |
-| dbo.ldf_group | 4 | 2 | **2/2** |
+| dbo.ldf_group | 8 | 2 | **2/2** |
 | dbo.ldf_hepatitis | 0 | 7 | 0/7 |
-| dbo.ldf_mumps | 0 | 7 | 0/7 |
+| dbo.ldf_mumps | 1 | 10 | 9/10 |
 | dbo.ldf_tetanus | 1 | 11 | 10/11 |
 | dbo.ldf_vaccine_prevent_diseases | 1 | 8 | **8/8** |
 | dbo.lookup_table_n_rept | 0 | 2 | 0/2 |
@@ -124,11 +124,11 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.morbidity_report_event | 3 | 17 | **17/17** |
 | dbo.notification | 2 | 6 | **6/6** |
 | dbo.notification_event | 2 | 8 | **8/8** |
-| dbo.organization_ldf_group | 0 | 3 | 0/3 |
-| dbo.patient_ldf_group | 0 | 3 | 0/3 |
+| dbo.organization_ldf_group | 1 | 3 | **3/3** |
+| dbo.patient_ldf_group | 1 | 3 | **3/3** |
 | dbo.pertussis_suspected_source_grp | 1 | 1 | **1/1** |
 | dbo.pertussis_treatment_group | 1 | 1 | **1/1** |
-| dbo.provider_ldf_group | 0 | 3 | 0/3 |
+| dbo.provider_ldf_group | 1 | 3 | **3/3** |
 | dbo.rdb_date | 4019 | 11 | **11/11** |
 | dbo.result_comment_group | 7 | 3 | **3/3** |
 | dbo.sr100 | 0 | 20 | 0/20 |
@@ -137,18 +137,18 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.summary_report_case | 1 | 12 | 11/12 |
 | dbo.tb_datamart | 2 | 318 | 275/318 |
 | dbo.tb_hiv_datamart | 2 | 322 | 279/322 |
-| dbo.tb_pam_ldf | 0 | 3 | 0/3 |
+| dbo.tb_pam_ldf | 1 | 6 | **6/6** |
 | dbo.test_result_grouping | 7 | 3 | **3/3** |
 | dbo.treatment | 7 | 16 | **16/16** |
 | dbo.treatment_event | 6 | 11 | **11/11** |
 | dbo.user_profile | 11 | 8 | **8/8** |
 | dbo.var_datamart | 2 | 231 | 203/231 |
-| dbo.var_pam_ldf | 0 | 3 | 0/3 |
+| dbo.var_pam_ldf | 3 | 6 | **6/6** |
 
 
 ## Categorization
 
-### Fully covered (73)
+### Fully covered (78)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -216,17 +216,22 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.morbidity_report_event
 - dbo.notification
 - dbo.notification_event
+- dbo.organization_ldf_group
+- dbo.patient_ldf_group
 - dbo.pertussis_suspected_source_grp
 - dbo.pertussis_treatment_group
+- dbo.provider_ldf_group
 - dbo.rdb_date
 - dbo.result_comment_group
 - dbo.summary_case_group
+- dbo.tb_pam_ldf
 - dbo.test_result_grouping
 - dbo.treatment
 - dbo.treatment_event
 - dbo.user_profile
+- dbo.var_pam_ldf
 
-### Partially covered (30)
+### Partially covered (33)
 
 Tables with rows but at least one column never populated. These are the
 candidates for Tier 3 gap-driven coverage work.
@@ -237,6 +242,7 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.condition
 - dbo.covid_case_datamart
 - dbo.covid_contact_datamart
+- dbo.covid_lab_celr_datamart
 - dbo.covid_lab_datamart
 - dbo.d_case_management
 - dbo.d_contact_record
@@ -249,12 +255,14 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.f_page_case
 - dbo.hep100
 - dbo.hepatitis_datamart
+- dbo.inv_summ_datamart
 - dbo.job_flow_log
 - dbo.lab_test_result
 - dbo.lab100
 - dbo.ldf_data
 - dbo.ldf_dimensional_data
 - dbo.ldf_foodborne
+- dbo.ldf_mumps
 - dbo.ldf_tetanus
 - dbo.std_hiv_datamart
 - dbo.summary_report_case
@@ -262,26 +270,18 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.tb_hiv_datamart
 - dbo.var_datamart
 
-### Empty (14)
+### Empty (6)
 
 Tables that exist in RDB_MODERN but have zero rows after the merged
 chain runs. Most are datamart-side fact tables that depend on Merge
 contract step 9 (Datamart SPs — out of scope for v1).
 
 - dbo.aggregate_report_datamart
-- dbo.covid_lab_celr_datamart
-- dbo.inv_summ_datamart
 - dbo.lab101
 - dbo.ldf_bmird
 - dbo.ldf_hepatitis
-- dbo.ldf_mumps
 - dbo.lookup_table_n_rept
-- dbo.organization_ldf_group
-- dbo.patient_ldf_group
-- dbo.provider_ldf_group
 - dbo.sr100
-- dbo.tb_pam_ldf
-- dbo.var_pam_ldf
 
 ### Missing from live schema (1)
 
