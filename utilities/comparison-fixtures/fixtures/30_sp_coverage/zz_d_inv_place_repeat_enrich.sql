@@ -74,11 +74,13 @@
 USE [RDB_MODERN];
 GO
 
--- Idempotent guard so re-running the orchestrator doesn't duplicate rows.
-IF NOT EXISTS (
-    SELECT 1 FROM dbo.nrt_page_case_answer
-    WHERE nbs_case_answer_uid BETWEEN 22010000 AND 22010999
-)
+-- Idempotent: delete any prior rows from this UID block, then re-insert.
+-- (DELETE-then-INSERT is preferred over IF-NOT-EXISTS because we want
+-- subsequent edits to this fixture to take effect on re-run, not be
+-- ignored because some rows from the previous shape are still present.)
+DELETE FROM dbo.nrt_page_case_answer
+ WHERE nbs_case_answer_uid BETWEEN 22010000 AND 22010999;
+
 BEGIN
     INSERT INTO [dbo].[nrt_page_case_answer]
         ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
