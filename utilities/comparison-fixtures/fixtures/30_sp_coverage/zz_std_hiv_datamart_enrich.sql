@@ -322,12 +322,27 @@ END;
 --     HIV_CA_900_OTH_RSN_NOT_LO, HIV_CA_900_REASON_NOT_LOC
 --     (Authored by std_hiv_investigation_full_chain.sql but those 2
 --     columns were deliberately left NULL — see coverage doc.)
+--
+--     CRITICAL: The std_hiv_datamart_postprocessing SP reads these
+--     columns from INV_HIV (alias HIV), NOT from D_INV_HIV.
+--     The SP's INV_HIV UPDATE/INSERT block (lines 62-159) does NOT
+--     propagate HIV_CA_900_OTH_RSN_NOT_LO/REASON_NOT_LOC from D_INV_HIV
+--     to INV_HIV — only 16 of 18 HIV columns are copied. So we must
+--     also UPDATE INV_HIV directly to land these 2 columns on
+--     STD_HIV_DATAMART (UPDATE block lines 303-304, INSERT lines 961-962).
 -- =====================================================================
 UPDATE [dbo].[D_INV_HIV]
 SET [HIV_CA_900_OTH_RSN_NOT_LO] = N'Patient declined follow-up',
     [HIV_CA_900_REASON_NOT_LOC] = N'Refused'
 WHERE D_INV_HIV_KEY = 22004100
   AND ([HIV_CA_900_OTH_RSN_NOT_LO] IS NULL OR [HIV_CA_900_REASON_NOT_LOC] IS NULL);
+
+UPDATE ih
+SET ih.[HIV_CA_900_OTH_RSN_NOT_LO] = N'Patient declined follow-up',
+    ih.[HIV_CA_900_REASON_NOT_LOC] = N'Refused'
+FROM dbo.INV_HIV ih
+WHERE ih.D_INV_HIV_KEY = 22004100
+  AND (ih.[HIV_CA_900_OTH_RSN_NOT_LO] IS NULL OR ih.[HIV_CA_900_REASON_NOT_LOC] IS NULL);
 
 -- =====================================================================
 -- 11. UPDATE existing D_INV_EPIDEMIOLOGY row (22004130) with SOURCE_SPREAD
