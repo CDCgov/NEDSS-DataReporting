@@ -479,6 +479,14 @@ SET answer_txt = N'385660001'
 WHERE act_uid = 22001000
   AND answer_txt = N'1'
   AND code_set_group_id = 4170;
+
+-- Anchor fixture wrote TUB114 OUT_OF_CNTRY answer "PHC2" which is not
+-- a valid PHVS_TB_BIRTH_CNTRY code. Replace with "USA".
+UPDATE [dbo].[nrt_page_case_answer]
+SET answer_txt = N'USA'
+WHERE act_uid = 22001000
+  AND question_identifier = N'TUB114'
+  AND answer_txt = N'PHC2';
 GO
 
 -- =====================================================================
