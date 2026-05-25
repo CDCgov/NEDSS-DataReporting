@@ -4,21 +4,34 @@ Synthetic NBS_ODSE INSERTs designed to maximize RDB_MODERN coverage when RTR
 runs initial hydration. Output is consumed by a planned RDB-vs-RDB_MODERN
 comparison test against MasterETL.
 
-## Status — 2026-05-21
+## Status — 2026-05-25
 
 End-to-end `scripts/merge_and_verify.sh` against 118 in-scope RDB_MODERN
 target tables:
 
-- **Fully covered: 66** (every column populated for at least one row)
-- **Partially covered: 35**
-- **Empty: 16**
+- **Fully covered: 80** (every column populated for at least one row)
+- **Partially covered: 31**
+- **Empty: 6** (was 16 — 10 tables unblocked this session)
 - **Missing from live schema: 1** (`job_batch_rebuild_log` — not in baseline 6.0.18.1)
-- **Overall column coverage: 41.4%** (1913 / 4615 columns)
-- **11 RTR bugs surfaced and documented** (5 merged upstream, 3 squashed
-  on this branch, 3 documented with repros for follow-up)
+- **Overall column coverage: 84.4%** (3915 / 4636 columns, last live-verified)
+- **14 RTR bugs surfaced and documented** (5 merged upstream, 5 squashed
+  on this branch, 4 documented with repros for follow-up — bugs #9 and
+  #10 LANDED this branch in commits `a88e40e5` and `99ef3517`)
 
 Wall-clock for the full pipeline: ~5 min from `docker compose down -v`.
 Zero external dependencies beyond the baseline image.
+
+**Pending verification**: agents Q (hepatitis_datamart round 2,
++61 cols), U (d_contact_record enrich, +15), V (d_investigation_repeat
+round 3, +94) authored fixtures pre-block but their full application
+to live DB was interrupted by the disk-full event of 2026-05-25 00:30
+PDT. All fixtures are committed and idempotently re-applicable.
+Estimated post-apply headline: **~87-89%**.
+
+See `BLOCKED.md` for the open issue (MSSQL container tempdb/log
+growing unbounded — needs disk expansion or DB restart with
+`DBCC SHRINKFILE`). Once unblocked, `scripts/coverage_summary.sh`
+will produce the real number.
 
 ## Documents
 
@@ -80,26 +93,37 @@ head -12 coverage/coverage_merged.md   # Headline numbers
 
 ## What's next
 
-Roughly ranked by expected coverage delta:
+1. **Unblock the disk-full state** (see `BLOCKED.md`). MSSQL's
+   tempdb/log volume needs expansion or `DBCC SHRINKFILE`.
+2. **Re-apply pending fixtures** (Q + U + V) once DB is responsive,
+   then `scripts/coverage_summary.sh` for the real headline.
+3. **Investigate bugs #12, #13, #14** — all surfaced this session
+   (BMIRD ROW_NUMBER PARTITION, sld_investigation_repeat TEXT pivot
+   NULL prop, d_contact_record STRING_AGG VARCHAR(8000) truncation).
+   Bug #13 fix alone would add ~50 TEXT cols on D_INVESTIGATION_REPEAT
+   for free.
+4. **MasterETL-side coverage analysis** — mirror Phase 0 against
+   MasterETL SPs in `NEDSSDB/src/migrations/*/RDB/`. Output:
+   `catalog/masteretl_target_columns.md`. Without this, the eventual
+   diff tool can't distinguish "fixture didn't seed it" from
+   "MasterETL also doesn't write it" from "RTR gap".
+5. **The comparison tool itself** — the actual diff harness, modeled
+   on NEDSS-DataCompare. Without this, today's coverage state has
+   nowhere to go.
+6. **Remaining condition families** for completeness — Pertussis,
+   Measles, Rubella full chains. Lower yield now that the baseline
+   is at ~85%.
 
-1. **Investigate bug #10** (`sp_sld_investigation_repeat_postprocessing` surrogate-key
-   allocation) — would unlock `D_INVESTIGATION_REPEAT` (252 cols, currently 1/252).
-   See `bugs/10_sld_investigation_repeat_key_alloc/findings.md`.
-2. **Investigate bug #9** (`sp_dyn_dm_repeatvarch_postprocessing` UNPIVOT type
-   conflict) — would unlock the `DM_INV_*` family.
-3. **MasterETL-side coverage analysis** — mirror Phase 0 against MasterETL SPs
-   in `NEDSSDB/src/migrations/*/RDB/`. Output: `catalog/masteretl_target_columns.md`.
-   Without this, the eventual diff tool can't distinguish "fixture didn't seed it"
-   from "MasterETL also doesn't write it" from "RTR gap".
-4. **The comparison tool itself** — the actual diff harness, modeled on
-   NEDSS-DataCompare. Without this, today's coverage state has nowhere to go.
-5. **Remaining condition families** — Pertussis, Measles, Rubella, Mumps,
-   Tetanus LDF chain. Lower yield per agent-day than the items above; smaller
-   per-condition unblocks.
-6. **Spike `etl_dq_log` + `lookup_table_n_rept` full population** — corrected
-   from "MasterETL-only" per `catalog/odse_unknown_tables.md`; small targeted
-   fixtures could populate them.
+**Earlier "40-45% ceiling" estimate (commits before 2026-05-22) was
+blown away.** Two parallel-agent loops took live coverage from 41.4%
+→ 84.4% verified, with another ~3-4pp pending on Q+U+V re-apply.
+The methodology that drove this:
+- Identify biggest table-level gaps via `coverage_summary.sh`
+- Spawn 4-5 parallel agents in worktrees, each on a distinct
+  datamart with a reserved UID block
+- Reconcile via cherry-pick + DB lock + foreground apply
+- Document SP-level bugs as `bugs/NN_*/findings.md` rather than
+  fixing in-loop
 
-Realistic ceiling on fixture-authorable coverage is probably **40-45%** before
-further work blocks on upstream RTR fixes (bugs #9, #10) or shifts focus to the
-diff tool itself.
+See `LOOP.md` for full loop protocol, `LOOP_round1.md` for the
+single-agent overnight precedent.

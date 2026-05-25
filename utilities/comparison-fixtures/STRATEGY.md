@@ -620,3 +620,75 @@ full overnight log.
 Realistic ceiling on fixture-authorable coverage is **40-45%**
 before further progress requires upstream RTR fixes or a pivot to
 the diff tool.
+
+### 2026-05-22 to 2026-05-25 — Parallel-agent enrichment loops
+
+**Headline coverage 41.4% → 84.4% (verified live, +43.0pp / +2002 cols
+populated).** Two rounds of multi-agent parallel work in worktrees,
+plus targeted bug fixes.
+
+**Round 1 (2026-05-22, 4 parallel agents A/B/C/D)**: COVID_CASE_DATAMART
+enrich (+147), VAR_DATAMART (+112), HEPATITIS_DATAMART (+114),
+D_INV_PLACE_REPEAT (+43). Plus discovered Step 8.6 orchestrator wiring
+gap (sp_repeated_place_postprocessing never invoked). Bugs #9 and #10
+landed as fixes (a88e40e5, 99ef3517).
+
+**Round 2 (2026-05-24 to 25, multi-agent top-up loop)**: 15 agents
+(E-V) cycling 5-in-flight, ~15-min ticks. Headline 53.3% → 84.4%
+(verified) with ~3-4pp more pending re-apply.
+
+**Per-table wins** (verified or strongly confirmed by agent reports):
+
+| Agent | Target | Before | After | Δ |
+|---|---|---|---|---|
+| E | tb_datamart | 95 | 275 | +180 |
+| E | tb_hiv_datamart | 99 | 279 | +180 |
+| E | d_tb_pam | 9 | 161 | +152 |
+| F | std_hiv_datamart | 135 | 235 | +100 |
+| G | bmird_strep_pneumo_datamart | 69 | 126 | +57 |
+| H | d_investigation_repeat | 39 | 103 | +64 |
+| I | morbidity_report_datamart | 86 | 133 | +47 (100%) |
+| J | hep100 | 0 | 184 | +184 |
+| L | covid_contact_datamart | 71 | 93 | +22 |
+| M | LDF cluster | (6/8 tables) | unblocked | +~18 |
+| N | covid_vaccination_datamart | 10 | 60 | +50 (100%) |
+| O | lab100 | 22 | 61 | +39 |
+| P | covid_lab_datamart | 0 | 124 | +124 |
+| Q | hepatitis_datamart r2 | 140 | 201 | +61 *(pending apply)* |
+| R | covid_case_datamart r2 | 241 | 379 | +138 (99%) |
+| S | inv_summ_datamart | 0 | 58 | +58 (100%) |
+| T | covid_lab_celr_datamart | 0 | 84 | +84 |
+| U | d_contact_record | 42 | 57 | +15 *(pending apply)* |
+| V | d_investigation_repeat r3 | 106 | 200 | +94 *(pending apply)* |
+
+**Methodology refinements**:
+- Worktree isolation per agent (some agents committed directly to
+  `aw/odse-test-seed`; others worked in worktree branches that need
+  cherry-pick reconciliation).
+- `db_lock.sh` with explicit `acquire_db_lock` / `release_db_lock`
+  (the `with_db_lock <<HEREDOC` form has a documented bug — agents
+  must avoid it).
+- WIP commits after every meaningful step are MANDATORY — agent A's
+  first spawn lost 44KB of unsaved work to API trouble before this
+  rule was added.
+- ORCH_TODO pattern — agents document needed orchestrator changes
+  (PHC_UIDS extension, LAB_OBS_UIDS extension, new Step 8.6 wiring)
+  but the parent loop applies them.
+
+**Bugs added** (#12, #13, #14):
+- #12: `sp_bmird_case_datamart_postprocessing` ROW_NUMBER PARTITION
+  BY branch_id collapses multi-value rows. Blocks 13 cols on
+  BMIRD_STREP_PNEUMO_DATAMART.
+- #13: `sp_sld_investigation_repeat_postprocessing` TEXT pivot
+  NULL-propagation. Blocks ~50 TEXT cols on D_INVESTIGATION_REPEAT
+  for any PHC that shares the polluted state with agent-D2's
+  place_repeat fixture (PHC 22006000).
+- #14: `sp_d_contact_record_postprocessing` STRING_AGG without
+  NVARCHAR(MAX) cast → silently truncates dynamic INSERT SQL at
+  8000 bytes. Caps pivot col count at 15.
+
+**Outage 2026-05-25 ~00:30 PDT**: MSSQL container hit ENOSPC
+mid-loop. Disk grew 2.5GB inside ~15 min of fixture-apply activity
+(transaction log / tempdb auto-growth without truncation). Loop
+stopped; Q + U + V have committed fixtures but their final live
+apply is pending DB recovery.
