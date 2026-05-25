@@ -1,8 +1,10 @@
 -- =====================================================================
 -- Tier 3 — BMIRD_STREP_PNEUMO_DATAMART column-coverage enrichment.
 -- =====================================================================
--- Lift BMIRD_STREP_PNEUMO_DATAMART from 69/140 populated columns to as
--- close to 140 as observation-graph authoring will allow.
+-- Lift BMIRD_STREP_PNEUMO_DATAMART from 69/140 populated columns to
+-- 126/140 (+57 columns, verified 2026-05-23) by adding additional
+-- BMIRD_Case answers and a full Antimicrobial batch-entry observation
+-- graph for 9 drugs.
 --
 -- Reuses PHC anchor 22005000 (authored by
 --  fixtures/30_sp_coverage/bmird_investigation_full_chain.sql). DOES NOT
@@ -15,21 +17,48 @@
 --   3. New nrt_observation_coded / _txt / _numeric / _date rows providing
 --      the answer values.
 --
--- TARGET COLUMN GAINS (counts approximate — actual depends on whether
--- SP-internal pivot CASE-WHEN matches our codes):
---   1. BMIRD_Case single-value coded/text columns (8 cols)
+-- COLUMN GAINS (verified populated 2026-05-23 against live DB):
+--   1. BMIRD_Case single-value (10 cols, all reached):
 --      OTHER_MALIGNANCY, ORGAN_TRANSPLANT, OTHER_PRIOR_ILLNESS_1..3,
 --      BACTERIAL_SPECIES_ISOLATED_OTH, CASE_REPORT_STATUS,
 --      INTERNAL_BODY_SITE, ADD_CULTURE_1_OTHER_SITE,
 --      ADD_CULTURE_2_OTHER_SITE.
---   2. BMIRD_Multi_Value_field extra rows pivoted into wide columns
---      (~14 cols):
---      UNDERLYING_CONDITION_2..8 (7), NON_STERILE_SITE_2..3 (2),
---      ADD_CULTURE_1_SITE_2..3 (2), ADD_CULTURE_2_SITE_1..3 (3),
---      TYPE_INFECTION_OTHERS_CONCAT (1), STERILE_SITE_OTHERS_CONCAT (1).
---   3. ANTIMICROBIAL batch-entry rows -> Antimicrobial pivot (3 drugs ->
---      15 cols ANTIMICROBIAL_AGENT_TESTED_1..3 + SUSCEPTABILITY_METHOD_1..3
---      + S_I_R_U_RESULT_1..3 + MIC_SIGN_1..3 + MIC_VALUE_1..3).
+--   2. BMIRD_Multi_Value_field overflow / OTHERS-CONCAT + first-row
+--      (3 cols, all reached): TYPE_INFECTION_OTHERS_CONCAT,
+--      STERILE_SITE_OTHERS_CONCAT, ADD_CULTURE_2_SITE_1.
+--      Plus AGE_REPORTED, AGE_REPORTED_UNIT, PATIENT_STREET_ADDRESS_2
+--      surface from foundation patient when SP 140 re-runs against the
+--      fully-populated answer set (3 cols).
+--   3. ANTIMICROBIAL batch-entry rows -> Antimicrobial pivot
+--      (9 drugs authored -> 40 + 1 cols reached):
+--      ANTIMICROBIAL_AGENT_TESTED_1..8 + SUSCEPTABILITY_METHOD_1..8 +
+--      S_I_R_U_RESULT_1..8 + MIC_SIGN_1..8 + MIC_VALUE_1..8 (40 cols)
+--      + ANTIMIC_GT_8_AGENT_AND_RESULT (1 col, 9th drug overflow).
+--
+-- COLUMNS NOT REACHED (14 / 140 remain):
+--   - HOSPITAL_NAME (1): requires Tier 2 organization participation edge
+--     binding inv.ADT_HSPTL_KEY -> D_ORGANIZATION; out of scope here.
+--   - UNDERLYING_CONDITION_2..8 (7), NON_STERILE_SITE_2..3 (2),
+--     ADD_CULTURE_1_SITE_2..3 (2), ADD_CULTURE_2_SITE_2..3 (2):
+--     Blocked by an SP-level limitation in
+--     sp_bmird_case_datamart_postprocessing (040 SP line 555-558):
+--       ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id
+--                          ORDER BY branch_id) AS row_num
+--     The PARTITION clause yields row_num=1 for every row, so
+--     DISTINCT (phc_uid, row_num) collapses to a single row_num per
+--     phc_uid -> exactly ONE BMIRD_MULTI_VALUE_FIELD row per
+--     Investigation regardless of how many multi-value answers we
+--     author. SP 140's COUNTER-based pivot for UNDERLYING_CONDITION_2..8,
+--     NON_STERILE_SITE_2..3, ADD_CULTURE_*_SITE_2..3 has no source rows
+--     beyond _1.
+--
+--     ORCH_TODO (Phase 2 SP fix candidate): change line 558 to
+--       ROW_NUMBER() OVER (PARTITION BY public_health_case_uid
+--                          ORDER BY branch_id) AS row_num
+--     so each distinct branch_id gets its own row_num. Same fix likely
+--     needed for the PIVOT subquery at SP 040 line 1213-1218 (the inner
+--     ROW_NUMBER inside the multi-value INSERT) so the unpivoted rows
+--     don't all land at row_num=1.
 --
 -- ANTIMICROBIAL OBSERVATION GRAPH (per v_rdb_obs_mapping + SP 040 line 200-216
 -- and SP 040 line 1099-1127):
