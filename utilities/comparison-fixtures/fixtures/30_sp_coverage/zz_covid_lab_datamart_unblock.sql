@@ -533,7 +533,7 @@ BEGIN
          ovn_numeric_unit_cd, ovn_separator_cd, ovn_seq, batch_id)
     VALUES
         (@covid_lab_result_uid, N'40.00', N'0.00', N'<',
-         25.0, NULL, N'Ct', NULL, 1, NULL);
+         25.0, 35.0, N'Ct', N'-', 1, NULL);
 END;
 
 -- nrt_observation_material: specimen material on Order
@@ -602,12 +602,16 @@ INSERT INTO dbo.nrt_observation
     ( [observation_uid], [class_cd], [mood_cd], [act_uid]
     , [cd], [obs_domain_cd_st_1], [patient_id], [record_status_cd]
     , [add_user_id], [add_time], [last_chg_time], [report_observation_uid]
+    , [version_ctrl_nbr], [electronic_ind], [shared_ind], [prog_area_cd]
+    , [jurisdiction_cd], [status_cd], [record_status_time], [status_time]
     )
 SELECT
     src.uid, N'OBS', N'EVN', src.uid,
     src.cd, N'Result', @foundation_patient_uid, N'PROCESSED',
     @superuser_id, '2026-04-10T08:30:00', '2026-04-10T08:30:00',
-    CAST(@covid_lab_order_uid AS nvarchar(50))
+    CAST(@covid_lab_order_uid AS nvarchar(50)),
+    1, N'Y', N'T', N'COV',
+    N'130001', N'A', '2026-04-10T08:30:00', '2026-04-10T08:30:00'
 FROM (VALUES
     (CAST(22022100 AS bigint), N'95417-2'),  -- FIRST_TEST
     (CAST(22022101 AS bigint), N'95418-0'),  -- EMPLOYED_IN_HEALTHCARE
@@ -641,7 +645,7 @@ FROM (VALUES
     (CAST(22022103 AS bigint), N'Y', N'Yes'),
     (CAST(22022104 AS bigint), N'N', N'No'),
     (CAST(22022105 AS bigint), N'N', N'No'),
-    (CAST(22022106 AS bigint), N'N', N'Not pregnant')
+    (CAST(22022106 AS bigint), N'60001007', N'Not Pregnant')
 ) AS src(uid, code, display)
 WHERE NOT EXISTS (
     SELECT 1 FROM dbo.nrt_observation_coded c WHERE c.observation_uid = src.uid
