@@ -801,7 +801,38 @@ VALUES
 END;
 GO
 
--- No tail-EXEC: orchestrator Step 8.5 runs
--- sp_sld_investigation_repeat_postprocessing across $PHC_UIDS which
--- includes 22006000, picking up these answers in one pass with
--- d_investigation_repeat.sql / zz_d_investigation_repeat_extra_cols.sql.
+-- =====================================================================
+-- TAIL-EXEC: re-run sp_sld_investigation_repeat_postprocessing for PHC
+-- 22006000 to pick up:
+--   - the original 24 answers from d_investigation_repeat.sql
+--   - the 30 baseline-col-targeting answers from
+--     zz_d_investigation_repeat_extra_cols.sql
+--   - this fixture's ~130 additional answers
+--
+-- WHY THIS IS NEEDED (ORCH_TODO finding):
+--   orchestrator merge_and_verify.sh Step 8.5 runs the SP for
+--   @phc_id_list = N'$PHC_UIDS' where $PHC_UIDS DOES NOT include
+--   22006000 (verified live 2026-05-24).  Without a tail-EXEC here,
+--   only the answers loaded *before* d_investigation_repeat.sql's
+--   own tail-EXEC make it into the dim; both zz_*_extra_cols.sql
+--   and this fixture's answers would be invisible to the SP at
+--   merge_and_verify.sh runtime.
+--
+--   FIX OPTIONS (pick one):
+--     a) Add '22006000' to PHC_UIDS in scripts/merge_and_verify.sh
+--        (so Step 8.5 picks up the Pertussis full-chain PHC across
+--        all D_INVESTIGATION_REPEAT-related fixtures).
+--     b) Keep this tail-EXEC (acceptable pattern -- matches the tail
+--        in d_investigation_repeat.sql).
+--   This fixture takes option (b) for safety.  Recommended long-term
+--   is (a) -- delete this tail-EXEC and the one in
+--   d_investigation_repeat.sql once PHC_UIDS includes 22006000.
+--
+-- @batch_id: a per-run bigint for job_flow_log correlation; we use
+-- 22014000 to disambiguate from the d_investigation_repeat.sql tail
+-- (which uses 22006000).
+-- =====================================================================
+EXEC dbo.sp_sld_investigation_repeat_postprocessing
+    @batch_id    = 22014000,
+    @phc_id_list = N'22006000',
+    @debug       = 0;
