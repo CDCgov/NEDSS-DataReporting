@@ -1,154 +1,205 @@
-# Overnight autonomous loop — APP-471 coverage push
+# Multi-agent top-up loop — APP-471 coverage push round 2
 
-**Started**: 2026-05-21 02:30:09 PDT
-**Hard stop**: 2026-05-21 07:30:09 PDT (T+5h00m)
-**Budget**: 5 hours wall-clock.
-**Goal**: Push RDB_MODERN column coverage as high as possible without:
-- Fixing RTR bugs (document only)
-- Squashing / rebasing / amending commits (linear history only)
-- Modifying anything outside `fixtures/30_sp_coverage/` and the planning docs
-  (no liquibase routines, no `fixtures/00_foundation/`, no Tier 1, no Tier 2,
-  no `scripts/` unless a fixture genuinely needs it)
+**Started**: 2026-05-24 22:00 PDT
+**Hard stop**: 2026-05-25 05:00 PDT (T+7h from start)
+**Cadence**: every ~15 minutes (900s) via ScheduleWakeup
+**Goal**: keep ~5 agents in flight at all times, each authoring a
+Tier-3 enrichment fixture targeting a specific datamart/dim coverage
+gap, until the hard stop or the user aborts.
 
-## Baseline (start of overnight run)
-
-- Fully covered: 65
-- Partial: 32
-- Empty: 20
-- Column coverage: **33.9%** (1566 / 4615 cols populated)
-- Last commit: `9ae6c9b7` Docs sweep
-- See `coverage/coverage_merged.md` for the canonical state.
+The prior overnight loop (T+5h, single-agent serial) is archived in
+`LOOP_round1.md` for reference.
 
 ## Per-iteration protocol
 
 Each /loop firing:
 
-1. **Read this file first** to recover context.
-2. **Check wall-clock**: if T+5h elapsed (compute from "Started" above),
-   write `SESSION_SUMMARY.md` and STOP (omit ScheduleWakeup at end of turn).
-3. **Check for user abort**: if `STOP_LOOP` file exists at project root,
-   write `SESSION_SUMMARY.md` and STOP.
-4. **Check coverage_merged.md** for current numbers. Don't trust this file;
-   trust only what `merge_and_verify.sh` produces.
-5. **Pick ONE bounded item** from the queue below (top of queue first).
-6. **Author / fix the item**. Apply fixture, run merge_and_verify, check
-   coverage. If coverage IMPROVED, commit with a focused message.
-   If coverage REGRESSED or apply ERRORED, revert your fixture (move to
-   `_quarantine/`) and move to next queue item.
-7. **Update this file**: add a line under "Iterations log" with the result.
-8. **ScheduleWakeup** for ~1200-1800s. Pass `/loop <<autonomous-loop-dynamic>>`
-   as prompt (the sentinel re-fires this same plan).
-9. **DO NOT message the user, ask questions, or use AskUserQuestion**.
-   If you'd genuinely block — write the question to `BLOCKED.md`, stop the
-   loop, and let me see it in the morning.
+1. **Read this file first** (you are here).
+2. **Check wall-clock**: if T+7h elapsed (compute from "Started" above),
+   write end-of-loop note in "Iterations log" and STOP — omit
+   `ScheduleWakeup` at end of turn.
+3. **Check for user abort**: if `STOP_LOOP` file exists at
+   `utilities/comparison-fixtures/STOP_LOOP`, write end-of-loop note
+   and STOP.
+4. **Survey running agents**: call TaskList. Background agents may
+   have completed since the last tick; check task notifications in
+   conversation context.
+5. **Reconcile completed agents**:
+   - For each completed agent that hasn't been processed yet:
+     - If they committed directly to `aw/odse-test-seed`, verify
+       commits and fixture file presence.
+     - If they worked in a worktree, cherry-pick their commits.
+       Find new commits with `git log --oneline <prev-head>..<worktree-branch> --no-merges`.
+     - Apply fixture to live DB: `sqlcmd -I -i <fixture>`. EXEC the
+       SP(s) the agent identified. Query coverage.
+     - Run `bash scripts/coverage_summary.sh` to refresh
+       `coverage/coverage_merged.md`.
+     - If headline improved, commit (include before/after numbers).
+     - TaskUpdate that agent's "Wait for Agent X" task to `completed`.
+   - If an ORCH_TODO from the agent (PHC_UIDS extension, Step 8.6-style
+     wiring), apply it directly.
+6. **Top up to 5 in flight**: count in_progress background agents.
+   If fewer than 5, spawn new ones. Each new agent gets a fresh UID
+   block from "Available UID blocks" below. Update both
+   `catalog/uid_ranges.md` (reserve the block) AND "Available UID
+   blocks" (mark allocated) in the same turn.
+7. **Update this file**: append one line under "Iterations log".
+8. **ScheduleWakeup** for 900s. Pass the literal sentinel
+   `<<autonomous-loop-dynamic>>` as `prompt` so the runtime re-enters
+   this skill on the next tick.
 
-## Queue (work top-down)
+## Hard rules (DO NOT VIOLATE)
 
-Each item is bounded. If an item takes more than ~45min in one iteration,
-split it across iterations using "Resume notes" below.
+- DO NOT message the user unless something is BLOCKED (write to
+  `BLOCKED.md` and stop the loop instead).
+- DO NOT use `AskUserQuestion`.
+- DO NOT modify the orchestrator's UID lists or fixture files outside
+  `fixtures/30_sp_coverage/` UNLESS a completed agent's ORCH_TODO
+  explicitly calls for it.
+- DO NOT touch liquibase routines (RTR bug territory). If an agent
+  surfaces a bug, document at `bugs/NN_<name>/findings.md` — do not
+  fix.
+- DO NOT spawn agents that target the same datamart/dim as a running
+  one. Pick from the queue below or the next-biggest-gap survey.
+- USE the DB lock when applying fixtures or refreshing coverage.
+  Hold it minimally — agents use it too.
+- DO NOT use `with_db_lock <<HEREDOC` — known bug. Use explicit
+  `acquire_db_lock` / `release_db_lock` pair (see `scripts/db_lock.sh`).
+- DO NOT mass-revert. If a fixture errors, move it to
+  `fixtures/30_sp_coverage/_quarantine/` and continue.
 
-### High-value (largest expected unlock)
+## Available UID blocks for loop top-up
 
-1. **Pertussis full-chain fixture** (UID 22007000-22007999). Mirror TB
-   template. Should unlock `pertussis_case_datamart` (currently 0 / N cols).
-   Stub already at 22000040.
-2. **Measles full-chain fixture** (22008000-22008999). Mirrors TB template.
-   Stub at 22000050. Unlocks `measles_case_datamart`.
-3. **Rubella full-chain fixture** (22009000-22009999). Stub at 22000060.
-   Unlocks `rubella_case_datamart`.
-4. **Mumps full-chain fixture** (22010000-22010999). Stub at 22000030.
-   Unlocks `mumps_case_datamart` (and `ldf_mumps` if LDF chain works for it).
-5. **Tetanus LDF answer-chain expansion** — extend the existing
-   `ldf_answers_tetanus.sql` to produce a full LDF_TETANUS row. Bug-7
-   fix is squashed on this branch so `LDF_DIMENSIONAL_DATA` should now
-   work; verify and extend.
-6. **Per-condition LDF chains** — author equivalents of
-   `ldf_answers_tetanus.sql` for the other 5 conditions that have
-   per-condition LDF datamart SPs (BMIRD, foodborne, hepatitis, mumps,
-   vaccine_prevent_diseases).
+| Block | Status |
+| --- | --- |
+| 22016000 - 22016999 | available |
+| 22017000 - 22017999 | available |
+| 22018000 - 22018999 | available |
+| 22019000 - 22019999 | available |
+| 22020000+ | UNRESERVED — if you need more, add a new row to `catalog/uid_ranges.md` in the same turn you allocate. |
 
-### Medium-value (close out partials)
+## Round-2 targets (currently in flight; do NOT re-spawn)
 
-7. **`covid_case_datamart`** is at 53/383 (gap 330). The COVID agent's
-   fixture authored 22 answers; adding more SNOMED-coded answers + lab
-   observation/vaccination edges would push coverage up. Read the SP
-   body to identify the column groups (~10 are clustered) you can hit
-   with one batch of answer rows.
-8. **`std_hiv_datamart`** at 78/248 (gap 170). Same pattern — read SP,
-   identify next answer batch.
-9. **`bmird_strep_pneumo_datamart`** at 69/140 (gap 71). Same pattern.
+- **Agent E**: TB cluster (TB_DATAMART 95/318, TB_HIV_DATAMART 99/322,
+  D_TB_PAM 9/166) — UID 22011xxx
+- **Agent F**: STD_HIV_DATAMART (135/248) — UID 22012xxx
+- **Agent G**: BMIRD_STREP_PNEUMO_DATAMART (69/140) — UID 22013xxx
+- **Agent H**: D_INVESTIGATION_REPEAT block/seq expansion (39/256) — UID 22014xxx
+- **Agent I**: MORBIDITY_REPORT_DATAMART (78/133) — UID 22015xxx
 
-### Lower-priority
+## Round-3 target queue (claim top-down)
 
-10. **Spike `etl_dq_log`** — Tier-1/2-reachable per the classification
-    catalog. Three page-builder/SLD SPs write DQ-failure rows. Cheap
-    win (1 row × 15 cols).
-11. **Spike `summary_report_case`** — 0/12 cols. Investigate via SP grep.
+Each target lists the gap + standard enrichment playbook. Prefer
+targets that don't overlap with currently-running agents.
+
+1. **HEP100 unblock** (gap 187, 0/187) — needs direct seeding of
+   `dbo.HEPATITIS_CASE` (no SP writes to it in routines layer; it's
+   normally populated by Kafka/Debezium). Author a fixture that
+   directly INSERTs a HEPATITIS_CASE row keyed on existing Hep PHC
+   22008500. **Largest single-table win in the queue.**
+2. **CASE_LAB_DATAMART** (gap 26, 9/35) — needs case-lab investigation
+   linkage. Investigate `sp_case_lab_datamart_postprocessing` filters.
+3. **COVID_CONTACT_DATAMART** (gap 23, 71/94) — existing 1 row. Easy
+   expansion via more nrt_page_case_answer rows for missing CTT_*
+   questions.
+4. **D_CONTACT_RECORD** (gap 24, 42/66) — sibling of #3. Probably
+   covered by COVID contact enrich; check overlap before spawning.
+5. **COVID_VAX via PATIENT enrich** (gap 50, 10/60) — many missing cols
+   are patient demographics tied to foundation Patient 20000000
+   (NULL middle_name, SSN, etc.). Cascading effect on many datamarts.
+   **CAUTION**: discuss with user before pursuing if it requires
+   touching the foundation Patient row directly. Write to BLOCKED.md
+   and stop the loop if unsure.
+6. **AGGREGATE_REPORT_DATAMART** (0/42) — **BLOCKED on bug #11** (RTR
+   schema mismatch). Skip.
+7. **LAB100 / LAB101 / COVID_LAB_DATAMART / COVID_LAB_CELR_DATAMART** —
+   needs lab-investigation linkage. The LAB_OBS_UIDS patch in
+   merge_and_verify.sh:451 should help on next full verify. Plan a
+   `bash scripts/merge_and_verify.sh` near loop end to confirm.
+8. **LDF cluster** (tb_pam_ldf, var_pam_ldf, ldf_bmird, ldf_mumps,
+   ldf_hepatitis, *_ldf_group siblings) — needs nrt_page_case_answer
+   rows with `ldf_status_cd IN ('LDF_CREATE','LDF_PROCESSED','LDF_UPDATE')`.
+   **Wait until TB/VAR/BMIRD agents finish** to avoid PHC overlap.
+9. **D_TB_PAM expansion** — if agent E doesn't fill all 166 cols.
+   Hold until E finishes.
+
+### When the queue is empty
+
+Survey `coverage/coverage_merged.md` for the next biggest gap:
+```
+awk -F'|' '/^\| dbo\./ {gsub(/^ +| +$/, "", $2); gsub(/^ +| +$/, "", $5); if ($5 !~ /[*]/ && $5 ~ /\//) {split($5,a,"/"); if (a[1]+0 < a[2]+0 && a[1]+0 > 0) print (a[2]-a[1])"\t"$5"\t"$2}}' coverage/coverage_merged.md | sort -k1 -nr | head -10
+```
+
+Pick the next biggest gap and queue it.
+
+## Spawning a new agent — prompt template
+
+Use Agent tool with `isolation: "worktree"`, `run_in_background: true`,
+and `subagent_type: "general-purpose"`. Prompt skeleton:
+
+```
+You are Agent <LETTER>, one of N parallel agents in a multi-agent loop.
+
+## Goal
+<one-sentence goal>. Lift dbo.<table> from X/Y to as high as possible
+(target: +Z cols).
+
+## CRITICAL — commit early, commit often
+You're in a git worktree. After every meaningful step, `git add -A &&
+git commit -m 'WIP: <what>'`.
+
+## Your assigned UID block
+22<NNNN>000 - 22<NNNN>999. Stay strictly within this range.
+
+## Context
+- Live DB at localhost:3433. SQLCMDPASSWORD=PizzaIsGood33!. Use `-I`
+  flag on every sqlcmd.
+- <related existing fixtures + relevant SP name(s) + reuse-PHC pointer>
+
+## Required discovery steps (do FIRST)
+1. Read related existing fixtures (cite paths).
+2. Find the SP and verify its parameter signature via `grep -A 3
+   "CREATE PROCEDURE.*sp_<name>" liquibase-service/...` — common
+   pitfall: `@phc_id` vs `@phc_id_list` vs `@phc_uids`.
+3. List unpopulated cols of target table using the per-column COUNT
+   pattern.
+4. Verify codes against `nrt_srte_Code_Value_General` for any coded
+   answers — agent-C2's lesson: invalid codes silently collapse to NULL.
+
+## Fixture authoring rules
+- UIDs from 22<NNNN>000-22<NNNN>999.
+- Reuse existing PHC where possible.
+- Idempotent IF NOT EXISTS guards.
+- Tail-EXEC the SP chain at bottom, wrap in TRY/CATCH.
+
+## DB-touching work — USE THE LOCK
+\`\`\`
+source /Users/adam/code/nbs/NEDSS-DataReporting/utilities/comparison-fixtures/scripts/db_lock.sh
+acquire_db_lock "agent-<LETTER>"
+trap 'release_db_lock "agent-<LETTER>"' EXIT
+# DB work
+release_db_lock "agent-<LETTER>"
+trap - EXIT
+\`\`\`
+DO NOT use `with_db_lock <<HEREDOC` (known bug).
+
+## What to deliver
+1. Fixture file committed with WIP checkpoints.
+2. Short final report (<300 words): before/after, SP+param signature,
+   gotchas, ORCH_TODO if any.
+
+DO NOT touch files outside your fixture. uid_ranges.md slot already
+reserved by parent loop.
+```
 
 ## Iterations log
 
-(append one line per iteration; format: `T+Xh Ym | iter N | <action>
-| coverage X.X% (Δ +Y) | commit <hash>` or `| reverted | reason`)
+(append one line per tick; format: `T+Xh Ym | iter N | <action> |
+headline X.X% (Δ +Y) | in flight: M`)
 
-T+0h 25m | iter 1 | Pertussis full-chain (UID 22007000) | 33.9% (Δ 0pp) | committed 6fd2929b | PERTUSSIS_CASE not in scope; fixture populated 2 out-of-scope tables (Pertussis_Suspected_Source_Fld, Pertussis_Treatment_Field). Net headline 0pp. See coverage_pertussis_full_chain.md for full notes.
-T+1h 03m | iter 2 | LDF answers Mumps + Foodborne | 34.2% (Δ +0.3pp, +13 cols) | committed 11a8c143 | ldf_foodborne 0/12 -> 11/12 (major: schema widened 7->12 by dynamic ALTER, 11 cols populated); ldf_dimensional_data 12/16 -> 14/16; ldf_data 5 -> 15 rows; ldf_group 2 -> 4 rows. ldf_mumps stayed 0/7 (cause TBD, deferred per LOOP rules). ldf_bmird + ldf_hepatitis cannot populate without baseline metadata seeding (0 LDF entries for their condition_cds).
-T+1h 25m | iter 3 (attempt 1) | case_management staging fixture + sp_nrt_case_management_postprocessing wired into Step 9 | apply failed (Msg 10709 VALUES col count mismatch 61/63 vs 62) | Rewrote with minimal INSERT + UPDATE pattern.
-T+1h 46m | iter 3 (attempt 2) | case_management staging — minimal INSERT then rich UPDATE | apply failed (Msg 2628 truncation 'EHARS-FAKE-001' > varchar(10)) | Validated all column widths via INFORMATION_SCHEMA; rewrote with all values fitting their column max length.
-T+1h 50m | iter 3 (attempt 3) | case_management staging — width-validated values | 36.7% (Δ +2.5pp, +119 cols) | success commit b6a85259 | d_case_management 0/67 -> 3 rows, 62/67 cols. Headline jumped from 34.2% to 36.7%. Note: extra +57 cols beyond d_case_management came from other downstream effects of the SP run (other dims that join CM data — std_hiv_datamart 78->135 cols!).
-T+2h 22m | iter 4 | summary_report_case fixture (UID 22009000, case_type_cd='S', SUM103/104/105 observations) | 37.0% (Δ +0.3pp, +12 cols) | success commit 40a017b1 | summary_report_case 0/12 -> 1 row, 11/12 cols (only SUM_RPT_CASE_STATUS unpopulated — depends on nrt_investigation_notification, out of scope).
-T+2h 25m | iter 5 analysis | inv_summ_datamart investigated, found chicken-and-egg WHERE clause on line 102 (requires INV_SUMM_DATAMART rows to already exist). Skipped per LOOP rules. TB_PAM_LDF and VAR_PAM_LDF have 0 LDF_DATAMART_TABLE_REF entries — unreachable. Pivoted to aggregate_report_datamart.
-T+2h 35m | iter 5 (attempt 1) | aggregate_report fixture | 37.0% (Δ 0pp) | 0 rows | SP ran clean but response=NULL for every count. Root cause: SP line 43 uses `IIF(agg.batch_id = inv.batch_id, ...)`. NULL = NULL is NULL (false). My rows had batch_id NULL on both sides, so the IIF always returned NULL.
-T+3h 05m | iter 5 (attempt 2) | aggregate_report fixture — added batch_id=1 to both nrt_investigation and 25 nrt_investigation_aggregate rows | 37.0% (Δ 0pp) | BLOCKED by NEW RTR bug #11 | Fixture is correct (verified that #AGG_DATA_NUM has 25 rows with proper responses + #AGG_EVENT has 1 row). SP's UPDATE step fails with `Invalid column name 'NOTIFICATION_UPD_DT_KEY'` — the SP's dynamic UPDATE references that column but AGGREGATE_REPORT_DATAMART only has NOTIFICATION_STATUS and NOTIFICATION_LOCAL_ID. SP/schema mismatch documented as bug #11. Fixture kept (groundwork for when bug #11 lands). Committed 589136e1.
-T+3h 13m | iter 6 (attempt 1) | enrich_phase2_investigations.sql | apply failed | "Missing NRT Record: sp_nrt_investigation_postprocessing" — file sorted alphabetically before pertussis/std_hiv/tb/var fixtures, so its UPDATE ran before those PHCs existed.
-T+3h 16m | iter 6 (attempt 2) | zz_enrich_phase2_investigations.sql (renamed to sort last) | 39.9% (Δ +2.9pp, +132 cols) | SUCCESS commit a802b9e5 | covid_case_datamart 53→87 (+34), tb_datamart 61→95 (+34), var_datamart 61→91 (+30). bmird, std_hiv, hep_datamart unchanged (different read paths).
-T+3h 19m | iter 7 | Extended zz_enrich UPDATE to cover 12 more stub PHCs | 39.9% (Δ 0pp) | defensive commit d396a706 | Stubs got enriched in nrt_investigation, but condition datamart row counts unchanged. No regression. Kept the change as defensive groundwork.
-T+3h 31m | docs+SESSION_SUMMARY refresh | committed 533e39f4 | README/DEMO/STRATEGY/bugs/README all bumped to 39.9% / 11 bugs.
-T+3h 47m | iter 8 (att 1) | zz_covid_contact.sql v1 | apply failed | CTT_EXPOSURE_TYPE not a nrt_contact column. SP reads from nrt_contact_answer.
-T+3h 53m | iter 8 (att 2) | added nrt_contact_answer rows (answer_val/answer_code, not answer_txt) | 41.4% (Δ +1.5pp, +71 cols) | SUCCESS commit 0e6f7b62 | covid_contact_datamart 0/94 -> 1 row, 71/94 cols.
-T+4h 24m | iter 9 | zz_enrich_vaccination.sql — UPDATE 20 cols on the v2 nrt_vaccination row (20110010) | 41.4% (Δ 0pp) | defensive | covid_vaccination_datamart unchanged at 10/60. The SP reads from D_VACCINATION (already 21/21) and D_PATIENT/D_PROVIDER/D_ORG dim tables, not directly from nrt_vaccination. The remaining 50 NULL cols probably depend on join paths we haven't unblocked. No regression; fixture kept as groundwork.
+T+0h 00m | iter 0 | Loop launched. 5 agents (E/F/G/H/I) in flight at start. Coverage 53.3% (2468/4627). Targets: TB cluster / STD / BMIRD / D_INV_REPEAT / MORB.
 
-## Key insight from iter 1
+## End-of-loop note
 
-**Condition-specific case tables for Measles/Rubella/Mumps are
-ALMOST CERTAINLY also out of scope.** Verified manually that
-`pertussis_case_datamart` does not exist in the live schema; only
-`PERTUSSIS_CASE` does (also not in `rtr_target_columns.md`).
-
-**For iter 2+, check before authoring**:
-```sh
-grep -iE "^- (dbo\.)?<table>" catalog/rtr_target_columns.md
-# Or:
-grep -E "(dbo\.)?<table>" coverage/coverage_merged.md
-```
-
-**Re-prioritize queue**:
-- **Skip** Measles/Rubella/Mumps full-chain fixtures (likely 0pp each).
-  Verify with the grep above first; if any IS in scope, do that one.
-- **Promote** the LDF chains — they're definitively in scope:
-  `ldf_bmird`, `ldf_foodborne`, `ldf_hepatitis`, `ldf_mumps`,
-  `ldf_tetanus`, `ldf_vaccine_prevent_diseases` (42 cols across 6
-  tables, all 0/7 right now). The bug-7 fix is squashed on this
-  branch so `LDF_DIMENSIONAL_DATA` should populate; the Tetanus LDF
-  fixture is the working template.
-- **Also promote** answer expansion for partially-covered datamarts
-  (covid_case_datamart 53/383, std_hiv_datamart 78/248,
-  bmird_strep_pneumo_datamart 69/140). Each could add ~30-50 cols by
-  reading the SP's WHERE filter list and adding the missing
-  observation rows.
-
-## Resume notes
-
-(if an iteration partial-completed, scratch your handoff state here)
-
-## Stop conditions checklist
-
-End-of-session SUMMARY.md should report:
-
-- Total iterations
-- Final coverage % and delta from 33.9%
-- New fully-covered tables (count)
-- Bugs surfaced (filed only, no fixes — list with severity)
-- Fixtures landed (file list)
-- Fixtures abandoned / reverted (file list with reason)
-- Wall-clock used
-- Items left in queue
+(write here when loop ends: at hard stop, STOP_LOOP, or 3 consecutive
+empty queue iterations.)
