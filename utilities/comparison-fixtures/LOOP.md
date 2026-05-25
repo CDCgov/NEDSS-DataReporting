@@ -74,8 +74,8 @@ Each /loop firing:
 | --- | --- |
 | 22016000 - 22016999 | **allocated** Agent J (hep100 unblock — direct HEPATITIS_CASE seed) |
 | 22017000 - 22017999 | **allocated** Agent K (case_lab_datamart enrich) |
-| 22018000 - 22018999 | available |
-| 22019000 - 22019999 | available |
+| 22018000 - 22018999 | **allocated** Agent L (covid_contact_datamart enrich) |
+| 22019000 - 22019999 | **allocated** Agent M (LDF cluster — *_pam_ldf + ldf_bmird/mumps/hepatitis + *_ldf_group) |
 | 22020000+ | UNRESERVED — if you need more, add a new row to `catalog/uid_ranges.md` in the same turn you allocate. |
 
 ## Round-2 targets (currently in flight; do NOT re-spawn)
@@ -199,6 +199,7 @@ headline X.X% (Δ +Y) | in flight: M`)
 
 T+0h 00m | iter 0 | Loop launched. 5 agents (E/F/G/H/I) in flight at start. Coverage 53.3% (2468/4627). Targets: TB cluster / STD / BMIRD / D_INV_REPEAT / MORB.
 T+0h 39m | iter 1 | Agents E (TB cluster) + F (STD_HIV) completed and reconciled. Spawned J (hep100 unblock, 22016xxx) + K (case_lab_datamart, 22017xxx) to top up to 5 in flight (J, K, G, H, I). Coverage 53.3% → 67.1% (+13.8pp / +638 cols).
+T+0h 50m | iter 2 (early — task-notification fired) | Agent G (BMIRD) completed; surfaced bug #12 (BMIRD ROW_NUMBER PARTITION issue) — findings doc written. Agent J (hep100 unblock) also completed mid-tick with +184 cols. Coverage 67.1% → 74.6% (+7.5pp / +345 cols). Spawned L (covid_contact_datamart, 22018xxx) + M (LDF cluster, 22019xxx). In flight: H, I, K, L, M (5).
 
 ## End-of-loop note
 
