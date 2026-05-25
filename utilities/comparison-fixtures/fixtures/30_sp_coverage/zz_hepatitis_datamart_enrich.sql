@@ -639,13 +639,124 @@ END;
 GO
 
 -- =====================================================================
--- Tail-EXECs: flow the Investigation row, run pagebuilder/f_page_case,
--- finally hepatitis datamart. Wrap each in TRY/CATCH so chain failures
--- don't abort downstream fixtures in merge_and_verify.sh.
+-- DIRECT INSERTS: D_INV_<CAT> + L_INV_<CAT> rows.
+--
+-- The sp_s_pagebuilder → sp_d_pagebuilder chain that normally pivots
+-- nrt_page_case_answer rows into the per-category S_INV/D_INV tables
+-- has complex preconditions that the current minimal RDB seed doesn't
+-- meet for our newly-authored Hep A questions (no real nbs_question
+-- metadata seeded for our placeholder UIDs; the code_set_group_id
+-- joins to v_nrt_ref_formcode_translation drop rows).
+--
+-- To unblock HEPATITIS_DATAMART column coverage without rebuilding
+-- the entire pagebuilder dependency graph, we INSERT directly into
+-- D_INV_<CAT> + L_INV_<CAT> with hand-curated row values. The
+-- HEPATITIS_DATAMART SP joins F_PAGE_CASE → these dim tables, so
+-- sp_f_page_case_postprocessing (re-run below) sees the L_INV_*
+-- linkage and assembles F_PAGE_CASE with non-sentinel D_INV_*_KEY,
+-- letting sp_hepatitis_datamart_postprocessing emit the LAB_*, EPI_*,
+-- MDH_*, MTH_*, TRV_*, ADM_*, CLN_*, IPO_*, VAC_* columns.
+--
+-- The pagebuilder chain is still attempted via sp_dyn_dm_main_postprocessing
+-- below; it's a no-op for us but exercises the call path. If it ever
+-- starts producing rows for us, those would conflict; we IF-NOT-EXISTS
+-- guard each direct INSERT to be idempotent.
 -- =====================================================================
 
 USE [RDB_MODERN];
 GO
+
+-- D_INV_LAB_FINDING (36 HEPATITIS_DATAMART columns)
+IF NOT EXISTS (SELECT 1 FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY = 22008600)
+BEGIN
+    INSERT INTO D_INV_LAB_FINDING (D_INV_LAB_FINDING_KEY, LAB_TotalAntiHCV, LAB_HBsAg, LAB_AntiHBsPositive, LAB_HBeAg, LAB_HCVRNA, LAB_HBV_NAT, LAB_HepDTest, LAB_IgM_AntiHAV, LAB_IgMAntiHBc, LAB_PrevNegHepTest, LAB_SignalToCutoff, LAB_Supplem_antiHCV, LAB_TotalAntiHAV, LAB_TotalAntiHBc, LAB_TotalAntiHDV, LAB_TotalAntiHEV, LAB_AntiHBsTested, LAB_ALT_Result, LAB_AST_Result, LAB_TestResultUpperLimit, LAB_TestResultUpperLimit2, LAB_VerifiedTestDate, LAB_HBeAg_Date, LAB_HBsAg_Date, LAB_HBV_NAT_Date, LAB_HCVRNA_Date, LAB_IgMAntiHAVDate, LAB_IgMAntiHBcDate, LAB_Supplem_antiHCV_Date, LAB_TestDate, LAB_TestDate2, LAB_TotalAntiHAVDate, LAB_TotalAntiHBcDate, LAB_TotalAntiHCV_Date, LAB_TotalAntiHDV_Date, LAB_TotalAntiHEV_Date)
+    VALUES (22008600, N'positive', N'negative', N'positive', N'positive', N'negative', N'negative', N'N', N'positive', N'negative', N'N', N'3.5', N'reactive', N'positive', N'negative', N'negative', N'negative', N'Y', N'120', N'80', N'40', N'40', '2026-03-28', '2026-03-15', '2026-03-16', '2026-03-17', '2026-03-18', '2026-03-19', '2026-03-21', '2026-03-20', '2026-03-22', '2026-03-21', '2026-03-23', '2026-03-24', '2026-03-25', '2026-03-26', '2026-03-27');
+    INSERT INTO L_INV_LAB_FINDING (D_INV_LAB_FINDING_KEY, PAGE_CASE_UID) VALUES (22008600, 22008500);
+END;
+
+-- D_INV_EPIDEMIOLOGY (25 HEPATITIS_DATAMART columns)
+IF NOT EXISTS (SELECT 1 FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY = 22008610)
+BEGIN
+    INSERT INTO D_INV_EPIDEMIOLOGY (D_INV_EPIDEMIOLOGY_KEY, EPI_ChildCareCase, EPI_CNTRY_USUAL_RESID, EPI_ContactBabysitter, EPI_ContactChildcare, EPI_ContactHousehold, EPI_ContactOfCase, EPI_ContactOther, EPI_ContactOthSpecify, EPI_ContactPlaymate, EPI_ContactSexPartner, EPI_DaycareContact, EPI_EpiLinked, EPI_FemaleSexPartners, EPI_FoodHandler, EPI_InDayCare, EPI_IVDrugUse, EPI_MaleSexPartner, EPI_OutbreakFoodHndlr, EPI_OutbreakFoodItem, EPI_outbreakNonFoodHndlr, EPI_OutbreakUnidentified, EPI_OutbreakWaterborne, EPI_RecDrugUse, EPI_OutbreakAssoc)
+    VALUES (22008610, N'N', N'United States', N'N', N'N', N'Y', N'Y', N'N', N'Neighbor', N'N', N'N', N'N', N'Y', N'0', N'N', N'N', N'N', N'1', N'N', N'N', N'N', N'N', N'N', N'N', N'Y');
+    INSERT INTO L_INV_EPIDEMIOLOGY (D_INV_EPIDEMIOLOGY_KEY, PAGE_CASE_UID) VALUES (22008610, 22008500);
+END;
+
+-- D_INV_MEDICAL_HISTORY (9 HEPATITIS_DATAMART columns)
+IF NOT EXISTS (SELECT 1 FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY = 22008630)
+BEGIN
+    INSERT INTO D_INV_MEDICAL_HISTORY (D_INV_MEDICAL_HISTORY_KEY, MDH_DiabetesDxDate, MDH_Diabetes, MDH_Jaundiced, MDH_PrevAwareInfection, MDH_ProviderOfCare, MDH_ReasonForTest, MDH_ReasonForTestingOth, MDH_Symptomatic, MDH_DueDate)
+    VALUES (22008630, '2026-01-01', N'N', N'Y', N'N', N'Primary Care', N'Symptoms', N'N/A', N'Y', '2026-09-15');
+    INSERT INTO L_INV_MEDICAL_HISTORY (D_INV_MEDICAL_HISTORY_KEY, PAGE_CASE_UID) VALUES (22008630, 22008500);
+END;
+
+-- D_INV_MOTHER (7 HEPATITIS_DATAMART columns)
+IF NOT EXISTS (SELECT 1 FROM D_INV_MOTHER WHERE D_INV_MOTHER_KEY = 22008640)
+BEGIN
+    INSERT INTO D_INV_MOTHER (D_INV_MOTHER_KEY, MTH_MotherBornOutsideUS, MTH_MotherEthnicity, MTH_MotherHBsAgPosPrior, MTH_MotherPositiveAfter, MTH_MotherRace, MTH_MothersBirthCountry, MTH_MotherPosTestDate)
+    VALUES (22008640, N'N', N'Non-Hispanic', N'N', N'N', N'White', N'United States', '2026-02-15');
+    INSERT INTO L_INV_MOTHER (D_INV_MOTHER_KEY, PAGE_CASE_UID) VALUES (22008640, 22008500);
+END;
+
+-- D_INV_TRAVEL (5 HEPATITIS_DATAMART columns)
+IF NOT EXISTS (SELECT 1 FROM D_INV_TRAVEL WHERE D_INV_TRAVEL_KEY = 22008650)
+BEGIN
+    INSERT INTO D_INV_TRAVEL (D_INV_TRAVEL_KEY, TRV_HouseholdTravel, TRV_PatientTravel, TRV_PtTravelCountries, TRV_TravelCountryHouse, TRV_VHF_TRAVEL_REASON)
+    VALUES (22008650, N'N', N'N', N'none', N'none', N'Tourism');
+    INSERT INTO L_INV_TRAVEL (D_INV_TRAVEL_KEY, PAGE_CASE_UID) VALUES (22008650, 22008500);
+END;
+
+-- D_INV_ADMINISTRATIVE (3 HEPATITIS_DATAMART columns)
+IF NOT EXISTS (SELECT 1 FROM D_INV_ADMINISTRATIVE WHERE D_INV_ADMINISTRATIVE_KEY = 22008660)
+BEGIN
+    INSERT INTO D_INV_ADMINISTRATIVE (D_INV_ADMINISTRATIVE_KEY, ADM_INNC_NOTIFICATION_DT, ADM_FIRST_RPT_TO_PHD_DT, ADM_BINATIONAL_RPTNG_CRIT)
+    VALUES (22008660, '2026-04-04', '2026-03-24', N'BC-01');
+    INSERT INTO L_INV_ADMINISTRATIVE (D_INV_ADMINISTRATIVE_KEY, PAGE_CASE_UID) VALUES (22008660, 22008500);
+END;
+
+-- D_INV_CLINICAL (2 HEPATITIS_DATAMART columns — HEP D + meds)
+IF NOT EXISTS (SELECT 1 FROM D_INV_CLINICAL WHERE D_INV_CLINICAL_KEY = 22008670)
+BEGIN
+    INSERT INTO D_INV_CLINICAL (D_INV_CLINICAL_KEY, CLN_HepDInfection, CLN_MedsforHep)
+    VALUES (22008670, N'N', N'N');
+    INSERT INTO L_INV_CLINICAL (D_INV_CLINICAL_KEY, PAGE_CASE_UID) VALUES (22008670, 22008500);
+END;
+
+-- D_INV_PATIENT_OBS (1 HEPATITIS_DATAMART column — SEX_PREF)
+IF NOT EXISTS (SELECT 1 FROM D_INV_PATIENT_OBS WHERE D_INV_PATIENT_OBS_KEY = 22008680)
+BEGIN
+    INSERT INTO D_INV_PATIENT_OBS (D_INV_PATIENT_OBS_KEY, IPO_SEXUAL_PREF)
+    VALUES (22008680, N'Hetero');
+    INSERT INTO L_INV_PATIENT_OBS (D_INV_PATIENT_OBS_KEY, PAGE_CASE_UID) VALUES (22008680, 22008500);
+END;
+
+-- D_INV_VACCINATION (3 HEPATITIS_DATAMART vaccination cols: VACC_RECVD_IND,
+-- VACC_DOSE_RECVD_NBR, VACC_LAST_RECVD_YR).
+-- NOTE: HEPATITIS_DATAMART expects VAC_HEP_A_VACC_* style separate cols
+-- in some versions but the live D_INV_VACCINATION schema has
+-- VAC_Vacc_Rcvd / VAC_VaccineDoses / VAC_YearofLastDose which the SP
+-- maps to VACC_RECVD_IND / VACC_DOSE_RECVD_NBR / VACC_LAST_RECVD_YR
+-- via the SELECT at sp_hepatitis line 1007-1009.
+IF NOT EXISTS (SELECT 1 FROM D_INV_VACCINATION WHERE D_INV_VACCINATION_KEY = 22008690)
+BEGIN
+    INSERT INTO D_INV_VACCINATION (D_INV_VACCINATION_KEY, VAC_Vacc_Rcvd, VAC_VaccineDoses, VAC_YearofLastDose)
+    VALUES (22008690, N'N', N'0', N'2025');
+    INSERT INTO L_INV_VACCINATION (D_INV_VACCINATION_KEY, PAGE_CASE_UID) VALUES (22008690, 22008500);
+END;
+
+-- D_INV_RISK_FACTOR (39 HEPATITIS_DATAMART columns) — SKIPPED
+-- The hepatitis_datamart SP at line 855 casts RSK_NumSexPrtners to
+-- LIFE_SEX_PRTNR_NBR (numeric) which fails on non-numeric values like
+-- 'none' or '1'. Need a more careful curation here. Leaving as future
+-- work — current coverage (137/209) already exceeds the 100+ target
+-- so this is non-blocking.
+GO
+
+-- =====================================================================
+-- Tail-EXECs: flow the Investigation row, run pagebuilder/f_page_case,
+-- finally hepatitis datamart. Wrap each in TRY/CATCH so chain failures
+-- don't abort downstream fixtures in merge_and_verify.sh.
+-- =====================================================================
 
 BEGIN TRY
     EXEC dbo.sp_nrt_investigation_postprocessing
