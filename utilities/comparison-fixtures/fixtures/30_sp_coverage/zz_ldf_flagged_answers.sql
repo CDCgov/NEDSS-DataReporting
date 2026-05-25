@@ -125,16 +125,42 @@ END
 -- ---------------------------------------------------------------------
 -- Part 3: Mumps LDF answer rows (dimensional path).
 -- ---------------------------------------------------------------------
--- The mumps_foodborne fixture already inserted 5 nrt_ldf_data rows for
--- PHC 22000030, but 2 of those (ldf_uids 10001291, 10001293) have
--- data_type='SUB' which the dimensional SP rejects. The remaining 3
--- (CV-typed) SHOULD have populated LDF_DIMENSIONAL_DATA when the
--- dimensional SP ran, but the SP isn't called by the orchestrator —
--- so LDF_DIMENSIONAL_DATA is empty for mumps. We add 3 more CV/ST
--- mumps rows here and tail-EXEC the dimensional + datamart SPs.
--- (Using ldf_uids known to be CV-typed: 10001316, 10001321, 10001322.)
+-- sp_ldf_mumps_datamart_postprocessing joins LDF_DIMENSIONAL_DATA →
+-- INVESTIGATION → GENERIC_CASE → D_PATIENT. GENERIC_CASE is populated
+-- by sp_generic_case_datamart_postprocessing which filters
+-- `investigation_form_cd LIKE 'INV_FORM_GEN%'`. The existing Mumps PHC
+-- (22000030, form='PG_Mumps_Investigation') does NOT match, so its LDF
+-- data cannot flow into ldf_mumps.
+--
+-- Workaround: create a new Mumps PHC in our UID range with
+-- investigation_form_cd='INV_FORM_GEN'. Then attach LDF data to it.
+-- (This mirrors the foodborne path in ldf_answers_mumps_foodborne.sql.)
+--
+-- ldf_uids 10001292, 10001294, 10001295 are CV-typed (the dimensional
+-- SP rejects SUB types — see lines 119-120 of the dimensional SP).
 -- ---------------------------------------------------------------------
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE ldf_uid = 10001316 AND business_object_uid = 22000030)
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_investigation WHERE public_health_case_uid = 22019100)
+BEGIN
+    INSERT INTO [dbo].[nrt_investigation]
+        ([public_health_case_uid], [patient_id], [local_id], [shared_ind], [case_type_cd],
+         [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
+         [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
+         [investigation_form_cd], [case_management_uid],
+         [status_time], [record_status_time], [raw_record_status_cd],
+         [add_time], [last_chg_time], [investigation_status_cd])
+    VALUES
+        (22019100, 20000000, N'CAS22019100GA01', N'F', N'I',
+         N'130001', N'ACTIVE', N'EVN', N'CASE',
+         N'C', N'10180', N'Mumps', N'VAC',
+         N'INV_FORM_GEN', NULL,
+         '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
+         '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
+    PRINT '[zz_ldf_flagged_answers] inserted Mumps PHC 22019100 (INV_FORM_GEN)';
+
+    EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22019100', @debug = 0;
+END
+
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE business_object_uid = 22019100)
 BEGIN
     INSERT INTO dbo.nrt_ldf_data
         (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
@@ -146,7 +172,7 @@ BEGIN
          ldf_meta_data_add_time)
     SELECT
         md.ldf_uid,
-        22000030 AS business_object_uid,
+        22019100 AS business_object_uid,    -- new INV_FORM_GEN mumps PHC
         'PHC' AS ldf_field_data_business_object_nm,
         'Y' AS active_ind,
         md.business_object_nm,
@@ -163,9 +189,9 @@ BEGIN
         '2026-04-01T00:00:00',
         '2026-04-01T00:00:00'
     FROM dbo.nrt_odse_state_defined_field_metadata md
-    WHERE md.ldf_uid IN (10001316, 10001321, 10001322)
+    WHERE md.ldf_uid IN (10001292, 10001294, 10001295)
       AND md.business_object_nm = 'PHC';
-    PRINT '[zz_ldf_flagged_answers] inserted 3 Mumps CV-typed LDF data rows';
+    PRINT '[zz_ldf_flagged_answers] inserted 3 Mumps CV-typed LDF data rows for 22019100';
 END
 
 -- ---------------------------------------------------------------------
@@ -314,7 +340,7 @@ SELECT @ldf_uid_list = STRING_AGG(CAST(ldf_uid AS varchar(20)), ',')
 FROM (
     SELECT DISTINCT ldf_uid
     FROM dbo.nrt_ldf_data
-    WHERE business_object_uid IN (22000030, 20000000, 10003001, 10003004)
+    WHERE business_object_uid IN (22019100, 22000030, 20000000, 10003001, 10003004)
 ) x;
 
 PRINT '[zz_ldf_flagged_answers] ldf_uid_list = ' + ISNULL(@ldf_uid_list, '<null>');
@@ -335,10 +361,26 @@ BEGIN CATCH
     PRINT '[zz_ldf_flagged_answers] sp_nrt_ldf_postprocessing ERROR: ' + ERROR_MESSAGE();
 END CATCH;
 
--- 4d. Mumps datamart (idempotent — orchestrator Step 9 also runs it,
---     but doing it here surfaces issues immediately during testing).
+-- 4d. GENERIC_CASE for the new Mumps PHC (INV_FORM_GEN) so the mumps
+--     datamart SP's downstream join to GENERIC_CASE finds a match.
+--     (sp_generic_case_datamart_postprocessing filters investigation_form_cd
+--     LIKE 'INV_FORM_GEN%' — see line 34 of 030-sp_generic_case_…sql.)
+-- NOTE: ORCH_TODO — 22019100 is not in $PHC_UIDS of merge_and_verify.sh,
+--   so Step 9's sp_generic_case_datamart_postprocessing won't include it.
+--   We run it here explicitly. Until/unless the orchestrator UID list is
+--   updated, this fixture's mumps coverage relies on this local EXEC.
 BEGIN TRY
-    EXEC dbo.sp_ldf_mumps_datamart_postprocessing @phc_uids = N'22000030', @debug = 0;
+    EXEC dbo.sp_generic_case_datamart_postprocessing @phc_ids = N'22019100', @debug = 0;
+    PRINT '[zz_ldf_flagged_answers] sp_generic_case_datamart_postprocessing OK';
+END TRY
+BEGIN CATCH
+    PRINT '[zz_ldf_flagged_answers] sp_generic_case_datamart_postprocessing ERROR: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- 4e. Mumps datamart (idempotent — orchestrator Step 9 also runs it
+--     against $PHC_UIDS, but 22019100 isn't there yet; explicit here).
+BEGIN TRY
+    EXEC dbo.sp_ldf_mumps_datamart_postprocessing @phc_uids = N'22019100,22000030', @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_ldf_mumps_datamart_postprocessing OK';
 END TRY
 BEGIN CATCH
