@@ -1239,8 +1239,8 @@ populated by this edge.
 | 22013000 - 22013999 | `zz_bmird_strep_pneumo_datamart_enrich` (extra answers / observation rows for existing BMIRD PHC 22005000 to lift BMIRD_STREP_PNEUMO_DATAMART column coverage) | **reserved 2026-05-24**. Parallel agent G. |
 | 22014000 - 22014999 | `zz_d_investigation_repeat_more_blocks` (more repeating-block answer-row variants on PHC 22006000 across additional BLOCK_NM × seq combinations to lift D_INVESTIGATION_REPEAT row count and column coverage) | **reserved 2026-05-24**. Parallel agent H. |
 | 22015000 - 22015999 | `zz_morbidity_report_datamart_enrich` (full morbidity observation chain — author additional MorbReport observations with multi-value lab results / treatments to populate MORBIDITY_REPORT_DATAMART's _1/_2/_3 suffix columns) | **reserved 2026-05-24**. Parallel agent I. |
-| 22016000 - 22016999 | reserved for loop top-up (next agent target picked at fire time) | **reserved 2026-05-24**. Loop. |
-| 22017000 - 22017999 | reserved for loop top-up (next agent target picked at fire time) | **reserved 2026-05-24**. Loop. |
+| 22016000 - 22016999 | `zz_hep100_unblock` (direct INSERT into HEPATITIS_CASE for hep PHC 22008500 to unblock hep100 datamart, ~187 cols) | **allocated 2026-05-24**. Loop / Agent J. |
+| 22017000 - 22017999 | `zz_case_lab_datamart_enrich` (case-lab linkage rows so sp_case_lab_datamart_postprocessing populates more cols, ~26 cols) | **allocated 2026-05-24**. Loop / Agent K. |
 | 22018000 - 22018999 | reserved for loop top-up (next agent target picked at fire time) | **reserved 2026-05-24**. Loop. |
 | 22019000 - 22019999 | reserved for loop top-up (next agent target picked at fire time) | **reserved 2026-05-24**. Loop. |
 
