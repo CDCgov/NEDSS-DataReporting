@@ -316,6 +316,9 @@ GO
 -- =====================================================================
 IF NOT EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT WHERE MORB_RPT_KEY = 22015000)
 BEGIN
+    -- Note: MORB_RPT_OID is numeric(9). Use the morb UID as the OID value.
+    -- JURISDICTION_CD is varchar(20); we use a string code consistent with
+    -- existing rows (e.g. '130001' = Fulton County) but 'GA' would also work.
     INSERT INTO dbo.MORBIDITY_REPORT (
         MORB_RPT_KEY, MORB_RPT_UID, MORB_RPT_LOCAL_ID,
         MORB_RPT_SHARE_IND, MORB_RPT_OID,
@@ -331,10 +334,10 @@ BEGIN
         PROCESSING_DECISION_CD, PROCESSING_DECISION_DESC
     ) VALUES (
         22015000, 22015000, N'OBS22015000GA01',
-        N'T', N'2.16.840.1.114222.4.5.1.1',
+        N'T', 22015000,
         N'INIT', N'Morb enrich — fully attributed morbidity report for SP coverage.', N'Web',
         N'Y', N'Suspect foodborne; ill at restaurant.',
-        N'N', N'GA', N'Georgia',
+        N'N', N'130001', N'Fulton County',
         N'N',
         '2026-04-05T10:30:00',
         '2026-04-02T00:00:00', '2026-04-02T08:30:00', '2026-04-04T09:00:00',
@@ -434,6 +437,28 @@ END
 GO
 
 -- =====================================================================
+-- TEST_RESULT_GROUPING / RESULT_COMMENT_GROUP — parent grouping rows
+-- required by FK from LAB_RESULT_VAL / LAB_RESULT_COMMENT respectively.
+-- =====================================================================
+IF NOT EXISTS (SELECT 1 FROM dbo.TEST_RESULT_GROUPING WHERE TEST_RESULT_GRP_KEY = 22015500)
+BEGIN
+    INSERT INTO dbo.TEST_RESULT_GROUPING (TEST_RESULT_GRP_KEY, LAB_TEST_UID, RDB_LAST_REFRESH_TIME) VALUES
+        (22015500, 22015800, '2026-04-05T10:30:00'),
+        (22015501, 22015801, '2026-04-05T11:30:00'),
+        (22015502, 22015802, '2026-04-06T11:30:00');
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.RESULT_COMMENT_GROUP WHERE RESULT_COMMENT_GRP_KEY = 22015600)
+BEGIN
+    INSERT INTO dbo.RESULT_COMMENT_GROUP (RESULT_COMMENT_GRP_KEY, LAB_TEST_UID, RDB_LAST_REFRESH_TIME) VALUES
+        (22015600, 22015800, '2026-04-05T10:30:00'),
+        (22015601, 22015801, '2026-04-05T11:30:00'),
+        (22015602, 22015802, '2026-04-06T11:30:00');
+END
+GO
+
+-- =====================================================================
 -- LAB_RESULT_VAL — one row per Result lab. TEST_RESULT_GRP_KEY is the
 -- LTR.TEST_RESULT_GRP_KEY FK target. Provides RESULTED_TEST_RESULT_x
 -- (TEST_RESULT_VAL_CD_DESC), RESULTED_TEST_NUMERIC_CONCAT_x
@@ -522,6 +547,8 @@ GO
 -- =====================================================================
 IF NOT EXISTS (SELECT 1 FROM dbo.TREATMENT WHERE TREATMENT_KEY = 22015400)
 BEGIN
+    -- Note: TREATMENT_OID is bigint (despite the OID suffix); TREATMENT_DOSAGE_*
+    -- columns are varchar. Use the treatment_key as the OID value.
     INSERT INTO dbo.TREATMENT (
         TREATMENT_KEY, TREATMENT_UID, TREATMENT_LOCAL_ID,
         TREATMENT_NM, TREATMENT_DRUG, TREATMENT_DOSAGE_STRENGTH,
@@ -531,23 +558,23 @@ BEGIN
         CUSTOM_TREATMENT, TREATMENT_SHARED_IND, TREATMENT_OID, RECORD_STATUS_CD
     ) VALUES
     (22015400, 22015400, N'TRT22015400GA01',
-     N'Hepatitis A IG, 0.1 mL/kg, IM, x 1', N'HepA IG', 0.1,
+     N'Hepatitis A IG, 0.1 mL/kg, IM, x 1', N'HepA IG', N'0.1',
      N'mL/kg', N'Once',
-     1, N'dose',
+     N'1', N'dose',
      N'Post-exposure prophylaxis; administered within 14 days.', N'IM',
-     N'HepA Immune Globulin (custom name)', N'T', N'2.16.840.1.114222.4.5.1.1', N'ACTIVE'),
+     N'HepA Immune Globulin (custom name)', N'T', 22015400, N'ACTIVE'),
     (22015401, 22015401, N'TRT22015401GA01',
-     N'Acetaminophen, 500 mg, PO, q6h, x 5d', N'Acetaminophen', 500,
+     N'Acetaminophen, 500 mg, PO, q6h, x 5d', N'Acetaminophen', N'500',
      N'mg', N'Every 6 hours',
-     5, N'days',
+     N'5', N'days',
      N'Antipyretic; max 3 g/day.', N'PO',
-     N'Acetaminophen 500mg (custom name)', N'T', N'2.16.840.1.114222.4.5.1.1', N'ACTIVE'),
+     N'Acetaminophen 500mg (custom name)', N'T', 22015401, N'ACTIVE'),
     (22015402, 22015402, N'TRT22015402GA01',
-     N'IV Fluids, normal saline, 1L, x 1', N'Normal Saline 0.9%', 1000,
+     N'IV Fluids, normal saline, 1L, x 1', N'Normal Saline 0.9%', N'1000',
      N'mL', N'Once',
-     1, N'dose',
+     N'1', N'dose',
      N'Supportive hydration during acute illness.', N'IV',
-     N'IV Saline Bolus (custom name)', N'T', N'2.16.840.1.114222.4.5.1.1', N'ACTIVE');
+     N'IV Saline Bolus (custom name)', N'T', 22015402, N'ACTIVE');
 END
 GO
 
