@@ -488,13 +488,14 @@ BEGIN
 END;
 
 -- nrt_observation_txt: result text (FT) + comment (N) for Result
+-- ovt_txt_type_cd='O' (or NULL) feeds Text_Result_Desc; 'N' feeds Result_Comments.
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
                WHERE observation_uid = @covid_lab_result_uid AND ovt_seq = 1)
 BEGIN
     INSERT INTO dbo.nrt_observation_txt
         (observation_uid, ovt_seq, ovt_txt_type_cd, ovt_value_txt, batch_id)
     VALUES
-        (@covid_lab_result_uid, 1, N'FT',
+        (@covid_lab_result_uid, 1, N'O',
          N'SARS-CoV-2 RNA DETECTED. Positive for SARS-CoV-2.', NULL);
 END;
 
@@ -552,6 +553,116 @@ BEGIN
          N'Nasopharyngeal swab, viral transport medium, refrigerated',
          N'2', N'mL',
          N'Nasopharyngeal specimen', N'B', N'Biohazard');
+END;
+
+GO
+
+-- =====================================================================
+-- Step 3b. AOE (Ask-on-order Entry) observations.
+-- The SP's #COVID_LAB_AOE_DATA pivot dynamically inflates the datamart
+-- with ALTER TABLE statements for each column in nrt_odse_lookup_question
+-- WHERE from_form_cd='LAB_REPORT'. Live live-verified 9 questions:
+--   95417-2 FIRST_TEST            (YNU)
+--   95418-0 EMPLOYED_IN_HEALTHCARE (YNU)
+--   95419-8 SYMPTOMATIC_FOR_DISEASE (YNU)
+--   77974-4 HOSPITALIZED          (YNU)
+--   95420-6 ICU                   (YNU)
+--   95421-4 RESIDENT_CONGREGATE_SETTING (YNU)
+--   82810-3 PREGNANT              (PREGNANCY_STATUS — coded, but using value 'Y' which is NOT in PREGNANCY_STATUS; safer to populate as numeric or txt)
+--   65222-2 ILLNESS_ONSET_DATE    (no code_set — use numeric or txt)
+--   30525-0 PATIENT_AGE           (no code_set — use numeric)
+--
+-- The SP's answer_txt logic prefers numeric > txt > coded. For the YNU
+-- ones, we use coded (ovc_code='Y') and rely on the cvg join to
+-- produce 'Yes' as the displayed value.
+-- For ILLNESS_ONSET_DATE we use txt ('2026-04-05'). For PATIENT_AGE
+-- we use numeric (35 years).
+--
+-- Each AOE observation:
+--   - obs_domain_cd_st_1 = 'Result' (so the o1.obs_domain_cd_st_1='Result' filter passes)
+--   - cd = the question LOINC
+--   - report_observation_uid = '22022000' (the COVID Order, in the input list)
+-- UIDs 22022100-22022108.
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+
+DECLARE @superuser_id           bigint = 10009282;
+DECLARE @foundation_patient_uid bigint = 20000000;
+DECLARE @foundation_provider_uid bigint = 20000010;
+DECLARE @foundation_org_uid     bigint = 20000020;
+DECLARE @covid_lab_order_uid    bigint = 22022000;
+
+-- AOE row template: 9 observations, each with cd=question LOINC and
+-- report_observation_uid pointing to the COVID Order.
+-- We use a minimal 12-column INSERT (vs the 83 the Tier 1 lab uses) —
+-- the SP only reads obs_domain_cd_st_1, cd, report_observation_uid, and
+-- batch_id from the AOE rows. Other cols default to NULL.
+INSERT INTO dbo.nrt_observation
+    ( [observation_uid], [class_cd], [mood_cd], [act_uid]
+    , [cd], [obs_domain_cd_st_1], [patient_id], [record_status_cd]
+    , [add_user_id], [add_time], [last_chg_time], [report_observation_uid]
+    )
+SELECT
+    src.uid, N'OBS', N'EVN', src.uid,
+    src.cd, N'Result', @foundation_patient_uid, N'PROCESSED',
+    @superuser_id, '2026-04-10T08:30:00', '2026-04-10T08:30:00',
+    CAST(@covid_lab_order_uid AS nvarchar(50))
+FROM (VALUES
+    (CAST(22022100 AS bigint), N'95417-2'),  -- FIRST_TEST
+    (CAST(22022101 AS bigint), N'95418-0'),  -- EMPLOYED_IN_HEALTHCARE
+    (CAST(22022102 AS bigint), N'95419-8'),  -- SYMPTOMATIC_FOR_DISEASE
+    (CAST(22022103 AS bigint), N'77974-4'),  -- HOSPITALIZED
+    (CAST(22022104 AS bigint), N'95420-6'),  -- ICU
+    (CAST(22022105 AS bigint), N'95421-4'),  -- RESIDENT_CONGREGATE_SETTING
+    (CAST(22022106 AS bigint), N'82810-3'),  -- PREGNANT
+    (CAST(22022107 AS bigint), N'65222-2'),  -- ILLNESS_ONSET_DATE
+    (CAST(22022108 AS bigint), N'30525-0')   -- PATIENT_AGE
+) AS src(uid, cd)
+WHERE NOT EXISTS (
+    SELECT 1 FROM dbo.nrt_observation o WHERE o.observation_uid = src.uid
+);
+
+-- act parents for AOE observations (NBS_ODSE FK reference if act is FK).
+-- nrt_observation does NOT FK to act in RDB_MODERN, so this is optional.
+-- We skip ODSE-side act/observation rows for AOE — the SP only touches
+-- RDB_MODERN.dbo.nrt_observation* for the pivot.
+
+-- Coded answers for the 6 YNU AOE observations (Y for FIRST_TEST,
+-- HOSPITALIZED, SYMPTOMATIC; N for EMPLOYED_IN_HEALTHCARE, ICU, RCS).
+INSERT INTO dbo.nrt_observation_coded
+    (observation_uid, ovc_code, ovc_code_system_cd,
+     ovc_code_system_desc_txt, ovc_display_name, batch_id)
+SELECT src.uid, src.code, N'2.16.840.1.113883.6.96', N'SCT', src.display, NULL
+FROM (VALUES
+    (CAST(22022100 AS bigint), N'Y', N'Yes'),
+    (CAST(22022101 AS bigint), N'N', N'No'),
+    (CAST(22022102 AS bigint), N'Y', N'Yes'),
+    (CAST(22022103 AS bigint), N'Y', N'Yes'),
+    (CAST(22022104 AS bigint), N'N', N'No'),
+    (CAST(22022105 AS bigint), N'N', N'No'),
+    (CAST(22022106 AS bigint), N'N', N'Not pregnant')
+) AS src(uid, code, display)
+WHERE NOT EXISTS (
+    SELECT 1 FROM dbo.nrt_observation_coded c WHERE c.observation_uid = src.uid
+);
+
+-- Txt answer for ILLNESS_ONSET_DATE (22022107)
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
+               WHERE observation_uid = 22022107)
+BEGIN
+    INSERT INTO dbo.nrt_observation_txt
+        (observation_uid, ovt_seq, ovt_txt_type_cd, ovt_value_txt, batch_id)
+    VALUES (22022107, 1, NULL, N'2026-04-05', NULL);
+END;
+
+-- Numeric answer for PATIENT_AGE (22022108)
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_numeric
+               WHERE observation_uid = 22022108)
+BEGIN
+    INSERT INTO dbo.nrt_observation_numeric
+        (observation_uid, ovn_numeric_value_1, ovn_numeric_unit_cd, ovn_seq, batch_id)
+    VALUES (22022108, 35.0, N'a', 1, NULL);
 END;
 
 GO
