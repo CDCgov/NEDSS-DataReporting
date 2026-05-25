@@ -1246,6 +1246,10 @@ populated by this edge.
 | 22020000 - 22020999 | `zz_covid_vaccination_datamart_enrich` (new Patient with full demographics + COVID vaccination intervention linkage to lift covid_vaccination_datamart from 10/60) | **allocated 2026-05-24**. Loop / Agent N. |
 | 22021000 - 22021999 | `zz_lab100_enrich` (additional Result-type LAB_TEST rows + LAB_TEST_RESULT to extend lab100 col coverage beyond initial 22/69) | **allocated 2026-05-24**. Loop / Agent O. |
 | 22022000 - 22022999 | `zz_covid_lab_datamart_unblock` (COVID-coded lab observations linked to existing COVID PHC 22003000 to unblock covid_lab_datamart from 0/129) | **allocated 2026-05-24**. Loop / Agent P. |
+| 22023000 - 22023999 | `zz_hepatitis_datamart_round2` (fill the 69 remaining unpopulated cols on hepatitis_datamart via Tier-2-style participation rows + dim enrichment) | **allocated 2026-05-24**. Loop / Agent Q. |
+| 22024000 - 22024999 | `zz_covid_case_datamart_round2` (fill the 149 remaining unpopulated cols on covid_case_datamart via more answer rows + dim/participation fixes) | **allocated 2026-05-24**. Loop / Agent R. |
+| 22025000 - 22025999 | `zz_inv_summ_datamart_unblock` (unblock inv_summ_datamart 0/58 — investigate the WHERE-clause requiring pre-existing rows from LOOP_round1) | **allocated 2026-05-24**. Loop / Agent S. |
+| 22026000 - 22026999 | `zz_covid_lab_celr_datamart_unblock` (unblock covid_lab_celr_datamart 0/101 — sibling of covid_lab_datamart with same SP pattern) | **allocated 2026-05-24**. Loop / Agent T. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
