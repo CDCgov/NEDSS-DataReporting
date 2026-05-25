@@ -149,16 +149,25 @@ END;
 GO
 
 -- NOTE: This fixture only authors source-side answers.  Without
--- orchestrator wire-up (see ORCH_TODO), running merge_and_verify.sh
--- will NOT call sp_repeated_place_postprocessing and D_INV_PLACE_REPEAT
--- will remain at 1/42 (sentinel only).
+-- orchestrator wire-up (see ORCH_TODO in agent-D2 final report and
+-- bugs/12_*), running merge_and_verify.sh will NOT call
+-- sp_repeated_place_postprocessing and D_INV_PLACE_REPEAT will remain
+-- at 1/42 (sentinel only).
 --
--- Smoke-test EXEC (manual):
+-- VERIFIED 2026-05-22 on live DB (agent-D2):
+-- After applying this fixture and running:
 --   EXEC dbo.sp_repeated_place_postprocessing
 --        @batch_id = 260522,
 --        @phc_id_list = N'22006000',
 --        @debug = 0;
--- After which:
---   SELECT * FROM dbo.D_INV_PLACE_REPEAT WHERE PAGE_CASE_UID = 22006000;
--- should return 2-3 rows with most PLACE_* columns non-NULL (v2 Place
--- variant is fully populated by 10_subjects/place.sql).
+-- D_INV_PLACE_REPEAT goes from 1/42 → 44/44 populated cols
+-- (42 baseline + 2 dynamically-added: PlaceAsHangoutOfPHC,
+-- PlaceAsSexOfPHC) with 6 net new rows for PHC 22006000.
+--
+-- Quick spot-check:
+--   SELECT TOP 6 PAGE_CASE_UID, answer_group_seq_nbr,
+--          PLACE_LOCATOR_UID, PLACE_NAME, PLACE_PHONE, PLACE_EMAIL
+--   FROM dbo.D_INV_PLACE_REPEAT WHERE PAGE_CASE_UID = 22006000
+--   ORDER BY answer_group_seq_nbr, PLACE_LOCATOR_UID;
+--   -- seq 1+2 hit postal-locator variants (no phone/email)
+--   -- seq 3 hits tele-locator variant (404-555-4010 / variant.place@nbs.test)
