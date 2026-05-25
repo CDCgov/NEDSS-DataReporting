@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-24 23:48:53 PDT
+Generated: 2026-05-24 23:55:14 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 78
-- Partially covered (some columns populated): 33
+- Fully covered (all columns populated for at least one row): 80
+- Partially covered (some columns populated): 31
 - Empty (table exists, 0 rows): 6
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4636
-- Columns with ≥1 populated row: 3870
-- Overall column coverage: 83.5%
+- Columns with ≥1 populated row: 3915
+- Overall column coverage: 84.4%
 
 ## Per-table coverage
 
@@ -35,7 +35,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.condition | 269 | 15 | 14/15 |
 | dbo.confirmation_method | 3 | 3 | **3/3** |
 | dbo.confirmation_method_group | 27 | 3 | **3/3** |
-| dbo.covid_case_datamart | 2 | 383 | 234/383 |
+| dbo.covid_case_datamart | 2 | 383 | 241/383 |
 | dbo.covid_contact_datamart | 2 | 94 | 93/94 |
 | dbo.covid_lab_celr_datamart | 1 | 101 | 84/101 |
 | dbo.covid_lab_datamart | 1 | 129 | 124/129 |
@@ -43,7 +43,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_addl_risk | 3 | 6 | **6/6** |
 | dbo.d_addl_risk_group | 2 | 1 | **1/1** |
 | dbo.d_case_management | 3 | 67 | 65/67 |
-| dbo.d_contact_record | 3 | 66 | 42/66 |
+| dbo.d_contact_record | 4 | 66 | **66/66** |
 | dbo.d_disease_site | 3 | 6 | **6/6** |
 | dbo.d_disease_site_group | 2 | 1 | **1/1** |
 | dbo.d_gt_12_reas | 3 | 6 | **6/6** |
@@ -91,12 +91,12 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.f_var_pam | 1 | 12 | **12/12** |
 | dbo.hep_multi_value_field_group | 1 | 1 | **1/1** |
 | dbo.hep100 | 1 | 187 | 184/187 |
-| dbo.hepatitis_datamart | 2 | 209 | 140/209 |
+| dbo.hepatitis_datamart | 2 | 209 | 144/209 |
 | dbo.inv_hiv | 3 | 19 | **19/19** |
-| dbo.inv_summ_datamart | 20 | 58 | 48/58 |
+| dbo.inv_summ_datamart | 21 | 58 | **58/58** |
 | dbo.investigation | 28 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 30019 | 15 | 14/15 |
+| dbo.job_flow_log | 30162 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
@@ -148,7 +148,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 ## Categorization
 
-### Fully covered (78)
+### Fully covered (80)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -159,6 +159,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.covid_vaccination_datamart
 - dbo.d_addl_risk
 - dbo.d_addl_risk_group
+- dbo.d_contact_record
 - dbo.d_disease_site
 - dbo.d_disease_site_group
 - dbo.d_gt_12_reas
@@ -199,6 +200,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.f_var_pam
 - dbo.hep_multi_value_field_group
 - dbo.inv_hiv
+- dbo.inv_summ_datamart
 - dbo.investigation
 - dbo.l_inv_place_repeat
 - dbo.l_investigation_repeat
@@ -231,7 +233,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.user_profile
 - dbo.var_pam_ldf
 
-### Partially covered (33)
+### Partially covered (31)
 
 Tables with rows but at least one column never populated. These are the
 candidates for Tier 3 gap-driven coverage work.
@@ -245,7 +247,6 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.covid_lab_celr_datamart
 - dbo.covid_lab_datamart
 - dbo.d_case_management
-- dbo.d_contact_record
 - dbo.d_interview
 - dbo.d_investigation_repeat
 - dbo.d_ldf_meta_data
@@ -255,7 +256,6 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.f_page_case
 - dbo.hep100
 - dbo.hepatitis_datamart
-- dbo.inv_summ_datamart
 - dbo.job_flow_log
 - dbo.lab_test_result
 - dbo.lab100
