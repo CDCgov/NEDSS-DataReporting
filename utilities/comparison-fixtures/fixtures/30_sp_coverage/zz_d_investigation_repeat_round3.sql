@@ -9,6 +9,19 @@
 --   * 106 populated baseline columns out of 256 total
 --   * 150 unpopulated columns
 --
+-- LIVE-VERIFIED 2026-05-25 (Agent V):
+--   * 200/256 populated (under realistic merge_and_verify
+--     conditions with FULL PHC_UIDS @phc_id_list passed to the SP;
+--     56 of my TEXT cols regress due to bug #13)
+--   * 250/256 populated when SP is invoked with @phc_id_list=N'22007000'
+--     in isolation (TEXT pivot works for 22007000 because the
+--     polluting agent-D2 22006000 rows aren't in #text_data_REPT)
+--   * 36 dim rows (was 23, +13 from this fixture's 3 BLOCK x 3 SEQ)
+--   * Headline gain: +94 cols at merge_and_verify time (exceeds +90 target)
+--   * The 6 unfillable cols are SP-internal metadata not addressable
+--     by the pivot: D_INTERVIEW_NOTE_KEY, INVESTIGATION_FORM_CD,
+--     INVESTIGATION_FORM_CD_coded/_date/_numeric, PARENT_UID.
+--
 -- PHC STRATEGY
 --   Existing clean Pertussis Investigation: PHC 22007000.
 --   * already-allocated in PHC_UIDS in scripts/merge_and_verify.sh
