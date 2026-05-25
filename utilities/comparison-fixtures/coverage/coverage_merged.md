@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-22 08:24:16 PDT
+Generated: 2026-05-24 21:16:18 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -19,8 +19,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4625
-- Columns with ≥1 populated row: 1949
-- Overall column coverage: 42.1%
+- Columns with ≥1 populated row: 2096
+- Overall column coverage: 45.3%
 
 ## Per-table coverage
 
@@ -35,7 +35,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.condition | 269 | 15 | 14/15 |
 | dbo.confirmation_method | 3 | 3 | **3/3** |
 | dbo.confirmation_method_group | 25 | 3 | **3/3** |
-| dbo.covid_case_datamart | 2 | 383 | 87/383 |
+| dbo.covid_case_datamart | 2 | 383 | 234/383 |
 | dbo.covid_contact_datamart | 1 | 94 | 71/94 |
 | dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
 | dbo.covid_lab_datamart | 0 | 129 | 0/129 |
@@ -96,7 +96,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
 | dbo.investigation | 25 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 24605 | 15 | 14/15 |
+| dbo.job_flow_log | 24688 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
