@@ -482,6 +482,89 @@ WHERE act_uid = 22001000
 GO
 
 -- =====================================================================
+-- Multi-row d_topic answers: each d_topic question (TUB114, 119, 129,
+-- 167, 225, 228, 229, 230, 235, 237) can have multiple answer rows.
+-- The 255 datamart SP pivots up to MOVED_WHERE_4 etc. Authoring 2-3
+-- additional answer rows per d_topic question lights up _2 / _3 /
+-- _ALL / _GT3_IND aggregate columns. UID block: 22011300-22011399.
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_page_case_answer] WHERE nbs_case_answer_uid = 22011300)
+BEGIN
+    INSERT INTO [dbo].[nrt_page_case_answer]
+        ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
+         [nbs_question_uid],
+         [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
+         [investigation_form_cd], [question_identifier], [data_location],
+         [code_set_group_id], [last_chg_time], [record_status_cd],
+         [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id])
+    VALUES
+    -- DISEASE_SITE (TUB119, 1079, codeset 2470 PHVS_TB_ADDL_SITE)
+    (22001000, 22011300, 1, 1079, N'TB_PAM', N'DISEASE_SITE', N'10200004', N'1', N'INV_FORM_RVCT', N'TUB119', N'NBS_Case_Answer.answer_txt', 2470, '2026-04-01T00:00:00', N'ACTIVE', N'DISEASE_SITE', NULL, 2, NULL),
+    (22001000, 22011301, 1, 1079, N'TB_PAM', N'DISEASE_SITE', N'39607008', N'1', N'INV_FORM_RVCT', N'TUB119', N'NBS_Case_Answer.answer_txt', 2470, '2026-04-01T00:00:00', N'ACTIVE', N'DISEASE_SITE', NULL, 3, NULL),
+    -- SMR_EXAM_TY (TUB129, 1174, codeset 2560 PHVS_TB_MICRO_EX_TY)
+    (22001000, 22011302, 1, 1174, N'TB_PAM', N'SMR_EXAM_TY', N'108257001', N'1', N'INV_FORM_RVCT', N'TUB129', N'NBS_Case_Answer.answer_txt', 2560, '2026-04-01T00:00:00', N'ACTIVE', N'SMR_EXAM_TY', NULL, 2, NULL),
+    (22001000, 22011303, 1, 1174, N'TB_PAM', N'SMR_EXAM_TY', N'108257001', N'1', N'INV_FORM_RVCT', N'TUB129', N'NBS_Case_Answer.answer_txt', 2560, '2026-04-01T00:00:00', N'ACTIVE', N'SMR_EXAM_TY', NULL, 3, NULL),
+    -- ADDL_RISK (TUB167, 1230, codeset 2600 PHVS_TB_RISK_FACTORS)
+    (22001000, 22011304, 1, 1230, N'TB_PAM', N'ADDL_RISK', N'73211009', N'1', N'INV_FORM_RVCT', N'TUB167', N'NBS_Case_Answer.answer_txt', 2600, '2026-04-01T00:00:00', N'ACTIVE', N'ADDL_RISK', NULL, 2, NULL),
+    (22001000, 22011305, 1, 1230, N'TB_PAM', N'ADDL_RISK', N'46177005', N'1', N'INV_FORM_RVCT', N'TUB167', N'NBS_Case_Answer.answer_txt', 2600, '2026-04-01T00:00:00', N'ACTIVE', N'ADDL_RISK', NULL, 3, NULL),
+    -- MOVED_WHERE (TUB225, 1256, codeset 4180 PHVS_TB_DIS_ACQ_JUR)
+    (22001000, 22011306, 1, 1256, N'TB_PAM', N'MOVED_WHERE', N'C1512888', N'1', N'INV_FORM_RVCT', N'TUB225', N'NBS_Case_Answer.answer_txt', 4180, '2026-04-01T00:00:00', N'ACTIVE', N'MOVED_WHERE', NULL, 2, NULL),
+    (22001000, 22011307, 1, 1256, N'TB_PAM', N'MOVED_WHERE', N'C1512888', N'1', N'INV_FORM_RVCT', N'TUB225', N'NBS_Case_Answer.answer_txt', 4180, '2026-04-01T00:00:00', N'ACTIVE', N'MOVED_WHERE', NULL, 3, NULL),
+    -- MOVE_CNTY (TUB228, 1055, codeset 560 COUNTY_CCD)
+    (22001000, 22011308, 1, 1055, N'TB_PAM', N'MOVE_CNTY', N'13121', N'1', N'INV_FORM_RVCT', N'TUB228', N'NBS_Case_Answer.answer_txt', 560, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_CNTY', NULL, 2, NULL),
+    (22001000, 22011309, 1, 1055, N'TB_PAM', N'MOVE_CNTY', N'13121', N'1', N'INV_FORM_RVCT', N'TUB228', N'NBS_Case_Answer.answer_txt', 560, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_CNTY', NULL, 3, NULL),
+    -- MOVE_STATE (TUB229, 1248, codeset 3920 STATE_CCD)
+    (22001000, 22011310, 1, 1248, N'TB_PAM', N'MOVE_STATE', N'13', N'1', N'INV_FORM_RVCT', N'TUB229', N'NBS_Case_Answer.answer_txt', 3920, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_STATE', NULL, 2, NULL),
+    (22001000, 22011311, 1, 1248, N'TB_PAM', N'MOVE_STATE', N'13', N'1', N'INV_FORM_RVCT', N'TUB229', N'NBS_Case_Answer.answer_txt', 3920, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_STATE', NULL, 3, NULL),
+    -- MOVE_CNTRY (TUB230, 1243, codeset 4260 PHVS_TB_BIRTH_CNTRY); first row valid value
+    (22001000, 22011312, 1, 1243, N'TB_PAM', N'MOVE_CNTRY', N'USA', N'1', N'INV_FORM_RVCT', N'TUB230', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_CNTRY', NULL, 2, NULL),
+    (22001000, 22011313, 1, 1243, N'TB_PAM', N'MOVE_CNTRY', N'USA', N'1', N'INV_FORM_RVCT', N'TUB230', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_CNTRY', NULL, 3, NULL),
+    -- GT_12_REAS (TUB235, 1318, codeset 2520 PHVS_TB_EXTEND_REAS)
+    (22001000, 22011314, 1, 1318, N'TB_PAM', N'GT_12_REAS', N'258143003', N'1', N'INV_FORM_RVCT', N'TUB235', N'NBS_Case_Answer.answer_txt', 2520, '2026-04-01T00:00:00', N'ACTIVE', N'GT_12_REAS', NULL, 2, NULL),
+    (22001000, 22011315, 1, 1318, N'TB_PAM', N'GT_12_REAS', N'258143003', N'1', N'INV_FORM_RVCT', N'TUB235', N'NBS_Case_Answer.answer_txt', 2520, '2026-04-01T00:00:00', N'ACTIVE', N'GT_12_REAS', NULL, 3, NULL),
+    -- HC_PROV_TY (TUB237, 1071, codeset 2530 PHVS_TB_HC_PRAC_TY)
+    (22001000, 22011316, 1, 1071, N'TB_PAM', N'HC_PROV_TY', N'310174000', N'1', N'INV_FORM_RVCT', N'TUB237', N'NBS_Case_Answer.answer_txt', 2530, '2026-04-01T00:00:00', N'ACTIVE', N'HC_PROV_TY', NULL, 2, NULL),
+    (22001000, 22011317, 1, 1071, N'TB_PAM', N'HC_PROV_TY', N'310174000', N'1', N'INV_FORM_RVCT', N'TUB237', N'NBS_Case_Answer.answer_txt', 2530, '2026-04-01T00:00:00', N'ACTIVE', N'HC_PROV_TY', NULL, 3, NULL),
+    -- OUT_OF_CNTRY (TUB114, 1080, codeset 4260 PHVS_TB_BIRTH_CNTRY); use USA
+    (22001000, 22011318, 1, 1080, N'TB_PAM', N'OUT_OF_CNTRY', N'USA', N'1', N'INV_FORM_RVCT', N'TUB114', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'OUT_OF_CNTRY', NULL, 2, NULL),
+    (22001000, 22011319, 1, 1080, N'TB_PAM', N'OUT_OF_CNTRY', N'USA', N'1', N'INV_FORM_RVCT', N'TUB114', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'OUT_OF_CNTRY', NULL, 3, NULL)
+    ;
+
+    -- Mirror NBS_ODSE rows (so the ODSE-side referential model is consistent).
+    SET IDENTITY_INSERT [NBS_ODSE].[dbo].[nbs_case_answer] ON;
+    INSERT INTO [NBS_ODSE].[dbo].[nbs_case_answer]
+        ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+         [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+         [last_chg_time], [last_chg_user_id],
+         [record_status_cd], [record_status_time], [seq_nbr])
+    VALUES
+        (22011300, 22001000, '2026-04-01T00:00:00', 10009282, N'10200004', 1079, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011301, 22001000, '2026-04-01T00:00:00', 10009282, N'39607008', 1079, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011302, 22001000, '2026-04-01T00:00:00', 10009282, N'108257001', 1174, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011303, 22001000, '2026-04-01T00:00:00', 10009282, N'108257001', 1174, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011304, 22001000, '2026-04-01T00:00:00', 10009282, N'73211009', 1230, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011305, 22001000, '2026-04-01T00:00:00', 10009282, N'46177005', 1230, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011306, 22001000, '2026-04-01T00:00:00', 10009282, N'C1512888', 1256, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011307, 22001000, '2026-04-01T00:00:00', 10009282, N'C1512888', 1256, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011308, 22001000, '2026-04-01T00:00:00', 10009282, N'13121', 1055, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011309, 22001000, '2026-04-01T00:00:00', 10009282, N'13121', 1055, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011310, 22001000, '2026-04-01T00:00:00', 10009282, N'13', 1248, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011311, 22001000, '2026-04-01T00:00:00', 10009282, N'13', 1248, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011312, 22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1243, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011313, 22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1243, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011314, 22001000, '2026-04-01T00:00:00', 10009282, N'258143003', 1318, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011315, 22001000, '2026-04-01T00:00:00', 10009282, N'258143003', 1318, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011316, 22001000, '2026-04-01T00:00:00', 10009282, N'310174000', 1071, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011317, 22001000, '2026-04-01T00:00:00', 10009282, N'310174000', 1071, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3),
+        (22011318, 22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1080, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 2),
+        (22011319, 22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1080, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 3);
+    SET IDENTITY_INSERT [NBS_ODSE].[dbo].[nbs_case_answer] OFF;
+END
+GO
+
+-- =====================================================================
 -- Tail-EXEC the SP chain for PHC 22001000.
 --   Order matters: D_TB_PAM (147) must run before F_TB_PAM (206) which
 --   must run before TB_DATAMART (255) and TB_HIV_DATAMART (260).
@@ -494,6 +577,19 @@ END TRY
 BEGIN CATCH
     PRINT 'sp_nrt_d_tb_pam_postprocessing failed: ' + ERROR_MESSAGE();
 END CATCH;
+
+-- d_topic SPs (12 total) so multi-row answers light up _2, _3, _ALL, _GT3_IND.
+BEGIN TRY EXEC dbo.sp_nrt_d_disease_site_postprocessing @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_disease_site: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_addl_risk_postprocessing    @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_addl_risk: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_move_cntry_postprocessing   @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_move_cntry: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_move_cnty_postprocessing    @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_move_cnty: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_move_state_postprocessing   @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_move_state: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_moved_where_postprocessing  @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_moved_where: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_gt_12_reas_postprocessing   @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_gt_12_reas: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_hc_prov_ty_3_postprocessing @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_hc_prov_ty_3: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_out_of_cntry_postprocessing @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_out_of_cntry: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_smr_exam_ty_postprocessing  @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_smr_exam_ty: ' + ERROR_MESSAGE(); END CATCH;
+BEGIN TRY EXEC dbo.sp_nrt_d_tb_hiv_postprocessing       @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_tb_hiv: ' + ERROR_MESSAGE(); END CATCH;
 
 BEGIN TRY
     EXEC dbo.sp_f_tb_pam_postprocessing
