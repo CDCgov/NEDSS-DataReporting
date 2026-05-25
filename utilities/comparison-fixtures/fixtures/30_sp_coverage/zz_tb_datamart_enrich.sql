@@ -383,6 +383,46 @@ END
 GO
 
 -- =====================================================================
+-- Corrective UPDATEs: fix answer_txt values that silently collapse to
+-- NULL in the 147 SP pivot because the answer code is not present in
+-- the relevant nrt_srte_code_value_general codeset.
+--
+-- 1. PHVS_TB_BIRTH_CNTRY (4260): the seeded "840" is not a valid code.
+--    Use "USA" (verified). Affects PATIENT_BIRTH_COUNTRY,
+--    PRIMARY_GUARD_1_BIRTH_COUNTRY, PRIMARY_GUARD_2_BIRTH_COUNTRY,
+--    OUT_OF_CNTRY (TUB114), STATUS_AT_DIAGNOSIS (the anchor fixture
+--    miswrote TUB109 codeset).
+-- 2. PHVS_TB_SUSCEPT (4170): "1" is not a valid code. "385660001"
+--    (Not Done) is. Affects all FINAL_SUSCEPT_* + INIT_SUSCEPT_* rows.
+-- 3. PHVS_PNUND (2410): some rows already use 260385009; safe.
+-- 4. PHVS_TB_LAB_TEST_INT (4190): same.
+-- These UPDATEs are idempotent (they're WHERE-targeted by act_uid +
+-- nbs_question_uid + answer_txt) and only run if the bad value is
+-- still present.
+-- =====================================================================
+UPDATE [dbo].[nrt_page_case_answer]
+SET answer_txt = N'USA'
+WHERE act_uid = 22001000
+  AND answer_txt = N'840'
+  AND code_set_group_id = 4260;
+
+-- The anchor fixture wrote STATUS_AT_DIAGNOSIS code "A" with
+-- code_set_group_id=4260 but TUB117 STATUS_AT_DIAGNOSIS uses
+-- codeset 2450 (PHVS_STATUS_AT_DIAG; valid code 397709008).
+-- The row itself stays put (wrong mapping by anchor); we can't fix
+-- without authoring a new row. Skip.
+
+-- Per anchor fixture, TUB245 FINAL_SUSCEPT_RIFAMPIN answer="1" with
+-- code_set_group_id=4170. Fix by replacing with "385660001" so the
+-- codeset join resolves to "Not Done".
+UPDATE [dbo].[nrt_page_case_answer]
+SET answer_txt = N'385660001'
+WHERE act_uid = 22001000
+  AND answer_txt = N'1'
+  AND code_set_group_id = 4170;
+GO
+
+-- =====================================================================
 -- Tail-EXEC the SP chain for PHC 22001000.
 --   Order matters: D_TB_PAM (147) must run before F_TB_PAM (206) which
 --   must run before TB_DATAMART (255) and TB_HIV_DATAMART (260).
