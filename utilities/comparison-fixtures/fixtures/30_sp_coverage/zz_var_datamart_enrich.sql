@@ -364,6 +364,101 @@ END
 GO
 
 -- =====================================================================
+-- Block C: VAR100 LESIONS_TOTAL — Coded 2760. The parent fixture did
+-- not author VAR100; D_VAR_PAM.LESIONS_TOTAL is therefore NULL. Add.
+-- UIDs 22009210..22009210.
+-- =====================================================================
+USE [NBS_ODSE];
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE nbs_case_answer_uid = 22009210)
+BEGIN
+    SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+    INSERT INTO [dbo].[nbs_case_answer]
+        ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+         [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+         [last_chg_time], [last_chg_user_id],
+         [record_status_cd], [record_status_time], [seq_nbr])
+    VALUES
+        -- VAR100 LESIONS_TOTAL — code_set_group_id=2760. Sample valid code
+        -- (queried live 2026-05-24): use '<50' or '50-249' representation
+        -- depending on dataset. Use plain text - var_pam SP doesn't have
+        -- 2760 in the special-translate exclusion list, so CODE_SHORT_DESC_TXT
+        -- swaps in for the answer. Use a valid code if known else fallback.
+        (22009210, 22002000, '2026-04-01T00:00:00', 10009282, N'PHC1247', 1143, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 0);
+    SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+END
+GO
+
+USE [RDB_MODERN];
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid = 22009210)
+BEGIN
+    INSERT INTO [dbo].[nrt_page_case_answer]
+        ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid], [nbs_question_uid],
+         [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
+         [investigation_form_cd], [question_identifier], [data_location],
+         [code_set_group_id], [last_chg_time], [record_status_cd],
+         [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id],
+         [nbs_ui_component_uid], [nca_add_time], [nuim_record_status_cd])
+    VALUES
+        (22002000, 22009210, 2, 1143, N'VAR_PAM', N'LESIONS_TOTAL', N'PHC1247', N'1', N'INV_FORM_VAR', N'VAR100', N'NBS_Case_Answer.answer_txt', 2760, '2026-04-01T00:00:00', N'ACTIVE', N'LESIONS_TOTAL', NULL, 1, NULL, 2, '2026-04-01T00:00:00', N'Active');
+END
+GO
+
+-- =====================================================================
+-- Block D: fix RASH_LOCATION translation. Parent fixture stored 'OTH'
+-- which is NOT a valid code in PHVS_VZ_RASH_DISTRO (code_set_group_id
+-- 2780; valid codes are 60132005=Generalized, 87017008=Focal, UNK).
+-- The D_VAR_PAM SP's translation step joins NRT_SRTE_CODE_VALUE_GENERAL
+-- via CODE+CODE_SET_NM, finds no match, so CODE_SHORT_DESC_TXT is NULL
+-- and the pivoted value collapses. UPDATE the existing parent-fixture
+-- row to a valid code so var_datamart.RASH_LOCATION populates.
+-- =====================================================================
+USE [NBS_ODSE];
+GO
+UPDATE dbo.nbs_case_answer SET answer_txt = N'60132005'
+WHERE nbs_case_answer_uid = 22002101 AND answer_txt = N'OTH';
+GO
+
+USE [RDB_MODERN];
+GO
+UPDATE dbo.nrt_page_case_answer SET answer_txt = N'60132005'
+WHERE nbs_case_answer_uid = 22002101 AND question_identifier = N'VAR103' AND answer_txt = N'OTH';
+GO
+
+-- =====================================================================
+-- Block E: enrich nrt_investigation row 22002000 with INV_COMMENTS,
+-- ILLNESS_DURATION/UNIT, and a valid OUTBREAK_NAME code. These flow
+-- through sp_nrt_investigation_postprocessing into INVESTIGATION dim,
+-- whence the var_datamart SP picks them up as GENERAL_COMMENTS,
+-- ILLNESS_DURATION, ILLNESS_DURATION_UNIT, OUTBREAK_NAME.
+--
+-- OUTBREAK_NM valid code (live 2026-05-24): 'MDK' = "Ketchup - McDonalds"
+-- ILLNESS_DURATION_UNIT codeset = AGE_UNIT (e.g. 'D' = Day).
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+UPDATE dbo.nrt_investigation
+SET inv_comments           = N'Varicella outbreak: index case linked epi-cluster',
+    illness_duration       = 14,
+    illness_duration_unit  = N'D',
+    outbreak_name          = N'MDK'
+WHERE public_health_case_uid = 22002000;
+GO
+
+-- The investigation event SP reads from NBS_ODSE.dbo.public_health_case +
+-- friends; nrt_investigation is the RDB-side staging that the
+-- investigation postprocessing SP reads. Re-run that SP to flow our
+-- updates into the INVESTIGATION dim.
+BEGIN TRY
+    EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22002000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'zz_var_datamart_enrich: sp_nrt_investigation_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- =====================================================================
 -- Tail-EXEC: re-run the VAR-PAM SP chain so the new rows flow into
 -- D_VAR_PAM / D_RASH_LOC_GEN / D_PCR_SOURCE / VAR_PAM_LDF / F_VAR_PAM /
 -- VAR_DATAMART. Wrapped in TRY/CATCH so a SP failure does not abort
