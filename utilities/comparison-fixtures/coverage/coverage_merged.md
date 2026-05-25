@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-24 22:55:15 PDT
+Generated: 2026-05-24 23:11:25 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 72
+- Fully covered (all columns populated for at least one row): 73
 - Partially covered (some columns populated): 30
-- Empty (table exists, 0 rows): 15
+- Empty (table exists, 0 rows): 14
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4627
-- Columns with ≥1 populated row: 3473
-- Overall column coverage: 75.1%
+- Columns with ≥1 populated row: 3686
+- Overall column coverage: 79.7%
 
 ## Per-table coverage
 
@@ -38,8 +38,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.covid_case_datamart | 2 | 383 | 234/383 |
 | dbo.covid_contact_datamart | 1 | 94 | 71/94 |
 | dbo.covid_lab_celr_datamart | 0 | 101 | 0/101 |
-| dbo.covid_lab_datamart | 0 | 129 | 0/129 |
-| dbo.covid_vaccination_datamart | 1 | 60 | 10/60 |
+| dbo.covid_lab_datamart | 1 | 129 | 124/129 |
+| dbo.covid_vaccination_datamart | 2 | 60 | **60/60** |
 | dbo.d_addl_risk | 3 | 6 | **6/6** |
 | dbo.d_addl_risk_group | 2 | 1 | **1/1** |
 | dbo.d_case_management | 3 | 67 | 65/67 |
@@ -63,21 +63,21 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_move_state_group | 2 | 1 | **1/1** |
 | dbo.d_moved_where | 3 | 6 | **6/6** |
 | dbo.d_moved_where_group | 2 | 1 | **1/1** |
-| dbo.d_organization | 10 | 30 | **30/30** |
+| dbo.d_organization | 11 | 30 | **30/30** |
 | dbo.d_out_of_cntry | 3 | 6 | **6/6** |
 | dbo.d_out_of_cntry_group | 2 | 1 | **1/1** |
-| dbo.d_patient | 6 | 81 | **81/81** |
+| dbo.d_patient | 7 | 81 | **81/81** |
 | dbo.d_pcr_source | 3 | 6 | **6/6** |
 | dbo.d_pcr_source_group | 2 | 1 | **1/1** |
 | dbo.d_place | 8 | 37 | **37/37** |
-| dbo.d_provider | 15 | 34 | **34/34** |
+| dbo.d_provider | 16 | 34 | **34/34** |
 | dbo.d_rash_loc_gen | 3 | 6 | **6/6** |
 | dbo.d_rash_loc_gen_group | 2 | 1 | **1/1** |
 | dbo.d_smr_exam_ty | 3 | 6 | **6/6** |
 | dbo.d_smr_exam_ty_group | 2 | 1 | **1/1** |
 | dbo.d_tb_hiv | 1 | 6 | **6/6** |
 | dbo.d_tb_pam | 1 | 166 | 161/166 |
-| dbo.d_vaccination | 3 | 21 | **21/21** |
+| dbo.d_vaccination | 4 | 21 | **21/21** |
 | dbo.d_var_pam | 1 | 129 | 127/129 |
 | dbo.etl_dq_log | 20889 | 15 | 14/15 |
 | dbo.event_metric | 30 | 28 | **28/28** |
@@ -96,7 +96,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
 | dbo.investigation | 27 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 29467 | 15 | 14/15 |
+| dbo.job_flow_log | 29570 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
@@ -105,7 +105,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.lab_rpt_user_comment | 1 | 8 | **8/8** |
 | dbo.lab_test | 6 | 66 | **66/66** |
 | dbo.lab_test_result | 6 | 20 | 19/20 |
-| dbo.lab100 | 3 | 69 | 22/69 |
+| dbo.lab100 | 3 | 69 | 61/69 |
 | dbo.lab101 | 0 | 46 | 0/46 |
 | dbo.ldf_bmird | 0 | 7 | 0/7 |
 | dbo.ldf_data | 15 | 17 | 9/17 |
@@ -148,7 +148,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 ## Categorization
 
-### Fully covered (72)
+### Fully covered (73)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -156,6 +156,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.bmird_multi_value_field_group
 - dbo.confirmation_method
 - dbo.confirmation_method_group
+- dbo.covid_vaccination_datamart
 - dbo.d_addl_risk
 - dbo.d_addl_risk_group
 - dbo.d_disease_site
@@ -236,7 +237,7 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.condition
 - dbo.covid_case_datamart
 - dbo.covid_contact_datamart
-- dbo.covid_vaccination_datamart
+- dbo.covid_lab_datamart
 - dbo.d_case_management
 - dbo.d_contact_record
 - dbo.d_interview
@@ -261,7 +262,7 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.tb_hiv_datamart
 - dbo.var_datamart
 
-### Empty (15)
+### Empty (14)
 
 Tables that exist in RDB_MODERN but have zero rows after the merged
 chain runs. Most are datamart-side fact tables that depend on Merge
@@ -269,7 +270,6 @@ contract step 9 (Datamart SPs — out of scope for v1).
 
 - dbo.aggregate_report_datamart
 - dbo.covid_lab_celr_datamart
-- dbo.covid_lab_datamart
 - dbo.inv_summ_datamart
 - dbo.lab101
 - dbo.ldf_bmird
