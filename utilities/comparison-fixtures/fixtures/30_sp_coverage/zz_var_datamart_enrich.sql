@@ -438,11 +438,20 @@ GO
 -- =====================================================================
 USE [RDB_MODERN];
 GO
+-- Column name notes (verified live 2026-05-24):
+--   nrt_investigation.txt                    -> INV_COMMENTS (NULLIF empty)
+--   nrt_investigation.effective_duration_amt -> ILLNESS_DURATION (isnumeric)
+--   nrt_investigation.illness_duration_unit  -> ILLNESS_DURATION_UNIT
+--   nrt_investigation.outbreak_name          -> OUTBREAK_NAME (PHC->INVESTIGATION)
+--                                               then var_datamart joins via
+--                                               NRT_SRTE_CODE_VALUE_GENERAL
+--                                               CODE_SET_NM='OUTBREAK_NM' to
+--                                               surface CODE_SHORT_DESC_TXT
 UPDATE dbo.nrt_investigation
-SET inv_comments           = N'Varicella outbreak: index case linked epi-cluster',
-    illness_duration       = 14,
-    illness_duration_unit  = N'D',
-    outbreak_name          = N'MDK'
+SET txt                       = N'Varicella outbreak: index case linked epi-cluster',
+    effective_duration_amt    = N'14',
+    illness_duration_unit     = N'D',
+    outbreak_name             = N'MDK'
 WHERE public_health_case_uid = 22002000;
 GO
 
