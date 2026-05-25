@@ -265,28 +265,37 @@ GO
 -- rdb_column_nm). datamart_column_nm matches rdb_column_nm; this is
 -- the column-name string the downstream SP joins to.
 --
--- nbs_question_uid is left NULL where the SP doesn't filter on it
--- (the s_pagebuilder INNER JOINs nbs_question to discover data_type;
--- using NULL would drop the row). We use a non-zero placeholder
--- nbs_question_uid value derived from the answer_uid; the
--- s_pagebuilder text-vs-coded branch is selected by rdb_column_nm
--- LIKE '%_CD' OR DATA_TYPE='TEXT' / 'CODED'. Per the SP code at
--- 007-sp_s_pagebuilder line 103-105 the matching predicates are
+-- IMPORTANT: We intentionally SKIP the ODSE nbs_case_answer block.
+-- The downstream RTR SPs (sp_s_pagebuilder, sp_d_pagebuilder,
+-- sp_hepatitis_datamart_postprocessing) all read from RDB_MODERN
+-- staging tables. NBS_ODSE.nbs_case_answer has a NOT NULL FK on
+-- nbs_question_uid → NBS_question, and we don't have real
+-- nbs_question_uid values for the HEP-form questions we author
+-- (Hep A INV_FORM_HEPA questions are not pre-seeded in this DB's
+-- nbs_question table by foundation). Skipping ODSE keeps the FK
+-- constraints satisfied. RDB_MODERN.nrt_page_case_answer has NO FK
+-- to nbs_question (RDB_MODERN doesn't host nbs_question), so any
+-- non-NULL nbs_question_uid placeholder works there.
+--
+-- Per the SP code at 007-sp_s_pagebuilder line 103-105 the matching
+-- predicates are:
 --   nrt_page.RDB_TABLE_NM = @rdb_table_name
 --   nrt_page.QUESTION_GROUP_SEQ_NBR IS NULL
 --   (DATA_TYPE='TEXT' OR rdb_column_nm LIKE '%_CD')
--- so we set data_type='TEXT' (so the row enters the text-pivot path)
--- and rdb_column_nm to the literal D_INV_<CAT> column name.
+-- so we set the rdb_column_nm to the literal D_INV_<CAT> column name
+-- and the text-pivot path picks them up. The pivot uses
+-- nrt_page.DATA_TYPE; we use empty/NULL for now and rely on the SP's
+-- COALESCE/fallback.
 -- =====================================================================
 
--- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column in ODSE.
 USE [NBS_ODSE];
 GO
 
 DECLARE @superuser_id_2 bigint = 10009282;
 DECLARE @hep_full_phc_uid_2 bigint = 22008500;
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_case_answer] WHERE nbs_case_answer_uid = 22008600)
+-- ODSE nbs_case_answer block intentionally skipped — see comment above.
+IF 1 = 0
 BEGIN
     SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
 
