@@ -251,8 +251,11 @@ BEGIN
         (22013100, N'STAPH AUR', NULL),
         -- BMD269 CASE_REPORT_STATUS (BM_CRF_STS -> 'Complete')
         (22013101, N'COM', NULL),
-        -- BMD295 INTBODYSITE (BM_ORG_ISO_S1 -> Internal body site)
-        (22013102, N'INBODYSITE', NULL),
+        -- BMD295 INTBODYSITE (codeset BM_ORG_ISO_S3 -> 'Liver')
+        -- (Earlier comment incorrectly said BM_ORG_ISO_S1; verified live
+        --  2026-05-23: BMD295 codeset is BM_ORG_ISO_S3 whose code set has
+        --  119383005=Liver, 119398007=Brain, etc.)
+        (22013102, N'119383005', NULL),
 
         -- BMD127 additional UNDERLYING_CONDITION rows (distinct codes -> distinct values)
         (22013200, N'ASTH', NULL),      -- Asthma
@@ -282,19 +285,23 @@ BEGIN
         -- BMD122 extra "other" sterile site (mark=0 path -> STERILE_SITE_OTHERS_CONCAT)
         (22013250, N'BONE', NULL),      -- Bone (BM_ORG_ISO_S1; not in SP whitelist of BMD122)
 
-        -- Antimicrobial coded answers (BMD212 agent, BMD213 method, BMD214 SIR, BMD215 sign)
+        -- Antimicrobial coded answers (BMD212 agent, BMD213 method, BMD214 SIR, BMD215 sign).
+        -- BMD212 codeset = BM_ANTI_AGENT — codes are C-codes (C0220892=PENICILLIN,
+        -- C0042313=VANCOMYCIN, C0002645=AMOXICILLIN). v_getobscode resolves the
+        -- C-code to short_desc_txt; that's the value the SP pivots into
+        -- ANTIMICROBIAL_AGENT_TESTED_1..8.
         -- PENICILLIN
-        (22013301, N'PENICILLIN', NULL),  -- BMD212 ANTIMICROBIAL_AGENT_TESTED_IND
+        (22013301, N'C0220892', NULL),    -- BMD212 PENICILLIN
         (22013302, N'A', NULL),           -- BMD213 SUSCEPTABILITY_METHOD -> AGAR (BM_SUSC_MT)
         (22013303, N'R', NULL),           -- BMD214 S_I_R_U_RESULT -> Resistant (LAB_SENS_RSLT_Q)
         (22013304, N'LE', NULL),          -- BMD215 MIC_SIGN -> <= (BM_ORG_SIGN)
         -- VANCOMYCIN
-        (22013311, N'VANCOMYCIN', NULL),
+        (22013311, N'C0042313', NULL),    -- BMD212 VANCOMYCIN
         (22013312, N'B', NULL),           -- BROTH
         (22013313, N'SUS', NULL),         -- Susceptible
         (22013314, N'EQ', NULL),          -- =
         -- AMOXICILLIN
-        (22013321, N'AMOXICILLIN', NULL),
+        (22013321, N'C0002645', NULL),    -- BMD212 AMOXICILLIN
         (22013322, N'D', NULL),           -- DISK (KB)
         (22013323, N'I', NULL),           -- Intermediate
         (22013324, N'GT', NULL);          -- >
