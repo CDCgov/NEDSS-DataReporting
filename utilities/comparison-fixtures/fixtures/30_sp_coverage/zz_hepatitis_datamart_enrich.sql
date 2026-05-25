@@ -224,7 +224,14 @@ BEGIN
          N'EVN', N'CASE',                       -- mood_cd, class_cd
          N'C', N'10110', N'Hepatitis A, acute', N'HEP', -- case_class_cd, cd, cd_desc, prog
          N'PG_Hepatitis_A_Acute_Investigation',                      -- investigation_form_cd
-         22008501,                              -- case_management_uid
+         -- case_management_uid: MUST be NULL so sp_f_page_case_postprocessing
+         -- enters our PHC into #PHC_UIDS (line 64 filter:
+         -- "CASE_MANAGEMENT_UID is null"). Cases WITH a case_management_uid
+         -- are routed through sp_f_std_page_case_postprocessing which
+         -- requires a row in nrt_investigation_case_management (we don't
+         -- author one). Without F_PAGE_CASE entry the Hep datamart SP
+         -- joins fail and 0 rows produced.
+         NULL,                                  -- case_management_uid
          N'O', N'Open',
          N'Confirmed',
          '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
