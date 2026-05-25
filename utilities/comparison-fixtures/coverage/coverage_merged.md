@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-24 21:40:06 PDT
+Generated: 2026-05-24 21:44:14 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -19,8 +19,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4627
-- Columns with ≥1 populated row: 2350
-- Overall column coverage: 50.8%
+- Columns with ≥1 populated row: 2379
+- Overall column coverage: 51.4%
 
 ## Per-table coverage
 
@@ -78,25 +78,25 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_tb_hiv | 1 | 6 | **6/6** |
 | dbo.d_tb_pam | 1 | 166 | 9/166 |
 | dbo.d_vaccination | 3 | 21 | **21/21** |
-| dbo.d_var_pam | 1 | 129 | 126/129 |
+| dbo.d_var_pam | 1 | 129 | 127/129 |
 | dbo.etl_dq_log | 423 | 15 | 14/15 |
 | dbo.event_metric | 29 | 28 | **28/28** |
 | dbo.event_metric_inc | 30 | 28 | **28/28** |
 | dbo.f_contact_record_case | 2 | 11 | **11/11** |
 | dbo.f_interview_case | 2 | 10 | **10/10** |
-| dbo.f_page_case | 6 | 35 | 33/35 |
+| dbo.f_page_case | 7 | 35 | 33/35 |
 | dbo.f_std_page_case | 2 | 52 | **52/52** |
 | dbo.f_tb_pam | 1 | 20 | **20/20** |
 | dbo.f_vaccination | 2 | 6 | **6/6** |
 | dbo.f_var_pam | 1 | 12 | **12/12** |
 | dbo.hep_multi_value_field_group | 1 | 1 | **1/1** |
 | dbo.hep100 | 0 | 187 | 0/187 |
-| dbo.hepatitis_datamart | 1 | 209 | 26/209 |
+| dbo.hepatitis_datamart | 2 | 209 | 51/209 |
 | dbo.inv_hiv | 3 | 19 | 17/19 |
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
 | dbo.investigation | 26 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 26241 | 15 | 14/15 |
+| dbo.job_flow_log | 26398 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
@@ -142,7 +142,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.treatment | 4 | 16 | **16/16** |
 | dbo.treatment_event | 3 | 11 | **11/11** |
 | dbo.user_profile | 11 | 8 | **8/8** |
-| dbo.var_datamart | 2 | 231 | 200/231 |
+| dbo.var_datamart | 2 | 231 | 203/231 |
 | dbo.var_pam_ldf | 0 | 3 | 0/3 |
 
 
