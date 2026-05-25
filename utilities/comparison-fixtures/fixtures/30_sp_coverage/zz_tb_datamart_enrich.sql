@@ -383,6 +383,65 @@ END
 GO
 
 -- =====================================================================
+-- Corrective overlay rows: anchor fixture wrote 6 TUB questions with
+-- the WRONG datamart_column_nm (their nbs_question_uid<->datamart_col
+-- mapping in live nbs_question disagrees with what the anchor authored).
+-- The anchor rows still feed the columns they THINK they do (the SP
+-- pivots on datamart_column_nm, not on nbs_question_uid), but the
+-- CORRECT datamart columns stay empty. Author additional rows with
+-- correct datamart_column_nm and valid codes so those 6 columns light up.
+--
+-- TUB100 LINK_STATE_CASE_NUM_1 (no codeset)
+-- TUB101 LINK_REASON_1          (codeset 2540 PHVS_TB_LINK_REASON)
+-- TUB103 LINK_REASON_2          (codeset 2540)
+-- TUB108 COUNT_STATUS           (codeset 2480 PHVS_TB_COUNT_STATUS)
+-- TUB109 COUNTRY_OF_VERIFIED_CASE (codeset 4260 PHVS_TB_BIRTH_CNTRY)
+-- TUB113 PATIENT_OUTSIDE_US_GT_2_MONTHS (codeset 4150 YNU)
+-- TUB117 STATUS_AT_DIAGNOSIS    (codeset 2450 PHVS_STATUS_AT_DIAG)
+--
+-- UID block: 22011200-22011206 (within reserved 22011000-22011999).
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_page_case_answer] WHERE nbs_case_answer_uid = 22011200)
+BEGIN
+    INSERT INTO [dbo].[nrt_page_case_answer]
+        ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
+         [nbs_question_uid],
+         [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
+         [investigation_form_cd], [question_identifier], [data_location],
+         [code_set_group_id], [last_chg_time], [record_status_cd],
+         [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id])
+    VALUES
+    (22001000, 22011200, 1, 1068, N'TB_PAM', N'LINK_STATE_CASE_NUM_1', N'TB-LINK-01', N'1', N'INV_FORM_RVCT', N'TUB100', N'NBS_Case_Answer.answer_txt', NULL, '2026-04-01T00:00:00', N'ACTIVE', N'LINK_STATE_CASE_NUM_1', NULL, 1, NULL),  -- TUB100 correct
+    (22001000, 22011201, 1, 1264, N'TB_PAM', N'LINK_REASON_1', N'PHC238', N'1', N'INV_FORM_RVCT', N'TUB101', N'NBS_Case_Answer.answer_txt', 2540, '2026-04-01T00:00:00', N'ACTIVE', N'LINK_REASON_1', NULL, 1, NULL),  -- TUB101 correct
+    (22001000, 22011202, 1, 1044, N'TB_PAM', N'LINK_REASON_2', N'PHC238', N'1', N'INV_FORM_RVCT', N'TUB103', N'NBS_Case_Answer.answer_txt', 2540, '2026-04-01T00:00:00', N'ACTIVE', N'LINK_REASON_2', NULL, 1, NULL),  -- TUB103 correct
+    (22001000, 22011203, 1, 1091, N'TB_PAM', N'COUNT_STATUS', N'PHC657', N'1', N'INV_FORM_RVCT', N'TUB108', N'NBS_Case_Answer.answer_txt', 2480, '2026-04-01T00:00:00', N'ACTIVE', N'COUNT_STATUS', NULL, 1, NULL),  -- TUB108 correct
+    (22001000, 22011204, 1, 1199, N'TB_PAM', N'COUNTRY_OF_VERIFIED_CASE', N'USA', N'1', N'INV_FORM_RVCT', N'TUB109', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'COUNTRY_OF_VERIFIED_CASE', NULL, 1, NULL),  -- TUB109 correct
+    (22001000, 22011205, 1, 1060, N'TB_PAM', N'PATIENT_OUTSIDE_US_GT_2_MONTHS', N'N', N'1', N'INV_FORM_RVCT', N'TUB113', N'NBS_Case_Answer.answer_txt', 4150, '2026-04-01T00:00:00', N'ACTIVE', N'PATIENT_OUTSIDE_US_GT_2_MONTHS', NULL, 1, NULL),  -- TUB113 correct
+    (22001000, 22011206, 1, 1319, N'TB_PAM', N'STATUS_AT_DIAGNOSIS', N'397709008', N'1', N'INV_FORM_RVCT', N'TUB117', N'NBS_Case_Answer.answer_txt', 2450, '2026-04-01T00:00:00', N'ACTIVE', N'STATUS_AT_DIAGNOSIS', NULL, 1, NULL)   -- TUB117 correct
+    ;
+
+    -- Mirror NBS_ODSE.nbs_case_answer rows (using existing nbs_question_uids).
+    SET IDENTITY_INSERT [NBS_ODSE].[dbo].[nbs_case_answer] ON;
+    INSERT INTO [NBS_ODSE].[dbo].[nbs_case_answer]
+        ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+         [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+         [last_chg_time], [last_chg_user_id],
+         [record_status_cd], [record_status_time], [seq_nbr])
+    VALUES
+        (22011200, 22001000, '2026-04-01T00:00:00', 10009282, N'TB-LINK-01', 1068, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        (22011201, 22001000, '2026-04-01T00:00:00', 10009282, N'PHC238', 1264, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        (22011202, 22001000, '2026-04-01T00:00:00', 10009282, N'PHC238', 1044, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        (22011203, 22001000, '2026-04-01T00:00:00', 10009282, N'PHC657', 1091, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        (22011204, 22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1199, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        (22011205, 22001000, '2026-04-01T00:00:00', 10009282, N'N', 1060, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        (22011206, 22001000, '2026-04-01T00:00:00', 10009282, N'397709008', 1319, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1);
+    SET IDENTITY_INSERT [NBS_ODSE].[dbo].[nbs_case_answer] OFF;
+END
+GO
+
+-- =====================================================================
 -- Corrective UPDATEs: fix answer_txt values that silently collapse to
 -- NULL in the 147 SP pivot because the answer code is not present in
 -- the relevant nrt_srte_code_value_general codeset.
