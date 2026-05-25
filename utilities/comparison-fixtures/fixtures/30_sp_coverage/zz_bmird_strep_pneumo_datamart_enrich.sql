@@ -168,6 +168,85 @@ BEGIN
         (22013324, N'OBS', N'EVN', N'BMD215', N'MIC sign (AMOXICILLIN)',
          N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
         (22013325, N'OBS', N'EVN', N'BMD216', N'MIC value (AMOXICILLIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        -- CEFOTAXIME root + branches (drug 4 — fills _4 columns)
+        (22013330, N'OBS', N'EVN', N'AntimicrobialRoot', N'CEFOTAXIME antimicrobial test',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013331, N'OBS', N'EVN', N'BMD212', N'Antimicrobial agent tested (CEFOTAXIME)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013332, N'OBS', N'EVN', N'BMD213', N'Susceptability method (CEFOTAXIME)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013333, N'OBS', N'EVN', N'BMD214', N'S/I/R/U result (CEFOTAXIME)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013334, N'OBS', N'EVN', N'BMD215', N'MIC sign (CEFOTAXIME)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013335, N'OBS', N'EVN', N'BMD216', N'MIC value (CEFOTAXIME)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        -- CEFTRIAXONE root + branches (drug 5 — fills _5 columns)
+        (22013340, N'OBS', N'EVN', N'AntimicrobialRoot', N'CEFTRIAXONE antimicrobial test',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013341, N'OBS', N'EVN', N'BMD212', N'Antimicrobial agent tested (CEFTRIAXONE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013342, N'OBS', N'EVN', N'BMD213', N'Susceptability method (CEFTRIAXONE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013343, N'OBS', N'EVN', N'BMD214', N'S/I/R/U result (CEFTRIAXONE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013344, N'OBS', N'EVN', N'BMD215', N'MIC sign (CEFTRIAXONE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013345, N'OBS', N'EVN', N'BMD216', N'MIC value (CEFTRIAXONE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        -- ERYTHROMYCIN root + branches (drug 6 — fills _6 columns)
+        (22013350, N'OBS', N'EVN', N'AntimicrobialRoot', N'ERYTHROMYCIN antimicrobial test',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013351, N'OBS', N'EVN', N'BMD212', N'Antimicrobial agent tested (ERYTHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013352, N'OBS', N'EVN', N'BMD213', N'Susceptability method (ERYTHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013353, N'OBS', N'EVN', N'BMD214', N'S/I/R/U result (ERYTHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013354, N'OBS', N'EVN', N'BMD215', N'MIC sign (ERYTHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013355, N'OBS', N'EVN', N'BMD216', N'MIC value (ERYTHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        -- CLINDAMYCIN root + branches (drug 7 — fills _7 columns)
+        (22013360, N'OBS', N'EVN', N'AntimicrobialRoot', N'CLINDAMYCIN antimicrobial test',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013361, N'OBS', N'EVN', N'BMD212', N'Antimicrobial agent tested (CLINDAMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013362, N'OBS', N'EVN', N'BMD213', N'Susceptability method (CLINDAMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013363, N'OBS', N'EVN', N'BMD214', N'S/I/R/U result (CLINDAMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013364, N'OBS', N'EVN', N'BMD215', N'MIC sign (CLINDAMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013365, N'OBS', N'EVN', N'BMD216', N'MIC value (CLINDAMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        -- TETRACYCLINE root + branches (drug 8 — fills _8 columns)
+        (22013370, N'OBS', N'EVN', N'AntimicrobialRoot', N'TETRACYCLINE antimicrobial test',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013371, N'OBS', N'EVN', N'BMD212', N'Antimicrobial agent tested (TETRACYCLINE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013372, N'OBS', N'EVN', N'BMD213', N'Susceptability method (TETRACYCLINE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013373, N'OBS', N'EVN', N'BMD214', N'S/I/R/U result (TETRACYCLINE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013374, N'OBS', N'EVN', N'BMD215', N'MIC sign (TETRACYCLINE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013375, N'OBS', N'EVN', N'BMD216', N'MIC value (TETRACYCLINE)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        -- AZITHROMYCIN root + branches (drug 9 — triggers ANTIMIC_GT_8_AGENT_AND_RESULT
+        -- since COUNTER > 8 cascades to the concat path)
+        (22013380, N'OBS', N'EVN', N'AntimicrobialRoot', N'AZITHROMYCIN antimicrobial test',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013381, N'OBS', N'EVN', N'BMD212', N'Antimicrobial agent tested (AZITHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013382, N'OBS', N'EVN', N'BMD213', N'Susceptability method (AZITHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013383, N'OBS', N'EVN', N'BMD214', N'S/I/R/U result (AZITHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013384, N'OBS', N'EVN', N'BMD215', N'MIC sign (AZITHROMYCIN)',
+         N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00'),
+        (22013385, N'OBS', N'EVN', N'BMD216', N'MIC value (AZITHROMYCIN)',
          N'ACTIVE', N'Result', 1, 10009282, '2026-04-01T00:00:00', 10009282, '2026-04-01T00:00:00');
 END;
 GO
@@ -234,7 +313,43 @@ BEGIN
         (22005000, 22013320, N'ANTIBIOTIC', 22013322, N'InvFrmQ', NULL),
         (22005000, 22013320, N'ANTIBIOTIC', 22013323, N'InvFrmQ', NULL),
         (22005000, 22013320, N'ANTIBIOTIC', 22013324, N'InvFrmQ', NULL),
-        (22005000, 22013320, N'ANTIBIOTIC', 22013325, N'InvFrmQ', NULL);
+        (22005000, 22013320, N'ANTIBIOTIC', 22013325, N'InvFrmQ', NULL),
+        -- CEFOTAXIME root 22013330
+        (22005000, 22013330, N'ANTIBIOTIC', 22013331, N'InvFrmQ', NULL),
+        (22005000, 22013330, N'ANTIBIOTIC', 22013332, N'InvFrmQ', NULL),
+        (22005000, 22013330, N'ANTIBIOTIC', 22013333, N'InvFrmQ', NULL),
+        (22005000, 22013330, N'ANTIBIOTIC', 22013334, N'InvFrmQ', NULL),
+        (22005000, 22013330, N'ANTIBIOTIC', 22013335, N'InvFrmQ', NULL),
+        -- CEFTRIAXONE root 22013340
+        (22005000, 22013340, N'ANTIBIOTIC', 22013341, N'InvFrmQ', NULL),
+        (22005000, 22013340, N'ANTIBIOTIC', 22013342, N'InvFrmQ', NULL),
+        (22005000, 22013340, N'ANTIBIOTIC', 22013343, N'InvFrmQ', NULL),
+        (22005000, 22013340, N'ANTIBIOTIC', 22013344, N'InvFrmQ', NULL),
+        (22005000, 22013340, N'ANTIBIOTIC', 22013345, N'InvFrmQ', NULL),
+        -- ERYTHROMYCIN root 22013350
+        (22005000, 22013350, N'ANTIBIOTIC', 22013351, N'InvFrmQ', NULL),
+        (22005000, 22013350, N'ANTIBIOTIC', 22013352, N'InvFrmQ', NULL),
+        (22005000, 22013350, N'ANTIBIOTIC', 22013353, N'InvFrmQ', NULL),
+        (22005000, 22013350, N'ANTIBIOTIC', 22013354, N'InvFrmQ', NULL),
+        (22005000, 22013350, N'ANTIBIOTIC', 22013355, N'InvFrmQ', NULL),
+        -- CLINDAMYCIN root 22013360
+        (22005000, 22013360, N'ANTIBIOTIC', 22013361, N'InvFrmQ', NULL),
+        (22005000, 22013360, N'ANTIBIOTIC', 22013362, N'InvFrmQ', NULL),
+        (22005000, 22013360, N'ANTIBIOTIC', 22013363, N'InvFrmQ', NULL),
+        (22005000, 22013360, N'ANTIBIOTIC', 22013364, N'InvFrmQ', NULL),
+        (22005000, 22013360, N'ANTIBIOTIC', 22013365, N'InvFrmQ', NULL),
+        -- TETRACYCLINE root 22013370
+        (22005000, 22013370, N'ANTIBIOTIC', 22013371, N'InvFrmQ', NULL),
+        (22005000, 22013370, N'ANTIBIOTIC', 22013372, N'InvFrmQ', NULL),
+        (22005000, 22013370, N'ANTIBIOTIC', 22013373, N'InvFrmQ', NULL),
+        (22005000, 22013370, N'ANTIBIOTIC', 22013374, N'InvFrmQ', NULL),
+        (22005000, 22013370, N'ANTIBIOTIC', 22013375, N'InvFrmQ', NULL),
+        -- AZITHROMYCIN root 22013380 (drug 9 — overflow to GT_8 concat)
+        (22005000, 22013380, N'ANTIBIOTIC', 22013381, N'InvFrmQ', NULL),
+        (22005000, 22013380, N'ANTIBIOTIC', 22013382, N'InvFrmQ', NULL),
+        (22005000, 22013380, N'ANTIBIOTIC', 22013383, N'InvFrmQ', NULL),
+        (22005000, 22013380, N'ANTIBIOTIC', 22013384, N'InvFrmQ', NULL),
+        (22005000, 22013380, N'ANTIBIOTIC', 22013385, N'InvFrmQ', NULL);
 END;
 GO
 
@@ -304,7 +419,37 @@ BEGIN
         (22013321, N'C0002645', NULL),    -- BMD212 AMOXICILLIN
         (22013322, N'D', NULL),           -- DISK (KB)
         (22013323, N'I', NULL),           -- Intermediate
-        (22013324, N'GT', NULL);          -- >
+        (22013324, N'GT', NULL),          -- >
+        -- CEFOTAXIME (drug 4)
+        (22013331, N'C0007554', NULL),    -- BMD212 CEFOTAXIME
+        (22013332, N'A', NULL),
+        (22013333, N'SUS', NULL),
+        (22013334, N'EQ', NULL),
+        -- CEFTRIAXONE (drug 5)
+        (22013341, N'C0007561', NULL),    -- BMD212 CEFTRIAXONE
+        (22013342, N'B', NULL),
+        (22013343, N'SUS', NULL),
+        (22013344, N'LT', NULL),          -- <
+        -- ERYTHROMYCIN (drug 6)
+        (22013351, N'C0014806', NULL),    -- BMD212 ERYTHROMYCIN
+        (22013352, N'D', NULL),
+        (22013353, N'R', NULL),
+        (22013354, N'GE', NULL),          -- >=
+        -- CLINDAMYCIN (drug 7)
+        (22013361, N'C0008947', NULL),    -- BMD212 CLINDAMYCIN
+        (22013362, N'A', NULL),
+        (22013363, N'I', NULL),
+        (22013364, N'LE', NULL),          -- <=
+        -- TETRACYCLINE (drug 8)
+        (22013371, N'C0039644', NULL),    -- BMD212 TETRACYCLINE
+        (22013372, N'B', NULL),
+        (22013373, N'R', NULL),
+        (22013374, N'GT', NULL),          -- >
+        -- AZITHROMYCIN (drug 9 — overflow to GT_8)
+        (22013381, N'C0052796', NULL),    -- BMD212 AZITHROMYCIN
+        (22013382, N'D', NULL),
+        (22013383, N'SUS', NULL),
+        (22013384, N'EQ', NULL);          -- =
 END;
 GO
 
@@ -337,7 +482,13 @@ BEGIN
     VALUES
         (22013305, 1, 4.000, NULL),    -- PENICILLIN MIC <= 4.0
         (22013315, 1, 0.500, NULL),    -- VANCOMYCIN  MIC = 0.5
-        (22013325, 1, 32.000, NULL);   -- AMOXICILLIN MIC > 32
+        (22013325, 1, 32.000, NULL),   -- AMOXICILLIN MIC > 32
+        (22013335, 1, 2.000, NULL),    -- CEFOTAXIME  MIC = 2.0
+        (22013345, 1, 1.000, NULL),    -- CEFTRIAXONE MIC < 1.0
+        (22013355, 1, 16.000, NULL),   -- ERYTHROMYCIN MIC >= 16
+        (22013365, 1, 8.000, NULL),    -- CLINDAMYCIN MIC <= 8
+        (22013375, 1, 64.000, NULL),   -- TETRACYCLINE MIC > 64
+        (22013385, 1, 0.250, NULL);    -- AZITHROMYCIN MIC = 0.25
 END;
 GO
 
