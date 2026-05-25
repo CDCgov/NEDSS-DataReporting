@@ -10,11 +10,28 @@
 --         in utilities/comparison-fixtures/scripts/merge_and_verify.sh
 --         (Steps 5/7/8.5/9 all skip it).  See ORCH_TODO in the
 --         agent-D2 final report — orchestrator wire-up is required
---         BEFORE this fixture moves the needle.
+--         BEFORE this fixture moves the needle in the merge run.
 --     (b) No fixtures author nrt_page_case_answer rows with
 --         part_type_cd IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
 --         and answer_txt pointing to a D_PLACE.PLACE_LOCATOR_UID
 --         (only TRAVEL_BLOCK / EXPOSURE_BLOCK / GENERAL answers exist).
+--
+-- D_PLACE.PLACE_LOCATOR_UID rows observed live (after Tier 1 place chain):
+--   20000030^^           (Foundation Place, minimal)
+--   20040010^^           (v2 Place, minimal)
+--   20000030^20040000^   (Foundation Place + postal locator variant)
+--   20040010^20040011^   (v2 Place + postal locator variant — most cols)
+--   20000030^^20040001   (Foundation Place + tele locator variant)
+-- (PLACE_LOCATOR_UID = place_uid + '^' + postal_uid + '^' + tele_uid;
+--  empty positions collapse to literal '^'.)
+--
+-- SP-side normalization (line 48 of 035-sp_repeated_place_postprocessing):
+--   IF len(answer_txt) - len_no_carets(answer_txt) < 2 THEN
+--       CONCAT(answer_txt, '^')   -- adds one trailing caret
+--   ELSE answer_txt
+-- This means a 1-caret input like '20040010^' becomes '20040010^^'.
+-- To match composite locator UIDs (which already have 2 carets), pass
+-- the answer_txt verbatim (>=2 carets bypasses normalization).
 --
 -- This fixture authors the (b) side: nrt_page_case_answer rows that
 -- the SP picks up via its INNER JOIN to D_PLACE on PLACE_LOCATOR_UID.
@@ -38,9 +55,9 @@
 --                PLACE_HANGOUT_OF_PHC, PLACE_AS_SEX_OF_PHC) + all D_PLACE
 -- cols populated on the referenced D_PLACE row.
 --
--- v2 Place (20040010 → PLACE_LOCATOR_UID 'PLC20040010GA01', authored
+-- v2 Place (20040010 → PLACE_LOCATOR_UID '20040010^20040011^', authored
 -- by fixtures/10_subjects/place.sql) populates every D_PLACE column.
--- Foundation Place (20000030 → 'PLC20000030GA01') populates the
+-- Foundation Place (20000030 → '20000030^20040000^') populates the
 -- mandatory subset.
 --
 -- Authoring strategy:
@@ -76,14 +93,14 @@ BEGIN
         -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 1
         -- both PART_TYPE_CD's, both pointing to v2 Place (max coverage).
         (22006000, 22010001, 1, 22010001,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'PLC20040010GA01', N'1',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'1',
          N'PG_Pertussis_Investigation', N'INV900',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
          NULL, NULL, 1, NULL,
          N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
         (22006000, 22010002, 1, 22010002,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'PLC20040010GA01', N'1',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'1',
          N'PG_Pertussis_Investigation', N'INV901',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
@@ -93,14 +110,14 @@ BEGIN
         -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 2
         -- Hangout points to foundation Place (minimal coverage variant).
         (22006000, 22010003, 1, 22010003,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'PLC20000030GA01', N'2',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20000030^20040000^', N'2',
          N'PG_Pertussis_Investigation', N'INV902',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
          NULL, NULL, 1, NULL,
          N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
         (22006000, 22010004, 1, 22010004,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'PLC20040010GA01', N'2',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'2',
          N'PG_Pertussis_Investigation', N'INV903',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
@@ -110,14 +127,14 @@ BEGIN
         -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 3
         -- Both PART_TYPE_CD's again; v2 Place for full-width coverage.
         (22006000, 22010005, 1, 22010005,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'PLC20040010GA01', N'3',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'3',
          N'PG_Pertussis_Investigation', N'INV904',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
          NULL, NULL, 1, NULL,
          N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
         (22006000, 22010006, 1, 22010006,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'PLC20040010GA01', N'3',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'3',
          N'PG_Pertussis_Investigation', N'INV905',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
