@@ -403,6 +403,21 @@ BEGIN
 END
 GO
 
+-- Bug-fix self-heal: if a prior run inserted PHC1247 (invalid code) for
+-- VAR100, replace with PHC222. Always-safe UPDATE.
+UPDATE [dbo].[nrt_page_case_answer]
+SET answer_txt = N'PHC222'
+WHERE nbs_case_answer_uid = 22009210 AND question_identifier = N'VAR100' AND answer_txt <> N'PHC222';
+GO
+USE [NBS_ODSE];
+GO
+UPDATE dbo.nbs_case_answer
+SET answer_txt = N'PHC222'
+WHERE nbs_case_answer_uid = 22009210 AND answer_txt <> N'PHC222';
+GO
+USE [RDB_MODERN];
+GO
+
 -- =====================================================================
 -- Block D: fix RASH_LOCATION translation. Parent fixture stored 'OTH'
 -- which is NOT a valid code in PHVS_VZ_RASH_DISTRO (code_set_group_id
@@ -481,15 +496,22 @@ DECLARE @inv_key BIGINT;
 SELECT @inv_key = INVESTIGATION_KEY FROM dbo.INVESTIGATION WHERE CASE_UID = 22002000;
 
 IF @inv_key IS NOT NULL
-   AND NOT EXISTS (
-       SELECT 1 FROM dbo.confirmation_method_group
-       WHERE INVESTIGATION_KEY = @inv_key
-   )
 BEGIN
-    INSERT INTO dbo.confirmation_method_group
-        (INVESTIGATION_KEY, CONFIRMATION_METHOD_KEY, CONFIRMATION_DT)
-    VALUES
-        (@inv_key, 4, '2026-04-15T00:00:00');
+    -- Re-point our investigation's CMG row to confirmation_method_key=4
+    -- (LD, "Laboratory confirmed", with non-NULL CONFIRMATION_METHOD_DESC).
+    -- The baseline insertion (probably from a previous SP run) used key=1
+    -- which is NULL-described and produces empty CONFIRMATION_METHOD_*.
+    UPDATE dbo.confirmation_method_group
+        SET CONFIRMATION_METHOD_KEY = 4,
+            CONFIRMATION_DT         = '2026-04-15T00:00:00'
+    WHERE INVESTIGATION_KEY = @inv_key;
+
+    -- If no row at all, insert a new one.
+    IF @@ROWCOUNT = 0
+        INSERT INTO dbo.confirmation_method_group
+            (INVESTIGATION_KEY, CONFIRMATION_METHOD_KEY, CONFIRMATION_DT)
+        VALUES
+            (@inv_key, 4, '2026-04-15T00:00:00');
 END
 GO
 
