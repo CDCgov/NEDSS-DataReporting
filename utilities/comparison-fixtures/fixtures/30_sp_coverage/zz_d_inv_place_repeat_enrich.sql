@@ -125,16 +125,19 @@ BEGIN
          N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsSexOfPHC'),
 
         -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 3
-        -- Both PART_TYPE_CD's again; v2 Place for full-width coverage.
+        -- Both PART_TYPE_CD's pointing to v2 Place tele variant
+        -- (PLACE_LOCATOR_UID = '20040010^20040011^20040012').  This is
+        -- the only D_PLACE row that populates PLACE_PHONE / PLACE_EMAIL
+        -- / PLACE_PHONE_EXT / PLACE_TELE_LOCATOR_UID / PLACE_PHONE_COMMENTS.
         (22006000, 22010005, 1, 22010005,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'3',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^20040012', N'3',
          N'PG_Pertussis_Investigation', N'INV904',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
          NULL, NULL, 1, NULL,
          N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
         (22006000, 22010006, 1, 22010006,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'3',
+         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^20040012', N'3',
          N'PG_Pertussis_Investigation', N'INV905',
          N'NBS_Case_Answer.answer_txt', NULL,
          '2026-04-01T00:00:00', N'ACTIVE',
