@@ -1234,6 +1234,10 @@ populated by this edge.
 | 22008000 - 22008999 | `zz_hepatitis_datamart_enrich` (full ODSE + answers chain for a Hep A Investigation to lift HEPATITIS_DATAMART column coverage) | **reserved 2026-05-22**. Parallel agent B. |
 | 22009000 - 22009999 | `zz_var_datamart_enrich` (extra answers for existing Varicella PHC 22002000 to lift VAR_DATAMART column coverage beyond the curated 25-question set) | **reserved 2026-05-22**. Parallel agent C. |
 | 22010000 - 22010999 | `zz_d_inv_place_repeat_enrich` (repeating-block place-of-exposure answers to populate D_INV_PLACE_REPEAT baseline columns) | **reserved 2026-05-22**. Parallel agent D. |
+| 22011000 - 22011999 | `zz_tb_datamart_enrich` (extra TUB* answer rows for existing TB PHC 22001000 to lift TB_DATAMART / TB_HIV_DATAMART / D_TB_PAM column coverage) | **reserved 2026-05-24**. Parallel agent E. |
+| 22012000 - 22012999 | `zz_std_hiv_datamart_enrich` (extra answers for existing STD PHC 22004000 to lift STD_HIV_DATAMART column coverage) | **reserved 2026-05-24**. Parallel agent F. |
+| 22013000 - 22013999 | `zz_bmird_strep_pneumo_datamart_enrich` (extra answers / observation rows for existing BMIRD PHC 22005000 to lift BMIRD_STREP_PNEUMO_DATAMART column coverage) | **reserved 2026-05-24**. Parallel agent G. |
+| 22014000 - 22014999 | `zz_d_investigation_repeat_more_blocks` (more repeating-block answer-row variants on PHC 22006000 across additional BLOCK_NM × seq combinations to lift D_INVESTIGATION_REPEAT row count and column coverage) | **reserved 2026-05-24**. Parallel agent H. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
