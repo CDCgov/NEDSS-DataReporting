@@ -379,12 +379,10 @@ BEGIN
          [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [seq_nbr])
     VALUES
-        -- VAR100 LESIONS_TOTAL — code_set_group_id=2760. Sample valid code
-        -- (queried live 2026-05-24): use '<50' or '50-249' representation
-        -- depending on dataset. Use plain text - var_pam SP doesn't have
-        -- 2760 in the special-translate exclusion list, so CODE_SHORT_DESC_TXT
-        -- swaps in for the answer. Use a valid code if known else fallback.
-        (22009210, 22002000, '2026-04-01T00:00:00', 10009282, N'PHC1247', 1143, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 0);
+        -- VAR100 LESIONS_TOTAL — code_set_group_id=2760 (PHVS_VZ_LESIONS_TOT).
+        -- Valid codes verified live 2026-05-24: PHC222 (<50), PHC223 (50-249),
+        -- PHC224 (250-499), PHC225 (>500), PHC1437 (50-500), UNK. Use PHC222.
+        (22009210, 22002000, '2026-04-01T00:00:00', 10009282, N'PHC222', 1143, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 0);
     SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
 END
 GO
@@ -401,7 +399,7 @@ BEGIN
          [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id],
          [nbs_ui_component_uid], [nca_add_time], [nuim_record_status_cd])
     VALUES
-        (22002000, 22009210, 2, 1143, N'VAR_PAM', N'LESIONS_TOTAL', N'PHC1247', N'1', N'INV_FORM_VAR', N'VAR100', N'NBS_Case_Answer.answer_txt', 2760, '2026-04-01T00:00:00', N'ACTIVE', N'LESIONS_TOTAL', NULL, 1, NULL, 2, '2026-04-01T00:00:00', N'Active');
+        (22002000, 22009210, 2, 1143, N'VAR_PAM', N'LESIONS_TOTAL', N'PHC222', N'1', N'INV_FORM_VAR', N'VAR100', N'NBS_Case_Answer.answer_txt', 2760, '2026-04-01T00:00:00', N'ACTIVE', N'LESIONS_TOTAL', NULL, 1, NULL, 2, '2026-04-01T00:00:00', N'Active');
 END
 GO
 
@@ -465,6 +463,34 @@ END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_nrt_investigation_postprocessing failed - ' + ERROR_MESSAGE();
 END CATCH;
+GO
+
+-- =====================================================================
+-- Block F: confirmation_method_group enrichment.
+--   var_datamart.CONFIRMATION_METHOD_1 / _ALL / _DATE come from joining
+--   confirmation_method_group (CMG) to confirmation_method (CM) via
+--   CONFIRMATION_METHOD_KEY, filtered by INVESTIGATION_KEY = our
+--   investigation. Baseline has 3 CM rows; CM key=4 is LD "Laboratory
+--   confirmed". Insert a CMG row binding INV_KEY (looked up dynamically
+--   from case_uid=22002000) to CM key=4. Idempotent: skip if exists.
+--
+--   INVESTIGATION_KEY is volatile across SP reseeds, so resolve at
+--   apply time.
+-- =====================================================================
+DECLARE @inv_key BIGINT;
+SELECT @inv_key = INVESTIGATION_KEY FROM dbo.INVESTIGATION WHERE CASE_UID = 22002000;
+
+IF @inv_key IS NOT NULL
+   AND NOT EXISTS (
+       SELECT 1 FROM dbo.confirmation_method_group
+       WHERE INVESTIGATION_KEY = @inv_key
+   )
+BEGIN
+    INSERT INTO dbo.confirmation_method_group
+        (INVESTIGATION_KEY, CONFIRMATION_METHOD_KEY, CONFIRMATION_DT)
+    VALUES
+        (@inv_key, 4, '2026-04-15T00:00:00');
+END
 GO
 
 -- =====================================================================
