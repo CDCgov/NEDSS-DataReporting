@@ -1250,6 +1250,8 @@ populated by this edge.
 | 22024000 - 22024999 | `zz_covid_case_datamart_round2` (fill the 149 remaining unpopulated cols on covid_case_datamart via more answer rows + dim/participation fixes) | **allocated 2026-05-24**. Loop / Agent R. |
 | 22025000 - 22025999 | `zz_inv_summ_datamart_unblock` (unblock inv_summ_datamart 0/58 — investigate the WHERE-clause requiring pre-existing rows from LOOP_round1) | **allocated 2026-05-24**. Loop / Agent S. |
 | 22026000 - 22026999 | `zz_covid_lab_celr_datamart_unblock` (unblock covid_lab_celr_datamart 0/101 — sibling of covid_lab_datamart with same SP pattern) | **allocated 2026-05-24**. Loop / Agent T. |
+| 22027000 - 22027999 | `zz_d_contact_record_enrich` (more answer rows / dim attrs on existing contact PHCs to lift d_contact_record from 42/66) | **allocated 2026-05-24**. Loop / Agent U. |
+| 22028000 - 22028999 | `zz_d_investigation_repeat_round3` (more block-NM coverage via a NEW PHC (not 22006000 to avoid bug #13 TEXT pivot pollution) to lift d_investigation_repeat from 106/256) | **allocated 2026-05-24**. Loop / Agent V. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
