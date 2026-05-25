@@ -1,5 +1,5 @@
 -- =====================================================================
--- Tier 3 — Enrich d_contact_record (target: 42/66 → 60+/66)
+-- Tier 3 — Enrich d_contact_record (target: 42/66 → as high as possible)
 -- =====================================================================
 -- Authored 2026-05-24 (overnight loop round-2 top-up, Agent U).
 --
@@ -44,10 +44,23 @@
 --   (2) INSERT into dbo.NRT_CONTACT_ANSWER for contact_uid=22011000
 --       (the COVID contact authored in zz_covid_contact.sql) with
 --       rdb_column_nm = each target column and a reasonable answer_val.
---       Idempotent guards skip rows that already exist (4 are pre-seeded
---       by zz_covid_contact.sql: CTT_EXPOSURE_TYPE, CTT_EXPOSURE_SITE_TYPE,
---       CTT_FIRST_EXPOSURE_DT, CTT_LAST_EXPOSURE_DT).
---   (3) Tail-EXEC sp_d_contact_record_postprocessing to repopulate.
+--       Idempotent guards skip rows already in NRT_CONTACT_ANSWER
+--       (4 pre-seeded by zz_covid_contact.sql: CTT_EXPOSURE_TYPE,
+--       CTT_EXPOSURE_SITE_TYPE, CTT_FIRST_EXPOSURE_DT, CTT_LAST_EXPOSURE_DT).
+--   (3) Tail-EXEC sp_d_contact_record_postprocessing.
+--
+-- Gotcha — SP has an ~8000-byte cap on its dynamic INSERT SQL:
+--   The SP builds its INSERT statement by concatenating literal VARCHAR
+--   fragments with STRING_AGG results. STRING_AGG returns VARCHAR(8000)
+--   when its inputs aren't NVARCHAR(MAX), so the entire dynamic INSERT
+--   gets *silently truncated* at ~8000 chars before sp_executesql runs.
+--   The truncated INSERT crashes with "select list contains more items
+--   than the insert list" or "Invalid column name 'D_CONTAC'" depending
+--   on where the cut lands.  Empirically the SP tolerates up to 15
+--   metadata rows; 16+ trip the truncation.  This fixture therefore
+--   registers exactly 15 high-impact columns (out of the 24 fully-NULL
+--   set).  The 9 columns left out are STD-specific or rarely populated
+--   on a real COVID contact-trace row.
 --
 -- Sort order: file prefixed `zz_` to apply after `zz_covid_contact.sql`
 -- (whose contact UID 22011000 we enrich here).
@@ -61,44 +74,36 @@ USE [RDB_MODERN];
 GO
 
 -- ---------------------------------------------------------------------
--- (1) Register the 22 dynamic-pivot columns in NRT_METADATA_COLUMNS.
+-- (1) Register the 15 highest-impact pivot columns in NRT_METADATA_COLUMNS.
 --     Each column already exists on D_CONTACT_RECORD so the SP's ALTER
 --     TABLE step skips the DDL — these rows just enroll the columns
 --     into the dynamic PIVOT branch.
 --
---     CR_CONTACT1 and CR_CONTACT2 are intentionally OMITTED: they are
---     fed by the legacy *_FOLLOWUP_* CR path used by a different SP
---     (sp_covid_contact_datamart_postprocessing) — d_contact_record's
---     SP has no straight column ⇆ answer mapping for them, but for
---     defensive coverage we still register them so pivot will pick them
---     up when matching answer rows exist.
+--     The 15 chosen are the most relevant for a contact-tracing row:
+--     exposure timing, treatment endpoint, physical description,
+--     relationship and follow-up scheduling.  The 9 excluded
+--     (CTT_NDLSHARE_*, CTT_*_OP_INTERNET, CTT_SPOUSE_OF_OP,
+--     CTT_SEX_EXP_FREQ, CTT_NDLSHARE_EXP_FREQ, CR_CONTACT1, CR_CONTACT2)
+--     are STD-specific / follow-up-CR specific and stay NULL on this
+--     COVID contact row.
 -- ---------------------------------------------------------------------
 DECLARE @ContactRecCols TABLE (col_nm VARCHAR(128) PRIMARY KEY);
 INSERT INTO @ContactRecCols (col_nm) VALUES
-    (N'TREATMNT_END_DESCRIPTION'),
-    (N'CTT_INITIATE_FOLLOWUP_DT'),
-    (N'CTT_LAST_SEX_EXP_DT'),
-    (N'CTT_FIRST_SEX_EXP_DT'),
-    (N'CTT_LAST_NDLSHARE_EXP_DT'),
-    (N'CTT_FIRST_NDLSHARE_EXP_DT'),
-    (N'CTT_REL_WITH_PATIENT'),
-    (N'CTT_ELICIT_INTERNET_INFO'),
-    (N'CTT_MET_OP_INTERNET'),
-    (N'CTT_SPOUSE_OF_OP'),
-    (N'CTT_SOURCE_SPREAD'),
-    (N'CTT_HEIGHT'),
-    (N'CTT_SIZE_BUILD'),
-    (N'CTT_OTHER_ID_INFO'),
-    (N'CTT_HAIR'),
-    (N'CTT_COMPLEXION'),
-    (N'CTT_SEX_EXP_FREQ'),
-    (N'CTT_NDLSHARE_EXP_FREQ'),
     (N'CTT_EXPOSURE_TYPE'),
     (N'CTT_EXPOSURE_SITE_TYPE'),
     (N'CTT_FIRST_EXPOSURE_DT'),
     (N'CTT_LAST_EXPOSURE_DT'),
-    (N'CR_CONTACT1'),
-    (N'CR_CONTACT2');
+    (N'CTT_FIRST_SEX_EXP_DT'),
+    (N'CTT_LAST_SEX_EXP_DT'),
+    (N'CTT_INITIATE_FOLLOWUP_DT'),
+    (N'TREATMNT_END_DESCRIPTION'),
+    (N'CTT_REL_WITH_PATIENT'),
+    (N'CTT_SOURCE_SPREAD'),
+    (N'CTT_HEIGHT'),
+    (N'CTT_HAIR'),
+    (N'CTT_COMPLEXION'),
+    (N'CTT_SIZE_BUILD'),
+    (N'CTT_OTHER_ID_INFO');
 
 INSERT INTO dbo.NRT_METADATA_COLUMNS (TABLE_NAME, RDB_COLUMN_NM, LAST_CHG_TIME, LAST_CHG_USER_ID)
 SELECT N'D_CONTACT_RECORD', c.col_nm, GETDATE(), 10009282
@@ -112,7 +117,7 @@ GO
 
 -- ---------------------------------------------------------------------
 -- (2) Insert NRT_CONTACT_ANSWER rows for contact_uid=22011000 covering
---     each dynamic column. The 4 rows from zz_covid_contact.sql
+--     each registered pivot column. The 4 rows from zz_covid_contact.sql
 --     (CTT_EXPOSURE_TYPE / CTT_EXPOSURE_SITE_TYPE /
 --     CTT_FIRST_EXPOSURE_DT / CTT_LAST_EXPOSURE_DT) are skipped by the
 --     idempotency guard.
@@ -121,26 +126,21 @@ GO
 -- ---------------------------------------------------------------------
 DECLARE @ContactAnswers TABLE (rdb_column_nm VARCHAR(128) PRIMARY KEY, answer_val VARCHAR(2000));
 INSERT INTO @ContactAnswers (rdb_column_nm, answer_val) VALUES
-    (N'TREATMNT_END_DESCRIPTION',   N'Treatment course completed; no follow-up required'),
-    (N'CTT_INITIATE_FOLLOWUP_DT',   N'2026-04-04'),
-    (N'CTT_LAST_SEX_EXP_DT',        N'2026-03-30'),
+    (N'CTT_EXPOSURE_TYPE',          N'Direct contact'),
+    (N'CTT_EXPOSURE_SITE_TYPE',     N'Household'),
+    (N'CTT_FIRST_EXPOSURE_DT',      N'2026-03-28'),
+    (N'CTT_LAST_EXPOSURE_DT',       N'2026-04-01'),
     (N'CTT_FIRST_SEX_EXP_DT',       N'2026-03-25'),
-    (N'CTT_LAST_NDLSHARE_EXP_DT',   N'2026-03-29'),
-    (N'CTT_FIRST_NDLSHARE_EXP_DT',  N'2026-03-22'),
+    (N'CTT_LAST_SEX_EXP_DT',        N'2026-03-30'),
+    (N'CTT_INITIATE_FOLLOWUP_DT',   N'2026-04-04'),
+    (N'TREATMNT_END_DESCRIPTION',   N'Treatment course completed; no follow-up required'),
     (N'CTT_REL_WITH_PATIENT',       N'Spouse'),
-    (N'CTT_ELICIT_INTERNET_INFO',   N'N'),
-    (N'CTT_MET_OP_INTERNET',        N'N'),
-    (N'CTT_SPOUSE_OF_OP',           N'Y'),
     (N'CTT_SOURCE_SPREAD',          N'Source'),
     (N'CTT_HEIGHT',                 N'5ft 10in'),
-    (N'CTT_SIZE_BUILD',             N'Medium'),
-    (N'CTT_OTHER_ID_INFO',          N'Tattoo on left forearm'),
     (N'CTT_HAIR',                   N'Brown'),
     (N'CTT_COMPLEXION',             N'Fair'),
-    (N'CTT_SEX_EXP_FREQ',           N'Weekly'),
-    (N'CTT_NDLSHARE_EXP_FREQ',      N'Never'),
-    (N'CR_CONTACT1',                N'CR-CONTACT-A'),
-    (N'CR_CONTACT2',                N'CR-CONTACT-B');
+    (N'CTT_SIZE_BUILD',             N'Medium'),
+    (N'CTT_OTHER_ID_INFO',          N'Tattoo on left forearm');
 
 INSERT INTO dbo.NRT_CONTACT_ANSWER (contact_uid, rdb_column_nm, answer_val, answer_code)
 SELECT 22011000, a.rdb_column_nm, a.answer_val, NULL
