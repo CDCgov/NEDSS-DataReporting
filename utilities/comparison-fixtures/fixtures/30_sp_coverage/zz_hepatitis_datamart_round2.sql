@@ -242,6 +242,81 @@ BEGIN
     VALUES (22023113, @hep_phc_uid, N'INV230', 4, 4, '2025-05-10');
 END;
 
+-- Link D_INVESTIGATION_REPEAT rows to the PHC via L_INVESTIGATION_REPEAT.
+-- sp_f_page_case_postprocessing reads this table to source
+-- D_INVESTIGATION_REPEAT_KEY into F_PAGE_CASE for the PHC. With multiple
+-- rows here, F_PAGE_CASE gets multiple rows (one per repeat key) which
+-- feed #TMP_F_INVESTIGATION_REPEAT and ultimately the VACC_*_NBR_/_DT_
+-- PIVOTs in sp_hepatitis_datamart_postprocessing.
+IF NOT EXISTS (SELECT 1 FROM dbo.L_INVESTIGATION_REPEAT WHERE D_INVESTIGATION_REPEAT_KEY = 22023110)
+BEGIN
+    INSERT INTO dbo.L_INVESTIGATION_REPEAT (D_INVESTIGATION_REPEAT_KEY, PAGE_CASE_UID) VALUES
+        (22023110, 22008500),
+        (22023111, 22008500),
+        (22023112, 22008500),
+        (22023113, 22008500);
+END;
+
+GO
+
+-- ---------------------------------------------------------------------
+-- 7b. nrt_page_case_answer rows for VAC103 / VAC120 (vaccination metadata)
+-- ---------------------------------------------------------------------
+-- sp_hepatitis_datamart_postprocessing #TMP_METADATA_TEST (line ~1472)
+-- builds the vaccination-repeat metadata catalog by SELECTing
+-- nrt_page_case_answer rows where:
+--   question_identifier IN ('VAC103','VAC120')
+--   investigation_form_cd = condition.DISEASE_GRP_DESC = 'PG_Hepatitis_A_Acute_Investigation'
+--   block_nm IS NOT NULL
+-- The block_nm value is then matched against D_INVESTIGATION_REPEAT.BLOCK_NM
+-- to enable the VACC_DOSE_NBR_1..4 / VACC_RECVD_DT_1..4 PIVOT.
+-- We use block_nm='INV230' to match the D_INVESTIGATION_REPEAT rows above.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_page_case_answer] WHERE act_uid = 22008500 AND nbs_case_answer_uid = 22023200)
+BEGIN
+    INSERT INTO [dbo].[nrt_page_case_answer]
+        ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
+         [nbs_question_uid],
+         [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
+         [investigation_form_cd], [question_identifier], [data_location],
+         [code_set_group_id], [last_chg_time], [record_status_cd],
+         [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id],
+         [nbs_ui_component_uid], [nca_add_time], [nuim_record_status_cd],
+         [data_type], [block_nm])
+    VALUES
+    -- VAC103 (vaccination date) — metadata row to feed #TMP_METADATA_TEST
+    (22008500, 22023200, 2, 22023200, N'D_INVESTIGATION_REPEAT', N'VAC_VaccinationDate', N'2010-05-10', N'1', N'PG_Hepatitis_A_Acute_Investigation', N'VAC103', N'NBS_Case_Answer.answer_txt', NULL, '2026-04-01T00:00:00', N'ACTIVE', N'VAC_VaccinationDate', NULL, 1, NULL, 2, '2026-04-01T00:00:00', N'Active', N'TEXT', N'INV230'),
+    -- VAC120 (vaccination dose number)
+    (22008500, 22023201, 2, 22023201, N'D_INVESTIGATION_REPEAT', N'VAC_VaccineDoseNum',  N'1',          N'1', N'PG_Hepatitis_A_Acute_Investigation', N'VAC120', N'NBS_Case_Answer.answer_txt', NULL, '2026-04-01T00:00:00', N'ACTIVE', N'VAC_VaccineDoseNum',  NULL, 1, NULL, 2, '2026-04-01T00:00:00', N'Active', N'TEXT', N'INV230');
+END;
+
+GO
+
+-- Re-run sp_f_page_case_postprocessing so the L_INVESTIGATION_REPEAT rows
+-- above produce per-repeat-key F_PAGE_CASE rows the hep datamart SP
+-- expects.
+BEGIN TRY
+    EXEC dbo.sp_f_page_case_postprocessing
+        @phc_ids = N'22008500',
+        @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'sp_f_page_case_postprocessing failed: ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- After sp_f_page_case rebuilds the F_PAGE_CASE rows, re-apply our
+-- physician / investigator / reporter / risk-factor key overrides so
+-- the rows we INSERTed point at the right dim rows (sp_f_page_case may
+-- reset PHYSICIAN_KEY etc. back to 1 since we have no real
+-- act_relationship / participation rows wiring providers to the PHC).
+UPDATE dbo.F_PAGE_CASE
+SET PHYSICIAN_KEY = 22023001,
+    INVESTIGATOR_KEY = 22023002,
+    ORG_AS_REPORTER_KEY = 22023003,
+    D_INV_RISK_FACTOR_KEY = 22023100
+WHERE INVESTIGATION_KEY = 26
+  AND (PHYSICIAN_KEY = 1 OR INVESTIGATOR_KEY = 1 OR ORG_AS_REPORTER_KEY = 1 OR D_INV_RISK_FACTOR_KEY = 1);
+
 GO
 
 -- ---------------------------------------------------------------------
