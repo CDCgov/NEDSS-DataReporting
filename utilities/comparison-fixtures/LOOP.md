@@ -76,7 +76,10 @@ Each /loop firing:
 | 22017000 - 22017999 | **allocated** Agent K (case_lab_datamart enrich) |
 | 22018000 - 22018999 | **allocated** Agent L (covid_contact_datamart enrich) |
 | 22019000 - 22019999 | **allocated** Agent M (LDF cluster — *_pam_ldf + ldf_bmird/mumps/hepatitis + *_ldf_group) |
-| 22020000+ | UNRESERVED — if you need more, add a new row to `catalog/uid_ranges.md` in the same turn you allocate. |
+| 22020000 - 22020999 | **allocated** Agent N (covid_vaccination_datamart enrich via new Patient with full demographics) |
+| 22021000 - 22021999 | **allocated** Agent O (lab100 enrichment — more Result-type LAB_TEST rows) |
+| 22022000 - 22022999 | **allocated** Agent P (covid_lab_datamart unblock — COVID-coded lab observations linked to existing COVID PHC) |
+| 22023000+ | UNRESERVED — if you need more, add a new row to `catalog/uid_ranges.md` in the same turn you allocate. |
 
 ## Round-2 targets (currently in flight; do NOT re-spawn)
 
@@ -200,6 +203,7 @@ headline X.X% (Δ +Y) | in flight: M`)
 T+0h 00m | iter 0 | Loop launched. 5 agents (E/F/G/H/I) in flight at start. Coverage 53.3% (2468/4627). Targets: TB cluster / STD / BMIRD / D_INV_REPEAT / MORB.
 T+0h 39m | iter 1 | Agents E (TB cluster) + F (STD_HIV) completed and reconciled. Spawned J (hep100 unblock, 22016xxx) + K (case_lab_datamart, 22017xxx) to top up to 5 in flight (J, K, G, H, I). Coverage 53.3% → 67.1% (+13.8pp / +638 cols).
 T+0h 50m | iter 2 (early — task-notification fired) | Agent G (BMIRD) completed; surfaced bug #12 (BMIRD ROW_NUMBER PARTITION issue) — findings doc written. Agent J (hep100 unblock) also completed mid-tick with +184 cols. Coverage 67.1% → 74.6% (+7.5pp / +345 cols). Spawned L (covid_contact_datamart, 22018xxx) + M (LDF cluster, 22019xxx). In flight: H, I, K, L, M (5).
+T+1h 05m | iter 3 (early — multiple notifications) | Agents I (morbidity 86→133, 100%) + H (d_inv_repeat 39→103, surfaced bug #13 TEXT pivot NULL-propagation) + K (case_lab errored on NOT NULL; quarantined) completed. Coverage 74.6% → 75.1% (+0.5pp). LAB100 also lifted 0→22 from earlier LAB_OBS_UIDS patch. Spawned N (covid_vax enrich, 22020xxx) + O (lab100 enrich, 22021xxx) + P (covid_lab unblock, 22022xxx) to top up to 5 in flight (L, M, N, O, P).
 
 ## End-of-loop note
 

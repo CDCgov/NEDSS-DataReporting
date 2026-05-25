@@ -1243,6 +1243,9 @@ populated by this edge.
 | 22017000 - 22017999 | `zz_case_lab_datamart_enrich` (case-lab linkage rows so sp_case_lab_datamart_postprocessing populates more cols, ~26 cols) | **allocated 2026-05-24**. Loop / Agent K. |
 | 22018000 - 22018999 | `zz_covid_contact_datamart_enrich` (more nrt_page_case_answer rows for COVID contact PHC to lift COVID_CONTACT_DATAMART column coverage from 71/94) | **allocated 2026-05-24**. Loop / Agent L. |
 | 22019000 - 22019999 | `zz_ldf_flagged_answers` (LDF-flagged nrt_page_case_answer rows across TB/VAR/BMIRD/Hep/Mumps PHCs to unblock *_pam_ldf + ldf_bmird/mumps/hepatitis + *_ldf_group tables) | **allocated 2026-05-24**. Loop / Agent M. |
+| 22020000 - 22020999 | `zz_covid_vaccination_datamart_enrich` (new Patient with full demographics + COVID vaccination intervention linkage to lift covid_vaccination_datamart from 10/60) | **allocated 2026-05-24**. Loop / Agent N. |
+| 22021000 - 22021999 | `zz_lab100_enrich` (additional Result-type LAB_TEST rows + LAB_TEST_RESULT to extend lab100 col coverage beyond initial 22/69) | **allocated 2026-05-24**. Loop / Agent O. |
+| 22022000 - 22022999 | `zz_covid_lab_datamart_unblock` (COVID-coded lab observations linked to existing COVID PHC 22003000 to unblock covid_lab_datamart from 0/129) | **allocated 2026-05-24**. Loop / Agent P. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
 
