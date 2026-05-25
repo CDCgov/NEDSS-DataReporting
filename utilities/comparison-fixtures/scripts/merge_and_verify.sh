@@ -488,6 +488,21 @@ run_sld_investigation_repeat() {
   }
 }
 
+# Step 8.6 — Populate D_INV_PLACE_REPEAT via sp_repeated_place_postprocessing.
+# Sibling of Step 8.5. The SP exists but was never wired into the
+# orchestrator; result was D_INV_PLACE_REPEAT stuck at 1/42 (sentinel
+# only). Discovered by agent-D2 (2026-05-24). The SP filters on
+# part_type_cd IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC') over
+# nrt_page_case_answer, joining to D_PLACE by composite PLACE_LOCATOR_UID.
+run_repeated_place_postprocessing() {
+  log "Step 8.6: populate D_INV_PLACE_REPEAT via sp_repeated_place_postprocessing"
+  local batch_id
+  batch_id=$(date +%y%m%d%H%M%S)
+  sql_q RDB_MODERN "EXEC dbo.sp_repeated_place_postprocessing @batch_id = $batch_id, @phc_id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || {
+    log "    (errored or no-op — see job_flow_log)"
+  }
+}
+
 run_datamart_sps() {
   log "Step 9: datamart SPs (40 SPs, condition-gated; only Hep-related populate with v1 single-condition fan-out)"
 
@@ -647,6 +662,7 @@ main() {
   rerun_tier_1_chains
   apply_tier_3_fixtures
   run_sld_investigation_repeat
+  run_repeated_place_postprocessing
   run_datamart_sps
 
   print_coverage_summary
