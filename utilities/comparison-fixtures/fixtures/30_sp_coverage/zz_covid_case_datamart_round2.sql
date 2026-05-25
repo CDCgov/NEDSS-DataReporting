@@ -383,6 +383,19 @@ END;
 GO
 
 -- ---------------------------------------------------------------------
+-- Section 5b: FIX up Section 5 rows — set seq_nbr=1.
+-- The 12 non-repeating PG_COVID cols are nbs_ui_component_uid=1013
+-- (multi-answer), so the SP routes them through #COVID_CASE_MULTI_ANS_DATA
+-- which REQUIRES seq_nbr IS NOT NULL. Update existing rows.
+-- ---------------------------------------------------------------------
+
+UPDATE [dbo].[nrt_page_case_answer]
+SET seq_nbr = 1
+WHERE nbs_case_answer_uid BETWEEN 22024100 AND 22024111
+  AND seq_nbr IS NULL;
+GO
+
+-- ---------------------------------------------------------------------
 -- Section 7: nrt_page_case_answer rows for partial-repeating cols.
 -- These have only the _2 and _3 datamart cols unpopulated; the _1 is
 -- already populated by foundation data. We need answers with
