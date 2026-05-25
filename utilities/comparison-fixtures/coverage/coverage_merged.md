@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-24 21:44:14 PDT
+Generated: 2026-05-24 21:54:53 PDT
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -19,8 +19,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4627
-- Columns with ≥1 populated row: 2379
-- Overall column coverage: 51.4%
+- Columns with ≥1 populated row: 2468
+- Overall column coverage: 53.3%
 
 ## Per-table coverage
 
@@ -91,12 +91,12 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.f_var_pam | 1 | 12 | **12/12** |
 | dbo.hep_multi_value_field_group | 1 | 1 | **1/1** |
 | dbo.hep100 | 0 | 187 | 0/187 |
-| dbo.hepatitis_datamart | 2 | 209 | 51/209 |
+| dbo.hepatitis_datamart | 2 | 209 | 140/209 |
 | dbo.inv_hiv | 3 | 19 | 17/19 |
 | dbo.inv_summ_datamart | 0 | 58 | 0/58 |
 | dbo.investigation | 26 | 71 | **71/71** |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 26398 | 15 | 14/15 |
+| dbo.job_flow_log | 28117 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat | 2 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
