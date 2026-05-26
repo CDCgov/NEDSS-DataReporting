@@ -237,3 +237,29 @@ Resume protocol after disk fix:
 4. If <85%: foreground-apply Q + U + V fixtures (committed) then
    re-refresh
 5. If ≥85%: write SESSION_SUMMARY.md and declare victory
+
+## Resume + resolution — 2026-05-25 (afternoon, post disk-fix)
+
+User cleared host disk and asked to resume. Reality differed from the
+resume protocol's assumptions:
+
+- The post-crash DB came up **near-baseline** (0 datamart rows) — the
+  84.4% live state did NOT survive. So step 4's "re-apply Q+U+V onto the
+  existing state" was moot; a full `merge_and_verify.sh` from-scratch
+  rebuild was required.
+- The cold deterministic rebuild exposed three issues invisible to the
+  warm incremental loop:
+  - **hep100 FK/ordering**: hardcoded INVESTIGATION_KEY=26 + alphabetical
+    sort before its anchor fixture → FK abort. Fixed (dynamic key lookup
+    + self-heal + rename to `zz_hepatitis_zz_hep100_unblock.sql`).
+  - **lab100 OID-into-bigint**: LAB_TEST.OID is bigint; fixture passed a
+    dotted-OID string → Msg 8114. Fixed (use row UID).
+  - **round2 tempdb blowup** (~70GB): the recurring disk-full culprit.
+    Quarantined per the fixture-error rule.
+- After fixes + quarantine: clean end-to-end run, **89.6% live-verified**
+  (4150/4633), past the 85% target and above the prior 84.4% — even
+  without round2's ~+61 cols. Committed as
+  `Fix clean-rebuild blockers; live coverage 89.6%`.
+
+Outstanding: restore round2 once its SP tempdb spill is fixed/capped
+(would push past 90%). BLOCKED.md updated to RESOLVED.

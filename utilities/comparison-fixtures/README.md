@@ -4,16 +4,16 @@ Synthetic NBS_ODSE INSERTs designed to maximize RDB_MODERN coverage when RTR
 runs initial hydration. Output is consumed by a planned RDB-vs-RDB_MODERN
 comparison test against MasterETL.
 
-## Status — 2026-05-25
+## Status — 2026-05-25 (live-verified, clean from-scratch run)
 
 End-to-end `scripts/merge_and_verify.sh` against 118 in-scope RDB_MODERN
-target tables:
+target tables, then `scripts/coverage_summary.sh`:
 
-- **Fully covered: 80** (every column populated for at least one row)
-- **Partially covered: 31**
-- **Empty: 6** (was 16 — 10 tables unblocked this session)
+- **Fully covered: 76** (every column populated for at least one row)
+- **Partially covered: 35**
+- **Empty: 6**
 - **Missing from live schema: 1** (`job_batch_rebuild_log` — not in baseline 6.0.18.1)
-- **Overall column coverage: 84.4%** (3915 / 4636 columns, last live-verified)
+- **Overall column coverage: 89.6%** (4150 / 4633 columns, live-verified)
 - **14 RTR bugs surfaced and documented** (5 merged upstream, 5 squashed
   on this branch, 4 documented with repros for follow-up — bugs #9 and
   #10 LANDED this branch in commits `a88e40e5` and `99ef3517`)
@@ -21,17 +21,18 @@ target tables:
 Wall-clock for the full pipeline: ~5 min from `docker compose down -v`.
 Zero external dependencies beyond the baseline image.
 
-**Pending verification**: agents Q (hepatitis_datamart round 2,
-+61 cols), U (d_contact_record enrich, +15), V (d_investigation_repeat
-round 3, +94) authored fixtures pre-block but their full application
-to live DB was interrupted by the disk-full event of 2026-05-25 00:30
-PDT. All fixtures are committed and idempotently re-applicable.
-Estimated post-apply headline: **~87-89%**.
-
-See `BLOCKED.md` for the open issue (MSSQL container tempdb/log
-growing unbounded — needs disk expansion or DB restart with
-`DBCC SHRINKFILE`). Once unblocked, `scripts/coverage_summary.sh`
-will produce the real number.
+This is a real, deterministic from-scratch number — not an estimate.
+The earlier disk-full block (2026-05-25 ~00:30 PDT) is **resolved**:
+host disk was freed, the DB rebuilt from a fresh baseline, and the
+pipeline now runs clean end-to-end (see `BLOCKED.md`). The 89.6%
+exceeds the prior 84.4% and the 85% target **even with**
+`zz_hepatitis_datamart_round2.sql` quarantined — its SP chain
+(`sp_hepatitis_datamart_postprocessing`) spills ~70GB into tempdb on a
+cold full dataset and was the recurring disk-full culprit. Restoring
+that fixture (~+61 hep cols) is the one outstanding follow-up; it needs
+an SP fix or a tempdb cap first. Two clean-rebuild bugs were fixed in
+passing (hep100 FK/ordering, lab100 OID-into-bigint) — see commit
+`Fix clean-rebuild blockers`.
 
 ## Documents
 
@@ -93,11 +94,14 @@ head -12 coverage/coverage_merged.md   # Headline numbers
 
 ## What's next
 
-1. **Unblock the disk-full state** (see `BLOCKED.md`). MSSQL's
-   tempdb/log volume needs expansion or `DBCC SHRINKFILE`.
-2. **Re-apply pending fixtures** (Q + U + V) once DB is responsive,
-   then `scripts/coverage_summary.sh` for the real headline.
-3. **Investigate bugs #12, #13, #14** — all surfaced this session
+1. **Restore `zz_hepatitis_datamart_round2.sql`** (currently quarantined
+   for the ~70GB tempdb blowup — see `BLOCKED.md` and
+   `fixtures/30_sp_coverage/_quarantine/README.md`). Needs an SP fix to
+   `sp_hepatitis_datamart_postprocessing` / `sp_f_page_case_postprocessing`
+   or a tempdb MAX_SIZE cap before it can safely re-enter the cold
+   single-batch pipeline. Recovers Agent Q's ~+61 hep cols (would push
+   the headline past 90%).
+2. **Investigate bugs #12, #13, #14** — all surfaced this session
    (BMIRD ROW_NUMBER PARTITION, sld_investigation_repeat TEXT pivot
    NULL prop, d_contact_record STRING_AGG VARCHAR(8000) truncation).
    Bug #13 fix alone would add ~50 TEXT cols on D_INVESTIGATION_REPEAT
