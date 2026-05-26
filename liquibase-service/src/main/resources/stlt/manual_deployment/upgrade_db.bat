@@ -36,15 +36,8 @@ if /i "%DATABASE%"=="master" (
 ) else if /i "%DATABASE%"=="rdb_modern" (
     set "SCRIPT_DIR=db\005-rdb_modern"
 ) else if /i "%DATABASE%"=="rdb" (
-    echo Selected RDB database.
-    choice /m "Would you like to run the rdb_modern scripts on the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB."
-	if errorlevel 2 (
-		echo User selected 'No'. Running RDB scripts.
-		set "SCRIPT_DIR=db\004-rdb"
-	) else (
-		echo User selected 'Yes'. Running modern scripts in RDB.
-		set "SCRIPT_DIR=db\005-rdb_modern"
-        )
+    echo Selected RDB database. Running rdb_modern scripts.
+    set "SCRIPT_DIR=db\005-rdb_modern"
 ) else (
     echo Unknown database: %DATABASE%
     exit /b 1
