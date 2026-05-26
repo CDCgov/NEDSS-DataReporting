@@ -5,18 +5,22 @@ These are not typical recordings; they are ELRs, or Electronic Lab Reports. ELRs
 ## Process
 
 1. Run `ELRImporter.sh` in wildfly (`docker compose exec -it wildfly sh /opt/jboss/wildfly/nedssdomain/Nedss/BatchFiles/ELRImporter.sh`) to import any existing ELRs
+2. Wait for the `nedss-datareporting-reporting-pipeline-service` to finish
+3. Start up `trace_db_dual_capture`
 
 ### Loop:
 
-2. Write the ELR as XML to [NBS_MSGOUTE].[dbo].[NBS_interface]
-3. `trace_db_dual_capture`
-4. Run `ELRImporter.sh` in wildfly (`docker compose exec -it wildfly sh /opt/jboss/wildfly/nedssdomain/Nedss/BatchFiles/ELRImporter.sh`)
-5. Back in NBS, the ELR should have landed in:
+4. Write the ELR as XML to [NBS_MSGOUTE].[dbo].[NBS_interface]
+5. Run `ELRImporter.sh` in wildfly (`docker compose exec -it wildfly sh /opt/jboss/wildfly/nedssdomain/Nedss/BatchFiles/ELRImporter.sh`)
+6. Wait for the `nedss-datareporting-reporting-pipeline-service` to finish
+7. Back in NBS, the ELR should have landed in:
     - Documents Requiring Security Assignment
         - if the GA county, condition and program don't align
         - Set Program Area to GDC
     - Documents Requiring Review
-6. From the Documents Requiring Review queue, click on the Lab Report and Create Investigation
+8. From the Documents Requiring Review queue, click on the Lab Report and Create Investigation OR assign the Lab Report to the existing Investigation
+9. Wait for the `nedss-datareporting-reporting-pipeline-service` to finish
+10. End this step in `trace_db_dual_capture`
 
 ## Resources
 
