@@ -49,9 +49,53 @@
 USE [RDB_MODERN];
 GO
 
--- Idempotency guard: only INSERT if no HEPATITIS_CASE row keyed to
--- INVESTIGATION_KEY=26 (CASE_UID=22008500) exists yet.
-IF NOT EXISTS (SELECT 1 FROM dbo.HEPATITIS_CASE WHERE INVESTIGATION_KEY = 26)
+-- ---------------------------------------------------------------------
+-- Resolve the anchor INVESTIGATION_KEY dynamically from CASE_UID.
+--
+-- Earlier versions hardcoded INVESTIGATION_KEY=26 from a one-off
+-- discovery query. That surrogate key is NOT stable across a clean
+-- rebuild — the INVESTIGATION dim is populated in a different order, so
+-- 26 either points at the wrong CASE_UID or doesn't exist, which raised
+-- FK__HEPATITIS__INVES and aborted the whole merge under `pipefail`.
+--
+-- The Hep A acute investigation (CASE_UID 22008500) is authored +
+-- driven into the INVESTIGATION dim by zz_hepatitis_datamart_enrich.sql.
+-- This fixture is renamed to sort AFTER that one, but we also make it
+-- self-healing: if the dim row is missing, drive it once (idempotent),
+-- then resolve the key. If it still can't be found, PRINT and skip
+-- cleanly so the pipeline does not abort.
+-- ---------------------------------------------------------------------
+DECLARE @anchor_case_uid bigint = 22008500;
+DECLARE @inv_key int =
+    (SELECT INVESTIGATION_KEY FROM dbo.INVESTIGATION WHERE CASE_UID = @anchor_case_uid);
+
+IF @inv_key IS NULL
+BEGIN
+    -- Anchor not in dim yet — try to flow it from staging (idempotent).
+    BEGIN TRY
+        EXEC dbo.sp_nrt_investigation_postprocessing
+            @id_list = N'22008500', @debug = 0;
+    END TRY
+    BEGIN CATCH
+        PRINT 'zz_hep100_unblock: could not drive anchor investigation: '
+              + ERROR_MESSAGE();
+    END CATCH;
+    SET @inv_key =
+        (SELECT INVESTIGATION_KEY FROM dbo.INVESTIGATION WHERE CASE_UID = @anchor_case_uid);
+END;
+
+IF @inv_key IS NULL
+BEGIN
+    PRINT 'zz_hep100_unblock: SKIP — anchor INVESTIGATION (CASE_UID '
+          + CAST(@anchor_case_uid AS varchar(20))
+          + ') absent; run zz_hepatitis_datamart_enrich first.';
+END
+ELSE
+BEGIN
+
+-- Idempotency guard: only INSERT if no HEPATITIS_CASE row keyed to the
+-- resolved anchor INVESTIGATION_KEY exists yet.
+IF NOT EXISTS (SELECT 1 FROM dbo.HEPATITIS_CASE WHERE INVESTIGATION_KEY = @inv_key)
 BEGIN
     INSERT INTO dbo.HEPATITIS_CASE (
         -- NOT NULL FK keys (must be satisfied first)
@@ -224,7 +268,7 @@ BEGIN
         2,        -- RPT_SRC_ORG_KEY -> D_ORGANIZATION
         1,        -- HEP_MULTI_VAL_GRP_KEY -> HEP_MULTI_VALUE_FIELD_GROUP
         2,        -- ADT_HSPTL_KEY -> D_ORGANIZATION (hospital admit)
-        26,       -- INVESTIGATION_KEY -> dbo.investigation (CASE_UID=22008500)
+        @inv_key, -- INVESTIGATION_KEY -> dbo.investigation (CASE_UID=22008500), resolved dynamically
         15,       -- CONDITION_KEY -> CONDITION (CONDITION_CD=10110 Hep A)
         1,        -- LDF_GROUP_KEY -> LDF_GROUP
         -- Lab / antibody indicators
@@ -375,7 +419,9 @@ BEGIN
         N'N',                       -- CHILD_RECEIVED_HBIG_IND
         NULL                        -- CHILD_RECEIVED_HBIG_DT
     );
-END;
+END;  -- close: IF NOT EXISTS (HEPATITIS_CASE for @inv_key)
+
+END;  -- close: ELSE (anchor INVESTIGATION resolved)
 GO
 
 -- =====================================================================
