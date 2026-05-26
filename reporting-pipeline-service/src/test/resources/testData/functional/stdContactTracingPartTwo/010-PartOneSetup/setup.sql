@@ -2,35 +2,35 @@ USE [NBS_ODSE];
 DECLARE @superuser_id bigint = 10009282;
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid bigint = 3410000;
-DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 3410001;
-DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 3410002;
-DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 3410003;
-DECLARE @dbo_Entity_entity_uid_2 bigint = 3410004;
-DECLARE @dbo_Postal_locator_postal_locator_uid_2 bigint = 3410005;
-DECLARE @dbo_Tele_locator_tele_locator_uid_3 bigint = 3410006;
-DECLARE @dbo_Tele_locator_tele_locator_uid_4 bigint = 3410007;
-DECLARE @dbo_Act_act_uid bigint = 3410008;
-DECLARE @dbo_Act_act_uid_2 bigint = 3410009;
-DECLARE @dbo_Act_act_uid_3 bigint = 3410010;
-DECLARE @dbo_Act_act_uid_4 bigint = 3410011;
-DECLARE @dbo_Entity_entity_uid_3 bigint = 3410012;
-DECLARE @dbo_Entity_entity_uid_4 bigint = 3410013;
-DECLARE @dbo_Postal_locator_postal_locator_uid_3 bigint = 3410014;
-DECLARE @dbo_Tele_locator_tele_locator_uid_5 bigint = 3410015;
-DECLARE @dbo_Tele_locator_tele_locator_uid_6 bigint = 3410016;
-DECLARE @dbo_Act_act_uid_5 bigint = 3410017;
-DECLARE @dbo_Act_act_uid_6 bigint = 3410018;
-DECLARE @dbo_Act_act_uid_7 bigint = 3410019;
-DECLARE @dbo_Entity_entity_uid_5 bigint = 3410020;
-DECLARE @dbo_Postal_locator_postal_locator_uid_4 bigint = 3410021;
-DECLARE @dbo_Entity_entity_uid_6 bigint = 3410022;
-DECLARE @dbo_Postal_locator_postal_locator_uid_5 bigint = 3410023;
-DECLARE @dbo_Act_act_uid_8 bigint = 3410024;
-DECLARE @dbo_Entity_entity_uid_7 bigint = 3410025;
-DECLARE @dbo_Postal_locator_postal_locator_uid_6 bigint = 3410026;
-DECLARE @dbo_Act_act_uid_9 bigint = 3410027;
-DECLARE @dbo_Act_act_uid_10 bigint = 3410028;
+DECLARE @dbo_Entity_entity_uid bigint = 3400000;
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 3400001;
+DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 3400002;
+DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 3400003;
+DECLARE @dbo_Entity_entity_uid_2 bigint = 3400004;
+DECLARE @dbo_Postal_locator_postal_locator_uid_2 bigint = 3400005;
+DECLARE @dbo_Tele_locator_tele_locator_uid_3 bigint = 3400006;
+DECLARE @dbo_Tele_locator_tele_locator_uid_4 bigint = 3400007;
+DECLARE @dbo_Act_act_uid bigint = 3400008;
+DECLARE @dbo_Act_act_uid_2 bigint = 3400009;
+DECLARE @dbo_Act_act_uid_3 bigint = 3400010;
+DECLARE @dbo_Act_act_uid_4 bigint = 3400011;
+DECLARE @dbo_Entity_entity_uid_3 bigint = 3400012;
+DECLARE @dbo_Entity_entity_uid_4 bigint = 3400013;
+DECLARE @dbo_Postal_locator_postal_locator_uid_3 bigint = 3400014;
+DECLARE @dbo_Tele_locator_tele_locator_uid_5 bigint = 3400015;
+DECLARE @dbo_Tele_locator_tele_locator_uid_6 bigint = 3400016;
+DECLARE @dbo_Act_act_uid_5 bigint = 3400017;
+DECLARE @dbo_Act_act_uid_6 bigint = 3400018;
+DECLARE @dbo_Act_act_uid_7 bigint = 3400019;
+DECLARE @dbo_Entity_entity_uid_5 bigint = 3400020;
+DECLARE @dbo_Postal_locator_postal_locator_uid_4 bigint = 3400021;
+DECLARE @dbo_Entity_entity_uid_6 bigint = 3400022;
+DECLARE @dbo_Postal_locator_postal_locator_uid_5 bigint = 3400023;
+DECLARE @dbo_Act_act_uid_8 bigint = 3400024;
+DECLARE @dbo_Entity_entity_uid_7 bigint = 3400025;
+DECLARE @dbo_Postal_locator_postal_locator_uid_6 bigint = 3400026;
+DECLARE @dbo_Act_act_uid_9 bigint = 3400027;
+DECLARE @dbo_Act_act_uid_10 bigint = 3400028;
 DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';
 DECLARE @dbo_Observation_local_id nvarchar(40) = N'OBS' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid))) + N'GA01';
 DECLARE @dbo_Observation_local_id_2 nvarchar(40) = N'OBS' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_2))) + N'GA01';
@@ -353,7 +353,6 @@ UPDATE [dbo].[Entity_locator_participation] SET [last_chg_time] = N'2026-05-06T2
 UPDATE [dbo].[Entity_locator_participation] SET [last_chg_time] = N'2026-05-06T22:04:56.937', [record_status_time] = N'2026-05-06T22:04:56.937', [status_time] = N'2026-05-06T22:04:56.937' WHERE [entity_uid] = @dbo_Entity_entity_uid AND [locator_uid] = @dbo_Tele_locator_tele_locator_uid_2;
 -- step: 1
 UPDATE [dbo].[Entity_locator_participation] SET [last_chg_time] = N'2026-05-06T22:04:56.937', [record_status_time] = N'2026-05-06T22:04:56.937', [status_time] = N'2026-05-06T22:04:56.937' WHERE [entity_uid] = @dbo_Entity_entity_uid AND [locator_uid] = @dbo_Tele_locator_tele_locator_uid;
-
 -- STEP 2: Create Investigation and Assign Investigator
 -- dbo.Entity
 -- step: 2
@@ -470,7 +469,6 @@ INSERT INTO [dbo].[PublicHealthCaseFact] ([public_health_case_uid], [age_reporte
 -- dbo.SubjectRaceInfo
 -- step: 2
 INSERT INTO [dbo].[SubjectRaceInfo] ([morbReport_uid], [public_health_case_uid], [race_cd], [race_category_cd]) VALUES (0, @dbo_Act_act_uid_5, N'2106-3', N'2106-3');
-
 -- STEP 3: Add Treatment to the Investigation
 -- dbo.Act
 -- step: 3
@@ -501,7 +499,6 @@ INSERT INTO [dbo].[Participation] ([subject_entity_uid], [act_uid], [type_cd], [
 -- dbo.Act_relationship
 -- step: 3
 INSERT INTO [dbo].[Act_relationship] ([target_act_uid], [source_act_uid], [type_cd], [add_time], [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [source_class_cd], [status_cd], [status_time], [target_class_cd]) VALUES (@dbo_Act_act_uid_5, @dbo_Act_act_uid_6, N'TreatmentToPHC', N'2026-05-06T22:16:04.810', N'2026-05-06T22:16:04.810', @superuser_id, N'ACTIVE', N'2026-05-06T22:16:04.810', N'TRMT', N'A', N'2026-05-06T22:16:04.810', N'CASE');
-
 -- STEP 4: Update Investigation Case Information
 -- dbo.Participation
 -- step: 4
@@ -592,7 +589,6 @@ INSERT INTO [dbo].[PublicHealthCaseFact] ([public_health_case_uid], [age_reporte
 -- dbo.SubjectRaceInfo
 -- step: 4
 INSERT INTO [dbo].[SubjectRaceInfo] ([morbReport_uid], [public_health_case_uid], [race_cd], [race_category_cd]) VALUES (0, @dbo_Act_act_uid_5, N'2106-3', N'2106-3');
-
 -- STEP 5: Assign investigator for field follow up
 -- dbo.message_log
 -- step: 5
@@ -723,7 +719,6 @@ INSERT INTO [dbo].[PublicHealthCaseFact] ([public_health_case_uid], [age_reporte
 -- dbo.SubjectRaceInfo
 -- step: 5
 INSERT INTO [dbo].[SubjectRaceInfo] ([morbReport_uid], [public_health_case_uid], [race_cd], [race_category_cd]) VALUES (0, @dbo_Act_act_uid_5, N'2106-3', N'2106-3');
-
 -- STEP 6: Patient interview
 -- dbo.NBS_case_answer
 -- step: 6
