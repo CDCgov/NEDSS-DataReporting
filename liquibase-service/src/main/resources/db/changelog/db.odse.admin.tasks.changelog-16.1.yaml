@@ -3,7 +3,6 @@ databaseChangeLog:
       id: 0
       author: liquibase
       runOnChange: true
-      comment: "Enable CDC for Treatment table in ODSE"
       changes:
         - sqlFile:
             path: 000-odse-db-general-001.sql
