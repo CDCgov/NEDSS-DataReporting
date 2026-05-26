@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from tracing_models import KnownAssociation, UidGeneratorEntry
 from tracing_metadata import DEFAULT_SUPERUSER_ID
 from tracing_output import write_summary
-from tracing_replay import reconstruct_sql_statements
+from tracing_replay import DEFAULT_ELR_USER_ID, reconstruct_sql_statements
 
 
 class ReplaySqlTest(unittest.TestCase):
@@ -131,6 +131,19 @@ class ReplaySqlTest(unittest.TestCase):
             },
             {
                 "schema_name": "dbo",
+                "table_name": "Person",
+                "operation": "insert",
+                "start_lsn": "0x01",
+                "seqval": "0x04a",
+                "operation_code": 2,
+                "row": {
+                    "person_uid": 10009297,
+                    "last_chg_user_id": DEFAULT_ELR_USER_ID,
+                    "first_nm": "Bart",
+                },
+            },
+            {
+                "schema_name": "dbo",
                 "table_name": "Entity_locator_participation",
                 "operation": "insert",
                 "start_lsn": "0x01",
@@ -162,8 +175,9 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertNotIn("GetUid", sql)
         self.assertNotIn("MAX([postal_locator_uid])", sql)
         self.assertIn(f"DECLARE @superuser_id bigint = {DEFAULT_SUPERUSER_ID};", sql)
+        self.assertIn(f"DECLARE @elruser_id bigint = {DEFAULT_ELR_USER_ID};", sql)
         self.assertIn(
-            "DECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\n",
+            "DECLARE @superuser_id bigint = 10009282;\nDECLARE @elruser_id bigint = 10000015;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\n",
             sql,
         )
         self.assertNotIn("DECLARE @dbo_Security_log_security_log_uid bigint = -1000;", sql)
@@ -177,7 +191,9 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertNotIn("SYSUTCDATETIME()", sql)
         self.assertIn(str(DEFAULT_SUPERUSER_ID), sql)
         self.assertIn("@superuser_id", sql)
+        self.assertIn("@elruser_id", sql)
         self.assertNotIn(", 7777,", sql)
+        self.assertNotIn(f", {DEFAULT_ELR_USER_ID},", sql)
         self.assertNotIn("INSERT INTO [dbo].[Security_log]", sql)
         self.assertNotIn("INSERT INTO [dbo].[Person_hist]", sql)
         self.assertIn(
@@ -219,7 +235,7 @@ class ReplaySqlTest(unittest.TestCase):
         self.assertIn("Reconstructed SQL written to: inserts.sql", summary)
         self.assertIn("Run inserts.sql directly against the source database to replay captured writes.", summary)
         self.assertIn(
-            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = 1234;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1235;\n",
+            "USE [NBS_ODSE];\nDECLARE @superuser_id bigint = 10009282;\nDECLARE @elruser_id bigint = 10000015;\n\n-- Adjust the UID declarations below manually so they remain unique across other tests.\nDECLARE @dbo_Entity_entity_uid bigint = 1234;\nDECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1235;\n",
             inserts_sql,
         )
         self.assertNotIn("Security_log_security_log_uid", summary)

@@ -25,6 +25,8 @@ from tracing_sql import quote_identifier, sql_literal, sql_quote
 
 
 SUPERUSER_ID_VARIABLE = "@superuser_id"
+ELR_USER_ID_VARIABLE = "@elruser_id"
+DEFAULT_ELR_USER_ID = 10000015
 
 SCALAR_DECLARE_PATTERN = re.compile(
     r"^DECLARE\s+(?P<name>@[A-Za-z0-9_]+)\s+(?P<sql_type>[^=;]+?)(?:\s*=\s*(?P<expression>.+?))?;\s*$",
@@ -608,6 +610,13 @@ def is_user_id_column(column_name: str) -> bool:
     return column_name.lower().endswith("user_id")
 
 
+def user_id_variable_for_value(value: object) -> str:
+    numeric_value = parse_int_value(value)
+    if numeric_value == DEFAULT_ELR_USER_ID:
+        return ELR_USER_ID_VARIABLE
+    return SUPERUSER_ID_VARIABLE
+
+
 
 def is_version_column(column_name: str) -> bool:
     return column_name.lower() == "version_ctrl_nbr"
@@ -954,7 +963,7 @@ def sql_replay_assignment_expression(
     emit_only_step: int | None,
 ) -> str:
     if is_user_id_column(column_name):
-        return SUPERUSER_ID_VARIABLE
+        return user_id_variable_for_value(value)
     return sql_value_expression(
         table_key,
         row,
@@ -1421,6 +1430,7 @@ def reconstruct_sql_statements(
     statements: list[str] = []
     top_level_declarations: list[str] = [
         f"DECLARE {SUPERUSER_ID_VARIABLE} bigint = {superuser_id};",
+        f"DECLARE {ELR_USER_ID_VARIABLE} bigint = {DEFAULT_ELR_USER_ID};",
         "",
         "-- Adjust the UID declarations below manually so they remain unique across other tests.",
     ]
