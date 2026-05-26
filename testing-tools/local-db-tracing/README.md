@@ -297,6 +297,13 @@ Show RDB-vs-RDB_MODERN compare tracer help:
 python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --help
 ```
 
+Shift IDs in an existing functional test. For example, this moves all the IDs 10000 higher:
+
+```powershell
+python local-db-tracing/shift_test_ids.py --test-dir NEDSS-DataReporting/reporting-pipeline-service/src/test/resources/testData/functional/covidMarkReviewed --offset 10000
+```
+
+
 ## Key Options
 
 Commonly used options across tracers:
