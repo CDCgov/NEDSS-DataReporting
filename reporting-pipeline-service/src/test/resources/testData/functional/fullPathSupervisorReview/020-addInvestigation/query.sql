@@ -826,9 +826,9 @@ WHERE
 	[LOCAL_ID] = N'CAS20100408GA01';
 
 -- Query 13: Verify F_PAGE_CASE entry is created 
--- Table is mostly keys that will change, so just verify 1 for patient and condition is created)
 SELECT
-	COUNT(*) as count
+	ADD_DATE_KEY,
+	LAST_CHG_DATE_KEY
 FROM
 	[RDB_MODERN].[dbo].[F_PAGE_CASE]
 WHERE

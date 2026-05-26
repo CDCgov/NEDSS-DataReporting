@@ -32,19 +32,16 @@ COPY --from=fetcher /sqlcmd /usr/local/bin/sqlcmd
 #Copy sources
 #changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
-#master
+# master
 COPY liquibase-service/src/main/resources/db/001-master /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/001-master/functions /liquibase/changelog
-#srte
+# srte
 COPY liquibase-service/src/main/resources/db/002-srte /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/002-srte/tables /liquibase/changelog
-#odse
+# odse
 COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
-#rdb
-COPY liquibase-service/src/main/resources/db/004-rdb /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/004-rdb/tables /liquibase/changelog
-#rdb_modern
+# rdb / rdb_modern
 COPY liquibase-service/src/main/resources/db/005-rdb_modern /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase/changelog
