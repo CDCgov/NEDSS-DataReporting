@@ -3,20 +3,20 @@
     {
       "ADT_HSPTL_KEY": 1,
       "CASE_COUNT": 1,
-      "DIAGNOSIS_DT_KEY": 1,
+      "DIAGNOSIS_DT_KEY": 13261,
       "GEOCODING_LOCATION_KEY": 1,
       "INVESTIGATION_COUNT": 1,
-      "INV_RPT_DT_KEY": 1,
-      "INV_START_DT_KEY": 1
+      "INV_RPT_DT_KEY": 13276,
+      "INV_START_DT_KEY": 13264
     },
     {
       "ADT_HSPTL_KEY": 1,
       "CASE_COUNT": 1,
-      "DIAGNOSIS_DT_KEY": 1,
+      "DIAGNOSIS_DT_KEY": 13261,
       "GEOCODING_LOCATION_KEY": 1,
       "INVESTIGATION_COUNT": 1,
-      "INV_RPT_DT_KEY": 1,
-      "INV_START_DT_KEY": 1
+      "INV_RPT_DT_KEY": 13276,
+      "INV_START_DT_KEY": 13264
     }
   ],
   "1": [
@@ -159,9 +159,6 @@
   "8": [
     {
       "COMMENT_DATE": "2026-05-06T18:36:00",
-      "D_INTERVIEW_KEY": 2.0,
-      "D_INTERVIEW_NOTE_KEY": 2.0,
-      "NBS_ANSWER_UID": 2.0,
       "USER_COMMENT": "asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say. asd asd asda dasd adsas dad asda lots of things to say.",
       "USER_FIRST_NAME": "Ariella",
       "USER_LAST_NAME": "Kent"
