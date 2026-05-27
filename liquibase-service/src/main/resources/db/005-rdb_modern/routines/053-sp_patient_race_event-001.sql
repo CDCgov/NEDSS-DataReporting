@@ -151,6 +151,15 @@ BEGIN
 --and cte1.rn = 1
         ;
 
+        --the sas PatientDimension.sas(line 219) for PATIENT_RACE_CALC_DETAILS column takes an extra step to reassign the column
+        --like so "IF LENGTHN(PATIENT_RACE_CALC_DETAILS)<1 THEN PATIENT_RACE_CALC_DETAILS='Unknown';". We should introduce
+         --a similar reassignment of the column to to prevent it from being NULL.
+
+        UPDATE sppr
+        SET sppr.PATIENT_RACE_CALC_DETAILS = 'Unknown'
+        FROM #TMP_S_PERSON_ROOT_RACE sppr
+        WHERE NULLIF(LTRIM(RTRIM(sppr.PATIENT_RACE_CALC_DETAILS)), '') IS NULL;
+
 
         update #TMP_S_PERSON_ROOT_RACE
         set PATIENT_RACE_CALCULATED =
