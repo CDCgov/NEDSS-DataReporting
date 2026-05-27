@@ -119,10 +119,7 @@ class DataDrivenFunctionalTests extends FunctionalTest {
           throw new AssertionError(
               String.format(
                   "Error executing query %d in %s/%s/query.sql. SQL:%n%s",
-                  i,
-                  testDirectory.getFileName(),
-                  stepDirectory.getFileName(),
-                  query.strip()),
+                  i, testDirectory.getFileName(), stepDirectory.getFileName(), query.strip()),
               e);
         }
 
