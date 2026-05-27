@@ -78,3 +78,25 @@ INSERT INTO [dbo].[Postal_locator] ([postal_locator_uid], [add_time], [cntry_cd]
 -- dbo.Entity_locator_participation
 -- step: 1
 INSERT INTO [dbo].[Entity_locator_participation] ([entity_uid], [locator_uid], [cd], [class_cd], [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [status_cd], [status_time], [use_cd], [version_ctrl_nbr], [as_of_date]) VALUES (@dbo_Entity_entity_uid, @dbo_Postal_locator_postal_locator_uid, N'H', N'PST', N'2026-05-20T17:52:20.203', @superuser_id, N'ACTIVE', N'2026-05-20T17:52:20.203', N'A', N'2026-05-20T17:52:20.203', N'H', 1, N'2026-05-20T00:00:00');
+-- dbo.Person_race
+-- step: 1
+INSERT INTO [dbo].[Person_race]
+(
+  [person_uid],
+  [race_cd],
+  [race_category_cd],
+  [add_time],
+  [add_user_id],
+  [record_status_cd],
+  [as_of_date]
+)
+VALUES
+(
+  @dbo_Entity_entity_uid,
+  N'U',
+  N'U',
+  N'2026-05-20T17:52:20.203',
+  @superuser_id,
+  N'ACTIVE',
+  N'2026-05-20T00:00:00'
+);
