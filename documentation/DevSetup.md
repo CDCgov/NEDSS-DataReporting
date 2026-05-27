@@ -8,7 +8,7 @@
    1. NBS_ODSE.NBS_Configuration entry added with `config_key = 'ENV'`, `config_value = 'UAT'`
    2. RTR User creation scripts applied
    3. Change Data Capture (CDC) enabled for relevant databases and tables
-2. [liquibase](../liquibase-service/Dockerfile.local) - Liquibase container with all migration scripts copied from `../liquibase-service/src/main/resources/db/`. Configured to automatically apply migrations and 1 time onboarding scripts and then close. Entrypoint: [migrate.sh](../containers/liquibase/migrate.sh)
+2. [liquibase](../liquibase-service/Dockerfile) - Liquibase container with all migration scripts copied from `../liquibase-service/src/main/resources/db/`. Configured to automatically apply migrations and 1 time onboarding scripts and then close. Entrypoint: [migrate.sh](../liquibase-service/migrate.sh)
 3. [kafka](../docker-compose.yaml) - Message broker
 4. [kafka-connect](../containers/kafka-connect/Dockerfile) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. Requires POST of [mssql-connector.json](../containers/kafka-connect/initialize/mssql-connector.json) after container start up.
 5. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Requires POST for each connector to be sent after container start up.
@@ -30,3 +30,32 @@ docker compose up -d
 2. Create a new patient
 3. Add an investigation to the patient
 4. View `RDB_MODERN.D_PATIENT` and `RDB_MODERN.INVESTIGATION` tables and verify the newly created patient and investigation are present.
+
+### Running SAS
+A SAS container is present in the docker compose witht the `sas` profile. This means it will not start by default.
+
+To start only the SAS container and its dependencies
+```sh
+docker compose up sas -d
+```
+
+To start all containers including SAS
+```sh
+docker compose --profile sas up -d
+```
+
+To execute the MasterETL script the following 1 liner can be used
+```sh
+# Executes the MasterEtl script from outside the SAS container
+docker compose exec -u SAS -it sas sh -c '/opt/wildfly-10.0.0.Final/nedssdomain/Nedss/BatchFiles/MasterEtl.sh'
+```
+
+To log into the SAS container and run it from within the following steps can be taken:
+
+```sh
+# Connect to SAS container as the SAS user
+docker compose exec -u SAS -it sas bash
+
+# Run MasterEtl script
+/opt/wildfly-10.0.0.Final/nedssdomain/Nedss/BatchFiles/MasterEtl.sh
+```

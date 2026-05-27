@@ -26,9 +26,9 @@ Both, (Windows and Linux) scripts support the same functionality:
   - **NBS_SRTE**: Scripts under [002-srte](../../db/002-srte) will be run with the NBS_SRTE database server name. 
   - **NBS_ODSE**: Scripts under [003-odse](../../db/003-odse) will be run with the NBS_ODSE database server name.
   - Reporting Database:
-    - **RDB**: If RDB is selected as the default reporting database, please ensure that scripts for RDB_MODERN are run against the RDB database server. 
+    - **RDB**: If RDB is selected as the default reporting database, please ensure that scripts for [005-rdb_modern](../../db/005-rdb_modern) are run against the RDB database server. 
     - **RDB_MODERN**: 
-      - If RDB_MODERN is selected as the reporting database, please run both scripts under [004-rdb](../../db/004-rdb) with the RDB server_name and [005-rdb_modern](../../db/005-rdb_modern) with RDB_MODERN server_name. 
+      - If RDB_MODERN is selected as the reporting database, please ensure that scripts for [005-rdb_modern](../../db/005-rdb_modern) are run against the RDB_MODERN database server.
       - `nrt_<>` tables should not exist the first time the scripts are executed.
 
 ## Requirements
@@ -109,23 +109,7 @@ upgrade_db.bat [options] server database user password
    ```bash
    ./upgrade_db.sh server_name rdb my_user my_password
    ```
-   Follow the prompts after selecting rdb. 
-    ```text
-   Selected RDB database.
-   Do you want to run rdb_modern scripts in the RDB database? Enter Y to run 005-rdb_modern scripts in RDB. Select N to run 004-rdb scripts in RDB. [Y,N]?
-   ```
-   If 005-rdb_modern scripts are required in RDB, please select Y. 
-   ```text
-   Y
-   User selected 'Yes'. Running modern scripts in RDB.
-    ```
-
-   If scripts are not required in RDB, please select N. This will run minimal required scripts (004-rdb) for RDB. 
-   ```text
-   N
-   User selected 'No'. Running RDB scripts.
-    ```
-6. **Display Help**:
+5. **Display Help**:
    ```bash
    ./upgrade_db.sh --help | -h | /h
    ```

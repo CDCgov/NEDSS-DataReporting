@@ -93,25 +93,8 @@ case "$lower_db" in
         SCRIPT_DIR="$PROJECT_ROOT/db/005-rdb_modern"
         ;;
     rdb)
-        echo "Selected RDB database."
-        while true; do
-            read -p "Would you like to run the rdb_modern scripts on the RDB database? (Y/N): " yn
-            case $yn in
-                [Yy]*)
-                    echo "User selected 'Yes'. Running modern scripts in RDB."
-                    SCRIPT_DIR="$PROJECT_ROOT/db/005-rdb_modern"
-                    break
-                    ;;
-                [Nn]*)
-                    echo "User selected 'No'. Running RDB scripts."
-                    SCRIPT_DIR="$PROJECT_ROOT/db/004-rdb"
-                    break
-                    ;;
-                *)
-                    echo "Please answer Y or N."
-                    ;;
-            esac
-        done
+        echo "Selected RDB database. Running rdb_modern scripts."
+        SCRIPT_DIR="$PROJECT_ROOT/db/005-rdb_modern"
         ;;
     *)
         echo "Unknown database: $DATABASE"

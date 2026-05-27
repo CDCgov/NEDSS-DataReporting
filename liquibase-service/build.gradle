@@ -80,7 +80,7 @@ jar {
 apply plugin: "org.liquibase.gradle"
 
 ext {
-    NBS_DB_VER = '15.1'
+    NBS_DB_VER = '16.1'
 }
 
 liquibase {
@@ -98,7 +98,7 @@ liquibase {
             password "${System.env.DB_PASSWORD}"
         }
         rdb_main {
-            changelogFile "./src/main/resources/db/changelog/db.rdb.changelog-${NBS_DB_VER}.yaml"
+            changelogFile "./src/main/resources/db/changelog/db.rdb_modern.changelog-${NBS_DB_VER}.yaml"
             url "jdbc:sqlserver://${System.env.DB_URL}:1433;databaseName=${System.env.DB_RDB};encrypt=true;trustServerCertificate=true"
             username "${System.env.DB_USERNAME}"
             password "${System.env.DB_PASSWORD}"

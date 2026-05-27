@@ -18,13 +18,12 @@ services:
 
   liquibase:
     build:
-      dockerfile: ./liquibase-service/Dockerfile.local
+      dockerfile: ./liquibase-service/Dockerfile
     environment:
+      - RUN_MIGRATIONS=true
       - DB_USERNAME=${RTR_ADMIN_NAME:-rtr_admin}
       - DB_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - DB_HOST=nbs-mssql
-      - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
-      - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
     depends_on:
       nbs-mssql:
         condition: service_healthy
@@ -39,6 +38,26 @@ services:
       - "9991:9990"
       - "7003:7001"
       - "8788:8787"
+
+  sas:
+    image: ghcr.io/cdcent/nbs7-sas-linux:v1.0.4
+    profiles: [sas] # Only start if sas profile is enabled
+    platform: linux/amd64
+    ports:
+      - 2323:2323
+    environment:
+      - db_host=nbs-mssql
+      - rdb_user=${DB_USER:-sa}
+      - rdb_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
+      - odse_user=${DB_USER:-sa}
+      - odse_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
+      - sas_user_pass=n3dss4dm1n
+      - sas_encoding=latin1
+      - ADDITIONAL_SAS_FLAGS=-DEBUG
+      - PATH=$PATH:/opt/mssql-tools18/bin
+    depends_on:
+      nbs-mssql:
+        condition: service_healthy
 
   kafka:
     image: confluentinc/cp-kafka:7.8.7
