@@ -539,7 +539,7 @@ ORDER BY CASE [LAB_TEST_UID]
     WHEN 14287 THEN 30
     WHEN 14288 THEN 40
     WHEN 14281 THEN 50
-END;
+END
 ;
 
 -- dbo.LAB_TEST | operations: insert, update
