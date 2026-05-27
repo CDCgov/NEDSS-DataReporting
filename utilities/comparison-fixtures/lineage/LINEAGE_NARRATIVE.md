@@ -78,7 +78,16 @@ the one place this document goes beyond any single SP body.
 
 ## How to read the column appendix
 
-`LINEAGE_COLUMNS.tsv` has one row per RDB_MODERN column, tab-separated:
+The appendix ships in two equivalent renderings, both with one row per
+RDB_MODERN column and both regenerated from the per-cluster slices in
+`lineage/columns/` by `scripts/build_lineage_columns.py`:
+
+- **`LINEAGE_COLUMNS.tsv`** — canonical, greppable. Tab-separated because the
+  free-text fields are full of commas (CSV would force quoting on nearly every
+  row); tabs never occur in the data.
+- **`LINEAGE_COLUMNS.jsonl`** — one JSON object per line, for the schema-diff
+  tool. Line-oriented so it streams and git-diffs cleanly. Same fields, except
+  `odse_source_col(s)` is keyed `odse_source_cols`.
 
 | field | meaning |
 | --- | --- |
@@ -88,6 +97,7 @@ the one place this document goes beyond any single SP body.
 | `nrt_staging_source` | the `nrt_*` column (or `#tmp` derivation) the SP reads |
 | `odse_source_col(s)` | the `nbs_odse.dbo.*` column(s) feeding that staging col |
 | `transform_note` | CASE/COALESCE/substring/pivot/code-lookup applied |
+| `mapping_kind` | how the value gets from ODSE to the target (below) — *derived* from `transform_note`, not hand-maintained |
 | `status` | provenance confidence (below) |
 | `fixture_proof` | the fixture (+ coverage report) establishing the mapping |
 
@@ -107,6 +117,37 @@ status — a confabulated ODSE→target mapping is worse than an `INFERRED` flag
   path; the column is pre-populated by the legacy MasterETL pipeline.
 - **`BLOCKED:#NN`** — reachable in principle but capped by a known RTR bug
   (`bugs/NN_*/findings.md`).
+
+**Mapping kind** (`mapping_kind`) classifies *how* the value reaches the
+target, so the diff tool can decide how strictly to compare a column. It is
+derived from `transform_note` by `scripts/build_lineage_columns.py` — a
+heuristic hint, not a contract; refine at the source if a column matters.
+
+- **`direct`** (700, ~19%) — value relocated unchanged: passthrough, direct
+  projection, dim-join / copied-from-dim. No reshape, no edit.
+- **`pivot`** (600, ~16%) — EAV→columnar reshape (an `nbs_case_answer` /
+  observation *row* pivoted into a column) with **no** value edit. Structurally
+  moved, value preserved.
+- **`code-translate`** (996, ~27%) — a code is mapped to its description or
+  another coded form (codeset lookup / decode), whether or not a pivot also
+  moved it. The same datum, a different *representation*.
+- **`derived`** (701, ~19%) — the value is computed: substring/concat,
+  aggregate (`SUM`/`COUNT`/`ROW_NUMBER`/`MAX` outside a pivot), `CASE` rewrite,
+  type convert, `COALESCE`/`ISNULL` key resolution, flags. Also the catch-all
+  for INFERRED rows whose exact op the fan-out could not isolate.
+- **`no-source`** (738, ~20%) — the *stored* value is not a copy of any ODSE
+  column: surrogate / IDENTITY / resolved foreign keys (any ODSE col in
+  `odse_source_col(s)` is the natural key that *drives* the lookup, not the
+  stored value), runtime-`DYNAMIC` tables, MasterETL-fed dims, generated date
+  dims, and operational log/metric state.
+
+For a schema-diff tool: **`direct` + `pivot` (~35%)** should compare
+byte-for-byte; **`code-translate` (~27%)** should compare after applying the
+codeset; **`derived` and `no-source` (~39%)** are environment-dependent —
+don't expect literal equality. (Where you draw the "is this a 1:1 mapping?"
+line is exactly the `pivot` vs `code-translate` question: ~35% if a pivot that
+also decodes a coded answer counts as transformed, ~61% if it counts as
+movement.)
 
 ### Scope and counts (sanity check for the appendix)
 
