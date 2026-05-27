@@ -2015,7 +2015,6 @@ WHERE [INV_LOCAL_ID] = N'CAS3400024GA01'
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_ADMINISTRATIVE_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2026,7 +2025,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_CLINICAL_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_CLINICAL]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2037,7 +2035,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_HIV_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_HIV]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2048,7 +2045,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_MEDICAL_HISTORY_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_MEDICAL_HISTORY]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2059,7 +2055,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_PREGNANCY_BIRTH_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_PREGNANCY_BIRTH]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2070,7 +2065,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_RISK_FACTOR_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_RISK_FACTOR]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2081,7 +2075,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 6
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_SOCIAL_HISTORY_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_SOCIAL_HISTORY]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2092,7 +2085,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Step: 4
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_TREATMENT_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INV_TREATMENT]
 WHERE [PAGE_CASE_UID] = 3400017.0
@@ -2103,7 +2095,6 @@ WHERE [PAGE_CASE_UID] = 3400017.0
 -- Steps: 8, 9
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INVESTIGATION_REPEAT_KEY],
     [PAGE_CASE_UID]
 FROM [RDB_MODERN].[dbo].[L_INVESTIGATION_REPEAT]
 WHERE [PAGE_CASE_UID] IN (3400024.0, 3400017.0)

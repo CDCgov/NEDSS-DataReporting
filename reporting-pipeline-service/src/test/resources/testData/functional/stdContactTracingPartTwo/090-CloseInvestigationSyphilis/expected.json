@@ -857,59 +857,49 @@
   ],
   "36": [
     {
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "37": [
     {
-      "D_INV_CLINICAL_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "38": [
     {
-      "D_INV_HIV_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "39": [
     {
-      "D_INV_MEDICAL_HISTORY_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "40": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "41": [
     {
-      "D_INV_RISK_FACTOR_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "42": [
     {
-      "D_INV_SOCIAL_HISTORY_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "43": [
     {
-      "D_INV_TREATMENT_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "44": [
     {
-      "D_INVESTIGATION_REPEAT_KEY": 1.0,
       "PAGE_CASE_UID": 3400024
     },
     {
-      "D_INVESTIGATION_REPEAT_KEY": 2.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
