@@ -3197,3 +3197,13 @@ databaseChangeLog:
             path: onboarding/1000-nrt_indexes-001.sql
             splitStatements: true
             endDelimiter: GO
+ - changeSet:
+     id: create_lab100
+     author: liquibase
+     runOnChange: true
+     runInTransaction: false
+     changes:
+       - sqlFile:
+           path: 259-create_lab100-001.sql
+           splitStatements: true
+           endDelimiter: GO
