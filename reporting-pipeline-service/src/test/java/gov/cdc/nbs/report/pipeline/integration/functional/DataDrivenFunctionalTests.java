@@ -107,13 +107,24 @@ class DataDrivenFunctionalTests extends FunctionalTest {
 
       // For each query in query.sql, execute and validate it matches expected. Allow
       // retry to wait on processing to complete
-      String[] queryList = queries.trim().split(";");
-      for (int i = 0; i < queryList.length; i++) {
-        String query = queryList[i];
+      List<String> queryList = QueryRunner.splitStatements(queries);
+      for (int i = 0; i < queryList.size(); i++) {
+        String query = queryList.get(i);
         String expectedResult = expectedNode.get(String.valueOf(i)).toString();
 
-        Optional<List<Map<String, Object>>> results =
-            Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
+        Optional<List<Map<String, Object>>> results;
+        try {
+          results = Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
+        } catch (RuntimeException e) {
+          throw new AssertionError(
+              String.format(
+                  "Error executing query %d in %s/%s/query.sql. SQL:%n%s",
+                  i,
+                  testDirectory.getFileName(),
+                  stepDirectory.getFileName(),
+                  query.strip()),
+              e);
+        }
 
         assertThat(results)
             .withFailMessage(
