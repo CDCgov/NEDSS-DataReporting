@@ -2,11 +2,11 @@ USE [NBS_ODSE];
 DECLARE @superuser_id bigint = 10009282;
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @patient_uid bigint = 10014313;
-DECLARE @patient_uid_2 bigint = 10014315;
-DECLARE @investigation_uid bigint = 10014317;
-DECLARE @postal_locator_uid bigint = 10014314;
-DECLARE @postal_locator_uid_2 bigint = 10014316;
+DECLARE @patient_uid bigint = 1000004000;
+DECLARE @patient_uid_2 bigint = 1000004002;
+DECLARE @investigation_uid bigint = 1000004004;
+DECLARE @postal_locator_uid bigint = 1000004001;
+DECLARE @postal_locator_uid_2 bigint = 1000004003;
 
 -- Derived local_ids
 DECLARE @patient_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @patient_uid))) + N'GA01';

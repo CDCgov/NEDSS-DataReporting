@@ -13,7 +13,7 @@ SELECT
     [IX_LOCATION],
     [IX_CONTACTS_NAMED_IND]
 FROM [RDB_MODERN].[dbo].[D_INTERVIEW]
-WHERE [LOCAL_ID] = 'INT10014318GA01';
+WHERE [LOCAL_ID] = 'INT1000004005GA01';
 
 -- Query 1: Verify nrt_interview was created
 SELECT
@@ -33,7 +33,7 @@ SELECT
     [provider_uid],
     [patient_uid]
 FROM [RDB_MODERN].[dbo].[nrt_interview]
-WHERE [local_id] = 'INT10014318GA01';
+WHERE [local_id] = 'INT1000004005GA01';
 
 -- Query 2: Verify D_INTERVIEW_NOTE entries were created (ordered by comment text for consistency)
 SELECT
@@ -44,7 +44,7 @@ SELECT
 FROM [RDB_MODERN].[dbo].[D_INTERVIEW_NOTE]
 WHERE EXISTS (
     SELECT 1 FROM [RDB_MODERN].[dbo].[D_INTERVIEW]
-    WHERE [LOCAL_ID] = 'INT10014318GA01'
+    WHERE [LOCAL_ID] = 'INT1000004005GA01'
     AND [D_INTERVIEW].[D_INTERVIEW_KEY] = [D_INTERVIEW_NOTE].[D_INTERVIEW_KEY]
 )
 ORDER BY [USER_COMMENT];
@@ -58,7 +58,7 @@ SELECT
     [comment_date],
     [record_status_cd]
 FROM [RDB_MODERN].[dbo].[nrt_interview_note]
-WHERE [interview_uid] = 10014318
+WHERE [interview_uid] = 1000004005
 ORDER BY [nbs_answer_uid];
 
 -- Query 4: Verify F_INTERVIEW_CASE was created (check existence only)
@@ -67,7 +67,7 @@ SELECT TOP 1
 FROM [RDB_MODERN].[dbo].[F_INTERVIEW_CASE]
 WHERE EXISTS (
     SELECT 1 FROM [RDB_MODERN].[dbo].[D_INTERVIEW]
-    WHERE [LOCAL_ID] = 'INT10014318GA01'
+    WHERE [LOCAL_ID] = 'INT1000004005GA01'
     AND [D_INTERVIEW].[D_INTERVIEW_KEY] = [F_INTERVIEW_CASE].[D_INTERVIEW_KEY]
 );
 
@@ -77,4 +77,4 @@ SELECT
     [rdb_column_nm],
     [answer_val]
 FROM [RDB_MODERN].[dbo].[nrt_interview_answer]
-WHERE [interview_uid] = 10014318;
+WHERE [interview_uid] = 1000004005;
