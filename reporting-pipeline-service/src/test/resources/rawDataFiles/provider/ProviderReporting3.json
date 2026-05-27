@@ -160,6 +160,16 @@
       {
         "type": "string",
         "optional": true,
+        "field": "phone_work_phone"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_ext_work_phone"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "phone_cell"
       },
       {
@@ -218,9 +228,11 @@
     "country": "United States",
     "country_code": "840",
     "address_comments": "",
-    "phone_work": "2223335555",
-    "phone_ext_work": "",
+    "phone_work": null,
+    "phone_ext_work": null,
     "phone_comments": null,
+    "phone_work_phone": "2323222422",
+    "phone_ext_work_phone": "232",
     "phone_cell": "2823252423",
     "email_work": "someone2@email.com",
     "quick_code": "12314286",

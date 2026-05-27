@@ -133,14 +133,14 @@ BEGIN
 
 
 		------------------------------------------------------------------------------------------------------------------------------------------
-        declare @backfill_list nvarchar(max);  
-        SET @backfill_list = 
-		( 
+        declare @backfill_list nvarchar(max);
+        SET @backfill_list =
+		(
 			SELECT string_agg(t.value, ',')
 			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@ldf_id_list, ',')) t
-                left join #LDF_META_DATA tmp
-                on tmp.ldf_uid = t.value	
-                WHERE tmp.ldf_uid is null	
+                LEFT JOIN [dbo].nrt_odse_state_defined_field_metadata md WITH (NOLOCK)
+                    ON md.ldf_uid = t.value
+                WHERE md.ldf_uid IS NULL
 		);
 
         IF @backfill_list IS NOT NULL
@@ -645,10 +645,10 @@ BEGIN
 			c.class_cd AS data_source
 		INTO #LDF_DATA
 		FROM [dbo].nrt_ldf_data a WITH (NOLOCK)
-		INNER JOIN 
-		dbo.nrt_srte_LDF_PAGE_SET page_set WITH ( NOLOCK) 
-		ON  
-		page_set.ldf_page_id =a.ldf_page_id 
+		LEFT JOIN
+		dbo.nrt_srte_LDF_PAGE_SET page_set WITH ( NOLOCK)
+		ON
+		page_set.ldf_page_id =a.ldf_page_id
 		LEFT JOIN [dbo].nrt_srte_Codeset c WITH (NOLOCK) 
 			ON a.code_set_nm = c.code_set_nm
         INNER JOIN [dbo].nrt_INVESTIGATION inv WITH (NOLOCK) 
