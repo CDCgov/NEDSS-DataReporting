@@ -3,7 +3,6 @@
 -- dbo.CASE_COUNT | operations: insert
 -- Query: 0
 -- Step: 1
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADT_HSPTL_KEY],
     [CASE_COUNT],
@@ -62,7 +61,6 @@ WHERE [INVESTIGATION_LOCAL_ID] = N'CAS1000008019GA01'
 -- dbo.CONFIRMATION_METHOD_GROUP | operations: insert
 -- Query: 2
 -- Step: 1
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [CONFIRMATION_DT]
 FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD_GROUP]
@@ -276,7 +274,6 @@ WHERE [PROVIDER_LOCAL_ID] = N'PSN1000008006GA01'
 -- dbo.GENERIC_CASE | operations: delete, insert
 -- Query: 7
 -- Steps: 1, 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [DAYCARE_ASSOCIATION_IND],
     [DETECTION_METHOD],
@@ -512,7 +509,6 @@ WHERE [PERSON_LOCAL_ID] = N'PSN1000008000GA01'
 -- dbo.LAB_RESULT_VAL | operations: delete, insert
 -- Query: 11
 -- Steps: 1, 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ALT_RESULT_VAL_CD],
     [ALT_RESULT_VAL_CD_DESC],
@@ -681,7 +677,6 @@ WHERE [LAB_RPT_LOCAL_ID] = N'OBS1000008013GA01'
 -- dbo.LAB_TEST_RESULT | operations: insert
 -- Query: 14
 -- Steps: 1, 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [CONDITION_KEY],
     [COPY_TO_PROVIDER_KEY],
@@ -702,7 +697,6 @@ WHERE INVESTIGATION_KEY=(SELECT INVESTIGATION_KEY FROM [RDB_MODERN].[dbo].[INVES
 -- dbo.TEST_RESULT_GROUPING | operations: delete, insert
 -- Query: 15
 -- Steps: 1, 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [LAB_TEST_UID]
 FROM [RDB_MODERN].[dbo].[TEST_RESULT_GROUPING]
