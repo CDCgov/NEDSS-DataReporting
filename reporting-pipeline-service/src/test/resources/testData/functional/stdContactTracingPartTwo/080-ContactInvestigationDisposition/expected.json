@@ -12,11 +12,11 @@
     {
       "ADT_HSPTL_KEY": 1,
       "CASE_COUNT": 1,
-      "DIAGNOSIS_DT_KEY": 13261,
+      "DIAGNOSIS_DT_KEY": 1,
       "GEOCODING_LOCATION_KEY": 1,
       "INVESTIGATION_COUNT": 1,
-      "INV_RPT_DT_KEY": 13276,
-      "INV_START_DT_KEY": 13264
+      "INV_RPT_DT_KEY": 1,
+      "INV_START_DT_KEY": 13265
     }
   ],
   "1": [
