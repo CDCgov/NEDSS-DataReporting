@@ -115,20 +115,21 @@ status — a confabulated ODSE→target mapping is worse than an `INFERRED` flag
   tables, plus **15** dynamic-SQL target placeholders whose columns are *not*
   statically derivable.
 - Live coverage (`coverage_merged.md`, full from-scratch run 2026-05-25)
-  reports **4,633** total columns across those 118 tables, of which **4,150**
-  are populated — **89.6%** overall column coverage.
-- **This appendix has 3,101 rows across 66 tables.** It is *not* a 1:1 with
-  the 4,150 live-populated columns, and deliberately so: tables whose physical
-  schema is generated at runtime — `covid_case_datamart`, `covid_lab*`,
-  `d_investigation_repeat`, the `dyn_dm_*` family — are built by dynamic SQL
+  reports **4,633** total columns across those 118 tables, of which **4,161**
+  are populated — **89.8%** overall column coverage.
+- **This appendix has 3,735 rows covering all 118 in-scope tables.** Every
+  in-scope table is now represented (none omitted), and the
+  statically-traceable column spine of each is enumerated against
+  `rtr_target_columns.md`. It is still *not* 1:1 with the 4,161 live-populated
+  columns, and deliberately so: tables whose physical schema is generated at
+  runtime — `covid_case_datamart`, `covid_lab*`, `d_investigation_repeat`, and
+  the `dyn_dm_*` / per-condition `ldf_*` families — are built by dynamic SQL
   (`ALTER TABLE … ADD` + PIVOT keyed on `nbs_page_answer` / page-builder
-  metadata) and are represented by a **single `DYNAMIC` mechanism row each**
-  rather than by enumerating their hundreds of runtime columns. That collapses
-  ~1,000+ live-populated-but-runtime columns into a handful of rows. The
-  statically-traceable spine of every table *is* fully enumerated (verified
-  1:1 against `rtr_target_columns.md` per cluster). Status split across the
-  3,101 rows: **1,499 VERIFIED · 1,318 INFERRED · 174 MASTERETL_ONLY ·
-  86 BLOCKED · 25 DYNAMIC**.
+  metadata) and are represented by a **single `DYNAMIC` (or `BLOCKED`)
+  mechanism row each** rather than by enumerating their hundreds of runtime
+  columns. That collapses ~1,000+ live-populated-but-runtime columns into a
+  handful of rows. Status split across the 3,735 rows: **1,940 VERIFIED ·
+  1,469 INFERRED · 193 MASTERETL_ONLY · 105 BLOCKED · 28 DYNAMIC**.
 
 ### Known caveats reflected in the data
 
@@ -136,10 +137,21 @@ status — a confabulated ODSE→target mapping is worse than an `INFERRED` flag
   rebuild — see `BLOCKED.md` / `bugs/`). Its ~+61 `hepatitis_datamart` columns
   are therefore **not** currently populated and are flagged `BLOCKED` /
   `INFERRED` in the Hepatitis section, not `VERIFIED`.
-- **Bugs #11–#13 cap specific columns**: #11 `aggregate_report_datamart`
-  schema mismatch; #12 `bmird_case_datamart` ROW_NUMBER partition; #13
-  `sld_investigation_repeat` TEXT-pivot NULL propagation. Affected columns are
-  flagged `BLOCKED:#NN`.
+- **Bugs cap specific columns** (flagged `BLOCKED:#NN`): #06/#10 LDF chain
+  prerequisites; #08 the per-condition LDF `SUBSTRING(@dynamiccolumnUpdate, 1,
+  LEN(...)-1)` family (fires on an empty dynamic-column list — see
+  `bugs/08_ldf_tetanus_substring/`); #11 `aggregate_report_datamart` schema
+  mismatch; #12 `bmird_case_datamart` ROW_NUMBER partition; #13
+  `sld_investigation_repeat` TEXT-pivot NULL propagation; #15 `EVENT_METRIC`
+  investigation-branch leaves `ADD_USER_NAME` NULL, which violates the
+  `SR100.ADD_USER_NAME NOT NULL` constraint and blocks the entire `SR100`
+  datamart (all 20 columns) — the TRY/CATCH swallows the Msg 515.
+- **Operational / audit tables are out of the subject-data lineage.**
+  `RDB_DATE` is a generated calendar dimension (no ODSE source); `ETL_DQ_LOG`,
+  `JOB_FLOW_LOG`, `EVENT_METRIC(_INC)`, and `USER_PROFILE` are RTR run-time
+  state (SP name, batch id, timestamps, DQ-fail records, staged user names),
+  not `nbs_odse` columns. They are enumerated honestly in section G4 with that
+  provenance rather than a fabricated ODSE→column chain.
 
 ---
 
@@ -153,6 +165,13 @@ status — a confabulated ODSE→target mapping is worse than an `INFERRED` flag
 - [L4 — COVID family lineage](#l4--covid-family-lineage)
 - [L5 — People, Links & Dimensions](#l5--people-links--dimensions)
 - [L6 — Investigation-repeat, LDF, dyn_dm, page-builder](#l6--investigation-repeat-ldf-dyn_dm-page-builder)
+
+Gap-fill sections (tables the L1–L6 fan-out narrated but did not enumerate):
+
+- [G1 — Core Investigation, HIV, Case-Management & Repeat-Link tables](#g1--core-investigation-hiv-case-management--repeat-link-tables)
+- [G2 — TB / Varicella PAM facts, LDFs, STD page-case fact & BMIRD/Pertussis groups](#g2--tb--varicella-pam-facts-ldfs-std-page-case-fact--bmirdpertussis-groups)
+- [G3 — PAM dimension code & group tables (TB / Varicella)](#g3--pam-dimension-code--group-tables-tb--varicella)
+- [G4 — Operational, audit & blocked tables](#g4--operational-audit--blocked-tables)
 
 ---
 
@@ -1525,4 +1544,677 @@ construction and are documented here as a mechanism rather than per-column.
 
 Note: there is **no bug #14** — the `LINEAGE.md` reference is incorrect;
 `aggregate_report` is #11 and the `sld_investigation_repeat` TEXT pivot is
-#13. `bugs/` holds dirs 01–13.
+#13. `bugs/` holds dirs 01–13 and #15 (`event_metric_add_user_name_null`,
+the SR100 blocker — see section G4).
+
+---
+
+## G1 — Core Investigation, HIV, Case-Management & Repeat-Link tables
+
+Gap-fill cluster covering ten RDB_MODERN tables that the original appendix
+missed: the core investigation fact (`INVESTIGATION`) and its two
+confirmation children (`confirmation_method`, `CONFIRMATION_METHOD_GROUP`),
+the SRTE-driven `CONDITION` dimension, the `CASE_COUNT` fact, the
+`D_CASE_MANAGEMENT` dimension, the STD/HIV `INV_HIV` bridge, and the three
+page-builder repeat-link tables (`L_INVESTIGATION_REPEAT`,
+`L_INVESTIGATION_REPEAT_INC`, `L_INV_PLACE_REPEAT`).
+
+Column appendix: `lineage/columns/G1_core_investigation.tsv` — 197 rows,
+one per (table, column) the catalog records. 193 VERIFIED, 4 INFERRED, 0
+DYNAMIC, 0 MASTERETL_ONLY, 0 BLOCKED.
+
+### How to read the chain for this cluster
+
+Every event-sourced table here follows the STRATEGY.md convention: the
+`sp_investigation_event` SP reads `nbs_odse.dbo.*` and projects a JSON
+view (it is the **ODSE → staging** edge, recorded in `odse_source_col(s)`);
+the matching `sp_nrt_*_postprocessing` SP reads only RDB_MODERN-side
+`nrt_*` staging (the **staging → RDB_MODERN** edge, recorded in
+`nrt_staging_source` + `transform_note`). One subtlety: a single event SP
+(`sp_investigation_event`) is the upstream projector for *three* of this
+cluster's postprocessing SPs — investigation, case-management, and
+case-count all read staging tables (`nrt_investigation`,
+`nrt_investigation_case_management`, `nrt_investigation_confirmation`)
+that are slices of that one event SP's nested-JSON output. The
+case-management columns in particular trace to the
+`investigation_case_management` nested projection of
+`nbs_odse.dbo.case_management` at event-SP lines 603-691. `CONDITION` is
+the exception: it has **no** event-SP partner and reads SRTE staging
+mirrors (`nrt_srte_condition_code`, `nrt_srte_program_area_code`), so its
+ultimate source is `nbs_srte.dbo.*` rather than ODSE.
+
+### INVESTIGATION — the core investigation fact (71/71 VERIFIED)
+
+`sp_nrt_investigation_postprocessing` is the heaviest SP in this cluster.
+It selects `nrt_investigation` into `#temp_inv_table` (SP:46-132),
+applying a uniform `NULLIF(x,'')`/`CASE WHEN '' OR 'null'` blank-to-NULL
+discipline and two `isnumeric()`-guarded `CAST … AS int` conversions
+(`PATIENT_AGE_AT_ONSET`, `ILLNESS_DURATION`). It then UPDATEs existing
+rows (SP:428-503) and INSERTs new ones (SP:536-681), allocating
+`INVESTIGATION_KEY` from the `nrt_investigation_key` IDENTITY surrogate.
+The upstream `sp_investigation_event` resolves nearly every `*_cd` to a
+description through `fn_get_value_by_cd_codeset` against a named INV* code
+set (e.g. `case_class_cd`→INV163 for `INV_CASE_STATUS`,
+`hospitalized_ind_cd`→INV128, `outcome_cd`→INV145 for
+`DIE_FRM_THIS_ILLNESS_IND`), plus SRTE desc joins for jurisdiction, state,
+county, program-area, and detection method. All 71 catalog columns map
+back to `nbs_odse.dbo.public_health_case` (with locator/code-set joins),
+and are VERIFIED across the two fixture variants (foundation = NULL-heavy
+blank-path; v2 = fully attributed).
+
+A notable **conditional branch** is the legacy coded-observation overlay
+(SP:198-385): when `investigation_form_cd` is one of 14 legacy forms
+(`INV_FORM_BMDGAS`/`INV_FORM_HEPGEN`/`INV_FORM_RUB`/…), the SP pulls
+coded/text/numeric/date observations from `NRT_INVESTIGATION_OBSERVATION`
+via the `v_getobs*` views and COALESCEs them over the direct PHC values
+for ~12 columns (HSPTLIZD_IND, IMPORT_FRM_*, FOOD_HANDLR_IND, etc.). The
+v2 fixture uses the modern `PG_Hepatitis_A_Acute_Investigation` form, so
+the overlay does not fire; the direct-PHC path is what is exercised. The
+overlay is documented in transform notes but not separately fixture-proven
+(coverage_investigation.md "Legacy investigation form" skip).
+
+### confirmation_method & CONFIRMATION_METHOD_GROUP (3/3 each, VERIFIED)
+
+Both are written by the same SP in its second transaction (SP:705-880).
+`#temp_cm_table` joins `dbo.investigation` LEFT JOIN
+`nrt_investigation_confirmation` (the event SP's
+`investigation_confirmation_method` projection of
+`nbs_odse.dbo.Confirmation_method` + the `PHC_CONF_M` SRTE desc). New
+confirmation codes allocate a `confirmation_method` key via
+`nrt_confirmation_method_key` IDENTITY (SP:805-817).
+`CONFIRMATION_METHOD_GROUP` is DELETE-then-INSERT per investigation and
+COALESCEs `CONFIRMATION_METHOD_KEY` to sentinel 1 when no real CM row
+exists (SP:856). **Caveat worth flagging for the diff tool:** the
+`#temp_cm_table` query emits one row per Investigation regardless of
+whether a confirmation method is present, so an Investigation with no
+`nrt_investigation_confirmation` row still gets a sentinel-1
+CONFIRMATION_METHOD_GROUP row — documented as a row-count-integrity bug in
+`coverage_std_hiv_full_chain.md` (the "sentinel CMG row" finding). It does
+not block any column population here.
+
+### CONDITION — SRTE-sourced dimension (14/15 VERIFIED, 1 INFERRED)
+
+`sp_nrt_srte_condition_code_postprocessing` is an infrastructure SP run
+once per merge (`@condition_cd_list = '10110'` for Hep A acute). Unlike
+the rest of the cluster it reads SRTE staging mirrors, not ODSE: 13
+columns are pass-throughs of `nrt_srte_condition_code` (=
+`nbs_srte.dbo.condition_code`); `program_area_desc` joins
+`nrt_srte_program_area_code`; `condition_key` is the
+`nrt_condition_key` IDENTITY surrogate; and `disease_grp_cd`/`_desc` are a
+`CASE LEFT(investigation_form_cd,50)` map to `*_Case` group labels
+(SP:70-93). One of the 15 catalog columns is NULL in the merged run
+(14/15) — most likely `assigning_authority_desc` for the Hep A code,
+which lacks an SRTE value; that single column is flagged **INFERRED**.
+
+### CASE_COUNT (13/15 VERIFIED, 2 INFERRED)
+
+`sp_nrt_case_count_postprocessing` reads `NRT_INVESTIGATION` and resolves
+13 dimension keys by joining the already-populated RDB_MODERN dimensions
+(`INVESTIGATION`, `condition`, `D_PATIENT`, `D_PROVIDER`×3,
+`D_ORGANIZATION`×2, `RDB_DATE`×4), each `COALESCE(...,1)`-guarded to
+sentinel 1 (SP:52-88). `geocoding_location_key` is a hard-coded literal 1
+(no RTR geocoding chain). The two derived count columns —
+`investigation_count` and `case_count` — come from
+`nrt_investigation.investigation_count`/`case_count`, which the event SP
+derives only from the `Summary_Report_Form`→`SUM107` `act_relationship`
+chain (event SP:846-867). The merged run leaves these 2 NULL (13/15);
+they are flagged **INFERRED** because no fixture authors the summary-form
+chain that feeds them.
+
+### D_CASE_MANAGEMENT — needs a case-management ODSE input (62/67 VERIFIED)
+
+`sp_nrt_case_management_postprocessing` reads
+`nrt_investigation_case_management` INNER JOIN `INVESTIGATION` (on
+CASE_UID) and writes the dimension (SP:52-432). 65 columns pass through
+the staging row, `INVESTIGATION_KEY` comes from the INVESTIGATION join,
+and `D_CASE_MANAGEMENT_KEY` is the `nrt_case_management_key` IDENTITY
+surrogate. **The load-bearing ODSE input is `nbs_odse.dbo.case_management`**:
+the entire staging row is the event SP's `investigation_case_management`
+nested-JSON projection (event SP:603-691), where each
+`case_management.*` column is either passed through or resolved through a
+`fn_get_value_by_cvg` code-set lookup (e.g.
+`pat_intv_status_cd`→PAT_INTVW_STATUS, `status_900`→STATUS_900,
+`fld_foll_up_dispo`→FIELD_FOLLOWUP_DISPOSITION_STDHIV). A handful of
+columns also apply `LEFT(x,N)` width truncation in the postprocessing SP
+to fit narrow target widths (`init_foll_up_notifiable` LEFT 27,
+`initiating_agncy`/`ooj_agency` LEFT 20). The TSV records all 67 columns
+VERIFIED against `case_management_staging.sql`; the catalog's "62/67"
+reflects 5 columns left NULL in the merged run because the fixture's
+short-string UPDATEs do not populate every narrow `*_cd`/date field — the
+mapping itself is sound, so each column is attributed to its
+`case_management.*` source.
+
+### INV_HIV — STD/HIV bridge over a MasterETL-only dimension (17/19 VERIFIED)
+
+`sp_std_hiv_datamart_postprocessing` populates `INV_HIV` by joining
+`F_STD_PAGE_CASE` (which carries `D_INV_HIV_KEY` and `INVESTIGATION_KEY`)
+to the `D_INV_HIV` dimension and copying its 15 `HIV_*` columns
+(SP:62-159). `INVESTIGATION_KEY` traces back to
+`public_health_case.public_health_case_uid` through the INVESTIGATION dim;
+`D_INV_HIV_KEY` and all `HIV_*` values originate in **`D_INV_HIV`, which
+is a MasterETL-only dimension with no RTR ODSE writer** — the fixture
+hand-authors the `D_INV_HIV` row directly (per the
+coverage_std_hiv_full_chain.md convention that Tier-3 dimensional-cluster
+fixtures may write these MasterETL-only tables when the RTR datamart chain
+reads from them). Because the fixture proves all 17 catalog columns
+populate end-to-end, they are recorded VERIFIED with the MasterETL-only
+provenance noted in `odse_source_col(s)`. The catalog's "17/19" reflects 2
+physical table columns RTR's SELECT list never writes (e.g.
+HIV_HIV_STAT_INV_IN_EHARS) — not in the catalog write-set, so not in this
+slice.
+
+### L_INVESTIGATION_REPEAT / _INC / L_INV_PLACE_REPEAT (repeat-link tables)
+
+`sp_sld_investigation_repeat_postprocessing` builds the two
+investigation-repeat link tables. `PAGE_CASE_UID` on both is the
+`nrt_investigation.public_health_case_uid` (→
+`public_health_case.public_health_case_uid`), filtered out of 15 legacy
+`investigation_form_cd` values (SP:84-91); the answer payload itself comes
+from `nrt_page_case_answer` (NRT_PAGE). `D_INVESTIGATION_REPEAT_KEY` is a
+surrogate from `LOOKUP_TABLE_N_REPT` (SP:1165-1203). Both tables are 2/2
+VERIFIED (merged coverage: `l_investigation_repeat` 1→2,
+`l_investigation_repeat_inc` 0→1). Note the link tables are **not** capped
+by the repeat-dim bugs: **bug #10** (`D_REPT_KEY` surrogate pins to
+sentinel 1, dropping rows from the wide `D_INVESTIGATION_REPEAT` dim) and
+**bug #13** (TEXT-pivot NULL propagation) both affect
+`D_INVESTIGATION_REPEAT`'s value columns, not these two-column link
+tables, which populate cleanly.
+
+`L_INV_PLACE_REPEAT` is written by `sp_repeated_place_postprocessing`. Its
+`D_INV_PLACE_REPEAT_KEY` is a `DENSE_RANK()`-allocated surrogate (SP:393-412)
+and is populated (the sentinel row), but `PAGE_CASE_UID` —
+sourced from `nrt_page_case_answer.act_uid` via the
+`PlaceAsHangoutOfPHC`/`PlaceAsSexOfPHC` part-type pivot (SP:46-67) — is
+**NULL in the merged run (1/2)**. Two things keep it unpopulated:
+`sp_repeated_place_postprocessing` is not wired into
+`merge_and_verify.sh` (the ORCH_TODO in `zz_d_inv_place_repeat_enrich.sql`),
+and the place-repeat answer rows + a matching `D_PLACE.PLACE_LOCATOR_UID`
+must both exist for the SP's INNER JOIN to emit a non-sentinel row.
+`PAGE_CASE_UID` is therefore flagged **INFERRED** — the mapping is read
+from the SP body but no merged fixture proves it.
+
+---
+
+## G2 — TB / Varicella PAM facts, LDFs, STD page-case fact & BMIRD/Pertussis groups
+
+Gap-fill slice for the PAM facts/dims, page-case fact, LDF dynamic tables,
+and the tiny BMIRD/pertussis group-bridge tables that L3 narrated but did
+not enumerate. Column-level lineage is in
+`lineage/columns/G2_tbvar_pam.tsv` (233 rows). All eleven tables are
+downstream consumers — none read `nbs_odse` directly (STRATEGY.md
+convention: only `sp_*_event` SPs read ODSE; the
+postprocessing/datamart layer reads `nrt_*` staging + RDB_MODERN
+dimensions). The ODSE columns in the appendix are therefore the
+*synthesis hop*: the `sp_investigation_event` JSON projection that feeds
+`nrt_investigation` / `nrt_page_case_answer`.
+
+**Status accounting** (233 rows): VERIFIED 89, INFERRED 122, DYNAMIC 4,
+MASTERETL_ONLY 18. As with L3, the high INFERRED count is honest, not a
+gap: the PAM pivot and the F_STD_PAGE_CASE keystore *map* every column,
+but the minimum-viable full-chain fixtures author a deliberately small
+set of PAM questions / dimension rows / participation edges to prove each
+SP runs end-to-end. Un-authored columns are INFERRED (SP clearly maps
+them, no fixture proves the specific col), never confabulated.
+
+---
+
+### D_VAR_PAM (129 cols) — `sp_nrt_d_var_pam_postprocessing` (215)
+
+`D_VAR_PAM` is the Varicella PAM dimension and the structural twin of
+L3's `D_TB_PAM`. The SP filters `nrt_page_case_answer` to the
+investigation's `INV_FORM_VAR` answers (`data_location =
+'NBS_Case_Answer.answer_txt'`, `ldf_status_cd IS NULL`, SP lines 86-92),
+code-translates coded answers through `nrt_srte_code_value_general` (with
+special handling for STATE/COUNTY/COUNTRY/jurisdiction/program code-sets,
+SP lines 126-194 — e.g. `PATIENT_BIRTH_COUNTRY` resolves `PSL_CNTRY`
+answers via `nrt_srte_country_code.code_desc_txt`), then `PIVOT`s
+`MAX(ANSWER_TXT) FOR DATAMART_COLUMN_NM` over the explicit ~122-column
+IN-list (SP lines 263-301). **Every pivot column is exactly one VAR
+question's `answer_txt`**, tagged by `nbs_question.datamart_column_nm`;
+the ODSE source is `nbs_odse.dbo.nbs_case_answer.answer_txt`.
+
+Keys: `D_VAR_PAM_KEY` is allocated from the `nrt_var_pam_key` keystore
+(SP line 510); `VAR_PAM_UID` is the page-case `public_health_case_uid`;
+`LAST_CHG_TIME` is the answer-set last-change time. Coverage
+(`coverage_varicella_full_chain.md` + `zz_var_datamart_enrich.sql` →
+127/129 in `coverage_merged.md`): the fixture proves the key/UID/time
+columns plus a ~25-question minimum-viable set (`VARICELLA_VACCINE`,
+`RASH_LOCATION`, `VESICLES`, `FEVER`, `PCR_TEST`/`PCR_TEST_RESULT`,
+`COMPLICATIONS*`, `EPI_LINKED`, `TRANSMISSION_SETTING`, etc.). The other
+~100 pivot columns are INFERRED — fed by VAR questions the fixture did
+not author (a fixture-completeness exercise, not an infrastructure
+block).
+
+### F_TB_PAM (20 cols) — `sp_f_tb_pam_postprocessing` (206) and F_VAR_PAM (12 cols) — `sp_f_var_pam_postprocessing` (240)
+
+These are the TB/Varicella PAM **fact** tables — all-key rows that hang
+the PAM dimension off the patient/provider/org dimensions, the
+topic-group dimensions, and the date dimension. Both read the
+`INV_FORM_RVCT` / `INV_FORM_VAR` rows of `nrt_investigation` for the
+driving UID set, then build per-UID keystores that resolve each
+entity UID to a surrogate key: `nrt_investigation.patient_id` →
+`D_PATIENT.PATIENT_KEY`, `investigator_id`/`physician_id`/
+`person_as_reporter_uid` → `D_PROVIDER.PROVIDER_KEY`, and
+`hospital_uid`/`org_as_reporter_uid` → `D_ORGANIZATION.ORGANIZATION_KEY`
+(all `COALESCE(..., 1)`). `INVESTIGATION_KEY` joins `INVESTIGATION` on
+`CASE_UID`; `ADD_DATE_KEY`/`LAST_CHG_DATE_KEY` resolve via `RDB_DATE` on
+the staging add/last-change times; `D_*_PAM_KEY` is the FK to the PAM
+pivot. F_TB_PAM additionally carries the 10 TB topic-group keys
+(`D_DISEASE_SITE_GROUP_KEY`, `D_ADDL_RISK_GROUP_KEY`, `D_MOVE_*`,
+`D_GT_12_REAS_GROUP_KEY`, `D_HC_PROV_TY_3_GROUP_KEY`,
+`D_OUT_OF_CNTRY_GROUP_KEY`, `D_MOVED_WHERE_GROUP_KEY`,
+`D_SMR_EXAM_TY_GROUP_KEY`), and F_VAR_PAM the two VAR topic-group keys
+(`D_RASH_LOC_GEN_GROUP_KEY`, `D_PCR_SOURCE_GROUP_KEY`) — these inherit
+the multi-value page-answer lineage from their `D_*` topic dimensions
+(group key set by the `sp_nrt_d_*_postprocessing` group-dim SPs, which
+the catalog lists as co-writers via UPDATE).
+
+The whole F_VAR_PAM body is gated by an `IF EXISTS` on condition
+`10030` having `PORT_REQ_IND_CD = 'T'` (SP lines 47-51). Both facts are
+VERIFIED (F_TB_PAM 20/20, F_VAR_PAM 12/12 in `coverage_merged.md`,
+spot-checked in the coverage reports), but note that the
+physician/reporter/hospital/provider keys resolve to **sentinel 1** —
+the standalone TB/VAR Phase-2 investigations carry no `PhysicianOfPHC` /
+`PerAsReporterOfPHC` / `OrgAsReporterOfPHC` / `HospOfADT` participation
+edges (the `LINK_REQUIRED` gap in both coverage reports). The values are
+populated and the mapping verified; only the *resolved* (non-sentinel)
+value awaits a Tier-2 edge follow-on.
+
+### D_TB_HIV (6 cols) — `sp_nrt_d_tb_hiv_postprocessing` (160)
+
+A narrow PAM sub-pivot: it filters `nrt_page_case_answer` for the RVCT
+investigation to the three HIV questions `TUB154`/`TUB155`/`TUB156` (SP
+line 104), code-translates, then `PIVOT`s into `HIV_STATE_PATIENT_NUM`,
+`HIV_STATUS`, `HIV_CITY_CNTY_PATIENT_NUM` (SP lines 300-312). `TB_PAM_UID`
+is `CAST(ACT_UID AS BIGINT)`, `D_TB_HIV_KEY` is from the `nrt_d_tb_hiv_key`
+keystore, `LAST_CHG_TIME` is the `MAX` over the three answers. These three
+HIV columns are the verified path L3 cited as feeding `TB_HIV_DATAMART`'s
+`HIV_*` block. All 6/6 VERIFIED (`coverage_tb_full_chain.md`).
+
+### TB_PAM_LDF (5 cols) — `sp_nrt_tb_pam_ldf_postprocessing` (220) and VAR_PAM_LDF (5 cols) — `sp_nrt_var_pam_ldf_postprocessing` (235)
+
+These are the LDF (locally-defined field) tables — the clearest example
+in the cluster of the **page-builder/PAM-answer dynamic-pivot
+mechanism**. Each SP filters `nrt_page_case_answer` to the RVCT/VAR
+investigation's *LDF-flagged* answers (`LDF_STATUS_CD IN
+('LDF_UPDATE','LDF_CREATE','LDF_PROCESSED')`, SP 220 lines 83-85), runs
+the answer through the SRTE translation ladder (code_value_general →
+clinical → state → country, with `STRING_AGG` concatenation for
+multi-select), then discovers which `datamart_column_nm` values are
+*not* yet columns of the target table, **`ALTER TABLE ... ADD`s those
+columns at runtime**, and finally `PIVOT`s `MAX(ANSWER_TXT) FOR
+DATAMART_COLUMN_NM IN (<dynamic list>)` into them via `sp_executesql`
+(SP 220 lines 344-491). Because the column set is whatever LDF questions
+exist in `nbs_page_answer` / `nbs_question` metadata, the data columns
+are **not statically derivable**.
+
+In the appendix the three base columns are static and VERIFIED:
+`INVESTIGATION_KEY` (LEFT JOIN `investigation` on `*_PAM_UID = CASE_UID`),
+`*_PAM_UID` (the page-case `ACT_UID`), and `ADD_TIME` (the answer's
+`NCA_ADD_TIME` — present in the SP INSERT and the live 6/6 population but
+missing from the static catalog extract). The two columns the catalog
+*did* statically capture, `END` and `THEN`, are SQL-keyword
+`datamart_column_nm` values from LDF questions and are flagged
+**DYNAMIC** (driving table: `nbs_page_answer` / `nbs_question` LDF
+metadata). The coverage reports note both tables show **0 rows** in the
+TB/VAR full-chain runs (LDF_GAP — the full-chain fixtures author only
+`ldf_status_cd IS NULL` answers); `coverage_merged.md` shows **6/6** for
+both because `zz_ldf_flagged_answers.sql` later authors LDF-flagged
+`nrt_page_case_answer` rows for the RVCT/VAR PHCs and tail-EXECs these
+two SPs (the orchestrator does not call them in its main chain).
+
+### F_STD_PAGE_CASE (52 cols) — `sp_f_std_page_case_postprocessing` (025)
+
+The STD/HIV page-case **fact** — an all-key row that L3's
+`STD_HIV_DATAMART` joins to reach the `D_INV_*` dimensional cluster. It
+reads `nrt_investigation` (+ `nrt_investigation_case_management`) for
+non-PAM, case-managed investigations (the form-cd exclusion list at SP
+lines 152-154, gated on `CASE_MANAGEMENT_UID IS NOT NULL`), then resolves
+three families of keys:
+
+1. **Entity keys** (`PATIENT_KEY`, `PHYSICIAN_KEY`, `INVESTIGATOR_KEY`,
+   `HOSPITAL_KEY`, `ORG_AS_REPORTER_KEY`, plus the ~14 follow-up /
+   delivery / OB-GYN provider+org keys) — each `COALESCE(..., 1)` joins a
+   UID column on the staging row to `D_PATIENT`/`D_PROVIDER`/
+   `D_ORGANIZATION` (SP lines 176-239). `CONDITION_KEY` joins `CONDITION`
+   on `CD`; `ADD_DATE_KEY`/`LAST_CHG_DATE_KEY` join `RDB_DATE`;
+   `INVESTIGATION_KEY` joins `INVESTIGATION` on `CASE_UID`.
+2. **`D_INV_*_KEY` dimensional keys** (24 of them) — each
+   `COALESCE(..., 1)` resolves through an `L_INV_*` link table to a
+   `D_INV_*` dimension keyed on `PAGE_CASE_UID` (SP lines 265-289).
+3. **`GEOCODING_LOCATION_KEY`** — joins `GEOCODING_LOCATION` on the
+   patient entity UID.
+
+The `D_INV_*`/`L_INV_*` dimensions and `GEOCODING_LOCATION` are
+**MasterETL-only** persistent dimensions — no RTR SP populates them from
+ODSE (see L3 and `catalog/odse_unknown_tables.md`). The STD full-chain
+fixture hand-authors **five** D_INV/L_INV pairs (HIV, ADMINISTRATIVE,
+CLINICAL, EPIDEMIOLOGY, COMPLICATION), so those 5 keys + the
+entity/condition/date keys are VERIFIED; the other 17 `D_INV_*` keys and
+`GEOCODING_LOCATION_KEY` are flagged `MASTERETL_ONLY` (they populate at
+sentinel 1 because no `L_INV_*` row exists for them). `D_INVESTIGATION_REPEAT_KEY`
+/ `D_INV_PLACE_REPEAT_KEY` are INFERRED (those dims *are* RTR-populated
+elsewhere — L6 — but no `L_*` row links this PHC). The 14 follow-up /
+delivery cross-subject keys are INFERRED (sentinel 1, no Tier-2
+participation edges — the coverage report's `LINK_REQUIRED` gap). Two RTR
+issues surfaced here, both documented in `coverage_std_hiv_full_chain.md`:
+the orchestrator `@phc_ids` vs `@phc_id_list` parameter-name mismatch
+(Bug #M — F_STD_PAGE_CASE stays 0 rows in the orchestrated path until
+fixed), and the sentinel-`CONFIRMATION_METHOD_GROUP` join-cardinality
+issue on the downstream datamart.
+
+### BMIRD & Pertussis group-bridge tables (1 col each)
+
+`ANTIMICROBIAL_GROUP` and `BMIRD_MULTI_VALUE_FIELD_GROUP` (written by
+`sp_bmird_case_datamart_postprocessing`, SP 040) and
+`PERTUSSIS_SUSPECTED_SOURCE_GRP` and `PERTUSSIS_TREATMENT_GROUP` (written
+by `sp_pertussis_case_datamart_postprocessing`, SP 043) are
+single-column **group-bridge** tables. Each holds one surrogate
+group-key column (`*_GRP_KEY`). The mechanism is identical across all
+four: the datamart SP computes a multi-value group key per
+investigation; for PHCs whose group key is **unresolved** (left at the
+sentinel value 1 because no matching multi-value/antimicrobial group
+exists), it loads `public_health_case_uid` into a `nrt_*_group_key`
+keystore (which DELETEs then re-INSERTs every run), then `INSERT`s the
+allocated `*_GRP_KEY` from that keystore into the group-bridge table
+(SP 040 lines 398-425 and 588-612; SP 043 lines 605-632 and 816-838).
+There is **no direct ODSE column** — the value is a generated surrogate
+key, so the appendix records the keystore as the staging source and
+`—` for the ODSE column. All four are VERIFIED at 1/1 in
+`coverage_merged.md` (the full-chain fixtures for BMIRD/pertussis each
+produce the single sentinel group row).
+
+These tables relate to the L3 BMIRD note about **bug #12**: SP 040's
+`ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id ...)`
+collapses `BMIRD_MULTI_VALUE_FIELD` to one row per investigation, capping
+the `_2`+ pivot slots on `BMIRD_STREP_PNEUMO_DATAMART`. The group-bridge
+tables themselves are not blocked — they only ever hold the sentinel
+group key in the current fixtures — but the bug is why their downstream
+multi-value fan-out stays single-slot.
+
+---
+
+### Cross-cutting notes
+
+- **No PAM/fact/LDF SP reads `nbs_odse` directly.** ODSE columns are the
+  `sp_investigation_event` projection that feeds `nrt_investigation` /
+  `nrt_page_case_answer`.
+- **The PAM-answer pivot** (D_VAR_PAM, D_TB_HIV) and the **dynamic LDF
+  pivot** (TB_PAM_LDF, VAR_PAM_LDF) are the same idiom at two levels of
+  staticness: D_VAR_PAM/D_TB_HIV pivot over a *fixed* IN-list (statically
+  mappable → INFERRED/VERIFIED per column), whereas the LDF tables
+  `ALTER TABLE` + pivot over a *runtime-discovered* `datamart_column_nm`
+  list (DYNAMIC for the answer columns; only the base keys are static).
+- **`MASTERETL_ONLY`** on F_STD_PAGE_CASE means the `D_INV_*` /
+  `GEOCODING_LOCATION` dimension is a persistent dim RTR joins but does
+  not populate from ODSE; the STD fixture hand-authors a subset so the
+  join resolves.
+- **Sentinel-1 keys are populated, not missing.** Several VERIFIED fact
+  keys (provider/org/physician on F_TB_PAM/F_VAR_PAM/F_STD_PAGE_CASE)
+  resolve to 1 only because the Phase-2 investigations lack Tier-2
+  participation edges (`LINK_REQUIRED`) — the mapping is proven, the
+  resolved value awaits an edge fixture.
+
+---
+
+## G3 — PAM dimension code & group tables (TB / Varicella)
+
+**Cluster**: the 12 page-answer-driven PAM "code + group" dimension pairs that
+hang off the TB and Varicella PAM fact tables (`F_TB_PAM` / `F_VAR_PAM`) and
+their root dims (`D_TB_PAM` / `D_VAR_PAM`). Each pair is one *value* dimension
+plus its one-column `_GROUP` partner:
+
+| Dimension (6/6 cols) | Group (1/1 col) | Writer SP | Question | PAM family |
+| --- | --- | --- | --- | --- |
+| `D_ADDL_RISK` | `D_ADDL_RISK_GROUP` | `sp_nrt_d_addl_risk_postprocessing` (146) | TUB167 | TB |
+| `D_DISEASE_SITE` | `D_DISEASE_SITE_GROUP` | `sp_nrt_d_disease_site_postprocessing` (145) | TUB119 | TB |
+| `D_GT_12_REAS` | `D_GT_12_REAS_GROUP` | `sp_nrt_d_gt_12_reas_postprocessing` (170) | TUB235 | TB |
+| `D_HC_PROV_TY_3` | `D_HC_PROV_TY_3_GROUP` | `sp_nrt_d_hc_prov_ty_3_postprocessing` (180) | TUB237 | TB |
+| `D_MOVED_WHERE` | `D_MOVED_WHERE_GROUP` | `sp_nrt_d_moved_where_postprocessing` (195) | TUB225 | TB |
+| `D_MOVE_CNTRY` | `D_MOVE_CNTRY_GROUP` | `sp_nrt_d_move_cntry_postprocessing` (156) | TUB230 | TB |
+| `D_MOVE_CNTY` | `D_MOVE_CNTY_GROUP` | `sp_nrt_d_move_cnty_postprocessing` (175) | TUB228 | TB |
+| `D_MOVE_STATE` | `D_MOVE_STATE_GROUP` | `sp_nrt_d_move_state_postprocessing` (185) | TUB229 | TB |
+| `D_OUT_OF_CNTRY` | `D_OUT_OF_CNTRY_GROUP` | `sp_nrt_d_out_of_cntry_postprocessing` (190) | TUB114 | TB |
+| `D_PCR_SOURCE` | `D_PCR_SOURCE_GROUP` | `sp_nrt_d_pcr_source_postprocessing` (230) | VAR176 | Varicella |
+| `D_RASH_LOC_GEN` | `D_RASH_LOC_GEN_GROUP` | `sp_nrt_d_rash_loc_gen_postprocessing` (225) | VAR105 | Varicella |
+| `D_SMR_EXAM_TY` | `D_SMR_EXAM_TY_GROUP` | `sp_nrt_d_smr_exam_ty_postprocessing` (200) | TUB129 | TB |
+
+24 tables; 84 columns; **all VERIFIED** in the merged state (every dimension
+6/6, every group 1/1 — `coverage_merged.md`).
+
+---
+
+### The shared SP template
+
+These 12 SPs are near-identical clones; reading 145/146/185/225/230 establishes
+the whole family. Each one materializes a *single multi-answer PAM question* (a
+"repeating-block" page answer) into a value dimension + a group dimension that
+collects the per-investigation answer set. Per STRATEGY.md, none of them read
+`nbs_odse.dbo.*` — they read RDB_MODERN-side staging only. The pipeline is:
+
+```
+nbs_case_answer / PAM page answer  (ODSE-side; one row per answered question)
+   → CDC → Debezium → kafka-connect → nrt_page_case_answer  (staging projection)
+   → sp_nrt_d_<X>_postprocessing  → D_<X> + D_<X>_GROUP  (RDB_MODERN)
+```
+
+Step-by-step, the template is:
+
+1. **`#S_PHC_LIST`** — split the proc argument into a PHC-UID temp table.
+   Most SPs take `@phc_uids` and `STRING_SPLIT(@phc_uids, ',')`; a newer subset
+   (170, 180, 190, 200, 230) take **`@phc_id_list`** and use
+   `SELECT TRIM(value) FROM STRING_SPLIT(@phc_id_list, ',')` inline (no temp
+   table) — the only signature deviation in the family. The orchestrator
+   passes the correct argument name per SP (see `coverage_tb_full_chain.md`).
+2. **`#S_<X>_TRANSLATED`** — select from `NRT_PAGE_CASE_ANSWER` filtered to
+   `QUESTION_IDENTIFIER = '<the SP's question>'` and `DATAMART_COLUMN_NM <> 'n/a'`,
+   `LEFT JOIN NRT_INVESTIGATION` on `act_uid = public_health_case_uid`
+   (with the `isnull(tb.batch_id,1)=isnull(inv.batch_id,1)` batch guard),
+   `INNER JOIN #S_PHC_LIST` on `act_uid`. `CAST(act_uid AS BIGINT)` becomes the
+   grain key — `TB_PAM_UID` for TB tables, `VAR_PAM_UID` for the two Varicella
+   tables. The answer text is decoded against SRTE: join
+   `nrt_srte_codeset_group_metadata` on `CODE_SET_GROUP_ID` to resolve
+   `CODE_SET_NM`, then join the code-value table on `(CODE_SET_NM, CODE=ANSWER_TXT)`.
+3. **`#S_<X>`** — derive `VALUE`. Two transform shapes (see deviations below).
+4. **Delete-then-reload** — compute `#TEMP_D_<X>_DEL` (existing dim rows for
+   these PHCs), delete the matching rows from the two `NRT_<X>_KEY` /
+   `NRT_<X>_GROUP_KEY` surrogate-key staging tables and from `D_<X>`, then
+   re-insert fresh surrogate keys (`NRT_<X>_GROUP_KEY` by `TB_PAM_UID`/`VAR_PAM_UID`,
+   `NRT_<X>_KEY` by `(PAM_UID, NBS_CASE_ANSWER_UID)`). These IDENTITY-allocated
+   keys are RTR-internal surrogates — **no ODSE source**.
+5. **Build link temps** — `#D_<X>_PAM_TEMP` from `D_TB_PAM`/`D_VAR_PAM`,
+   `#L_<X>_GROUP` and `#L_<X>` join the surrogate keys; missing keys collapse to
+   the sentinel `1` via `CASE WHEN … IS NULL THEN 1`.
+6. **Load** — INSERT new `D_<X>_GROUP` rows (DISTINCT group keys), then
+   UPDATE-existing + INSERT-new into `D_<X>` writing the six columns
+   (`<PAM>_PAM_UID`, `D_<X>_KEY`, `SEQ_NBR`, `D_<X>_GROUP_KEY`, `LAST_CHG_TIME`,
+   `VALUE`). Finally **push `D_<X>_GROUP_KEY` onto the fact** via
+   `UPDATE F_TB_PAM`/`F_VAR_PAM … SET D_<X>_GROUP_KEY = …` joined through
+   `D_TB_PAM`/`D_VAR_PAM`, and garbage-collect orphaned group rows.
+
+So for every dimension: `<PAM>_PAM_UID`, `SEQ_NBR`, `LAST_CHG_TIME` carry
+through from the page answer; `VALUE` is the decoded answer; the two `_KEY`
+columns are RTR surrogate keys; and `D_<X>_GROUP` holds just the surrogate
+group key. The driving mechanism is a **fixed page-answer question pivot** —
+the value is page-answer-sourced (`nbs_case_answer` → `nrt_page_case_answer`),
+*not* a static ODSE column — but because each SP keys on a hard-coded
+`QUESTION_IDENTIFIER` (not runtime page-builder metadata) the column set is
+fully static, statically mappable, and fixture-proven. These are therefore
+**VERIFIED**, not DYNAMIC: the `nbs_case_answer`/PAM-page → `nrt_page_case_answer`
+edge is the honest ODSE-side source recorded in the appendix.
+
+### Per-table deviations
+
+The SPs are templated to the point of being clones; only three axes vary, all
+captured in the appendix `transform_note`:
+
+- **Argument name** — 170/180/190/200/230 use `@phc_id_list` (+ `TRIM`); the
+  other seven use `@phc_uids`. No effect on the column map.
+- **`VALUE` transform shape** — two forms:
+  - **CASE form** (145, 146, 170, 180, 190, 200, 230):
+    `CASE WHEN CODE_SET_GROUP_ID IS NULL OR ='' THEN ANSWER_TXT ELSE
+    CODE_SHORT_DESC_TXT END` — falls back to the raw answer text when the
+    answer is free-text (no code set).
+  - **Direct form** (156, 175, 185, 195, 225): `CODE_SHORT_DESC_TXT AS VALUE`
+    with no fallback (these questions are always coded).
+- **Code-value source table** — most decode against
+  `nrt_srte_code_value_general` (alias yields `CODE_SHORT_DESC_TXT`). Two
+  geography questions decode against **`nrt_srte_state_county_code_value`**
+  instead: `D_MOVE_CNTY` (175, county) keeps `CODE_SHORT_DESC_TXT`, while
+  `D_MOVE_STATE` (185, state) aliases **`CODE_DESC_TXT`** (the only SP that
+  reads `CODE_DESC_TXT` rather than `CODE_SHORT_DESC_TXT`).
+- **PAM family / grain column** — `D_PCR_SOURCE` (230) and `D_RASH_LOC_GEN`
+  (225) are the two **Varicella** tables: grain key `VAR_PAM_UID`, joined to
+  `D_VAR_PAM`, fact pushed to `F_VAR_PAM`. The other ten are **TB**:
+  `TB_PAM_UID`, `D_TB_PAM`, `F_TB_PAM`.
+
+### Verification
+
+Both PAM families are proven end-to-end. `tb_investigation_full_chain.sql`
+authors one `nbs_case_answer` + `nrt_page_case_answer` pair per TUB question
+(TUB114/119/129/167/225/228/229/230/235/237 all present) and runs the ten TB
+cluster SPs; `coverage_tb_full_chain.md` records each TB dim at 6/6 with sample
+`VALUE`s (`D_DISEASE_SITE='Pulmonary'`, `D_ADDL_RISK='Diabetes Mellitus'`,
+`D_MOVE_CNTRY='UNITED STATES'`, `D_MOVE_STATE='Georgia'`,
+`D_MOVED_WHERE='Out of the U.S.'`, `D_HC_PROV_TY_3='Private Outpatient'`,
+`D_GT_12_REAS='Non-adherence'`, `D_SMR_EXAM_TY='Pathology/Cytology'`).
+`varicella_investigation_full_chain.sql` authors VAR105 + VAR176 and runs the
+two Varicella SPs; `coverage_varicella_full_chain.md` records
+`D_RASH_LOC_GEN='Trunk'` and `D_PCR_SOURCE='Scab'`, each 6/6, plus the group
+keys flowing onto `F_VAR_PAM`. `coverage_merged.md` confirms all 24 tables at
+6/6 (dims) / 1/1 (groups) in the full merged run.
+
+*Note*: `coverage_tb_full_chain.md` labels `D_DISEASE_SITE` as "7/7"; this is a
+typo in that report — the catalog (the appendix spine) and the SP both define
+six columns for the table, and `coverage_merged.md` lists it as 6/6.
+
+### Status summary for this cluster
+
+- **VERIFIED (84/84)**: every column of all 24 tables. The dim grain/answer
+  columns trace to the PAM page answer (`nbs_case_answer` → `nrt_page_case_answer`)
+  via a fixed `QUESTION_IDENTIFIER` pivot + SRTE code decode; the `_KEY` /
+  `_GROUP_KEY` columns are RTR-internal surrogates (no ODSE source, correctly
+  recorded as such). No INFERRED, DYNAMIC, MASTERETL_ONLY, or BLOCKED rows —
+  the family is wholly fixture-proven and bug-free, and **as templated as
+  expected**.
+
+---
+
+## G4 — Operational, audit & blocked tables
+
+This section covers eight RDB_MODERN tables that sit **outside** the
+`ODSE source col → … → RDB_MODERN col` subject-data lineage the rest of
+this document traces. Seven of them are RTR-internal **operational /
+audit** tables: per-run job logs (`JOB_FLOW_LOG`, `JOB_BATCH_REBUILD_LOG`),
+a data-quality side-channel (`ETL_DQ_LOG`), event-processing metric buffers
+(`EVENT_METRIC`, `EVENT_METRIC_INC`), a generated calendar dimension
+(`RDB_DATE`), and a user/provider profile lookup (`USER_PROFILE`). For
+most of these the honest source is **RTR runtime state** — the emitting SP
+name, batch ids, timestamps, `@@ROWCOUNT`, error text, or a hard-coded
+literal — not an `nbs_odse.dbo.*` column. Where that is the case the
+column appendix records the operational source in `transform_note` and
+marks the row `INFERRED` rather than confabulating an ODSE chain. The
+eighth table, `SR100`, *is* a real condition-summary datamart with a
+genuine source chain, but it is **blocked at 0 rows by bug #15** and so is
+documented as `BLOCKED:#15` for every column. Two of these tables do carry
+honest staging-sourced lineage and are flagged `VERIFIED` accordingly:
+`USER_PROFILE` (reads `nrt_auth_user`) and `EVENT_METRIC` /
+`EVENT_METRIC_INC` (read the `nrt_investigation` / `nrt_observation` /
+`nrt_contact` / `nrt_auth_user` event-staging tables, fully consistent
+with the postprocessing-reads-NRT convention).
+
+**ETL_DQ_LOG** (14/15 cols live, ~6200 rows) is a **data-quality
+failure side-channel**, not MasterETL-only — correcting `coverage_tier_3.md`,
+which mislabeled it. Three RTR routines INSERT into it on a DQ-fail
+branch: `sp_s_pagebuilder_postprocessing` (007), the SLD-repeat SP (010),
+and `sp_f_std_page_case_postprocessing` (025). When a page-builder answer
+fails validation — a non-numeric value where numeric is expected
+(`isNumeric(ANSWER_VALUE) != 1`, SP 007 line ~477) or a malformed date
+(`ISDATE(ANSWER_TXT) != 1`, line ~817) — the SP logs the offending row:
+the investigation's `LOCAL_ID` / `PUBLIC_HEALTH_CASE_UID`, the literal
+issue code/description, and the page-builder metadata for the failing
+answer (`QUESTION_IDENTIFIER`, the bad `ANSWER_TXT` value itself,
+`DATA_LOCATION`, target `rdb_table_nm` / `RDB_COLUMN_NM`, `QUESTION_LABEL`)
+plus the run's `@Batch_id` and `GETDATE()`. The source is page-builder
+runtime state and the offending value, so columns are `INFERRED` — it only
+populates when a fixture deliberately exercises a DQ-fail branch.
+
+**EVENT_METRIC** (28/28) and **EVENT_METRIC_INC** (28/28) are
+**event-processing metrics** — one snapshot row per surveillance event
+(notification / observation / investigation / contact) capturing its
+class, condition, jurisdiction, status, prog-area and timing.
+`sp_event_metric_datamart_postprocessing` (037) builds `#TMP_EVENT_METRIC`
+from several branches over `nrt_investigation_notification`,
+`nrt_observation`, `nrt_investigation`, and `nrt_contact`, resolving code
+descriptions via SRTE and user names via `nrt_auth_user`. It INSERTs into
+the incremental buffer `EVENT_METRIC_INC` (line 963); the cleanup SP
+`sp_event_metric_cleanup_postprocessing` (345) later migrates rows into
+the durable `EVENT_METRIC` after a configurable lookback window. These are
+operational metrics, not ODSE subject-data, but the staging reads are
+real, so most columns are `VERIFIED`. The exception is the
+**`ADD_USER_NAME`** column on both tables: the investigation branch at
+line ~634 (`FROM dbo.nrt_investigation phc`) selects `add_user_id` but
+omits the `LEFT JOIN dbo.nrt_auth_user`, so its rows get
+`ADD_USER_NAME = NULL` — this is the layer-2 root cause of **bug #15** and
+is flagged `BLOCKED:#15`.
+
+**JOB_FLOW_LOG** (14/15 cols live, ~25,825 rows) is the pipeline's
+**operational run-log**, written by ~37 RTR routines as flow logging.
+Every postprocessing / datamart SP opens with a `START` row, writes a row
+after each step with the step number, step name and `@@ROWCOUNT`, and
+closes with a `COMPLETE` row; on failure the `BEGIN CATCH` writes an
+`ERROR` row carrying `@FullErrorMessage` (assembled from `ERROR_NUMBER` /
+`SEVERITY` / `STATE` / `LINE` / `MESSAGE`) and the truncated id-list in
+`MSG_DESCRIPTION1`. Every value is RTR runtime state — batch id,
+timestamps, the SP's own `@dataflow_name` / `@package_name` literals,
+status literals, step counters — so all columns are `INFERRED` with the
+operational source noted. There is no ODSE input.
+
+**JOB_BATCH_REBUILD_LOG** is **MISSING from the live RDB** and has **no
+RTR writer**. The only routine that touches it,
+`sp_sld_investigation_repeat_postprocessing` (010), merely *reads* /
+conditionally `UPDATE`s it inside an `IF OBJECT_ID('job_batch_rebuild_log')
+IS NOT NULL` guard (lines 41-69) to decide whether to rebuild the
+page-builder repeating-question dimension — it never INSERTs. The table is
+therefore a MasterETL-side artifact from RTR's perspective; it is
+documented as a single `MASTERETL_ONLY` appendix row.
+
+**RDB_DATE** (11/11) is a **generated calendar/date dimension with no ODSE
+source**. `sp_get_date_dim` takes `@start`/`@end` year integers and walks a
+date spine in a `WHILE` loop, deriving every column from the iterated date
+(`DATENAME`, `DATEPART`, `DAY`, `MONTH`, `YEAR`, and a legacy
+Saturday-counting week rule). `DATE_KEY = 1` is reserved for the
+NULL/unknown date row; real dates start at `DATE_KEY = 2` for 1990-01-01.
+Columns are `VERIFIED` against the live 4019-row dimension but the
+appendix `odse_source_col(s)` honestly reads "(generated utility — no ODSE
+source)". (Note: the STRATEGY baseline records an RTR bug in this SP under
+6.0.18.1 that forces the merge orchestrator to populate `RDB_DATE` via a
+recursive CTE instead; the column logic above is the SP's intent.)
+
+**USER_PROFILE** (8/8) is the one operational-adjacent table with
+**genuine staging-sourced lineage**. `sp_user_profile_postprocessing` (027)
+reads `dbo.nrt_auth_user` (the auth-user staging table — the ODSE
+`auth_user` projection) for `FIRST_NM`, `LAST_NM`, `LAST_CHG_TIME`,
+`NEDSS_ENTRY_ID` and `PROVIDER_UID`, derives `USER_NM` via a
+last/first-name CASE, and joins `D_PROVIDER` on `PROVIDER_UID` to attach
+`PROVIDER_KEY` (`COALESCE(...,1)` sentinel) and `PROVIDER_QUICK_CODE`. It
+dedupes to one row per `NEDSS_ENTRY_ID`. All eight columns are `VERIFIED`.
+
+**SR100** (0/20) is the **blocked condition-summary report datamart**.
+`sp_sr100_datamart_postprocessing` (155) builds `#temp_sr100` (one row,
+verified to build) by joining `SUMMARY_REPORT_CASE`, `INVESTIGATION`,
+`SUMMARY_CASE_GROUP`, `dbo.condition`, `RDB_DATE`, `nrt_srte_state_county_code_value`,
+`v_code_value_general`, `CASE_COUNT`, and `EVENT_METRIC` (INNER JOIN on
+`em.local_id = I.inv_local_id`). The chain resolves, but the final INSERT
+fails: **`SR100.ADD_USER_NAME` is NOT NULL while
+`EVENT_METRIC.ADD_USER_NAME` is NULL** (the bug-#15 line-634 branch never
+joined `nrt_auth_user`), raising **Msg 515** which the SP's outer
+`TRY/CATCH` swallows — so the pipeline sees success while SR100 stays
+empty at 0 rows. Per `bugs/15_event_metric_add_user_name_null/findings.md`,
+this is **not** a fixture-fixable gap (seeding `nrt_auth_user` and setting
+`add_user_id` was verified to leave `EVENT_METRIC.ADD_USER_NAME` NULL); it
+requires an RTR fix (uniformly apply the line-819 `nrt_auth_user` join to
+every `#TMP_EVENT_METRIC` branch, relax the SR100 NOT NULL, or
+`COALESCE(...,'')` the SR100 insert). Every SR100 column is therefore
+flagged `BLOCKED:#15`, with `ADD_USER_NAME` itself called out as the
+blocking column.
