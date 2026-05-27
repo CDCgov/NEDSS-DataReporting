@@ -18,7 +18,7 @@ When adding a new functional test, pick the next available range, and add your t
 | morbidityReport          | 1000005000  | 1000005027 |
 | skipSupervisorReview     | 1000006000  | 1000006029 |
 | stdContactTracing        | 1000007000  | 1000007028 |
-
+| elrEColi                 | 1000008000  | 1000008049 |
 
 ## Helper tools
 
