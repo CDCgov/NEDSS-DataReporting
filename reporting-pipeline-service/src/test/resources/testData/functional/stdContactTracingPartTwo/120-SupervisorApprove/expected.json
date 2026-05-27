@@ -950,25 +950,21 @@
   ],
   "39": [
     {
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "40": [
     {
-      "D_INV_CLINICAL_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "41": [
     {
-      "D_INV_HIV_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "42": [
     {
-      "D_INV_MEDICAL_HISTORY_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],

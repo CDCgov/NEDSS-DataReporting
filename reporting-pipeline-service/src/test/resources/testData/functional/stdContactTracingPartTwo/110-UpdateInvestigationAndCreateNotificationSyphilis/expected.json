@@ -176,9 +176,7 @@
   ],
   "9": [
     {
-      "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "nbs_case_answer_uid": 3241
+      "ADM_IMM_NTNL_NTFBL_CNDTN": "No"
     }
   ],
   "10": [
@@ -186,9 +184,7 @@
       "CLN_CARE_STATUS_CLOSE_DT": "1-In Care",
       "CLN_CASE_DIAGNOSIS": "720 - Syphilis, secondary",
       "CLN_PRE_EXP_PROPHY_IND": "No",
-      "CLN_PRE_EXP_PROPHY_REFER": "Yes",
-      "D_INV_CLINICAL_KEY": 3.0,
-      "nbs_case_answer_uid": 3244
+      "CLN_PRE_EXP_PROPHY_REFER": "Yes"
     }
   ],
   "11": [
