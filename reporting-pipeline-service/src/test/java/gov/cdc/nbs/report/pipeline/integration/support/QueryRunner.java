@@ -51,16 +51,7 @@ public class QueryRunner {
 
     return Stream.of(sql.split(";"))
         .map(String::trim)
-        .filter(statement -> !statement.isBlank())
-        .filter(statement -> !isCommentOnly(statement))
+        .filter(statement -> !statement.isBlank() && !statement.trim().startsWith("--"))
         .collect(Collectors.toList());
-  }
-
-  private static boolean isCommentOnly(String statement) {
-    return statement
-        .lines()
-        .map(String::trim)
-        .filter(line -> !line.isBlank())
-        .allMatch(line -> line.startsWith("--"));
   }
 }
