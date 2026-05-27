@@ -166,18 +166,14 @@
   ],
   "9": [
     {
-      "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "D_INV_ADMINISTRATIVE_KEY": 3.0,
-      "nbs_case_answer_uid": 3241
+      "ADM_IMM_NTNL_NTFBL_CNDTN": "No"
     }
   ],
   "10": [
     {
       "CLN_CASE_DIAGNOSIS": "720 - Syphilis, secondary",
       "CLN_PRE_EXP_PROPHY_IND": "No",
-      "CLN_PRE_EXP_PROPHY_REFER": "Yes",
-      "D_INV_CLINICAL_KEY": 3.0,
-      "nbs_case_answer_uid": 3244
+      "CLN_PRE_EXP_PROPHY_REFER": "Yes"
     }
   ],
   "11": [
@@ -199,23 +195,18 @@
   ],
   "13": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
-      "PBI_PATIENT_PREGNANT_WKS": "30",
-      "nbs_case_answer_uid": 3242
+      "PBI_PATIENT_PREGNANT_WKS": "30"
     }
   ],
   "14": [
     {
-      "D_INV_RISK_FACTOR_KEY": 3.0,
       "RSK_ANS_REFUSED_SEX_PARTNER": "No",
       "RSK_NUM_SEX_PARTNER_12MO": "7",
-      "RSK_UNK_SEX_PARTNERS": "No",
-      "nbs_case_answer_uid": 3259
+      "RSK_UNK_SEX_PARTNERS": "No"
     }
   ],
   "15": [
     {
-      "D_INV_SOCIAL_HISTORY_KEY": 3.0,
       "SOC_FEMALE_PRTNRS_12MO_IND": "Yes",
       "SOC_FEMALE_PRTNRS_12MO_TTL": "2",
       "SOC_MALE_PRTNRS_12MO_IND": "Yes",
@@ -228,15 +219,12 @@
       "SOC_PRTNRS_PRD_MALE_TTL": "2",
       "SOC_PRTNRS_PRD_TRNSGNDR_IND": "No",
       "SOC_SX_PRTNRS_INTNT_12MO_IND": "Yes",
-      "SOC_TRANSGNDR_PRTNRS_12MO_IND": "No",
-      "nbs_case_answer_uid": 3248
+      "SOC_TRANSGNDR_PRTNRS_12MO_IND": "No"
     }
   ],
   "16": [
     {
-      "D_INV_TREATMENT_KEY": 3.0,
-      "TRT_TREATMENT_DATE": "2026-04-20",
-      "nbs_case_answer_uid": 3243
+      "TRT_TREATMENT_DATE": "2026-04-20"
     }
   ],
   "17": [
