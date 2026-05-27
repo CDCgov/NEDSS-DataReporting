@@ -1,0 +1,1 @@
+EXEC RDB_Modern.dbo.sp_provider_event @user_id_list = '90010001,90010002';

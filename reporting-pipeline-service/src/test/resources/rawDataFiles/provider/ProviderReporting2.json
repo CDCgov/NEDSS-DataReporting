@@ -160,6 +160,16 @@
       {
         "type": "string",
         "optional": true,
+        "field": "phone_work_phone"
+      },
+      {
+        "type": "string",
+        "optional": true,
+        "field": "phone_ext_work_phone"
+      },
+      {
+        "type": "string",
+        "optional": true,
         "field": "phone_cell"
       },
       {
@@ -221,6 +231,8 @@
     "phone_work": "2223334455",
     "phone_ext_work": "",
     "phone_comments": "work phone office 2 comment",
+    "phone_work_phone": "2323222222",
+    "phone_ext_work_phone": "231",
     "phone_cell": "2823252423",
     "email_work": "someone2@email.com",
     "quick_code": "12314286",
