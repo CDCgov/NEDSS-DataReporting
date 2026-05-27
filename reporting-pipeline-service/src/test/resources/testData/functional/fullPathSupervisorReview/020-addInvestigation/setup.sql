@@ -2,16 +2,16 @@ USE [NBS_ODSE];
 
 DECLARE @local_user_id BIGINT = 10007004;
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid BIGINT = 20100400;
-DECLARE @dbo_Postal_locator_postal_locator_uid BIGINT = 20100401;
-DECLARE @dbo_Tele_locator_tele_locator_uid BIGINT = 20100402;
-DECLARE @dbo_Tele_locator_tele_locator_uid_2 BIGINT = 20100403;
-DECLARE @dbo_Entity_entity_uid_2 BIGINT = 20100404;
-DECLARE @dbo_Postal_locator_postal_locator_uid_2 BIGINT = 20100405;
-DECLARE @dbo_Tele_locator_tele_locator_uid_3 BIGINT = 20100406;
-DECLARE @dbo_Tele_locator_tele_locator_uid_4 BIGINT = 20100407;
-DECLARE @dbo_Act_act_uid BIGINT = 20100408;
-DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN20100400GA01';
+DECLARE @dbo_Entity_entity_uid BIGINT = 1000003000;
+DECLARE @dbo_Postal_locator_postal_locator_uid BIGINT = 1000003001;
+DECLARE @dbo_Tele_locator_tele_locator_uid BIGINT = 1000003002;
+DECLARE @dbo_Tele_locator_tele_locator_uid_2 BIGINT = 1000003003;
+DECLARE @dbo_Entity_entity_uid_2 BIGINT = 1000003004;
+DECLARE @dbo_Postal_locator_postal_locator_uid_2 BIGINT = 1000003005;
+DECLARE @dbo_Tele_locator_tele_locator_uid_3 BIGINT = 1000003006;
+DECLARE @dbo_Tele_locator_tele_locator_uid_4 BIGINT = 1000003007;
+DECLARE @dbo_Act_act_uid BIGINT = 1000003008;
+DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN1000003000GA01';
 
 -- STEP 2: AddInvestigation
 -- dbo.Entity

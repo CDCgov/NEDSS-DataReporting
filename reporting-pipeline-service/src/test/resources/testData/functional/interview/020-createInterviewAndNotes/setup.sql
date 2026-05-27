@@ -2,9 +2,9 @@ USE [NBS_ODSE];
 DECLARE @superuser_id bigint = 10009282;
 
 -- Use the same UIDs from step 1
-DECLARE @patient_uid_2 bigint = 10014315;
-DECLARE @investigation_uid bigint = 10014317;
-DECLARE @interview_uid bigint = 10014318;
+DECLARE @patient_uid_2 bigint = 1000004002;
+DECLARE @investigation_uid bigint = 1000004004;
+DECLARE @interview_uid bigint = 1000004005;
 
 -- Derived local_id
 DECLARE @interview_local_id nvarchar(40) = N'INT' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @interview_uid))) + N'GA01';
