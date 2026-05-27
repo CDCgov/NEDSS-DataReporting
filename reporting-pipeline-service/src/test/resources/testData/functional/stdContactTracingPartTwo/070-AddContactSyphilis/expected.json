@@ -188,9 +188,7 @@
   ],
   "12": [
     {
-      "D_INV_MEDICAL_HISTORY_KEY": 3.0,
-      "MDH_PREV_STD_HIST": "No",
-      "nbs_case_answer_uid": 3254
+      "MDH_PREV_STD_HIST": "No"
     }
   ],
   "13": [
