@@ -184,8 +184,7 @@
       "CLN_CARE_STATUS_CLOSE_DT": "1-In Care",
       "CLN_CASE_DIAGNOSIS": "720 - Syphilis, secondary",
       "CLN_PRE_EXP_PROPHY_IND": "No",
-      "CLN_PRE_EXP_PROPHY_REFER": "Yes",
-      "D_INV_CLINICAL_KEY": 3.0
+      "CLN_PRE_EXP_PROPHY_REFER": "Yes"
     }
   ],
   "11": [
@@ -662,8 +661,6 @@
       "DELIVERING_MD_KEY": 1,
       "DISPOSITIONED_BY_KEY": 2,
       "D_INVESTIGATION_REPEAT_KEY": 1.0,
-      "D_INV_ADMINISTRATIVE_KEY": 1,
-      "D_INV_CLINICAL_KEY": 1,
       "D_INV_COMPLICATION_KEY": 1,
       "D_INV_CONTACT_KEY": 1,
       "D_INV_DEATH_KEY": 1,
@@ -676,7 +673,6 @@
       "D_INV_OTHER_KEY": 1,
       "D_INV_PATIENT_OBS_KEY": 1,
       "D_INV_PLACE_REPEAT_KEY": 1.0,
-      "D_INV_PREGNANCY_BIRTH_KEY": 1,
       "D_INV_RESIDENCY_KEY": 1,
       "D_INV_RISK_FACTOR_KEY": 1,
       "D_INV_SOCIAL_HISTORY_KEY": 1,
@@ -712,7 +708,6 @@
       "DELIVERING_MD_KEY": 1,
       "DISPOSITIONED_BY_KEY": 2,
       "D_INVESTIGATION_REPEAT_KEY": 2.0,
-      "D_INV_ADMINISTRATIVE_KEY": 3,
       "D_INV_CLINICAL_KEY": 3,
       "D_INV_COMPLICATION_KEY": 1,
       "D_INV_CONTACT_KEY": 1,
@@ -726,7 +721,6 @@
       "D_INV_OTHER_KEY": 1,
       "D_INV_PATIENT_OBS_KEY": 1,
       "D_INV_PLACE_REPEAT_KEY": 1.0,
-      "D_INV_PREGNANCY_BIRTH_KEY": 3,
       "D_INV_RESIDENCY_KEY": 1,
       "D_INV_RISK_FACTOR_KEY": 3,
       "D_INV_SOCIAL_HISTORY_KEY": 3,
@@ -796,6 +790,7 @@
       "LABORATORY_INFORMATION": "<b>Local ID:</b> OBS3400008GA01<br><b>Date Received by PH:</b> 05/06/2026<br><b>Specimen Collection Date:</b> <br><b>ELR Indicator:</b>N<br><b>Resulted Test:</b> RPR Titer<br><b>Coded Result:</b> <br><b>Numeric Result:</b> =1:128<br><b>Text Result:</b> <br><b>Comments:</b> <br><br>",
       "MMWR_WEEK": 18,
       "MMWR_YEAR": 2026,
+      "NOTIFICATION_CREATE_DATE": "2026-05-06T00:00:00.000",
       "NOTIFICATION_LAST_UPDATED_DATE": "2026-05-06T23:27:54.717",
       "NOTIFICATION_LAST_UPDATED_USER": "Kent, Ariella",
       "NOTIFICATION_LOCAL_ID": "NOT3400028GA01",
@@ -844,6 +839,12 @@
       "LABORATORY_INFORMATION": "<b>Local ID:</b> OBS3400008GA01<br><b>Date Received by PH:</b> 05/06/2026<br><b>Specimen Collection Date:</b> <br><b>ELR Indicator:</b>N<br><b>Resulted Test:</b> RPR Titer<br><b>Coded Result:</b> <br><b>Numeric Result:</b> =1:128<br><b>Text Result:</b> <br><b>Comments:</b> <br><br>",
       "MMWR_WEEK": 18,
       "MMWR_YEAR": 2026,
+      "NOTIFICATION_CREATE_DATE": "2026-05-06T00:00:00.000",
+      "NOTIFICATION_LAST_UPDATED_DATE": "2026-05-06T23:27:54.717",
+      "NOTIFICATION_LAST_UPDATED_USER": "Kent, Ariella",
+      "NOTIFICATION_LOCAL_ID": "NOT3400028GA01",
+      "NOTIFICATION_STATUS": "APPROVED",
+      "NOTIFICATION_SUBMITTER": "Kent, Ariella",
       "PATIENT_CITY": "Atlanta",
       "PATIENT_COUNTY": "Fulton County",
       "PATIENT_COUNTY_CODE": "13121",
@@ -970,35 +971,29 @@
   ],
   "43": [
     {
-      "D_INV_PREGNANCY_BIRTH_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "44": [
     {
-      "D_INV_RISK_FACTOR_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "45": [
     {
-      "D_INV_SOCIAL_HISTORY_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "46": [
     {
-      "D_INV_TREATMENT_KEY": 3.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
   "47": [
     {
-      "D_INVESTIGATION_REPEAT_KEY": 1.0,
       "PAGE_CASE_UID": 3400024
     },
     {
-      "D_INVESTIGATION_REPEAT_KEY": 2.0,
       "PAGE_CASE_UID": 3400017
     }
   ],
