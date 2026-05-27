@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -65,7 +66,7 @@ def transform_query_sql(content: str) -> str:
 
 
 def transform_expected_json(content: str) -> str:
-    transformed = content.replace('T00:00:00"', 'T00:00:00.000"')
+    transformed = re.sub(r'(T\d{2}:\d{2}:\d{2})(")', r'\1.000\2', content)
     if not transformed.endswith("\n"):
         transformed += "\n"
     return transformed
