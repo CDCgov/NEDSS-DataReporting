@@ -3,6 +3,8 @@ package gov.cdc.nbs.report.pipeline.person.model.dto.persondetail;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import gov.cdc.nbs.report.pipeline.person.model.dto.PersonExtendedProps;
+import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderElasticSearch;
+import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderReporting;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,10 +37,23 @@ public class Phone implements ExtendPerson {
     personFull.setPhTlUid(teleLocatorUid);
 
     if (useCd.equalsIgnoreCase("WP")) {
-      personFull.setPhoneWork(telephoneNbr);
-      personFull.setPhoneExtWork(extensionTxt);
-      personFull.setPhoneComments(phoneComments);
-    } else if (useCd.equalsIgnoreCase("H")) {
+      // work phone fields applied differently for providers and patients
+      if (personFull instanceof ProviderReporting || personFull instanceof ProviderElasticSearch) {
+        if (cd.equalsIgnoreCase("PH")) {
+          personFull.setPhoneWorkPhone(telephoneNbr);
+          personFull.setPhoneExtWorkPhone(extensionTxt);
+        } else if (cd.equalsIgnoreCase("O")) {
+          personFull.setPhoneWork(telephoneNbr);
+          personFull.setPhoneExtWork(extensionTxt);
+          personFull.setPhoneComments(phoneComments);
+        }
+      } else {
+        if (cd.equalsIgnoreCase("PH")) {
+          personFull.setPhoneWork(telephoneNbr);
+          personFull.setPhoneExtWork(extensionTxt);
+        }
+      }
+    } else if (useCd.equalsIgnoreCase("H") && cd.equalsIgnoreCase("PH")) {
       personFull.setPhoneHome(telephoneNbr);
       personFull.setPhoneExtHome(extensionTxt);
     }

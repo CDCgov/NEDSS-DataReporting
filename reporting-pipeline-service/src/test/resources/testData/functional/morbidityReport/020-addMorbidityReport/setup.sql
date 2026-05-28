@@ -2,25 +2,25 @@ USE [NBS_ODSE]
 DECLARE @superuser_id bigint = 10009282
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid bigint = 20100001
-DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 20100011
-DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 20100012
-DECLARE @dbo_Act_act_uid bigint = 20100013
-DECLARE @dbo_Act_act_uid_2 bigint = 20100014
-DECLARE @dbo_Act_act_uid_3 bigint = 20100015
-DECLARE @dbo_Act_act_uid_4 bigint = 20100016
-DECLARE @dbo_Act_act_uid_5 bigint = 20100017
-DECLARE @dbo_Act_act_uid_6 bigint = 20100018
-DECLARE @dbo_Act_act_uid_7 bigint = 20100019
-DECLARE @dbo_Act_act_uid_8 bigint = 20100020
-DECLARE @dbo_Act_act_uid_9 bigint = 20100021
-DECLARE @dbo_Act_act_uid_10 bigint = 20100022
-DECLARE @dbo_Act_act_uid_11 bigint = 20100023
-DECLARE @dbo_Act_act_uid_12 bigint = 20100024
-DECLARE @dbo_Act_act_uid_13 bigint = 20100025
-DECLARE @dbo_Act_act_uid_14 bigint = 20100026
-DECLARE @dbo_Act_act_uid_15 bigint = 20100027
-DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN20100000GA01'
+DECLARE @dbo_Entity_entity_uid bigint = 1000005001
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000005011
+DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000005012
+DECLARE @dbo_Act_act_uid bigint = 1000005013
+DECLARE @dbo_Act_act_uid_2 bigint = 1000005014
+DECLARE @dbo_Act_act_uid_3 bigint = 1000005015
+DECLARE @dbo_Act_act_uid_4 bigint = 1000005016
+DECLARE @dbo_Act_act_uid_5 bigint = 1000005017
+DECLARE @dbo_Act_act_uid_6 bigint = 1000005018
+DECLARE @dbo_Act_act_uid_7 bigint = 1000005019
+DECLARE @dbo_Act_act_uid_8 bigint = 1000005020
+DECLARE @dbo_Act_act_uid_9 bigint = 1000005021
+DECLARE @dbo_Act_act_uid_10 bigint = 1000005022
+DECLARE @dbo_Act_act_uid_11 bigint = 1000005023
+DECLARE @dbo_Act_act_uid_12 bigint = 1000005024
+DECLARE @dbo_Act_act_uid_13 bigint = 1000005025
+DECLARE @dbo_Act_act_uid_14 bigint = 1000005026
+DECLARE @dbo_Act_act_uid_15 bigint = 1000005027
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000005000GA01'
 
 -- dbo.Entity
 INSERT INTO [dbo].[entity]
@@ -82,7 +82,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T00:00:00',
              N'2026-04-10T00:00:00',
              N'N',
-             20100000)
+             1000005000)
 
 -- dbo.Person_name
 INSERT INTO [dbo].[person_name]
@@ -1551,26 +1551,26 @@ SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770',
        [version_ctrl_nbr] = Isnull([version_ctrl_nbr], 0) + 1
-WHERE  [person_uid] = 20100000
+WHERE  [person_uid] = 1000005000
 
 -- dbo.Entity_locator_participation
 UPDATE [dbo].[entity_locator_participation]
 SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770'
-WHERE  [entity_uid] = 20100000
-       AND [locator_uid] = 20100001
+WHERE  [entity_uid] = 1000005000
+       AND [locator_uid] = 1000005001
 
 UPDATE [dbo].[entity_locator_participation]
 SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770'
-WHERE  [entity_uid] = 20100000
-       AND [locator_uid] = 20100002
+WHERE  [entity_uid] = 1000005000
+       AND [locator_uid] = 1000005002
 
 UPDATE [dbo].[entity_locator_participation]
 SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770'
-WHERE  [entity_uid] = 20100000
-       AND [locator_uid] = 20100003 
+WHERE  [entity_uid] = 1000005000
+       AND [locator_uid] = 1000005003 
