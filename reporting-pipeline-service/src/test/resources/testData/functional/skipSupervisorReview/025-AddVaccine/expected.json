@@ -60,7 +60,6 @@
   ],
   "2": [
     {
-      "D_VACCINATION_KEY": 2,
       "D_VACCINATION_REPEAT_KEY": 1.0,
       "VACCINE_GIVEN_BY_KEY": 2,
       "VACCINE_GIVEN_BY_ORG_KEY": 1

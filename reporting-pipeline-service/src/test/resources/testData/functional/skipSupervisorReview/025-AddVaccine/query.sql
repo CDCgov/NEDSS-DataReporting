@@ -125,7 +125,6 @@ WHERE [LOCAL_ID] = N'INT1000006030GA01'
 -- Step: 1
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_VACCINATION_KEY],
     [D_VACCINATION_REPEAT_KEY],
     [VACCINE_GIVEN_BY_KEY],
     [VACCINE_GIVEN_BY_ORG_KEY]
