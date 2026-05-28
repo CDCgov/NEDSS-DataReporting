@@ -19,6 +19,7 @@ When adding a new functional test, pick the next available range, and add your t
 | skipSupervisorReview     | 1000006000  | 1000006029 |
 | stdContactTracing        | 1000007000  | 1000007028 |
 | elrEColi                 | 1000008000  | 1000008049 |
+| stdContactTracingPartTwo        | 1000009000  | 1000009028 |
 
 ## Helper tools
 
