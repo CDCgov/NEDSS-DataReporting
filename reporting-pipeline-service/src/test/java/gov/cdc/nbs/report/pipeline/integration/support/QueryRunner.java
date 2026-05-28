@@ -50,7 +50,12 @@ public class QueryRunner {
     }
 
     return Stream.of(sql.split(";"))
-        .map(statement -> statement.lines().filter(line -> !line.stripLeading().startsWith("--")).collect(Collectors.joining(System.lineSeparator())))
+        .map(
+            statement ->
+                statement
+                    .lines()
+                    .filter(line -> !line.stripLeading().startsWith("--"))
+                    .collect(Collectors.joining(System.lineSeparator())))
         .map(String::trim)
         .filter(statement -> !statement.isBlank())
         .toList();
