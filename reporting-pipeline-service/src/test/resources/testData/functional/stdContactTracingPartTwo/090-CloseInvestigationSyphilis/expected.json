@@ -660,10 +660,8 @@
   ],
   "31": [
     {
-      "D_INV_HIV_KEY": 1
     },
     {
-      "D_INV_HIV_KEY": 3,
       "HIV_900_TEST_IND": "No",
       "HIV_900_TEST_REFERRAL_DT": "2026-04-24",
       "HIV_ENROLL_PRTNR_SRVCS_IND": "Accepted",

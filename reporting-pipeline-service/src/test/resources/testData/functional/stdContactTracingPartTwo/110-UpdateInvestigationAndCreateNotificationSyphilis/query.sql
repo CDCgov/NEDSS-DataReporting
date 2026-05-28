@@ -1743,7 +1743,6 @@ WHERE INVESTIGATION_KEY IN (SELECT [INVESTIGATION_KEY] FROM [RDB_MODERN].[dbo].[
 -- Steps: 2, 6, 7
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [D_INV_HIV_KEY],
     [HIV_900_RESULT],
     [HIV_900_TEST_IND],
     [HIV_900_TEST_REFERRAL_DT],
