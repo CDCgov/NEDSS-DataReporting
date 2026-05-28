@@ -644,11 +644,11 @@ BEGIN
 
         SELECT p1.PAGE_CASE_UID, p1.NBS_QUESTION_UID, STUFF(
                 (
-                    SELECT TOP 10 ' | ' + ANSWER_TXT1
+                    SELECT DISTINCT TOP 10 ' | ' + ANSWER_TXT1
                     FROM #CODED_TABLE_CAT_INV AS p2
                     WHERE p2.PAGE_CASE_UID = p1.PAGE_CASE_UID AND
                         p2.nbs_question_uid = p1.NBS_QUESTION_UID
-                    ORDER BY PAGE_CASE_UID, NBS_QUESTION_UID, NBS_CASE_ANSWER_UID FOR XML PATH(''), TYPE
+                    ORDER BY ' | ' + ANSWER_TXT1 FOR XML PATH(''), TYPE
                 ).value( '.', 'varchar(2000)' ), 1, 3, '') AS ANSWER_DESC11
         INTO #CODED_TABLE_DESC_INV_TEMP
         FROM #CODED_TABLE_CAT_INV AS p1
@@ -708,11 +708,11 @@ BEGIN
 
         SELECT p1.PAGE_CASE_UID, p1.NBS_QUESTION_UID, STUFF(
                 (
-                    SELECT TOP 10 ' |' + ANSWER_TXT1
+                    SELECT DISTINCT TOP 10 ' |' + ANSWER_TXT1
                     FROM #CODED_COUNTY_TABLE_INV AS p2
                     WHERE p2.PAGE_CASE_UID = p1.PAGE_CASE_UID AND
                         p2.nbs_question_uid = p1.NBS_QUESTION_UID
-                    ORDER BY PAGE_CASE_UID, NBS_QUESTION_UID, NBS_CASE_ANSWER_UID FOR XML PATH(''), TYPE
+                    ORDER BY ' |' + ANSWER_TXT1 FOR XML PATH(''), TYPE
                 ).value( '.', 'varchar(2000)' ), 1, 2, '') AS ANSWER_DESC11
         INTO #CODED_COUNTY_TABLE_DESC_INV_TEMP
         FROM #CODED_COUNTY_TABLE_INV AS p1
