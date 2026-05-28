@@ -4,19 +4,20 @@ Synthetic NBS_ODSE INSERTs designed to maximize RDB_MODERN coverage when RTR
 runs initial hydration. Output is consumed by a planned RDB-vs-RDB_MODERN
 comparison test against MasterETL.
 
-## Status — 2026-05-25 (live-verified, clean from-scratch run)
+## Status — 2026-05-27 (live-verified, clean from-scratch run)
 
 End-to-end `scripts/merge_and_verify.sh` against 118 in-scope RDB_MODERN
 target tables, then `scripts/coverage_summary.sh`:
 
 - **Fully covered: 76** (every column populated for at least one row)
-- **Partially covered: 35**
-- **Empty: 6**
+- **Partially covered: 36**
+- **Empty: 5**
 - **Missing from live schema: 1** (`job_batch_rebuild_log` — not in baseline 6.0.18.1)
-- **Overall column coverage: 89.6%** (4150 / 4633 columns, live-verified)
-- **14 RTR bugs surfaced and documented** (5 merged upstream, 5 squashed
-  on this branch, 4 documented with repros for follow-up — bugs #9 and
-  #10 LANDED this branch in commits `a88e40e5` and `99ef3517`)
+- **Overall column coverage: 89.9%** (4165 / 4633 columns, live-verified)
+- **14 RTR bugs surfaced and documented** (numbered #1–#13 and #15;
+  3 fixes merged upstream, 6 fixed on this branch, 5 documented with
+  repros for follow-up — bugs #9 and #10 LANDED this branch in commits
+  `a88e40e5` and `99ef3517`)
 
 Wall-clock for the full pipeline: ~5 min from `docker compose down -v`.
 Zero external dependencies beyond the baseline image.
@@ -24,7 +25,7 @@ Zero external dependencies beyond the baseline image.
 This is a real, deterministic from-scratch number — not an estimate.
 The earlier disk-full block (2026-05-25 ~00:30 PDT) is **resolved**:
 host disk was freed, the DB rebuilt from a fresh baseline, and the
-pipeline now runs clean end-to-end (see `BLOCKED.md`). The 89.6%
+pipeline now runs clean end-to-end (see `BLOCKED.md`). The 89.9%
 exceeds the prior 84.4% and the 85% target **even with**
 `zz_hepatitis_datamart_round2.sql` quarantined — its SP chain
 (`sp_hepatitis_datamart_postprocessing`) spills ~70GB into tempdb on a
@@ -101,27 +102,27 @@ head -12 coverage/coverage_merged.md   # Headline numbers
    or a tempdb MAX_SIZE cap before it can safely re-enter the cold
    single-batch pipeline. Recovers Agent Q's ~+61 hep cols (would push
    the headline past 90%).
-2. **Investigate bugs #12, #13, #14** — all surfaced this session
-   (BMIRD ROW_NUMBER PARTITION, sld_investigation_repeat TEXT pivot
-   NULL prop, d_contact_record STRING_AGG VARCHAR(8000) truncation).
-   Bug #13 fix alone would add ~50 TEXT cols on D_INVESTIGATION_REPEAT
-   for free.
-4. **MasterETL-side coverage analysis** — mirror Phase 0 against
+2. **Investigate the open bugs #11, #12, #13, #15** (aggregate_report
+   schema mismatch, BMIRD ROW_NUMBER PARTITION, sld_investigation_repeat
+   TEXT-pivot NULL propagation, event_metric/SR100 ADD_USER_NAME NULL).
+   Bug #13's fix alone would add ~50 TEXT cols on D_INVESTIGATION_REPEAT
+   for free. See `bugs/README.md` for repros and suggested fixes.
+3. **MasterETL-side coverage analysis** — mirror Phase 0 against
    MasterETL SPs in `NEDSSDB/src/migrations/*/RDB/`. Output:
    `catalog/masteretl_target_columns.md`. Without this, the eventual
    diff tool can't distinguish "fixture didn't seed it" from
    "MasterETL also doesn't write it" from "RTR gap".
-5. **The comparison tool itself** — the actual diff harness, modeled
+4. **The comparison tool itself** — the actual diff harness, modeled
    on NEDSS-DataCompare. Without this, today's coverage state has
    nowhere to go.
-6. **Remaining condition families** for completeness — Pertussis,
+5. **Remaining condition families** for completeness — Pertussis,
    Measles, Rubella full chains. Lower yield now that the baseline
-   is at ~85%.
+   is at ~90%.
 
 **Earlier "40-45% ceiling" estimate (commits before 2026-05-22) was
-blown away.** Two parallel-agent loops took live coverage from 41.4%
-→ 84.4% verified, with another ~3-4pp pending on Q+U+V re-apply.
-The methodology that drove this:
+blown away.** Two parallel-agent loops plus clean-rebuild fixes took
+live coverage from 41.4% to 89.9% verified (full from-scratch run,
+2026-05-27). The methodology that drove this:
 - Identify biggest table-level gaps via `coverage_summary.sh`
 - Spawn 4-5 parallel agents in worktrees, each on a distinct
   datamart with a reserved UID block

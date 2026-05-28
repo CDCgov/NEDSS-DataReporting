@@ -1,8 +1,9 @@
 # RTR bugs surfaced by the comparison-fixtures project
 
-This directory contains 11 bug investigations produced by the
-comparison-fixtures project's end-to-end merged-fixture run. Each
-subdirectory has:
+This directory contains 14 bug investigations produced by the
+comparison-fixtures project's end-to-end merged-fixture run, numbered
+`#1`–`#13` and `#15` (there is no `#14` directory — see "Total scope").
+Each subdirectory has:
 
 - `repro.sql` — self-contained SQL script demonstrating the bug (where
   applicable; some bugs are documented from in-orchestrator triggers)
@@ -27,6 +28,9 @@ with `DATABASE_VERSION=6.0.18.1`.
 | [09](./09_dyn_dm_unpivot_type/) | `sp_dyn_dm_repeatvarch_postprocessing` step 16 dynamic UNPIVOT raises Msg 8167 ("type of column EPI_CNTRY_OF_EXP conflicts with other columns in the UNPIVOT list") because repeat-block column types in `nrt_metadata_columns` are heterogeneous and the SP doesn't CAST before unpivoting | Medium (blocks every `DM_INV_<DATAMART>` wide table; surfaces when orchestrator's Step 9 invokes `sp_dyn_dm_main_postprocessing` for HEPATITIS_A_ACUTE) | `205-sp_dyn_dm_repeatvarch_postprocessing-001.sql:531-557` |
 | [10](./10_sld_investigation_repeat_key_alloc/) | `sp_sld_investigation_repeat_postprocessing` surrogate-key allocation: `LOOKUP_TABLE_N_REPT.D_REPT_KEY` is INT NOT NULL with no DEFAULT/IDENTITY, the INSERT supplies only `PAGE_CASE_UID`, the column ends up as `1`, and that 1 is then filtered out by `WHERE D_INVESTIGATION_REPEAT_KEY != 1` at line 1349. New dim rows stage correctly but never reach `D_INVESTIGATION_REPEAT`. | High (blocks every new row in `D_INVESTIGATION_REPEAT`, which is the dim for repeating-block dynamic columns). Suggested fix: IDENTITY column on LOOKUP_TABLE_N_REPT, or ROW_NUMBER()-derived key inside the SP. | `010-sp_sld_investigation_repeat_postprocessing-001.sql:1146, 1349` |
 | [11](./11_aggregate_report_datamart_schema_mismatch/) | `sp_aggregate_report_datamart_postprocessing` dynamic UPDATE references column `NOTIFICATION_UPD_DT_KEY` which `AGGREGATE_REPORT_DATAMART` does not have (table has only `NOTIFICATION_STATUS` and `NOTIFICATION_LOCAL_ID`). Msg 207 inside the SP's try/catch is silently swallowed; AGGREGATE_REPORT_DATAMART never populates. | Medium (blocks AGGREGATE_REPORT_DATAMART entirely; affects any aggregate report; likely never exercised in normal individual-case production flows). Suggested fix: add `NOTIFICATION_UPD_DT_KEY` column to AGGREGATE_REPORT_DATAMART (mirrors summary_report_case structure), OR remove that column reference from the SP's UPDATE/INSERT statements. | `050-sp_aggregate_report_datamart_postprocessing-001.sql:187, 268, 286` |
+| [12](./12_bmird_case_datamart_row_number_partition/) | `sp_bmird_case_datamart_postprocessing` `ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id)` collapses multi-value answer rows so only the `_1` pivot slot fills | Medium (blocks 13 multi-value cols — `UNDERLYING_CONDITION_2..8`, `NON_STERILE_SITE_2..3`, `ADD_CULTURE_*_SITE_2..3` — on `BMIRD_STREP_PNEUMO_DATAMART`). Open, not fixed. | `040-sp_bmird_case_datamart_postprocessing-001.sql:555-558` |
+| [13](./13_sld_investigation_repeat_text_pivot_null_propagation/) | `sp_sld_investigation_repeat_postprocessing` dynamic TEXT pivot column-list builder NULL-propagates, silently leaving TEXT columns of `D_INVESTIGATION_REPEAT` NULL (tail-EXEC returns 0 rows, no error) | High (blocks ~50 TEXT cols on `D_INVESTIGATION_REPEAT` for any PHC sharing the polluted state). Open, not fixed. | `010-sp_sld_investigation_repeat_postprocessing-001.sql:~212` |
+| [15](./15_event_metric_add_user_name_null/) | `sp_event_metric_datamart_postprocessing` leaves `ADD_USER_NAME` NULL on some branches; downstream `sp_sr100_datamart_postprocessing` swallows the resulting NOT NULL violation, blocking `SR100` | Medium (blocks `dbo.SR100` entirely, 0/20; likely under-populates `EVENT_METRIC.ADD_USER_NAME` / `LAST_CHG_USER_NAME` in production too). Documented, not fixed. | `155-sp_sr100_datamart_postprocessing-001.sql` + `sp_event_metric_datamart_postprocessing` |
 
 ## Surprises during investigation
 
@@ -60,7 +64,7 @@ investigation**. Worth noting because they reshape the picture:
    per-condition LDF datamart SPs (and 3 already-guarded sites — the
    pattern is known but inconsistently applied).
 
-## Current status (2026-05-21)
+## Current status (2026-05-27)
 
 | # | Status | Notes |
 | --- | --- | --- |
@@ -76,28 +80,39 @@ investigation**. Worth noting because they reshape the picture:
 | #9 | **Fixed on `aw/odse-test-seed`** (commit a88e40e5). | Dynamic UNPIVOT type-conflict in dyn_dm chain. Fix: CAST/TRY_CAST list wrapped around each column in the inner SELECT of UNPIVOT, applied to 3 SPs (repeatvarch nvarchar(max), repeatnumeric nvarchar(max), repeatdate DATE). Also pinned QUOTED_IDENTIFIER ON in all 3 files so re-applies via sqlcmd don't break the dynamic SELECT INTO. Chain runs to SP_COMPLETE. Headline coverage unchanged because DM_INV_* tables aren't in-scope and dim-table downstream needs richer fixture data. |
 | #10 | **Fixed on `aw/odse-test-seed`** (commit 99ef3517). | sp_sld_investigation_repeat_postprocessing surrogate-key collision. Fix: DBCC CHECKIDENT RESEED on LOOKUP_TABLE_N_REPT to max(2, MAX(D_INV_REPEAT_KEY)+1) right after the DELETE — so the next IDENTITY-assigned D_REPT_KEY is always >= 2 and passes the `!= 1` filter at line 1349. Also pinned QUOTED_IDENTIFIER ON. Orchestrator now invokes the SP at Step 8.5. D_INVESTIGATION_REPEAT 2→8 rows (+6 new), 1/252→12/256 cols. |
 | #11 | **Open** — documented; no fix attempted. | sp_aggregate_report_datamart references column NOTIFICATION_UPD_DT_KEY that target table doesn't have. SP/schema mismatch. Surfaced during overnight loop 2026-05-21 iter 5; fixture is correct but blocked by this SP defect. |
+| #12 | **Open** — documented; no fix attempted. | Surfaced 2026-05-24 (Agent G). `sp_bmird_case_datamart_postprocessing` ROW_NUMBER PARTITION BY branch_id collapses multi-value rows; 13 cols on BMIRD_STREP_PNEUMO_DATAMART stuck at the `_1` slot. |
+| #13 | **Open** — documented; no fix attempted. | Surfaced 2026-05-24 (Agent H). `sp_sld_investigation_repeat_postprocessing` dynamic TEXT pivot column-list builder NULL-propagates; ~50 TEXT cols on D_INVESTIGATION_REPEAT stay NULL with no error raised. |
+| #15 | **Documented** — not fixed (RTR routine, out of scope per LOOP.md). | `sp_event_metric_datamart_postprocessing` leaves ADD_USER_NAME NULL on some branches; `sp_sr100_datamart_postprocessing` swallows the NOT NULL violation, blocking SR100 entirely (0/20). Repro fully reduced in findings.md. |
 
 ### Remaining work
 
-- **#3** — PR #837 still open upstream; squashed onto `aw/odse-test-seed`
-  as `[SQUASH bug-3]` so the branch is self-contained. Re-rebase onto
-  main once #837 merges.
-- **#5a** — squashed onto `aw/odse-test-seed`. No separate PR pursued
-  per user direction.
-- **#7 + #8** — squashed onto `aw/odse-test-seed`. PRs #839/#840 were
-  approved but never merged; re-rebase if they land upstream.
-- **#9** — open. Investigate whether heterogeneous repeat-block column
-  types in `nrt_metadata_columns` are a baseline-data defect (would
-  not affect prod) or a latent SP defect (would). Suggested fix:
-  wrap each column in `CAST(<col> AS nvarchar(max))` inside the
-  dynamic SELECT before UNPIVOT. See `09_dyn_dm_unpivot_type/findings.md`.
-- **#10** — open. Fix the D_REPT_KEY surrogate-key allocation in
-  `sp_sld_investigation_repeat_postprocessing`. Preferred fix is
-  ROW_NUMBER() inside the SP (no schema change). Once fixed, also
-  add a Step 8.5 invocation of the SP to `merge_and_verify.sh` —
-  currently nothing in the orchestrated chain writes to
-  `D_INVESTIGATION_REPEAT`. See
-  `10_sld_investigation_repeat_key_alloc/findings.md`.
+**Branch hygiene** — fixes already landed on `aw/odse-test-seed`;
+re-rebase if/when they merge upstream:
+
+- **#3** — PR #837 still open upstream; squashed as `[SQUASH bug-3]` so
+  the branch is self-contained. Re-rebase onto main once #837 merges.
+- **#5a** — squashed; no separate PR pursued per user direction.
+- **#7 + #8** — squashed; PRs #839/#840 were approved but never merged;
+  re-rebase if they land upstream.
+- **#9 + #10** — fixed on-branch (commits `a88e40e5`, `99ef3517`). The
+  orchestrator now invokes `sp_sld_investigation_repeat_postprocessing`
+  at Step 8.5, so `D_INVESTIGATION_REPEAT` populates end-to-end.
+
+**Open bugs needing a fix** — documented with repros; no fix attempted:
+
+- **#11** — `sp_aggregate_report_datamart_postprocessing` references
+  `NOTIFICATION_UPD_DT_KEY`, which AGGREGATE_REPORT_DATAMART lacks. Add
+  the column to the table (mirrors summary_report_case) or drop the
+  reference from the SP. See `11_aggregate_report_datamart_schema_mismatch/`.
+- **#12** — `sp_bmird_case_datamart_postprocessing` ROW_NUMBER PARTITION
+  collapses multi-value rows (13 BMIRD cols). See
+  `12_bmird_case_datamart_row_number_partition/`.
+- **#13** — `sp_sld_investigation_repeat_postprocessing` TEXT-pivot
+  column-list builder NULL-propagates (~50 D_INVESTIGATION_REPEAT cols).
+  See `13_sld_investigation_repeat_text_pivot_null_propagation/`.
+- **#15** — `sp_event_metric_datamart_postprocessing` leaves
+  ADD_USER_NAME NULL, blocking SR100 (0/20). See
+  `15_event_metric_add_user_name_null/`.
 
 ### Additional issues surfaced today but not yet promoted to bugs/
 
@@ -148,7 +163,7 @@ DB plus the merged-fixture state from
 `scripts/merge_and_verify.sh`. To set up:
 
 ```sh
-cd /Users/adam/code/nbs/NEDSS-DataReporting
+cd <repo-root>/NEDSS-DataReporting
 docker compose down -v && docker compose up -d nbs-mssql liquibase
 # Wait for liquibase exit 0 (~3-5 min)
 
@@ -161,15 +176,23 @@ SQLCMDPASSWORD=PizzaIsGood33! sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -i
 
 ## Total scope
 
-- **11 bug categories** investigated, plus 3-4 additional issues
-  flagged but not promoted to their own bugs/ directories (BMIRD
-  INSERT dedup; CMG sentinel duplication; COVID row-size warning;
-  Pertussis SP @@ROWCOUNT-after-IF same pattern as bug 5a)
-- **At least 14 distinct SP-level defects** identified across them
-  (bug #1 has 2 issues; bug #5 has 2 issues; bug #7 has 2 issues;
-  bug #8 has 6 instances; bugs #9, #10, #11 each have one SP defect
-  with broad impact). Several "single bug" entries in the index
-  expand to multiple fixes.
+- **14 bug investigations** in their own `bugs/` directories, numbered
+  #1–#13 and #15. There is no `#14` directory: `#14` was assigned in
+  the STRATEGY.md progress log to a `sp_d_contact_record_postprocessing`
+  STRING_AGG / VARCHAR(8000) dynamic-SQL truncation issue that was never
+  promoted to its own directory here.
+- **Dispositions:** 3 fixes merged upstream (#2 PR #769, #4 PR #826,
+  #6 PR #827); 6 fixed on `aw/odse-test-seed` (#3, #5, #7, #8, #9, #10);
+  5 documented with repros (#1 resolved as a non-issue; #11, #12, #13,
+  #15 open, no fix attempted).
+- Plus **3-4 additional minor issues** flagged but not promoted to
+  their own directories (BMIRD INSERT dedup; CMG sentinel duplication;
+  COVID row-size warning; Pertussis SP @@ROWCOUNT-after-IF, same
+  pattern as bug 5a).
+- Several "single bug" entries expand to multiple distinct SP-level
+  defects — bug #1 has 2 issues, bugs #5 and #7 have 2 each, and bug #8
+  is a 6-instance family — so the count of distinct defects is
+  meaningfully higher than 14.
 - **Coverage state of the originally-blocked tables**:
   HEPATITIS_DATAMART unblocks at 0 → 1 row once #5b's orchestrator
   change is merged into `aw/odse-test-seed`; LDF_DIMENSIONAL_DATA and

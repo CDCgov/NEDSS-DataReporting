@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-05-25 18:57:11 PDT
+Generated: 2026-05-27 21:54:15 UTC
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -19,8 +19,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4633
-- Columns with ≥1 populated row: 4161
-- Overall column coverage: 89.8%
+- Columns with ≥1 populated row: 4165
+- Overall column coverage: 89.9%
 
 ## Per-table coverage
 
@@ -36,7 +36,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.confirmation_method | 3 | 3 | **3/3** |
 | dbo.confirmation_method_group | 27 | 3 | **3/3** |
 | dbo.covid_case_datamart | 2 | 383 | 379/383 |
-| dbo.covid_contact_datamart | 1 | 94 | 89/94 |
+| dbo.covid_contact_datamart | 2 | 94 | 93/94 |
 | dbo.covid_lab_celr_datamart | 1 | 101 | 85/101 |
 | dbo.covid_lab_datamart | 1 | 129 | 127/129 |
 | dbo.covid_vaccination_datamart | 2 | 60 | **60/60** |
@@ -89,8 +89,8 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.f_tb_pam | 1 | 20 | **20/20** |
 | dbo.f_vaccination | 2 | 6 | **6/6** |
 | dbo.f_var_pam | 1 | 12 | **12/12** |
-| dbo.hep_multi_value_field_group | 1 | 1 | **1/1** |
 | dbo.hep100 | 1 | 187 | 185/187 |
+| dbo.hep_multi_value_field_group | 1 | 1 | **1/1** |
 | dbo.hepatitis_datamart | 2 | 209 | 144/209 |
 | dbo.inv_hiv | 3 | 19 | 17/19 |
 | dbo.inv_summ_datamart | 1 | 58 | **58/58** |
@@ -100,13 +100,13 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 3 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 1 | 2 | **2/2** |
+| dbo.lab100 | 1 | 69 | 62/69 |
+| dbo.lab101 | 1 | 46 | 11/46 |
 | dbo.lab_result_comment | 6 | 6 | **6/6** |
 | dbo.lab_result_val | 42 | 20 | **20/20** |
 | dbo.lab_rpt_user_comment | 1 | 8 | **8/8** |
 | dbo.lab_test | 13 | 66 | **66/66** |
 | dbo.lab_test_result | 9 | 20 | 19/20 |
-| dbo.lab100 | 1 | 69 | 62/69 |
-| dbo.lab101 | 1 | 46 | 11/46 |
 | dbo.ldf_bmird | 0 | 7 | 0/7 |
 | dbo.ldf_data | 21 | 17 | 9/17 |
 | dbo.ldf_datamart_column_ref | 2662 | 8 | **8/8** |
@@ -129,7 +129,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.pertussis_suspected_source_grp | 1 | 1 | **1/1** |
 | dbo.pertussis_treatment_group | 1 | 1 | **1/1** |
 | dbo.provider_ldf_group | 1 | 3 | **3/3** |
-| dbo.rdb_date | 4019 | 11 | **11/11** |
+| dbo.rdb_date | 14976 | 11 | **11/11** |
 | dbo.result_comment_group | 8 | 3 | **3/3** |
 | dbo.sr100 | 0 | 20 | 0/20 |
 | dbo.std_hiv_datamart | 2 | 248 | 231/248 |
@@ -257,9 +257,9 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.inv_hiv
 - dbo.job_flow_log
 - dbo.l_inv_place_repeat
-- dbo.lab_test_result
 - dbo.lab100
 - dbo.lab101
+- dbo.lab_test_result
 - dbo.ldf_data
 - dbo.ldf_dimensional_data
 - dbo.ldf_foodborne

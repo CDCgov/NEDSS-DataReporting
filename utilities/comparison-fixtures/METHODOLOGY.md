@@ -34,10 +34,10 @@ Two reverse-engineering passes seeded everything else:
 1. **Phase 0 — RDB_MODERN target column catalog.** Static analysis of
    every routine in `005-rdb_modern/routines/` (130 .sql files) extracts
    the set of `(table, column)` pairs *any* RTR SP writes. Output:
-   `catalog/rtr_target_columns.md`. **118 in-scope tables; 4,621 total
+   `catalog/rtr_target_columns.md`. **118 in-scope tables; 4,633 total
    columns; 3,593 statically-extracted write pairs.** The headline
-   "41.4% column coverage" in `coverage/coverage_merged.md` is exactly
-   1,913 / 4,621 measured against this catalog — a fraction of *this
+   "89.9% column coverage" in `coverage/coverage_merged.md` is exactly
+   4,165 / 4,633 measured against this catalog — a fraction of *this
    file*, not of "everything RDB_MODERN could be." That definition is
    load-bearing for the whole project.
 
@@ -66,9 +66,9 @@ Two reverse-engineering passes seeded everything else:
    `sp_<cond>_case_datamart_postprocessing` family) we walked the
    `DECLARE @tgt_table_nm` at the top of each SP, or the row in
    `nrt_datamart_metadata` it joins against, to resolve the table.
-   These appear in the catalog as `<dynamic:@tgt_table_nm>`
-   placeholders (15 distinct). Column lists are not statically
-   derivable; the dynamic-datamart chain is verified post-hoc by
+   These appear in the catalog as `<dynamic:…>` placeholders
+   (17 distinct, e.g. `<dynamic:@tgt_table_nm>`). Column lists are not
+   statically derivable; the dynamic-datamart chain is verified post-hoc by
    inspecting the materialized tables after a run.
 
    **What 118 means.** Not every RDB_MODERN table — only the ones
@@ -156,6 +156,19 @@ agent's outputs become the next tier's read-only inputs:
 A single UID range registry (`catalog/uid_ranges.md`) is the source of
 truth. Collisions fail the merge loudly — no auto-deduplication.
 
+## Scaling: parallel agents
+
+The per-SP loop is the unit of work; coverage scales by running many
+of them concurrently. Each agent claims one datamart or dimension plus
+a reserved UID block, works in its own git worktree, and commits
+incrementally. A parent loop reconciles the worktrees via cherry-pick
+under a `mkdir`-based DB lock (`scripts/db_lock.sh`) and a single
+foreground re-apply. Because UID-range discipline keeps agents from
+colliding, per-table gains are additive — two such multi-agent loops
+drove the bulk of the climb from 41.4% to the current 89.9%, with
+SP-level defects logged as `bugs/<N>_*/findings.md` rather than fixed
+mid-loop.
+
 ## Reproducibility
 
 `scripts/merge_and_verify.sh` runs the deterministic 9-step Merge
@@ -174,9 +187,9 @@ depend on `runOnChange` checksum diffing against a baked image.
 ## Bug discovery as a byproduct
 
 Authoring fixtures that exercise every column path inevitably surfaces
-SPs that don't behave the way their column comments suggest. **Ten
-RTR bugs surfaced to date** (5 fixed upstream, 3 squashed on this
-branch, 2 documented with repros for follow-up). Each is documented
+SPs that don't behave the way their column comments suggest. **Fourteen
+RTR bugs surfaced to date** (3 fixes merged upstream, 6 fixed on this
+branch, 5 documented with repros for follow-up). Each is documented
 in `bugs/<N>_<slug>/findings.md` with a minimal repro. They range
 from trivial (`IF @debug` resetting `@@ROWCOUNT` and zeroing
 job_flow_log row counts; column-name typos; SUBSTRING-with-empty-string

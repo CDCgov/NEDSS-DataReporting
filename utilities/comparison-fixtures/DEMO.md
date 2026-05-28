@@ -92,30 +92,33 @@ Point at the comment block describing the 9-step Merge contract. Then:
 head -12 coverage/coverage_merged.md
 ```
 
-Read out the numbers (as of 2026-05-21 overnight loop end):
+Read out the numbers (latest verified from-scratch run, 2026-05-27):
 - In-scope target tables: 118
-- Fully covered: **66** (up from 48 at start of yesterday's session)
-- Partially covered: **35** (up from 23)
-- Empty: **16** (down from 46)
-- Overall column coverage: **41.4%** (up from 21.8%, +909 columns / +90%)
+- Fully covered: **76**
+- Partially covered: **36**
+- Empty: **5** (`aggregate_report_datamart`, `ldf_bmird`, `ldf_hepatitis`, `lookup_table_n_rept`, `sr100` — each tied to a specific open bug or the quarantined hep fixture)
+- Missing from live schema: **1** (`job_batch_rebuild_log` — not in baseline 6.0.18.1)
+- Overall column coverage: **89.9%** (4,165 / 4,633 columns)
 
-Quick wins to point at — Phase-2 unblocks from today:
+Quick wins to point at:
 
 ```bash
-grep -E "f_tb_pam|d_disease_site|d_addl_risk|bmird_strep|std_hiv_datamart|inv_hiv|f_std_page_case" coverage/coverage_merged.md
+grep -E "morbidity_report_datamart|covid_vaccination_datamart|inv_summ_datamart|covid_case_datamart|d_investigation_repeat|tb_datamart|bmird_strep|hepatitis_datamart" coverage/coverage_merged.md
 ```
 
 Talking points:
-- `f_tb_pam`: **20/20** (full) — TB PAM fact table, was 0
-- `d_disease_site` + `d_addl_risk`: **6/6** each — TB-PAM cluster dims, were 0
-- `f_std_page_case`: **52/52** (full) — STD/HIV fact, was 0 (orchestrator typo fix)
-- `tb_datamart`: **61/318**, `tb_hiv_datamart`: **65/322** — Step 9 ordering fix
-- `std_hiv_datamart`: **78/248** — Syphilis primary chain
-- `bmird_strep_pneumo_datamart`: **69/140** — BMIRD chain
-- `var_datamart`: **61/231** — Varicella chain
-- `covid_case_datamart`: **53/383** — COVID chain
-- `inv_hiv`: **17/19** — HIV columns
-- `lookup_table_n_rept`, `l_investigation_repeat_inc`: **full** — Agent A unlocks
+- `morbidity_report_datamart`: **133/133** (full)
+- `covid_vaccination_datamart`: **60/60** (full)
+- `inv_summ_datamart`: **58/58** (full)
+- `f_std_page_case`: **52/52**, `f_tb_pam`: **20/20** — both full
+- `d_disease_site`, `d_addl_risk`: **6/6** each (full)
+- `covid_case_datamart`: **379/383** (~99%)
+- `d_investigation_repeat`: **250/253** — the 3 remaining NULL cols are gated by bug #13 (TEXT-pivot NULL propagation)
+- `tb_datamart`: **277/318**, `tb_hiv_datamart`: **281/322**
+- `std_hiv_datamart`: **231/248**, `var_datamart`: **210/231**
+- `bmird_strep_pneumo_datamart`: **126/140** — the 14 remaining are gated by bug #12 (ROW_NUMBER PARTITION collapse)
+- `hep100`: **185/187**; `hepatitis_datamart`: **144/209** — the rest is in the quarantined `zz_hepatitis_datamart_round2.sql` fixture
+- `aggregate_report_datamart` (0/42) and `sr100` (0/20) — blocked by bugs #11 and #15 respectively, not by missing fixture data
 
 ### 5. Bugs as a byproduct (~45s) — pane B then A
 
@@ -123,36 +126,47 @@ Talking points:
 ls bugs/
 ```
 
-Visually: 11 bug investigation directories.
+Visually: 14 bug investigation directories (numbered #1–#13 and #15;
+#14 was assigned in the STRATEGY progress log to a `d_contact_record`
+STRING_AGG truncation issue but never promoted to its own dir).
 
 ```bash
 cat bugs/README.md | head -30
 ```
 
-> "We found 11 RTR bugs documented in bugs/, plus 2 more surfaced
-> during Phase-2 work (BMIRD INSERT-without-dedup; CMG sentinel
-> duplication). Five merged upstream; three squashed into this
-> branch as standalone fixes; the rest documented with repros.
-> They range from one-line logging defects (bug 5a: `IF @debug`
-> resetting `@@ROWCOUNT`) to architectural (bug 9: dynamic UNPIVOT
-> assumes uniform column types; bug 10: sp_sld_investigation_repeat
-> surrogate-key allocation defaults to 1; bug 11: sp_aggregate_report
-> references a column that doesn't exist in the target table)."
+> "We found 14 RTR bug investigations under `bugs/`. 3 fixes merged
+> upstream (PRs #769, #826, #827), 6 fixed on this branch as
+> standalone squashed commits (#3, #5, #7, #8, #9, #10), 5 still open
+> and documented with repros (#1 resolved as a non-issue; #11, #12,
+> #13, #15 awaiting RTR fixes). They range from one-line logging
+> defects (bug 5a: `IF @debug` resetting `@@ROWCOUNT`) to architectural
+> (bug 9: dynamic UNPIVOT assumes uniform column types — fixed; bug 13:
+> dynamic TEXT-pivot column-list NULL-propagates without raising an
+> error — still open; bug 15: `sp_event_metric_datamart_postprocessing`
+> leaves ADD_USER_NAME NULL and the downstream SR100 SP swallows the
+> NOT NULL violation — still open)."
 
 ### 6. What's next (~30s) — talk only
 
-- Bug #9 fix (dyn_dm UNPIVOT) — unblocks `DM_INV_*` family
-- Multi-condition fan-out completion (Varicella, COVID, STD/HIV
-  landed today; BMIRD and minor families remain)
+- Restore the quarantined `zz_hepatitis_datamart_round2.sql` fixture
+  — recovers ~+61 hep cols (would push the headline past 90%). Blocked
+  on a `sp_hepatitis_datamart_postprocessing` tempdb blowup (~70GB on a
+  cold dataset); needs an SP fix or a tempdb cap.
+- Fix the four open RTR bugs: **#11** (aggregate_report schema
+  mismatch), **#12** (BMIRD ROW_NUMBER PARTITION), **#13** (TEXT-pivot
+  NULL propagation — ~50 cols on D_INVESTIGATION_REPEAT for free),
+  **#15** (event_metric/SR100 ADD_USER_NAME NULL).
 - MasterETL-side column catalog (Phase 0 mirror) → tells us which
-  empty tables are RTR coverage gaps vs MasterETL-only
-- The actual comparison tool itself (RDB vs RDB_MODERN diff,
-  modeled on NEDSS-DataCompare)
+  empty tables are RTR coverage gaps vs MasterETL-only.
+- The actual comparison tool itself (RDB vs RDB_MODERN diff, modeled
+  on NEDSS-DataCompare). This is where today's coverage state goes.
+- Remaining condition families (Pertussis, Measles, Rubella) —
+  lower yield now that the baseline is at ~90%.
 
 ## Commands cheat-sheet (in order)
 
 ```bash
-cd /Users/adam/code/nbs/NEDSS-DataReporting/utilities/comparison-fixtures
+cd <repo-root>/NEDSS-DataReporting/utilities/comparison-fixtures
 
 # (1) Scope
 wc -l catalog/rtr_target_columns.md
