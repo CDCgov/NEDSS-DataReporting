@@ -3207,3 +3207,13 @@ databaseChangeLog:
            path: 259-create_lab100-001.sql
            splitStatements: true
            endDelimiter: GO
+ - changeSet:
+     id: create_labtest
+     author: liquibase
+     runOnChange: true
+     runInTransaction: false
+     changes:
+       - sqlFile:
+           path: 260-create_labtest-001.sql
+           splitStatements: true
+           endDelimiter: GO
