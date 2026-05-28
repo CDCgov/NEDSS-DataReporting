@@ -50,17 +50,9 @@ public class QueryRunner {
     }
 
     return Stream.of(sql.split(";"))
-        .map(QueryRunner::stripLineComments)
         .map(String::trim)
+        .flatMap(statement -> statement.lines().map(String::trim).filter(line -> !line.isBlank() && !line.startsWith("--")))
         .filter(statement -> !statement.isBlank())
         .collect(Collectors.toList());
-  }
-
-  private static String stripLineComments(String statement) {
-    return statement
-        .lines()
-        .map(String::trim)
-        .filter(line -> !line.isBlank() && !line.startsWith("--"))
-        .collect(Collectors.joining(System.lineSeparator()));
   }
 }
