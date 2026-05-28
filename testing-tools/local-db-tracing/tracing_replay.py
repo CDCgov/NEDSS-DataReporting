@@ -9,7 +9,9 @@ from datetime import datetime
 
 from tracing_constants import (
     CDC_METADATA_COLUMNS,
+    DEFAULT_ELR_USER_ID,
     DEFAULT_STARTING_UID,
+    DEFAULT_SUPERUSER_ID,
     DEFAULT_UID_BLOCK_SIZE_BY_CLASS,
     GENERIC_LOCAL_ID_PATTERN,
     NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS,
@@ -26,7 +28,6 @@ from tracing_sql import quote_identifier, sql_literal, sql_quote
 
 SUPERUSER_ID_VARIABLE = "@superuser_id"
 ELR_USER_ID_VARIABLE = "@elruser_id"
-DEFAULT_ELR_USER_ID = 10000015
 
 SCALAR_DECLARE_PATTERN = re.compile(
     r"^DECLARE\s+(?P<name>@[A-Za-z0-9_]+)\s+(?P<sql_type>[^=;]+?)(?:\s*=\s*(?P<expression>.+?))?;\s*$",
@@ -1421,7 +1422,7 @@ def reconstruct_sql_statements(
     uid_generator_entries: list[UidGeneratorEntry],
     known_associations: list[KnownAssociation],
     replay_now_window: tuple[datetime, datetime] | None = None,
-    superuser_id: int = 10009282,
+    superuser_id: int = DEFAULT_SUPERUSER_ID,
     starting_uid: int = DEFAULT_STARTING_UID,
     nbs_steps: list[dict[str, object]] | None = None,
     emit_only_step: int | None = None,
