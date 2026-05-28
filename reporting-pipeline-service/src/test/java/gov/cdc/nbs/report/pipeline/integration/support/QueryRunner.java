@@ -50,9 +50,9 @@ public class QueryRunner {
     }
 
     return Stream.of(sql.split(";"))
+        .map(statement -> statement.lines().filter(line -> !line.stripLeading().startsWith("--")).collect(Collectors.joining(System.lineSeparator())))
         .map(String::trim)
-        .flatMap(statement -> statement.lines().map(String::trim).filter(line -> !line.isBlank() && !line.startsWith("--")))
         .filter(statement -> !statement.isBlank())
-        .collect(Collectors.toList());
+        .toList();
   }
 }
