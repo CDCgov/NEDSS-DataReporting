@@ -474,7 +474,7 @@ BEGIN
             drop table #TMP_LAB_RESULTS_ORDER_CONTACT1;
 
         select
-            * , substring(left( oid+ space(11), 11),7,5) as PROGRAM_AREA_ID  --VS =SUBSTR(PUT(OID,11.),7,5)
+            * , SUBSTRING(RIGHT(SPACE(11) + RTRIM(oid), 11), 7, 5) as PROGRAM_AREA_ID  --VS =SUBSTR(PUT(OID,11.),7,5)
         into #TMP_LAB_RESULTS_ORDER_CONTACT1
         from #TMP_LABTEST_UPDATED
         ;

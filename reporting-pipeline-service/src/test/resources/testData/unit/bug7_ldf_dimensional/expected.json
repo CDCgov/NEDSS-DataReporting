@@ -1,0 +1,22 @@
+{
+  "0": [
+    {
+      "LDF_UID": 97001978,
+      "INVESTIGATION_UID": 97000200,
+      "BUSINESS_OBJECT_NM": "PHC",
+      "CONDITION_CD": "97210",
+      "DATA_TYPE": "CV",
+      "PHC_CD": "97210",
+      "COL1": "Yes"
+    },
+    {
+      "LDF_UID": 97001979,
+      "INVESTIGATION_UID": 97000200,
+      "BUSINESS_OBJECT_NM": "PHC",
+      "CONDITION_CD": "97210",
+      "DATA_TYPE": "ST",
+      "PHC_CD": "97210",
+      "COL1": "42"
+    }
+  ]
+}
