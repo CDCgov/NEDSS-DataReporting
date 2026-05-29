@@ -33,7 +33,8 @@
       "LAB_RPT_STATUS": "D",
       "ORDERING_PROVIDER_NM": "Norton_FAKE, Stephanie",
       "EVENT_DATE": "2026-05-24 20:31:53",
-      "REPORTING_FACILITY_UID": 2345
+      "REPORTING_FACILITY_UID": 2345,
+      "DOCUMENT_LINK": "<a href=\"#\" onClick=\"window.open('/nbs/viewELRDocument.do?method=viewELRDocument&documentUid=239&dateReceivedHidden=05/28/2026','DocumentViewer','width=900,height=800,left=0,top=0,menubar=no,titlebar=no,toolbar=no,scrollbars=yes,location=no');\">ViewLabDocument</a>"
     }
   ]
 }
