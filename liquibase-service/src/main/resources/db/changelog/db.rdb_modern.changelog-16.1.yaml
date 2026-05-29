@@ -3158,6 +3158,14 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: 957
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 259-alter_d_vaccination_add_vaccination_administered_cd-001.sql
+            splitStatements: false
+  - changeSet:
       id: onboarding-metadata-load
       author: liquibase
       runOnChange: true
