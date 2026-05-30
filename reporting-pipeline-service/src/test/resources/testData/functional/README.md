@@ -20,6 +20,7 @@ When adding a new functional test, pick the next available range, and add your t
 | stdContactTracing        | 1000007000  | 1000007028 |
 | elrEColi                 | 1000008000  | 1000008049 |
 | stdContactTracingPartTwo        | 1000009000  | 1000009028 |
+| f_interview_case_race*        | 1000010000  | 1000010010 |
 
 ## Helper tools
 
