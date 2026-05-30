@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+set -o pipefail
 
 if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
     # Run migrations
@@ -32,7 +34,7 @@ if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
 
     # Determine target reporting database based on NBS_ODSE configuration
     echo "Determining target reporting database..."
-    ENV_CHECK=$(sqlcmd -C -S "${DB_HOST}" -d "NBS_ODSE" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -Q "SET NOCOUNT ON; SELECT config_value FROM dbo.NBS_configuration WHERE config_key = 'ENV'" -h -1 -W 2>/dev/null | tr -d '\r' | xargs)
+    ENV_CHECK=$(sqlcmd -b -C -S "${DB_HOST}" -d "NBS_ODSE" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -Q "SET NOCOUNT ON; SELECT config_value FROM dbo.NBS_configuration WHERE config_key = 'ENV'" -h -1 -W 2>/dev/null | tr -d '\r' | xargs)
 
     TARGET_DB="rdb"
     if [[ "$ENV_CHECK" == "UAT" ]]; then
@@ -53,7 +55,7 @@ if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
     echo "Applying onboarding scripts"
     for sql in $(find "./02-onboarding" -iname "*.sql" | sort -V); do
         echo "Executing: $sql"
-        sqlcmd -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
+        sqlcmd -b -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
 
         echo "Completed: $sql"
     done

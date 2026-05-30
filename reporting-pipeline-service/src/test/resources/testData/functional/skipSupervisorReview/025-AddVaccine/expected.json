@@ -1,0 +1,68 @@
+{
+  "0": [
+      {
+          "PATIENT_ADDED_BY": "Kent, Ariella",
+          "PATIENT_ADD_TIME": "2026-04-23T14:30:02.313",
+          "PATIENT_AGE_REPORTED": 41,
+          "PATIENT_AGE_REPORTED_UNIT": "Years",
+          "PATIENT_CITY": "Atlanta",
+          "PATIENT_COUNTRY": "United States",
+          "PATIENT_COUNTY": "Fulton County",
+          "PATIENT_COUNTY_CODE": "13121",
+          "PATIENT_CURRENT_SEX": "Female",
+          "PATIENT_DECEASED_INDICATOR": "No",
+          "PATIENT_DOB": "1985-03-17T00:00:00.000",
+          "PATIENT_ENTRY_METHOD": "N",
+          "PATIENT_FIRST_NAME": "Taylor",
+          "PATIENT_LAST_CHANGE_TIME": "2026-04-23T14:30:02.313",
+          "PATIENT_LAST_NAME": "Swift_fake55ee",
+          "PATIENT_LAST_UPDATED_BY": "Kent, Ariella",
+          "PATIENT_LOCAL_ID": "PSN1000006000GA01",
+          "PATIENT_MARITAL_STATUS": "Married",
+          "PATIENT_MPR_UID": 1000006000,
+          "PATIENT_PHONE_HOME": "201-555-1212",
+          "PATIENT_RACE_ALL": "White",
+          "PATIENT_RACE_CALCULATED": "White",
+          "PATIENT_RACE_CALC_DETAILS": "White",
+          "PATIENT_RECORD_STATUS": "ACTIVE",
+          "PATIENT_STATE": "Georgia",
+          "PATIENT_STATE_CODE": "13",
+          "PATIENT_STREET_ADDRESS_1": "1313 Pine Way",
+          "PATIENT_UID": 1000006014,
+          "PATIENT_ZIP": "30033"
+      }
+  ],
+  "1": [
+    {
+      "ADD_TIME": "2026-05-28T14:18:25.180",
+      "ADD_USER_ID": 10009282,
+      "AGE_AT_VACCINATION": 62,
+      "AGE_AT_VACCINATION_UNIT": "Years",
+      "D_VACCINATION_KEY": 2,
+      "ELECTRONIC_IND": "N",
+      "LAST_CHG_TIME": "2026-05-28T14:18:25.183",
+      "LAST_CHG_USER_ID": 10009282,
+      "LOCAL_ID": "INT1000006030GA01",
+      "RECORD_STATUS_CD": "ACTIVE",
+      "RECORD_STATUS_TIME": "2026-05-28T14:18:25.183",
+      "VACCINATION_ADMINISTERED_NM": "influenza, live, intranasal",
+      "VACCINATION_ANATOMICAL_SITE": "Oral Cavity",
+      "VACCINATION_UID": 1000006030,
+      "VACCINE_ADMINISTERED_DATE": "2026-05-28T00:00:00.000",
+      "VACCINE_DOSE_NBR": 1,
+      "VACCINE_EXPIRATION_DT": "2027-05-07T00:00:00.000",
+      "VACCINE_INFO_SOURCE": "New immunization record",
+      "VACCINE_LOT_NUMBER_TXT": "12",
+      "VACCINE_MANUFACTURER_NM": "Aviron",
+      "VERSION_CTRL_NBR": 1,
+      "VACCINATION_ADMINISTERED_CD": "111"
+    }
+  ],
+  "2": [
+    {
+      "D_VACCINATION_REPEAT_KEY": 1.0,
+      "VACCINE_GIVEN_BY_KEY": 2,
+      "VACCINE_GIVEN_BY_ORG_KEY": 1
+    }
+  ]
+}

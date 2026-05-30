@@ -3163,7 +3163,15 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 259-add_index_f_interview_case_d_interview_key-001.sql
+            path: 259-alter_d_vaccination_add_vaccination_administered_cd-001.sql
+            splitStatements: false
+  - changeSet:
+      id: 958
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 261-add_index_f_interview_case_d_interview_key-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3204,5 +3212,25 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: onboarding/1000-nrt_indexes-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: create_lab100
+      author: liquibase
+      runOnChange: true
+      runInTransaction: false
+      changes:
+        - sqlFile:
+            path: 259-create_lab100-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: create_labtest
+      author: liquibase
+      runOnChange: true
+      runInTransaction: false
+      changes:
+        - sqlFile:
+            path: 260-create_labtest-001.sql
             splitStatements: true
             endDelimiter: GO
