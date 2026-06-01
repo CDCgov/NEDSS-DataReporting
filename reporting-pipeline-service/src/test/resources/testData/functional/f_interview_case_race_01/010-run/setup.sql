@@ -1,8 +1,10 @@
--- One of 10 parallel functional tests for the F_INTERVIEW_CASE duplicate-insert race.
--- All 10 copies share INTERVIEW_UID 1000010099 mapping to D_INTERVIEW_KEY 1000010000.
+-- One of 3 parallel functional tests for the F_INTERVIEW_CASE duplicate-insert race.
+-- See https://cdc-nbs.atlassian.net/browse/APP-621.
+--
+-- All 3 copies share INTERVIEW_UID 1000010099 mapping to D_INTERVIEW_KEY 1000010000.
 -- Whichever test wins the race seeds the nrt_interview_key row; the others see
 -- the row already there (via IF NOT EXISTS) or, in the tiny check-vs-insert gap,
--- hit the PK and TRY/CATCH swallows it. All 10 then call the SP for the same
+-- hit the PK and TRY/CATCH swallows it. All 3 then call the SP for the same
 -- UID, racing INSERTs against F_INTERVIEW_CASE (which has no UNIQUE constraint).
 -- With the patch, UPDLOCK + HOLDLOCK serializes the inserts → exactly one row.
 -- Without the patch, the race fires and the COUNT exceeds 1.
