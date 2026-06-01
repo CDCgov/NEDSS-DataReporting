@@ -197,7 +197,7 @@ UID range: `20000000–20009999`.
 
 ### Tier 1 — Subjects
 
-One agent per canonical subject (~11). Each agent owns the *internal* edges of
+One agent per canonical subject (12 — see Tier 0 enumeration above). Each agent owns the *internal* edges of
 its subject (e.g., Lab Report owns its Observation hierarchy and the
 Participation rows linking it to its own Patient and Ordering Provider, but
 **not** the link from a Lab to a separate Investigation — that's a Tier 2 edge).
@@ -333,10 +333,11 @@ coverage report is measured against it.
 ## Phase B — Edge-type catalog
 
 A second static-and-dynamic analysis: enumerate from live baseline SRTE every
-legal `type_cd` value for the connective tables — `act_relationship`,
-`participation`, `nbs_act_entity`, `entity_locator_participation`, `role`,
-`act_id` — together with the source/target `class_cd` constraints each
-type_cd implies. Output: `catalog/edge_types.md`.
+legal `type_cd` (or analogous discriminator) for the seven connective tables —
+`act_relationship`, `participation`, `nbs_act_entity`,
+`entity_locator_participation`, `role`, `act_id`, `entity_id` — together with
+the source/target `class_cd` constraints each value implies. Output:
+`catalog/edge_types.md`.
 
 Agents constructing edges select rows from this catalog rather than authoring
 codes inline.
@@ -503,7 +504,7 @@ Captured here so they don't get lost as we focus on v1:
   condition per family (e.g., one Hepatitis condition). Datamart columns
   whose logic branches on specific condition codes will be partially covered.
   Phase 2 fans out one investigation per condition code.
-- **Subject catalog expansion.** v1 catalog includes the 11 subjects listed
+- **Subject catalog expansion.** v1 catalog includes the 12 subjects listed
   in Tier 0. Add: Death Record, Aggregate Report, Document, Employer/Insurer
   variants of Organization, Specimen-only observations, additional Place
   types.
