@@ -22,6 +22,10 @@ These are not typical recordings; they are ELRs, or Electronic Lab Reports. ELRs
 9. Wait for the `nedss-datareporting-reporting-pipeline-service` to finish
 10. End this step in `trace_db_dual_capture`
 
+## Note
+
+If you get an error when running the ELRImporter, run `docker compose exec -it wildfly tail -n200 /opt/jboss/wildfly/nedssdomain/log/server.log` to look at the error log.
+
 ## Resources
 
 - https://www.dshs.texas.gov/sites/default/files/PHID/Documents/Texas-HL72.5.1-ELR-Guide.pdf
