@@ -12,7 +12,7 @@ ARG SQLCMD_VERSION=1.10.0
 # Go compiler builder to ensure everything is built with the latest secure Go release.
 RUN git clone --depth 1 --branch v${SQLCMD_VERSION} https://github.com/microsoft/go-sqlcmd.git /go-sqlcmd && \
     cd /go-sqlcmd && \
-    CGO_ENABLED=0 go build -ldflags="-w -s" -o /sqlcmd ./cmd/sqlcmd
+    CGO_ENABLED=0 go build -ldflags="-w -s" -o /sqlcmd ./cmd/modern
 
 FROM liquibase/liquibase:5.0.3-alpine
 
@@ -24,6 +24,7 @@ RUN apk update && apk upgrade --no-cache && \
     lpm add mssql --global
 
 COPY --from=builder /sqlcmd /usr/local/bin/sqlcmd
+RUN chmod +x /usr/local/bin/sqlcmd
 
 #Copy sources
 #changelog
