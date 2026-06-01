@@ -147,6 +147,11 @@ BEGIN
         SET
             @PROC_STEP_NAME = ' GENERATING #F_INTERVIEW_CASE_N';
 
+        -- This step and the INSERT below share one transaction (no COMMIT
+        -- between them). UPDLOCK + HOLDLOCK holds key-range locks on
+        -- dbo.F_INTERVIEW_CASE until the INSERT commits, so two concurrent
+        -- sessions cannot both see a key as "missing" and double-insert it
+        -- (the table has no UNIQUE constraint on D_INTERVIEW_KEY).
         SELECT
             D_INTERVIEW_KEY,
             PATIENT_KEY,
@@ -159,8 +164,12 @@ BEGIN
             IX_INTERVIEWEE_KEY,
             INTERVENTION_SITE_KEY
         INTO #F_INTERVIEW_CASE_N
-        FROM #F_INTERVIEW_CASE_INIT
-            WHERE D_INTERVIEW_KEY NOT IN (SELECT D_INTERVIEW_KEY FROM dbo.F_INTERVIEW_CASE);
+        FROM #F_INTERVIEW_CASE_INIT src
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM dbo.F_INTERVIEW_CASE tgt WITH (UPDLOCK, HOLDLOCK)
+            WHERE tgt.D_INTERVIEW_KEY = src.D_INTERVIEW_KEY
+        );
 
 
         if
@@ -174,11 +183,6 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log]
         (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, 'F_INTERVIEW_CASE', 'F_INTERVIEW_CASE', 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-
-        COMMIT TRANSACTION;
-
-
-        BEGIN TRANSACTION
 
         SET
             @PROC_STEP_NO = @PROC_STEP_NO + 1;
