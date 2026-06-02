@@ -27,7 +27,6 @@ GO
 -- silently drops every count. Discovered the hard way in iter 5
 -- attempt 1.
 
-EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22010000', @debug = 0;
 
 -- =====================================================================
 -- nrt_investigation_aggregate rows — one per (count_type, age_group).

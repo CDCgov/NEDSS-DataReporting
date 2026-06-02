@@ -275,7 +275,4 @@ GO
 -- contract sequence (Re-run Tier 1 chains affected by Tier 2 edges).
 -- =====================================================================
 
-EXEC dbo.sp_nrt_treatment_postprocessing
-    @treatment_uids = N'20000150,20100010,20100020',
-    @debug = 0;
 GO

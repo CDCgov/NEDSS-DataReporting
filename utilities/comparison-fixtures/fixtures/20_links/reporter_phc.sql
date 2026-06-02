@@ -243,6 +243,4 @@ GO
 -- Tail-EXEC: re-run sp_investigation_event to confirm SP callability
 -- with the new participation rows. (Coverage does not change at the
 -- INVESTIGATION dim level; this is a shape-consistency verification.)
-EXEC dbo.sp_investigation_event
-    @phc_id_list = N'20000100,20050010';
 GO

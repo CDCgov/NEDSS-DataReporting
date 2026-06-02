@@ -336,9 +336,6 @@ GO
 --   this step, the row never appears in INVESTIGATION and 255 no-ops.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22001000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step B: TB-PAM root SP populates D_TB_PAM (the wide pivoted dim).
@@ -349,9 +346,6 @@ EXEC dbo.sp_nrt_investigation_postprocessing
 --   10 columns populated and 156 NULL.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_d_tb_pam_postprocessing
-    @phc_id_list = N'22001000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step C: the 12 d_topic SPs each pivot a single TUB question into
@@ -360,20 +354,9 @@ EXEC dbo.sp_nrt_d_tb_pam_postprocessing
 -- =====================================================================
 
 -- @phc_uids SPs (8 of them)
-EXEC dbo.sp_nrt_d_disease_site_postprocessing @phc_uids = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_addl_risk_postprocessing    @phc_uids = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_move_cntry_postprocessing   @phc_uids = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_move_cnty_postprocessing    @phc_uids = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_move_state_postprocessing   @phc_uids = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_moved_where_postprocessing  @phc_uids = N'22001000', @debug = 0;
 -- (skip d_rash_loc_gen and d_pcr_source — those are Varicella, not TB)
 
 -- @phc_id_list SPs (rest)
-EXEC dbo.sp_nrt_d_tb_hiv_postprocessing       @phc_id_list = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_gt_12_reas_postprocessing   @phc_id_list = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_hc_prov_ty_3_postprocessing @phc_id_list = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_out_of_cntry_postprocessing @phc_id_list = N'22001000', @debug = 0;
-EXEC dbo.sp_nrt_d_smr_exam_ty_postprocessing  @phc_id_list = N'22001000', @debug = 0;
 
 -- =====================================================================
 -- Step E: tb_pam_ldf — LDF answer dim for the RVCT form. This SP is a
@@ -381,9 +364,6 @@ EXEC dbo.sp_nrt_d_smr_exam_ty_postprocessing  @phc_id_list = N'22001000', @debug
 --   orchestrator's Step 9, so we run it here.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_tb_pam_ldf_postprocessing
-    @phc_id_list = N'22001000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step D / F / G — NOT run from this fixture.

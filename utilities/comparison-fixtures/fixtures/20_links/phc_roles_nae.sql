@@ -338,6 +338,4 @@ GO
 --   * person_as_reporter_uid (foundation->20000010, v2->20010010)
 --   * hospital_uid           (foundation->20000020, v2->20030010)
 --   * org_as_reporter_uid    (foundation->20000020, v2->20030010)
-EXEC dbo.sp_investigation_event
-    @phc_id_list = N'20000100,20050010';
 GO

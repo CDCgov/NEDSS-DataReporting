@@ -401,9 +401,6 @@ GO
 --   resolves to a populated row.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22003000',
-    @debug = 0;
 
 -- =====================================================================
 -- COVID case datamart SP — NOT run from this fixture.

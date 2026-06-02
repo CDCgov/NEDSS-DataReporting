@@ -98,9 +98,6 @@ GO
 -- Wrapped in TRY/CATCH so a future SP refactor cannot break merge.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_covid_lab_celr_datamart_postprocessing
-        @obs_uids = N'22022000',
-        @debug    = 0;
 END TRY
 BEGIN CATCH
     PRINT 'WARN: sp_covid_lab_celr_datamart_postprocessing raised an error: '

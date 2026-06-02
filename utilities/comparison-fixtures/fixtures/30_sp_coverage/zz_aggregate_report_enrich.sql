@@ -65,7 +65,6 @@ DECLARE @coded_answer           varchar(20) = N'EVN';    -- ACT_MOOD code 'EVN' 
 -- every count to NULL (NULL = NULL evaluates as NULL).
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22023500', @debug = 0;
 
 -- =====================================================================
 -- nrt_investigation_aggregate — Numeric count grid (24 cells) so the
@@ -85,5 +84,4 @@ GO
 -- (Dataflow_Name='AGGREGATE_REPORT_DATAMART Post-Processing Event',
 -- status_type='ERROR') to observe it.
 -- =====================================================================
-EXEC dbo.sp_aggregate_report_datamart_postprocessing @id_list = N'22010000,22023500', @debug = 0;
 GO

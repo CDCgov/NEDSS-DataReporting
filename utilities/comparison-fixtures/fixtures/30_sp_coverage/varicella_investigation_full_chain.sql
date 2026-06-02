@@ -370,9 +370,6 @@ GO
 --   the row never appears and 240 no-ops at the INVESTIGATION join.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22002000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step B: VAR-PAM root SP populates D_VAR_PAM (the wide pivoted dim).
@@ -381,26 +378,18 @@ EXEC dbo.sp_nrt_investigation_postprocessing
 --   D_VAR_PAM PIVOT IN-list columns (lines 264-301).
 -- =====================================================================
 
-EXEC dbo.sp_nrt_d_var_pam_postprocessing
-    @phc_uids = N'22002000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step C: the 2 topic SPs each pivot a single VAR question into a
 --   topic dim + group link table. Param names verified above.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_d_rash_loc_gen_postprocessing @phc_uids   = N'22002000', @debug = 0;
-EXEC dbo.sp_nrt_d_pcr_source_postprocessing   @phc_id_list = N'22002000', @debug = 0;
 
 -- =====================================================================
 -- Step D: var_pam_ldf — LDF answer dim for the VAR form. Postprocessing
 --   SP not invoked by orchestrator Step 9.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_var_pam_ldf_postprocessing
-    @phc_uids = N'22002000',
-    @debug = 0;
 
 -- =====================================================================
 -- NOT RUN from this fixture (handled by Step 9 of merge_and_verify.sh,

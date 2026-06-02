@@ -112,6 +112,3 @@ UPDATE [dbo].[nrt_investigation]
 
 -- Re-run sp_nrt_investigation_postprocessing to flow these column
 -- updates into INVESTIGATION dimension.
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22001000,22002000,22003000,22004000,22005000,22007000,22008000,22009000,22010000,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22006000',
-    @debug = 0;

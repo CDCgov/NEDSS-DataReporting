@@ -519,9 +519,6 @@ GO
 -- =====================================================================
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_investigation_postprocessing
-        @id_list = N'22008500',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_nrt_investigation_postprocessing failed: ' + ERROR_MESSAGE();
@@ -535,10 +532,6 @@ GO
 -- dbo.v_nrt_nbs_page (FORM_CD → DATAMART_NM mapping). For Hep A acute,
 -- DATAMART_NM = 'HEPATITIS_A_ACUTE'.
 BEGIN TRY
-    EXEC dbo.sp_dyn_dm_main_postprocessing
-        @datamart_name = N'HEPATITIS_A_ACUTE',
-        @phc_id_list = N'22008500',
-        @debug = 'false';
 END TRY
 BEGIN CATCH
     PRINT 'sp_dyn_dm_main_postprocessing failed: ' + ERROR_MESSAGE();
@@ -550,9 +543,6 @@ GO
 -- but rerunning sp_f_page_case_postprocessing is idempotent and
 -- ensures the link row exists for downstream readers.
 BEGIN TRY
-    EXEC dbo.sp_f_page_case_postprocessing
-        @phc_ids = N'22008500',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_f_page_case_postprocessing failed: ' + ERROR_MESSAGE();
@@ -563,9 +553,6 @@ GO
 -- condition_cd IN ('10110', ...). Param @phc_id (not @phc_id_list,
 -- not @phc_uids) — verified by grep on the SP signature line 10.
 BEGIN TRY
-    EXEC dbo.sp_hepatitis_datamart_postprocessing
-        @phc_id = N'22008500',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_hepatitis_datamart_postprocessing failed: ' + ERROR_MESSAGE();
@@ -575,9 +562,6 @@ GO
 -- HEPATITIS_LDF (separate LDF dim): param @phc_uids (verified by grep
 -- on 320-sp_ldf_hepatitis_datamart_postprocessing-001.sql line 10).
 BEGIN TRY
-    EXEC dbo.sp_ldf_hepatitis_datamart_postprocessing
-        @phc_uids = N'22008500',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_ldf_hepatitis_datamart_postprocessing failed: ' + ERROR_MESSAGE();

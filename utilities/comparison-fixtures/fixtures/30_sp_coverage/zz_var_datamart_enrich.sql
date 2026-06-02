@@ -341,7 +341,6 @@ GO
 -- investigation postprocessing SP reads. Re-run that SP to flow our
 -- updates into the INVESTIGATION dim.
 BEGIN TRY
-    EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_nrt_investigation_postprocessing failed - ' + ERROR_MESSAGE();
@@ -391,7 +390,6 @@ GO
 -- =====================================================================
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_d_var_pam_postprocessing    @phc_uids    = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_nrt_d_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
@@ -399,7 +397,6 @@ END CATCH;
 GO
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_d_rash_loc_gen_postprocessing @phc_uids   = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_nrt_d_rash_loc_gen_postprocessing failed - ' + ERROR_MESSAGE();
@@ -407,7 +404,6 @@ END CATCH;
 GO
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_d_pcr_source_postprocessing  @phc_id_list = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_nrt_d_pcr_source_postprocessing failed - ' + ERROR_MESSAGE();
@@ -415,7 +411,6 @@ END CATCH;
 GO
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_var_pam_ldf_postprocessing   @phc_uids    = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_nrt_var_pam_ldf_postprocessing failed - ' + ERROR_MESSAGE();
@@ -423,7 +418,6 @@ END CATCH;
 GO
 
 BEGIN TRY
-    EXEC dbo.sp_f_var_pam_postprocessing         @phc_id_list = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_f_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
@@ -431,7 +425,6 @@ END CATCH;
 GO
 
 BEGIN TRY
-    EXEC dbo.sp_var_datamart_postprocessing      @phc_uids    = N'22002000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_var_datamart_enrich: sp_var_datamart_postprocessing failed - ' + ERROR_MESSAGE();

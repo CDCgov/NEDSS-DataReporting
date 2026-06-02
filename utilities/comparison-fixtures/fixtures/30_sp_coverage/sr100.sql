@@ -75,7 +75,6 @@ DECLARE @sr100_patient_uid    bigint = 20000000;  -- foundation Patient (read-on
 --    cd='10470' (Cholera) — present in RDB_MODERN.dbo.condition.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22024000', @debug = 0;
 
 -- =====================================================================
 -- 2) SummaryForm observations: SUM103 (coded), SUM104 (numeric),
@@ -100,14 +99,5 @@ EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22024000', @debug = 0;
 --    populates it. ORCH_TODO: move sp_sr100_datamart_postprocessing to
 --    run AFTER sp_event_metric_datamart_postprocessing in Step 9.
 -- =====================================================================
-EXEC dbo.sp_summary_report_case_postprocessing @id_list = N'22024000', @debug = 0;
 
-EXEC dbo.sp_event_metric_datamart_postprocessing
-     @phc_uids   = N'22024000',
-     @obs_uids   = N'',
-     @notif_uids = N'',
-     @ct_uids    = N'',
-     @vax_uids   = N'',
-     @debug      = 0;
 
-EXEC dbo.sp_sr100_datamart_postprocessing @id_list = N'22024000', @debug = 0;

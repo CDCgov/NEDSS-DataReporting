@@ -260,9 +260,6 @@ GO
 --   writes INVESTIGATION row keyed on case_uid=22006000.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22006000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step B: the repeating-block postprocessor.
@@ -290,8 +287,4 @@ EXEC dbo.sp_nrt_investigation_postprocessing
 -- fixture's job_flow_log rows from concurrent fixture runs.
 -- =====================================================================
 
-EXEC dbo.sp_sld_investigation_repeat_postprocessing
-    @batch_id    = 22006000,
-    @phc_id_list = N'22006000',
-    @debug       = 0;
 

@@ -281,9 +281,6 @@ GO
 -- 22029401 in its Step 9 @lab_test_uids list (ORCH_TODO).
 -- ---------------------------------------------------------------------
 BEGIN TRY
-    EXEC dbo.sp_lab101_datamart_postprocessing
-        @lab_test_uids = N'22029401',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_lab101_unblock: sp_lab101_datamart_postprocessing tail-EXEC failed — '

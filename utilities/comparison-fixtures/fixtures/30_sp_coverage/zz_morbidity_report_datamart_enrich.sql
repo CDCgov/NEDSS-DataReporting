@@ -608,13 +608,6 @@ GO
 -- @org_uids   + 22015120, 22015121.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_morbidity_report_datamart_postprocessing
-        @obs_uids = N'20000130,20080010,22015000',
-        @pat_uids = N'20000000,20020010,20020020',
-        @prov_uids = N'20000010,20010010,22015110,22015111',
-        @org_uids = N'20000020,20030010,22015120,22015121',
-        @inv_uids = N'20000100,20050010,22015200',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'TAIL EXEC FAILED:';

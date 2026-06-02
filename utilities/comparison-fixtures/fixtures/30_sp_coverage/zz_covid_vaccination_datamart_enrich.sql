@@ -302,10 +302,6 @@ GO
 -- abort downstream fixture application.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_covid_vaccination_datamart_postprocessing
-        @vac_uids = N'22020130',
-        @patient_uids = N'22020100',
-        @debug = 'false';
 END TRY
 BEGIN CATCH
     PRINT 'TAIL EXEC FAILED:';

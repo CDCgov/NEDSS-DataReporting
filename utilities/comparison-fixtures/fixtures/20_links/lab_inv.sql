@@ -188,12 +188,6 @@ GO
 -- INVESTIGATION_KEY via associated_phc_uids).
 -- =====================================================================
 
-EXEC dbo.sp_d_lab_test_postprocessing
-    @obs_ids = N'20000120,20070010,20070011',
-    @debug = 0;
 GO
 
-EXEC dbo.sp_d_labtest_result_postprocessing
-    @pLabResultList = N'20000120,20070010,20070011',
-    @pDebug = 0;
 GO

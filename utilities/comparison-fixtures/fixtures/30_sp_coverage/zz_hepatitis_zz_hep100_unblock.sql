@@ -73,8 +73,6 @@ IF @inv_key IS NULL
 BEGIN
     -- Anchor not in dim yet — try to flow it from staging (idempotent).
     BEGIN TRY
-        EXEC dbo.sp_nrt_investigation_postprocessing
-            @id_list = N'22008500', @debug = 0;
     END TRY
     BEGIN CATCH
         PRINT 'zz_hep100_unblock: could not drive anchor investigation: '
@@ -430,9 +428,6 @@ GO
 -- The orchestrator will also invoke this SP at Step 9 with PHC_UIDS.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_hep100_datamart_postprocessing
-        @phc_uids = N'22008500',
-        @debug    = 0;
 END TRY
 BEGIN CATCH
     -- log & swallow so the fixture remains rerunnable in pipelines

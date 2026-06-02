@@ -127,7 +127,6 @@ DECLARE @ldf_uids nvarchar(max) =
 --     LDF_DATAMART_COLUMN_REF) for these ldf_uids. REQUIRED before the
 --     datamart SPs; the orchestrator does not run this for our ldf_uids.
 BEGIN TRY
-    EXEC dbo.sp_nrt_ldf_dimensional_data_postprocessing @ldf_id_list = @ldf_uids, @debug = 0;
     PRINT '[ldf_answers_bmird_hepatitis] sp_nrt_ldf_dimensional_data_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -136,7 +135,6 @@ END CATCH;
 
 -- 3b. LDF postprocessing — maintains ldf_data / ldf_group / *_LDF_GROUP.
 BEGIN TRY
-    EXEC dbo.sp_nrt_ldf_postprocessing @ldf_uid_list = @ldf_uids, @debug = 0;
     PRINT '[ldf_answers_bmird_hepatitis] sp_nrt_ldf_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -147,7 +145,6 @@ END CATCH;
 --     (Orchestrator Step 9 also runs this against $PHC_UIDS, which already
 --      includes 22005000; we run it here for self-containment.)
 BEGIN TRY
-    EXEC dbo.sp_ldf_bmird_datamart_postprocessing @phc_uids = N'22005000', @debug = 0;
     PRINT '[ldf_answers_bmird_hepatitis] sp_ldf_bmird_datamart_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -158,7 +155,6 @@ END CATCH;
 --     (Orchestrator Step 9 also runs this against $PHC_UIDS, which already
 --      includes 22008500.)
 BEGIN TRY
-    EXEC dbo.sp_ldf_hepatitis_datamart_postprocessing @phc_uids = N'22008500', @debug = 0;
     PRINT '[ldf_answers_bmird_hepatitis] sp_ldf_hepatitis_datamart_postprocessing OK';
 END TRY
 BEGIN CATCH

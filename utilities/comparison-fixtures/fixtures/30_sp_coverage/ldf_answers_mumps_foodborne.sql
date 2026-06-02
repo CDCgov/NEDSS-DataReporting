@@ -35,7 +35,6 @@ GO
 -- patient_id = 20000000 (foundation Patient) for the bug-5b convention.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22008000', @debug = 0;
 
 -- =====================================================================
 -- LDF answer rows for Mumps (PHC 22000030, condition 10180).
@@ -56,8 +55,6 @@ SELECT @ldf_uids = STRING_AGG(CAST(ldf_uid AS varchar), ',')
 FROM dbo.nrt_ldf_data
 WHERE business_object_uid IN (22000030, 22008000);
 
-EXEC dbo.sp_nrt_ldf_postprocessing @ldf_uid_list = @ldf_uids, @debug = 0;
-EXEC dbo.sp_nrt_ldf_dimensional_data_postprocessing @ldf_id_list = @ldf_uids, @debug = 0;
 
 -- The per-condition LDF datamart SPs read LDF_DIMENSIONAL_DATA filtered
 -- by PHC_CD → LDF_DATAMART_TABLE_REF.condition_cd. We do NOT tail-EXEC

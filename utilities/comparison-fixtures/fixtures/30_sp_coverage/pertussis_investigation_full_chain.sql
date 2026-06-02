@@ -153,6 +153,3 @@ GO
 -- here — Step 9 owns it via $PHC_UIDS.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22007000',
-    @debug = 0;

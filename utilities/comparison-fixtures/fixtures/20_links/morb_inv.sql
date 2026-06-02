@@ -216,7 +216,4 @@ GO
 -- contract sequence (Re-run Tier 1 chains affected by Tier 2 edges).
 -- =====================================================================
 
-EXEC dbo.sp_d_morbidity_report_postprocessing
-    @pMorbidityIdList = N'20000130,20080010',
-    @debug = 0;
 GO

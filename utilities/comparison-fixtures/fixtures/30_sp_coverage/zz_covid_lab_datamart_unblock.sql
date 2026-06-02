@@ -432,9 +432,6 @@ GO
 --   Step 9. The fixture's data persists for the verifier.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_covid_lab_datamart_postprocessing
-        @observation_id_list = N'22022000',
-        @debug               = 0;
 END TRY
 BEGIN CATCH
     -- Log & swallow so the fixture remains rerunnable in pipelines and

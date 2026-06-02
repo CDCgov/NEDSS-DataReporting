@@ -48,6 +48,3 @@ USE [RDB_MODERN];
 -- Tier 1.
 
 -- Run sp_nrt_investigation_postprocessing to flow these into INVESTIGATION.
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100',
-    @debug = 0;

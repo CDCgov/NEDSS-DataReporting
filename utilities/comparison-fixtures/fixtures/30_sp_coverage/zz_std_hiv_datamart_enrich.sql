@@ -405,13 +405,7 @@ GO
 -- new dim values from the join cascade).
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_f_std_page_case_postprocessing
-        @phc_id_list = N'22004000',
-        @debug = 0;
 
-    EXEC dbo.sp_std_hiv_datamart_postprocessing
-        @phc_id = N'22004000',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_std_hiv_datamart_enrich: ERROR in tail-EXEC chain';

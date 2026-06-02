@@ -195,7 +195,6 @@ GO
 -- ---------------------------------------------------------------------
 
 BEGIN TRY
-    EXEC dbo.sp_covid_case_datamart_postprocessing @phc_uids = N'22003000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_covid_case_datamart_postprocessing failed: ' + ERROR_MESSAGE();

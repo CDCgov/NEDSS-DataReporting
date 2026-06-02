@@ -90,7 +90,11 @@ sql_i() {
   log "  apply: ${file#$FIXTURES_ROOT/}"
   local out
   out=$( $SQLCMD_BASE -i "$file" 2>&1 )
-  echo "$out" | grep -iE 'msg [0-9]+|error|level [0-9]+' | grep -viE 'msg 5701|msg 5703|level 0' && {
+  # Only treat real SQL errors (Msg NNNN, Level >=11) as failures. Do NOT match
+  # the bare substrings 'error'/'level' — benign result-set text (e.g. a
+  # job_flow_log row "Missing NRT Record ... Error") would otherwise false-fail.
+  # 5701/5703 are informational (changed DB context / language).
+  echo "$out" | grep -E 'Msg [0-9]+, Level (1[1-9]|2[0-9])' | grep -vE 'Msg 5701|Msg 5703' && {
     err "Apply failed for $file"
     echo "$out" >&2
     return 1

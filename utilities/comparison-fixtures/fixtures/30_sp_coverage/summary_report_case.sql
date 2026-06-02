@@ -21,7 +21,6 @@ GO
 -- Summary-type Investigation (case_type_cd='S').
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22009000', @debug = 0;
 
 -- =====================================================================
 -- Observations for SUM103 (coded), SUM104 (numeric), SUM105 (text).

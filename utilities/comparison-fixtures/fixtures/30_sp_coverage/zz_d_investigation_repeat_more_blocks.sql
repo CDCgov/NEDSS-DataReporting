@@ -97,7 +97,3 @@ GO
 -- 22014000 to disambiguate from the d_investigation_repeat.sql tail
 -- (which uses 22006000).
 -- =====================================================================
-EXEC dbo.sp_sld_investigation_repeat_postprocessing
-    @batch_id    = 22014000,
-    @phc_id_list = N'22006000',
-    @debug       = 0;

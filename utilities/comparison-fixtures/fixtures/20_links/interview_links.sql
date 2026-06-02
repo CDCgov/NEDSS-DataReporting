@@ -275,7 +275,4 @@ GO
 -- payload's PROVIDER_UID / PATIENT_UID / ORGANIZATION_UID fields.
 -- Expected: 2 rows in #INTERVIEW_INIT (one per Interview UID), each with
 -- non-NULL PROVIDER_UID, ORGANIZATION_UID, PATIENT_UID.
-EXEC dbo.sp_interview_event
-    @ix_uids = N'20000140,20090010',
-    @debug = 0;
 GO

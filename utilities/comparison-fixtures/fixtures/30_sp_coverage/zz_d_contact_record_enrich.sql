@@ -142,9 +142,6 @@ GO
 --     Wrapped in TRY/CATCH so a SP failure doesn't block other fixtures.
 -- ---------------------------------------------------------------------
 BEGIN TRY
-    EXEC dbo.sp_d_contact_record_postprocessing
-        @contact_uids = N'20000170,20120010,22011000',
-        @debug        = 'false';
 END TRY
 BEGIN CATCH
     PRINT 'sp_d_contact_record_postprocessing failed: ' + ERROR_MESSAGE();

@@ -250,7 +250,4 @@ GO
 -- PerformerOfVacc rows unblock the event SP's main projection.
 -- Expected: 2 rows projected (one per vaccination UID), JSON output
 -- contains PATIENT_UID and PROVIDER_UID for both rows.
-EXEC dbo.sp_vaccination_event
-    @vac_uids = N'20000160,20110010',
-    @debug = 0;
 GO

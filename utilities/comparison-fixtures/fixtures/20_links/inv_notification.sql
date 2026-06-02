@@ -126,7 +126,4 @@ USE [RDB_MODERN];
 GO
 
 -- Re-run Notification chain — INVESTIGATION_KEY/CONDITION_KEY now resolve.
-EXEC dbo.sp_nrt_notification_postprocessing
-    @notification_uids = N'20000110,20060010',
-    @debug = 0;
 GO

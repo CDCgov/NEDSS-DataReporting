@@ -369,8 +369,6 @@ GO
 --   Wrapped in TRY/CATCH so a downstream failure doesn't abort.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_nrt_d_tb_pam_postprocessing
-        @phc_id_list = N'22001000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_nrt_d_tb_pam_postprocessing failed: ' + ERROR_MESSAGE();
@@ -390,24 +388,18 @@ BEGIN TRY EXEC dbo.sp_nrt_d_smr_exam_ty_postprocessing  @phc_id_list = N'2200100
 BEGIN TRY EXEC dbo.sp_nrt_d_tb_hiv_postprocessing       @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_tb_hiv: ' + ERROR_MESSAGE(); END CATCH;
 
 BEGIN TRY
-    EXEC dbo.sp_f_tb_pam_postprocessing
-        @phc_id_list = N'22001000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_f_tb_pam_postprocessing failed: ' + ERROR_MESSAGE();
 END CATCH;
 
 BEGIN TRY
-    EXEC dbo.sp_tb_datamart_postprocessing
-        @phc_id_list = N'22001000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_tb_datamart_postprocessing failed: ' + ERROR_MESSAGE();
 END CATCH;
 
 BEGIN TRY
-    EXEC dbo.sp_tb_hiv_datamart_postprocessing
-        @phc_id_list = N'22001000', @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'sp_tb_hiv_datamart_postprocessing failed: ' + ERROR_MESSAGE();

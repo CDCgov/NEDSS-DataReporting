@@ -29,7 +29,6 @@ USE [RDB_MODERN];
 -- chain doesn't drop the row via the sentinel-key cascade —
 -- see fixtures/10_subjects/investigation.sql for the convention.
 
-EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22000200', @debug = 0;
 
 -- Author nrt_ldf_data answer rows for the first 5 Tetanus LDFs.
 -- Pulls ldf_uid + ldf_meta_data fields from nrt_odse_state_defined_field_metadata
@@ -41,6 +40,3 @@ SELECT @ldf_uids = STRING_AGG(CAST(ldf_uid AS varchar), ',')
 FROM dbo.nrt_ldf_data
 WHERE business_object_uid = 22000200;
 
-EXEC dbo.sp_nrt_ldf_postprocessing @ldf_uid_list = @ldf_uids, @debug = 0;
-EXEC dbo.sp_nrt_ldf_dimensional_data_postprocessing @ldf_id_list = @ldf_uids, @debug = 0;
-EXEC dbo.sp_ldf_tetanus_datamart_postprocessing @phc_id_list = N'22000200', @debug = 0;

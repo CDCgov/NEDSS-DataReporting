@@ -362,9 +362,6 @@ GO
 --   that same INVESTIGATION_KEY.
 -- =====================================================================
 
-EXEC dbo.sp_nrt_investigation_postprocessing
-    @id_list = N'22004000',
-    @debug = 0;
 
 -- =====================================================================
 -- Step B / C / D — NOT run from this fixture.

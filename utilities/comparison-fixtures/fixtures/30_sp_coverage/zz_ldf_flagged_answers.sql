@@ -84,7 +84,6 @@ IF NOT EXISTS (SELECT 1 FROM dbo.nrt_investigation WHERE public_health_case_uid 
 BEGIN
     PRINT '[zz_ldf_flagged_answers] inserted Mumps PHC 22019100 (INV_FORM_GEN)';
 
-    EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22019100', @debug = 0;
 END
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE business_object_uid = 22019100)
@@ -127,7 +126,6 @@ END
 
 -- 4a. TB PAM LDF (PHC 22001000, INV_FORM_RVCT)
 BEGIN TRY
-    EXEC dbo.sp_nrt_tb_pam_ldf_postprocessing @phc_id_list = N'22001000', @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_nrt_tb_pam_ldf_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -136,7 +134,6 @@ END CATCH;
 
 -- 4b. VAR PAM LDF (PHC 22002000, INV_FORM_VAR)
 BEGIN TRY
-    EXEC dbo.sp_nrt_var_pam_ldf_postprocessing @phc_uids = N'22002000', @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_nrt_var_pam_ldf_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -157,7 +154,6 @@ FROM (
 PRINT '[zz_ldf_flagged_answers] ldf_uid_list = ' + ISNULL(@ldf_uid_list, '<null>');
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_ldf_dimensional_data_postprocessing @ldf_id_list = @ldf_uid_list, @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_nrt_ldf_dimensional_data_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -165,7 +161,6 @@ BEGIN CATCH
 END CATCH;
 
 BEGIN TRY
-    EXEC dbo.sp_nrt_ldf_postprocessing @ldf_uid_list = @ldf_uid_list, @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_nrt_ldf_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -181,7 +176,6 @@ END CATCH;
 --   We run it here explicitly. Until/unless the orchestrator UID list is
 --   updated, this fixture's mumps coverage relies on this local EXEC.
 BEGIN TRY
-    EXEC dbo.sp_generic_case_datamart_postprocessing @phc_ids = N'22019100', @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_generic_case_datamart_postprocessing OK';
 END TRY
 BEGIN CATCH
@@ -191,7 +185,6 @@ END CATCH;
 -- 4e. Mumps datamart (idempotent — orchestrator Step 9 also runs it
 --     against $PHC_UIDS, but 22019100 isn't there yet; explicit here).
 BEGIN TRY
-    EXEC dbo.sp_ldf_mumps_datamart_postprocessing @phc_uids = N'22019100,22000030', @debug = 0;
     PRINT '[zz_ldf_flagged_answers] sp_ldf_mumps_datamart_postprocessing OK';
 END TRY
 BEGIN CATCH

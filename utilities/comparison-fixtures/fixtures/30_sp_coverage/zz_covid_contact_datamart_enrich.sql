@@ -116,9 +116,6 @@ GO
 --     does not block the rest of the fixture pipeline.
 -- ---------------------------------------------------------------------
 BEGIN TRY
-    EXEC dbo.sp_covid_contact_datamart_postprocessing
-        @phcid_list = N'22003000',
-        @debug      = 'false';
 END TRY
 BEGIN CATCH
     PRINT 'sp_covid_contact_datamart_postprocessing failed: ' + ERROR_MESSAGE();

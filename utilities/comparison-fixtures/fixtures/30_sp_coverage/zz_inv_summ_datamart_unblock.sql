@@ -203,11 +203,6 @@ GO
 --         and is robust to truncation between runs.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_inv_summary_datamart_postprocessing
-        @phc_uids   = N'20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22002000,22003000,22004000,22005000,22007000,22008000,22008500,22009000,22010000',
-        @notif_uids = N'',
-        @obs_uids   = N'',
-        @debug      = 0;
 END TRY
 BEGIN CATCH
     -- log & swallow so the fixture remains rerunnable in pipelines

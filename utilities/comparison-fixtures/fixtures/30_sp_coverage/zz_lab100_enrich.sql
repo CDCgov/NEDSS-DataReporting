@@ -350,9 +350,6 @@ GO
 -- in TRY/CATCH so a failure here doesn't break the rest of the suite.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_lab100_datamart_postprocessing
-        @labtestuids = N'20000120,20070010,20070011,22021402,22021403',
-        @debug = 0;
 END TRY
 BEGIN CATCH
     PRINT 'zz_lab100_enrich: sp_lab100_datamart_postprocessing tail-EXEC failed — '

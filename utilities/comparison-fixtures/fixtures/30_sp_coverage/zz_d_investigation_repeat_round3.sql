@@ -110,10 +110,6 @@ GO
 -- `sqlcmd -i` runs of this fixture in isolation.
 -- =====================================================================
 BEGIN TRY
-    EXEC dbo.sp_sld_investigation_repeat_postprocessing
-        @batch_id    = 22028000,
-        @phc_id_list = N'22007000',
-        @debug       = 0;
 END TRY
 BEGIN CATCH
     PRINT 'Agent V (round 3) tail-EXEC error suppressed: ' + ERROR_MESSAGE();
