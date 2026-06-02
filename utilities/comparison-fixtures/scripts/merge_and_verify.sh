@@ -102,31 +102,41 @@ sql_i() {
 # --------------------------------------------------------------------
 
 reset_baseline() {
-  log "Step 1: docker compose down -v && build liquibase && up -d nbs-mssql liquibase"
-  # Rebuild the liquibase image so it picks up working-tree changes to
-  # routines / changelogs / functions / etc. The Dockerfile.local COPYs
-  # those files in at build time, so without an explicit rebuild a stale
-  # cached image would ship the pre-edit SPs and our routine fixes
-  # wouldn't reach the DB. Layer cache stays hot for unchanged files;
-  # full rebuilds are ~20s.
+  log "Step 1: docker compose down -v && build && up -d FULL pipeline"
+  # Full real pipeline (no nrt_* shortcut): CDC (debezium) + kafka-connect sink
+  # project ODSE -> nrt_*, and reporting-pipeline-service runs the *_event +
+  # postprocessing SPs. Rebuild liquibase + service so working-tree routine/code
+  # changes ship into the images.
   ( cd "$NEDSS_DR_ROOT" \
       && docker compose down -v >/dev/null 2>&1 \
-      && docker compose build liquibase >/dev/null 2>&1 \
-      && docker compose up -d nbs-mssql liquibase >/dev/null 2>&1 )
+      && docker compose build liquibase reporting-pipeline-service >/dev/null 2>&1 \
+      && docker compose up -d >/dev/null 2>&1 )
 
   log "Waiting for liquibase migrations..."
-  local timeout=600
-  local elapsed=0
+  local timeout=600 elapsed=0
   while [[ $elapsed -lt $timeout ]]; do
-    if [[ "$(docker ps -a --filter name=liquibase --format '{{.Status}}' | head -1)" == Exited* ]]; then
-      log "Liquibase exited successfully."
+    [[ "$(docker ps -a --filter name=liquibase --format '{{.Status}}' | head -1)" == Exited* ]] && { log "Liquibase done."; break; }
+    sleep 10; elapsed=$((elapsed + 10))
+  done
+  [[ $elapsed -ge $timeout ]] && { err "Liquibase did not complete within ${timeout}s"; return 1; }
+
+  log "Waiting for pipeline to be ready (debezium/connect connectors + service initial drain)..."
+  wait_for_pipeline_drain 300 || { err "pipeline not ready"; return 1; }
+  log "Pipeline ready."
+}
+
+# Poll the reporting-pipeline-service log until it reports the idle signal
+# ("No ids to process from the topics.") 3 times in a row, i.e. CDC + the
+# service have drained all pending work. Arg: timeout seconds (default 300).
+wait_for_pipeline_drain() {
+  local timeout="${1:-300}" elapsed=0
+  local svc=nedss-datareporting-reporting-pipeline-service-1
+  while [[ $elapsed -lt $timeout ]]; do
+    if [[ "$(docker logs --tail 6 "$svc" 2>&1 | grep -c 'No ids to process from the topics')" -ge 3 ]]; then
       return 0
     fi
-    sleep 10
-    elapsed=$((elapsed + 10))
+    sleep 8; elapsed=$((elapsed + 8))
   done
-
-  err "Liquibase did not complete within $timeout seconds"
   return 1
 }
 
@@ -657,32 +667,33 @@ main() {
   acquire_db_lock "$lock_who" || { log "ERROR: could not acquire db lock; aborting"; exit 1; }
   trap 'release_db_lock' EXIT
 
+  # No-NRT-shortcut flow: apply ODSE fixtures, then let CDC + the
+  # reporting-pipeline-service reproduce nrt_* and run the *_event +
+  # postprocessing + datamart SPs. We drain between tiers so Tier 2 edges are
+  # processed against already-materialized Tier 1 entities. No manual SP EXEC.
   if [[ $SKIP_RESET -eq 0 ]]; then
     reset_baseline
-    run_infrastructure_sps
   else
     log "Skipping baseline reset (--skip-reset)"
   fi
 
   apply_foundation
   apply_tier_1_fixtures
-  run_tier_1_chains
+  log "Step 5: draining pipeline (Tier 1)..."; wait_for_pipeline_drain 300 || err "Tier 1 drain timed out (continuing)"
 
   if [[ $NO_TIER_2 -eq 1 ]]; then
-    log "Stopping after Tier 1 chains (--no-tier-2)"
+    log "Stopping after Tier 1 (--no-tier-2)"
     print_coverage_summary
     return 0
   fi
 
   apply_tier_2_fixtures
-  rerun_tier_1_chains
+  log "Step 7: draining pipeline (Tier 2 links)..."; wait_for_pipeline_drain 300 || err "Tier 2 drain timed out (continuing)"
   apply_tier_3_fixtures
-  run_sld_investigation_repeat
-  run_repeated_place_postprocessing
-  run_datamart_sps
+  log "Step 9: draining pipeline (Tier 3)..."; wait_for_pipeline_drain 420 || err "Tier 3 drain timed out (continuing)"
 
   print_coverage_summary
-  log "Merge complete."
+  log "Merge complete (CDC pipeline; no nrt_* shortcut)."
 }
 
 main "$@"
