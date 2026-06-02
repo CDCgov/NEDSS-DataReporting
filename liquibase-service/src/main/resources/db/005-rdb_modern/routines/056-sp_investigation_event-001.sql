@@ -661,17 +661,16 @@ BEGIN
                                                         fld_foll_up_dispo_date                                                         as fl_fup_dispo_dt,
                                                         act_ref_type_cd,
                                                         (select *
-                                                                                                                 from fn_get_value_by_cvg(
-                                                                                                                                 act_ref_type_cd,
-                                                                                                                                 case
-                                                                                                                                         when exists (select 1
-                                                                                                                                                                    from nbs_srte.dbo.condition_code cc
-                                                                                                                                                                    where cc.condition_cd = phc.cd
-                                                                                                                                                                        and cc.prog_area_cd = 'HIV')
-                                                                                                                                                 then 'NOTIFICATION_ACTUAL_METHOD_HIV'
-                                                                                                                                         else 'NOTIFICATION_ACTUAL_METHOD_STD'
-                                                                                                                                         end
-                                                                                                                            ))                                                                        as fl_fup_actual_ref_type,
+                                                        from fn_get_value_by_cvg(act_ref_type_cd,
+                                                            case
+                                                                when exists (select 1
+                                                                            from nbs_srte.dbo.condition_code cc
+                                                                            where cc.condition_cd = phc.cd
+                                                                                and cc.prog_area_cd = 'HIV')
+                                                                then 'NOTIFICATION_ACTUAL_METHOD_HIV'
+                                                                else 'NOTIFICATION_ACTUAL_METHOD_STD'
+                                                            end
+                                                        )) as fl_fup_actual_ref_type,
                                                         case_review_status,
                                                         case_review_status_date,
                                                         fld_foll_up_internet_outcome                                                   as fl_fup_internet_outcome_cd,
