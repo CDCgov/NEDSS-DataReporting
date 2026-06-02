@@ -103,25 +103,9 @@
 USE [RDB_MODERN];
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
-               WHERE loinc_cd = '94309-2' AND condition_cd = '11065')
-BEGIN
-END;
 
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
-               WHERE loinc_cd = '94500-6' AND condition_cd = '11065')
-BEGIN
-END;
 
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
-               WHERE loinc_cd = '94531-1' AND condition_cd = '11065')
-BEGIN
-END;
 
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
-               WHERE loinc_cd = '94533-7' AND condition_cd = '11065')
-BEGIN
-END;
 
 GO
 
@@ -319,44 +303,18 @@ DECLARE @covid_lab_result_uid   bigint = 22022001;
 DECLARE @covid_material_uid     bigint = 22022010;
 
 -- nrt_observation Order row (83-column footprint, matching Tier 1 Lab fixture)
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation WHERE observation_uid = @covid_lab_order_uid)
-BEGIN
-END;
 
 -- nrt_observation Result row
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation WHERE observation_uid = @covid_lab_result_uid)
-BEGIN
-END;
 
 -- nrt_observation_txt: result text (FT) + comment (N) for Result
 -- ovt_txt_type_cd='O' (or NULL) feeds Text_Result_Desc; 'N' feeds Result_Comments.
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
-               WHERE observation_uid = @covid_lab_result_uid AND ovt_seq = 1)
-BEGIN
-END;
 
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
-               WHERE observation_uid = @covid_lab_result_uid AND ovt_seq = 2)
-BEGIN
-END;
 
 -- nrt_observation_coded: coded result (Detected / Positive)
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_coded
-               WHERE observation_uid = @covid_lab_result_uid)
-BEGIN
-END;
 
 -- nrt_observation_numeric: numeric result
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_numeric
-               WHERE observation_uid = @covid_lab_result_uid)
-BEGIN
-END;
 
 -- nrt_observation_material: specimen material on Order
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_material
-               WHERE act_uid = @covid_lab_order_uid)
-BEGIN
-END;
 
 GO
 
@@ -402,6 +360,7 @@ DECLARE @covid_lab_order_uid    bigint = 22022000;
 -- the SP only reads obs_domain_cd_st_1, cd, report_observation_uid, and
 -- batch_id from the AOE rows. Other cols default to NULL.
 
+
 -- act parents for AOE observations (NBS_ODSE FK reference if act is FK).
 -- nrt_observation does NOT FK to act in RDB_MODERN, so this is optional.
 -- We skip ODSE-side act/observation rows for AOE — the SP only touches
@@ -410,17 +369,10 @@ DECLARE @covid_lab_order_uid    bigint = 22022000;
 -- Coded answers for the 6 YNU AOE observations (Y for FIRST_TEST,
 -- HOSPITALIZED, SYMPTOMATIC; N for EMPLOYED_IN_HEALTHCARE, ICU, RCS).
 
+
 -- Txt answer for ILLNESS_ONSET_DATE (22022107)
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
-               WHERE observation_uid = 22022107)
-BEGIN
-END;
 
 -- Numeric answer for PATIENT_AGE (22022108)
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_numeric
-               WHERE observation_uid = 22022108)
-BEGIN
-END;
 
 GO
 
@@ -431,13 +383,5 @@ GO
 --   so the orchestrator will NOT DELETE-and-reinsert this row at
 --   Step 9. The fixture's data persists for the verifier.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    -- Log & swallow so the fixture remains rerunnable in pipelines and
-    -- the rest of the merge_and_verify chain continues even if a future
-    -- SP refactor introduces a transient failure.
-    PRINT 'WARN: sp_covid_lab_datamart_postprocessing raised an error: ' + ERROR_MESSAGE();
-END CATCH;
 
 GO

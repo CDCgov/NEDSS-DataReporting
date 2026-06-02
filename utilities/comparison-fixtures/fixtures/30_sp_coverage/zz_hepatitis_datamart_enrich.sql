@@ -178,9 +178,6 @@ GO
 USE [RDB_MODERN];
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_investigation] WHERE public_health_case_uid = 22008500)
-BEGIN
-END;
 
 GO
 
@@ -392,9 +389,6 @@ GO
 USE [RDB_MODERN];
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_page_case_answer] WHERE act_uid = 22008500 AND nbs_case_answer_uid = 22008600)
-BEGIN
-END;
 
 GO
 
@@ -518,11 +512,6 @@ GO
 -- don't abort downstream fixtures in merge_and_verify.sh.
 -- =====================================================================
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_nrt_investigation_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
 -- Dynamic-datamart chain: sp_dyn_dm_main_postprocessing dispatches into
@@ -531,39 +520,19 @@ GO
 -- inserts the F_PAGE_CASE link row. The @datamart_name is keyed via
 -- dbo.v_nrt_nbs_page (FORM_CD → DATAMART_NM mapping). For Hep A acute,
 -- DATAMART_NM = 'HEPATITIS_A_ACUTE'.
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_dyn_dm_main_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
 -- F_PAGE_CASE: re-assemble after dyn_dm runs so the freshly-inserted
 -- D_INV_* rows are linked. sp_dyn_dm_main also touches F_PAGE_CASE,
 -- but rerunning sp_f_page_case_postprocessing is idempotent and
 -- ensures the link row exists for downstream readers.
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_f_page_case_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
 -- HEPATITIS_DATAMART: pivots D_INV_* into HEPATITIS_DATAMART for
 -- condition_cd IN ('10110', ...). Param @phc_id (not @phc_id_list,
 -- not @phc_uids) — verified by grep on the SP signature line 10.
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_hepatitis_datamart_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
 -- HEPATITIS_LDF (separate LDF dim): param @phc_uids (verified by grep
 -- on 320-sp_ldf_hepatitis_datamart_postprocessing-001.sql line 10).
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_ldf_hepatitis_datamart_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO

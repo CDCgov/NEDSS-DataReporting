@@ -82,15 +82,9 @@ WHERE patient_uid = 20000000;
 --     nrt_patient row with patient_uid = 22003000 carrying age_reported_unit_cd
 --     (used for CTT_PATIENT_AGE_RPTD_UNIT when CONTACT_ENTITY_PHC_UID IS NOT NULL).
 -- ---------------------------------------------------------------------
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_patient WHERE patient_uid = 22003000)
-BEGIN
-END
-ELSE
-BEGIN
-    UPDATE dbo.nrt_patient
-    SET age_reported_unit_cd = COALESCE(age_reported_unit_cd, N'Y')
-    WHERE patient_uid = 22003000;
-END
+UPDATE dbo.nrt_patient
+SET age_reported_unit_cd = COALESCE(age_reported_unit_cd, N'Y')
+WHERE patient_uid = 22003000;
 
 -- ---------------------------------------------------------------------
 -- (4) Update the existing nrt_contact 22011000:
@@ -115,9 +109,4 @@ GO
 --     the enriched upstream rows. Wrapped in TRY/CATCH so a SP failure
 --     does not block the rest of the fixture pipeline.
 -- ---------------------------------------------------------------------
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_covid_contact_datamart_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO

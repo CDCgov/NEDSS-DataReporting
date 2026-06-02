@@ -110,11 +110,4 @@
 USE [RDB_MODERN];
 GO
 
-IF NOT EXISTS (
-    SELECT 1
-    FROM [dbo].[nrt_page_case_answer]
-    WHERE nbs_case_answer_uid = 22007000
-)
-BEGIN
-END;
 GO

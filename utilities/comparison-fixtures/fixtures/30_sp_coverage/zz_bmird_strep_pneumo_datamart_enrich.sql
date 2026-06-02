@@ -91,9 +91,6 @@ GO
 -- nrt_observation rows: one per new BMD answer.
 -- (NOT-NULL columns: observation_uid, version_ctrl_nbr.)
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_observation] WHERE observation_uid = 22013100)
-BEGIN
-END;
 GO
 
 -- =====================================================================
@@ -103,36 +100,23 @@ GO
 -- For Antimicrobial branches, observation_id = root_uid (the container
 -- observation_uid) and branch_id = the child observation_uid.
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_investigation_observation]
-               WHERE public_health_case_uid = 22005000 AND branch_id = 22013100)
-BEGIN
-END;
 GO
 
 -- =====================================================================
 -- nrt_observation_coded: coded answers. Codes verified against
 -- nrt_srte_Code_value_general for each unique_cd's codeset.
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_observation_coded] WHERE observation_uid = 22013100)
-BEGIN
-END;
 GO
 
 -- =====================================================================
 -- nrt_observation_txt: text answer values (ovt_seq=1 — v_getobstxt filter).
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_observation_txt] WHERE observation_uid = 22013110)
-BEGIN
-END;
 GO
 
 -- =====================================================================
 -- nrt_observation_numeric: MIC numeric values for the 3 antimicrobial drugs
 -- (ovn_seq=1 — v_getobsnum filter).
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_observation_numeric] WHERE observation_uid = 22013305)
-BEGIN
-END;
 GO
 
 -- =====================================================================

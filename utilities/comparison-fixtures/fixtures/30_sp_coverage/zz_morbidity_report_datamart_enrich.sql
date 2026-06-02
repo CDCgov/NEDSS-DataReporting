@@ -607,13 +607,5 @@ GO
 -- @prov_uids  + 22015110, 22015111.
 -- @org_uids   + 22015120, 22015121.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'TAIL EXEC FAILED:';
-    PRINT ERROR_MESSAGE();
-    PRINT '  line=' + CAST(ERROR_LINE() AS varchar(10)) +
-          ' nbr=' + CAST(ERROR_NUMBER() AS varchar(10)) +
-          ' state=' + CAST(ERROR_STATE() AS varchar(10));
-END CATCH
+
 GO

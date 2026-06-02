@@ -221,9 +221,7 @@ USE [RDB_MODERN];
 GO
 
 -- Block A: 100 single-row VAR* answers (UIDs 22009100..22009199)
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid BETWEEN 22009100 AND 22009199)
-BEGIN
-END
+
 GO
 
 -- Block B: multi-value VAR105 / VAR176 mirror (UIDs 22009200..22009203)
@@ -235,9 +233,7 @@ GO
 -- as 'RASH_LOCATION_GENERAL' (uppercase). Re-using the same value here.
 -- For VAR176 the existing fixture set 'PCR_TEST_SOURCE' so we use the
 -- same datamart_column_nm.
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid BETWEEN 22009200 AND 22009203)
-BEGIN
-END
+
 GO
 
 -- =====================================================================
@@ -266,9 +262,7 @@ GO
 
 USE [RDB_MODERN];
 GO
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid = 22009210)
-BEGIN
-END
+
 GO
 
 -- Bug-fix self-heal: if a prior run inserted PHC1247 (invalid code) for
@@ -340,11 +334,7 @@ GO
 -- friends; nrt_investigation is the RDB-side staging that the
 -- investigation postprocessing SP reads. Re-run that SP to flow our
 -- updates into the INVESTIGATION dim.
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_nrt_investigation_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
+
 GO
 
 -- =====================================================================
@@ -389,44 +379,14 @@ GO
 -- merge_and_verify.sh's pipeline (TB regression scar).
 -- =====================================================================
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_nrt_d_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_nrt_d_rash_loc_gen_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_nrt_d_pcr_source_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_nrt_var_pam_ldf_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_f_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
 GO
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_var_datamart_enrich: sp_var_datamart_postprocessing failed - ' + ERROR_MESSAGE();
-END CATCH;
 GO

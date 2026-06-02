@@ -281,9 +281,6 @@ GO
 -- (material_cd IN ('207','208','213')). vaccination_uid=22020130,
 -- material_cd='208', soft-refs to new dim UIDs and the COVID PHC.
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_vaccination WHERE vaccination_uid = 22020130)
-BEGIN
-END
 GO
 
 -- =====================================================================
@@ -291,9 +288,6 @@ GO
 -- INVESTIGATION_LOCAL_ID + INVESTIGATION_DT. Linked by phc_uid=22003000
 -- (existing COVID PHC).
 -- =====================================================================
-IF NOT EXISTS (SELECT 1 FROM dbo.nrt_investigation WHERE public_health_case_uid = 22003000)
-BEGIN
-END
 GO
 
 -- =====================================================================
@@ -301,13 +295,4 @@ GO
 -- new vaccination_uid. Wrapped in TRY/CATCH so a failure here doesn't
 -- abort downstream fixture application.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'TAIL EXEC FAILED:';
-    PRINT ERROR_MESSAGE();
-    PRINT '  line=' + CAST(ERROR_LINE() AS varchar(10)) +
-          ' nbr=' + CAST(ERROR_NUMBER() AS varchar(10)) +
-          ' state=' + CAST(ERROR_STATE() AS varchar(10));
-END CATCH
 GO

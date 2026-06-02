@@ -97,10 +97,4 @@ GO
 -- Pass the COVID Lab Order UID (22022000) Agent P authored.
 -- Wrapped in TRY/CATCH so a future SP refactor cannot break merge.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'WARN: sp_covid_lab_celr_datamart_postprocessing raised an error: '
-        + ERROR_MESSAGE();
-END CATCH;
 GO

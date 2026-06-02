@@ -72,12 +72,6 @@ DECLARE @inv_key int =
 IF @inv_key IS NULL
 BEGIN
     -- Anchor not in dim yet — try to flow it from staging (idempotent).
-    BEGIN TRY
-    END TRY
-    BEGIN CATCH
-        PRINT 'zz_hep100_unblock: could not drive anchor investigation: '
-              + ERROR_MESSAGE();
-    END CATCH;
     SET @inv_key =
         (SELECT INVESTIGATION_KEY FROM dbo.INVESTIGATION WHERE CASE_UID = @anchor_case_uid);
 END;
@@ -427,11 +421,4 @@ GO
 -- fixture is self-verifying when applied stand-alone.
 -- The orchestrator will also invoke this SP at Step 9 with PHC_UIDS.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    -- log & swallow so the fixture remains rerunnable in pipelines
-    PRINT 'zz_hep100_unblock: sp_hep100_datamart_postprocessing error: '
-          + ERROR_MESSAGE();
-END CATCH;
 GO

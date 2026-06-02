@@ -404,12 +404,5 @@ GO
 -- and STD_HIV_DATAMART (DELETE+INSERT for @phc_id=22004000 picks up the
 -- new dim values from the join cascade).
 -- =====================================================================
-BEGIN TRY
 
-END TRY
-BEGIN CATCH
-    PRINT 'zz_std_hiv_datamart_enrich: ERROR in tail-EXEC chain';
-    PRINT ERROR_MESSAGE();
-    THROW;
-END CATCH;
 GO

@@ -105,6 +105,7 @@ INSERT INTO @ContactRecCols (col_nm) VALUES
     (N'CTT_SIZE_BUILD'),
     (N'CTT_OTHER_ID_INFO');
 
+
 GO
 
 -- ---------------------------------------------------------------------
@@ -134,6 +135,7 @@ INSERT INTO @ContactAnswers (rdb_column_nm, answer_val) VALUES
     (N'CTT_SIZE_BUILD',             N'Medium'),
     (N'CTT_OTHER_ID_INFO',          N'Tattoo on left forearm');
 
+
 GO
 
 -- ---------------------------------------------------------------------
@@ -141,9 +143,4 @@ GO
 --     pivot fires and the previously-NULL columns populate.
 --     Wrapped in TRY/CATCH so a SP failure doesn't block other fixtures.
 -- ---------------------------------------------------------------------
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_d_contact_record_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO

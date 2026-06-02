@@ -163,7 +163,6 @@ BEGIN
         SET @i += 1;
     END;
 
-
     -- 35 child observations: cd = LAB329a, LAB330..LAB363.
     -- (LAB329a is special-cased; the rest are LAB<330+n>.)
     SET @i = 0;
@@ -173,6 +172,7 @@ BEGIN
         DECLARE @cd varchar(20) =
             CASE WHEN @i = 0 THEN 'LAB329a'
                  ELSE 'LAB' + CAST(329 + @i AS varchar(10)) END;
+        
         SET @i += 1;
     END;
 END
@@ -280,10 +280,5 @@ GO
 -- so the fixture is self-verifying. The orchestrator should also pass
 -- 22029401 in its Step 9 @lab_test_uids list (ORCH_TODO).
 -- ---------------------------------------------------------------------
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_lab101_unblock: sp_lab101_datamart_postprocessing tail-EXEC failed — '
-        + ERROR_MESSAGE();
-END CATCH
+
 GO

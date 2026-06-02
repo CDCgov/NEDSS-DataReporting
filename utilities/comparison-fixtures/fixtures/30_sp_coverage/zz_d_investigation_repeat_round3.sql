@@ -92,14 +92,6 @@ GO
 -- Idempotency guard: skip the INSERT if any of our authored
 -- nbs_case_answer_uids are already present (re-run safety).
 -- ---------------------------------------------------------------------
-IF NOT EXISTS (
-    SELECT 1 FROM dbo.nrt_page_case_answer
-    WHERE nbs_case_answer_uid BETWEEN 22028000 AND 22028999
-)
-BEGIN
-
-
-END;
 GO
 
 -- =====================================================================
@@ -109,9 +101,4 @@ GO
 -- PHC_UIDS union anyway, so this tail call is belt-and-braces for
 -- `sqlcmd -i` runs of this fixture in isolation.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'Agent V (round 3) tail-EXEC error suppressed: ' + ERROR_MESSAGE();
-END CATCH;
 GO

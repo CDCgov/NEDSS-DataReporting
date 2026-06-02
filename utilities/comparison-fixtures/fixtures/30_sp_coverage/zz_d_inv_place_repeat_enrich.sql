@@ -81,8 +81,6 @@ GO
 DELETE FROM dbo.nrt_page_case_answer
  WHERE nbs_case_answer_uid BETWEEN 22010000 AND 22010999;
 
-BEGIN
-END;
 GO
 
 -- NOTE: This fixture only authors source-side answers.  Without

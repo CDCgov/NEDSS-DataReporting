@@ -202,11 +202,4 @@ GO
 --         makes the fixture self-verifying when applied stand-alone
 --         and is robust to truncation between runs.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    -- log & swallow so the fixture remains rerunnable in pipelines
-    PRINT 'zz_inv_summ_datamart_unblock: sp_inv_summary_datamart_postprocessing error: '
-          + ERROR_MESSAGE();
-END CATCH;
 GO

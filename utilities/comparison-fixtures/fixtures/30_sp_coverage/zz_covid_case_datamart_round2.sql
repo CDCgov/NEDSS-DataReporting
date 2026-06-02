@@ -112,24 +112,12 @@ GO
 -- Section 3: NRT_INVESTIGATION_NOTIFICATION row (NOTIFICATION_* cols).
 -- ---------------------------------------------------------------------
 
-IF NOT EXISTS (
-    SELECT 1 FROM [dbo].[NRT_INVESTIGATION_NOTIFICATION]
-    WHERE notification_uid = 22024010
-)
-BEGIN
-END;
 GO
 
 -- ---------------------------------------------------------------------
 -- Section 4: NRT_INVESTIGATION_CONFIRMATION row (CONFIRMATION_* cols).
 -- ---------------------------------------------------------------------
 
-IF NOT EXISTS (
-    SELECT 1 FROM [dbo].[NRT_INVESTIGATION_CONFIRMATION]
-    WHERE public_health_case_uid = 22003000
-)
-BEGIN
-END;
 GO
 
 -- ---------------------------------------------------------------------
@@ -138,12 +126,6 @@ GO
 -- UIDs 22024100..22024111.
 -- ---------------------------------------------------------------------
 
-IF NOT EXISTS (
-    SELECT 1 FROM [dbo].[nrt_page_case_answer]
-    WHERE nbs_case_answer_uid = 22024100
-)
-BEGIN
-END;
 GO
 
 -- ---------------------------------------------------------------------
@@ -153,12 +135,6 @@ GO
 -- UIDs 22024200..22024295 (32 * 3 = 96 rows).
 -- ---------------------------------------------------------------------
 
-IF NOT EXISTS (
-    SELECT 1 FROM [dbo].[nrt_page_case_answer]
-    WHERE nbs_case_answer_uid = 22024200
-)
-BEGIN
-END;
 GO
 
 -- ---------------------------------------------------------------------
@@ -182,21 +158,10 @@ GO
 -- UIDs 22024400..22024405.
 -- ---------------------------------------------------------------------
 
-IF NOT EXISTS (
-    SELECT 1 FROM [dbo].[nrt_page_case_answer]
-    WHERE nbs_case_answer_uid = 22024400
-)
-BEGIN
-END;
 GO
 
 -- ---------------------------------------------------------------------
 -- Tail EXEC: refresh covid_case_datamart so coverage reflects changes.
 -- ---------------------------------------------------------------------
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_covid_case_datamart_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO

@@ -56,14 +56,6 @@ GO
 -- Idempotency guard: skip the INSERT if any of our authored
 -- nbs_case_answer_uids are already present (re-run safety).
 -- ---------------------------------------------------------------------
-IF NOT EXISTS (
-    SELECT 1 FROM dbo.nrt_page_case_answer
-    WHERE nbs_case_answer_uid BETWEEN 22014000 AND 22014999
-)
-BEGIN
-
-
-END;
 GO
 
 -- =====================================================================
@@ -97,3 +89,4 @@ GO
 -- 22014000 to disambiguate from the d_investigation_repeat.sql tail
 -- (which uses 22006000).
 -- =====================================================================
+

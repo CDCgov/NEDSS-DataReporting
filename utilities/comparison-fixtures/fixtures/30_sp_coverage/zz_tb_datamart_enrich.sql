@@ -222,9 +222,6 @@ GO
 USE [RDB_MODERN];
 GO
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_page_case_answer] WHERE nbs_case_answer_uid = 22011000)
-BEGIN
-END
 GO
 
 -- =====================================================================
@@ -368,40 +365,7 @@ GO
 --   must run before TB_DATAMART (255) and TB_HIV_DATAMART (260).
 --   Wrapped in TRY/CATCH so a downstream failure doesn't abort.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_nrt_d_tb_pam_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 
 -- d_topic SPs (12 total) so multi-row answers light up _2, _3, _ALL, _GT3_IND.
-BEGIN TRY EXEC dbo.sp_nrt_d_disease_site_postprocessing @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_disease_site: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_addl_risk_postprocessing    @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_addl_risk: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_move_cntry_postprocessing   @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_move_cntry: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_move_cnty_postprocessing    @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_move_cnty: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_move_state_postprocessing   @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_move_state: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_moved_where_postprocessing  @phc_uids = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_moved_where: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_gt_12_reas_postprocessing   @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_gt_12_reas: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_hc_prov_ty_3_postprocessing @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_hc_prov_ty_3: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_out_of_cntry_postprocessing @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_out_of_cntry: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_smr_exam_ty_postprocessing  @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_smr_exam_ty: ' + ERROR_MESSAGE(); END CATCH;
-BEGIN TRY EXEC dbo.sp_nrt_d_tb_hiv_postprocessing       @phc_id_list = N'22001000', @debug = 0; END TRY BEGIN CATCH PRINT 'd_tb_hiv: ' + ERROR_MESSAGE(); END CATCH;
 
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_f_tb_pam_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
-
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_tb_datamart_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
-
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'sp_tb_hiv_datamart_postprocessing failed: ' + ERROR_MESSAGE();
-END CATCH;
 GO

@@ -349,10 +349,4 @@ GO
 -- orchestrator UID list extended with the two new Result UIDs. Wrapped
 -- in TRY/CATCH so a failure here doesn't break the rest of the suite.
 -- =====================================================================
-BEGIN TRY
-END TRY
-BEGIN CATCH
-    PRINT 'zz_lab100_enrich: sp_lab100_datamart_postprocessing tail-EXEC failed — '
-        + ERROR_MESSAGE();
-END CATCH
 GO
