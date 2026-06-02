@@ -1,0 +1,232 @@
+-- =====================================================================
+-- Tier 3 ENRICHMENT R3 — TB_DATAMART residual-column fill
+-- =====================================================================
+-- Agent: R3-E. Block: 22027000-22027999 (sub-range 22027000-22027099).
+--
+-- CONTEXT (live, 2026-06-02): TB_DATAMART is 277/318 populated. The
+-- prior TB enrichment (zz_tb_datamart_enrich.sql) maxed out the
+-- TB_PAM / page-case-answer route via D_TB_PAM. The 41 still-NULL
+-- columns are NOT page-case answers — they come from RDB_MODERN-side
+-- dimensions / staging that were left at sentinel/blank for the TB
+-- anchor PHC (22001000 / INVESTIGATION_KEY=24 / PERSON_KEY=3). This
+-- fixture fills those 41 by authoring the backing dimension + staging
+-- rows the SP joins, exactly as sp_tb_datamart_postprocessing reads
+-- them (verified against routine 255 lines 121-168, 193-346, 459-507,
+-- 1340-1415, 1511-1669).
+--
+-- The 41 NULL columns and their SP-verified source:
+--   Cluster 1 (user names, 3 cols): INVESTIGATION_CREATED_BY,
+--     INVESTIGATION_LAST_UPDTD_BY, NOTIFICATION_SUBMITTER
+--     <- user_profile JOINed on NEDSS_ENTRY_ID. add_user_id /
+--        last_chg_user_id / notification_submitted_by are all the
+--        superuser 10009282, but user_profile has no row for it.
+--   Cluster 2 (confirmation, 6 cols): CONFIRMATION_DATE,
+--     CONFIRMATION_METHOD_1/2/3/ALL, (GT3_IND already FALSE)
+--     <- confirmation_method_group (keyed INVESTIGATION_KEY=24) +
+--        confirmation_method rows (DESC len>2 required, SP line 1391).
+--   Cluster 3 (notification date, 1 col): NOTIFICATION_SENT_DATE
+--     <- nrt_investigation_notification.last_notification_send_date
+--        on public_health_case_uid=22001000 (no row existed).
+--   Cluster 4 (provider/org names, 11 cols): INVESTIGATOR_FIRST/LAST_NAME,
+--     INVESTIGATOR_PHONE_NUMBER, PHYSICIAN_FIRST/LAST_NAME,
+--     PHYSICIAN_PHONE_NUMBER, REPORTER_FIRST/LAST_NAME,
+--     REPORTER_PHONE_NUMBER, REPORTING_SOURCE_NAME, HOSPITAL_NAME
+--     <- F_TB_PAM PROVIDER/PHYSICIAN/PERSON_AS_REPORTER/ORG_AS_REPORTER/
+--        HOSPITAL_KEY were sentinel 1 (blank dims). Repoint them to
+--        already-populated D_PROVIDER / D_ORGANIZATION rows.
+--   Cluster 5 (patient attrs, 16 cols): PATIENT_SSN, PATIENT_NAME_SUFFIX,
+--     PATIENT_GENERAL_COMMENTS, PATIENT_PHONE_EXT_HOME/WORK,
+--     PATIENT_WITHIN_CITY_LIMITS, RACE_ASIAN_1/2/3/ALL/GT3_IND,
+--     RACE_NAT_HI_1/2/3/ALL/GT3_IND
+--     <- #PATIENT reads these straight off D_PATIENT (PATIENT_KEY=3),
+--        which was sparse. UPDATE the dim row.
+--   Cluster 6 (investigation attrs, 4 cols): GENERAL_COMMENTS,
+--     ILLNESS_DURATION, ILLNESS_DURATION_UNIT  <- INVESTIGATION dim;
+--     PROGRAM_AREA_DESCRIPTION <- nrt_investigation; OUTBREAK_NAME
+--     <- nrt_srte_Code_value_general (OUTBREAK_NM) desc of CODE='Cluster'
+--        already on the INVESTIGATION dim row.
+--
+-- All UPDATEs target the TB anchor's existing dim/staging rows; the few
+-- INSERTs (user_profile, confirmation_method[_group],
+-- nrt_investigation_notification, one OUTBREAK_NM code) are additive and
+-- keyed in 22027000-22027099 where they carry surrogate keys.
+--
+-- TAIL-EXEC at bottom re-runs 255 (TB_DATAMART) + 260 (TB_HIV_DATAMART,
+-- same upstream) for PHC 22001000.
+-- =====================================================================
+
+USE [RDB_MODERN];
+GO
+
+DECLARE @user            bigint = 10009282;   -- superuser (add/edit/notif submitter)
+DECLARE @phc_uid         bigint = 22001000;   -- TB anchor PHC / public_health_case_uid
+DECLARE @inv_key         bigint = 24;         -- INVESTIGATION_KEY of the TB anchor
+DECLARE @patient_key     bigint = 3;          -- D_PATIENT key on F_TB_PAM.PERSON_KEY
+
+-- Already-populated dim rows to repoint the sentinel F_TB_PAM keys at:
+DECLARE @investigator_pk bigint = 22024000;   -- D_PROVIDER 'Investigator Inez'
+DECLARE @physician_pk    bigint = 22024001;   -- D_PROVIDER 'Physician Phil'
+DECLARE @reporter_pk     bigint = 22024002;   -- D_PROVIDER 'Reporter Roger'
+DECLARE @org_reporter_ok bigint = 22024003;   -- D_ORGANIZATION 'Test Reporting Org'
+DECLARE @hospital_ok     bigint = 22024004;   -- D_ORGANIZATION 'Test Hospital'
+
+-- =====================================================================
+-- Cluster 1 — user_profile for the superuser id used as add/edit/notif user
+--   Unblocks INVESTIGATION_CREATED_BY, INVESTIGATION_LAST_UPDTD_BY,
+--   NOTIFICATION_SUBMITTER (SP lines 1517-1535, 1649-1669).
+-- =====================================================================
+IF NOT EXISTS (SELECT 1 FROM [dbo].[user_profile] WHERE NEDSS_ENTRY_ID = @user)
+BEGIN
+    INSERT INTO [dbo].[user_profile]
+        (NEDSS_ENTRY_ID, FIRST_NM, LAST_NM, USER_NM, LAST_UPD_TIME)
+    VALUES
+        (@user, N'Adam', N'Superuser', N'superuser', '2026-04-01T00:00:00');
+END
+GO
+
+-- =====================================================================
+-- Cluster 2 — confirmation_method + confirmation_method_group
+--   Unblocks CONFIRMATION_DATE, CONFIRMATION_METHOD_1/2/3/ALL
+--   (SP lines 1340-1415). DESC must be len > 2 to survive line 1391-1394.
+-- =====================================================================
+DECLARE @inv_key2 bigint = 24;
+IF NOT EXISTS (SELECT 1 FROM [dbo].[confirmation_method] WHERE confirmation_method_key = 22027000)
+BEGIN
+    INSERT INTO [dbo].[confirmation_method]
+        (confirmation_method_key, confirmation_method_cd, confirmation_method_desc)
+    VALUES
+        (22027000, N'LD',  N'Laboratory confirmed'),
+        (22027001, N'CLI', N'Clinical confirmation'),
+        (22027002, N'EPI', N'Epidemiologically linked');
+END
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[confirmation_method_group]
+               WHERE investigation_key = @inv_key2 AND confirmation_method_key = 22027000)
+BEGIN
+    INSERT INTO [dbo].[confirmation_method_group]
+        (investigation_key, confirmation_method_key, confirmation_dt)
+    VALUES
+        (@inv_key2, 22027000, '2026-04-05T00:00:00'),
+        (@inv_key2, 22027001, '2026-04-05T00:00:00'),
+        (@inv_key2, 22027002, '2026-04-05T00:00:00');
+END
+GO
+
+-- =====================================================================
+-- Cluster 3 — nrt_investigation_notification (NOTIFICATION_SENT_DATE)
+--   SP line 1514/1528: invn.last_notification_send_date on
+--   public_health_case_uid = TB_PAM_UID.
+-- =====================================================================
+DECLARE @phc bigint = 22001000;
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_investigation_notification] WHERE source_act_uid = 22027010)
+BEGIN
+    INSERT INTO [dbo].[nrt_investigation_notification]
+        (source_act_uid, public_health_case_uid, notification_uid,
+         notif_status, notif_local_id,
+         last_notification_send_date, first_notification_send_date,
+         last_notification_date, first_notification_date,
+         last_notification_submitted_by, first_notification_submitted_by,
+         notif_sent_count, notif_created_count,
+         refresh_datetime, max_datetime)
+    VALUES
+        (22027010, @phc, 22027010,
+         N'COMPLETED', N'NOT-TB-22027010',
+         '2026-04-10T00:00:00', '2026-04-10T00:00:00',
+         '2026-04-10T00:00:00', '2026-04-10T00:00:00',
+         10009282, 10009282,
+         1, 1,
+         '2026-04-10T00:00:00', '2026-04-10T00:00:00');
+END
+GO
+
+-- =====================================================================
+-- Cluster 4 — repoint sentinel F_TB_PAM keys to populated dim rows
+--   Unblocks INVESTIGATOR_*, PHYSICIAN_*, REPORTER_*,
+--   REPORTING_SOURCE_NAME, HOSPITAL_NAME (SP steps 2-6, lines 193-346;
+--   surfaced via #ENTITY_LOCATION, lines 370-434).
+-- =====================================================================
+UPDATE [dbo].[F_TB_PAM]
+SET PROVIDER_KEY           = 22024000,   -- Investigator Inez
+    PHYSICIAN_KEY          = 22024001,   -- Physician Phil
+    PERSON_AS_REPORTER_KEY = 22024002,   -- Reporter Roger
+    ORG_AS_REPORTER_KEY    = 22024003,   -- Test Reporting Org
+    HOSPITAL_KEY           = 22024004    -- Test Hospital
+WHERE INVESTIGATION_KEY = 24;
+GO
+
+-- =====================================================================
+-- Cluster 5 — enrich D_PATIENT key 3 (the TB patient dim row)
+--   Unblocks PATIENT_SSN, PATIENT_NAME_SUFFIX, PATIENT_GENERAL_COMMENTS,
+--   PATIENT_PHONE_EXT_HOME/WORK, PATIENT_WITHIN_CITY_LIMITS, and the
+--   RACE_ASIAN_* / RACE_NAT_HI_* family (SP #PATIENT step, lines 121-162).
+-- =====================================================================
+UPDATE [dbo].[D_PATIENT]
+SET PATIENT_SSN                = N'555-44-3333',
+    PATIENT_NAME_SUFFIX        = N'Jr.',
+    PATIENT_GENERAL_COMMENTS   = N'TB patient general comments (R3 enrich).',
+    PATIENT_PHONE_EXT_HOME     = N'101',
+    PATIENT_PHONE_EXT_WORK     = N'202',
+    PATIENT_WITHIN_CITY_LIMITS = N'Y',
+    PATIENT_RACE_ASIAN_1       = N'Chinese',
+    PATIENT_RACE_ASIAN_2       = N'Filipino',
+    PATIENT_RACE_ASIAN_3       = N'Japanese',
+    PATIENT_RACE_ASIAN_ALL     = N'Chinese | Filipino | Japanese',
+    PATIENT_RACE_ASIAN_GT3_IND = N'FALSE',
+    PATIENT_RACE_NAT_HI_1      = N'Native Hawaiian',
+    PATIENT_RACE_NAT_HI_2      = N'Guamanian',
+    PATIENT_RACE_NAT_HI_3      = N'Samoan',
+    PATIENT_RACE_NAT_HI_ALL    = N'Native Hawaiian | Guamanian | Samoan',
+    PATIENT_RACE_NAT_HI_GT3_IND= N'FALSE'
+WHERE PATIENT_KEY = 3;
+GO
+
+-- =====================================================================
+-- Cluster 6 — investigation attrs
+--   GENERAL_COMMENTS, ILLNESS_DURATION, ILLNESS_DURATION_UNIT  <- INVESTIGATION dim
+--   PROGRAM_AREA_DESCRIPTION  <- nrt_investigation
+--   OUTBREAK_NAME  <- nrt_srte_Code_value_general desc of the dim's
+--                     OUTBREAK_NAME code 'Cluster' (SP line 690/699-700).
+-- =====================================================================
+UPDATE [dbo].[INVESTIGATION]
+SET INV_COMMENTS          = N'TB investigation general comments (R3 enrich).',
+    ILLNESS_DURATION      = 21,
+    ILLNESS_DURATION_UNIT = N'day(s)'
+WHERE INVESTIGATION_KEY = 24;
+
+UPDATE [dbo].[nrt_investigation]
+SET program_area_description = N'Tuberculosis'
+WHERE public_health_case_uid = 22001000;
+
+-- OUTBREAK_NM code so cvg join resolves CODE='Cluster' -> OUTBREAK_NAME desc.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nrt_srte_Code_value_general]
+               WHERE code_set_nm = 'OUTBREAK_NM' AND code = 'Cluster')
+BEGIN
+    INSERT INTO [dbo].[nrt_srte_Code_value_general]
+        (code_set_nm, code, code_desc_txt, code_short_desc_txt,
+         status_cd, add_time, add_user_id)
+    VALUES
+        (N'OUTBREAK_NM', N'Cluster', N'TB Cluster Outbreak', N'TB Cluster Outbreak',
+         N'A', '2026-04-01T00:00:00', 10009282);
+END
+GO
+
+-- =====================================================================
+-- TAIL-EXEC — re-run the two TB datamart SPs for the anchor PHC.
+-- (Orchestrator may instead drive these via PHC_UIDS at Step 9; both
+--  SPs take the CASE_UID/PHC list.)
+-- =====================================================================
+BEGIN TRY
+    EXEC [dbo].[sp_tb_datamart_postprocessing]     @phc_id_list = N'22001000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'sp_tb_datamart_postprocessing error: ' + ERROR_MESSAGE();
+END CATCH
+GO
+
+BEGIN TRY
+    EXEC [dbo].[sp_tb_hiv_datamart_postprocessing] @phc_id_list = N'22001000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'sp_tb_hiv_datamart_postprocessing error: ' + ERROR_MESSAGE();
+END CATCH
+GO

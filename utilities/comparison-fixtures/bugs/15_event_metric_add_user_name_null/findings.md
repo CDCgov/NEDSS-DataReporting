@@ -112,3 +112,44 @@ to `JOB_FLOW_LOG` so the empty-table outcome is diagnosable.
 `SR100` (0/20) is left empty in the merged pipeline. Not a fixture gap —
 flag as an RTR coverage gap for the comparison test. Documented here
 instead of fixed, per the project's no-RTR-edits-in-loop rule.
+
+## Addendum 2026-06-02 (loop agent R3-B) — fixture-side resolution + broader NOT NULL set
+
+The "not a missing-input problem a fixture can solve" conclusion above is
+**partly incorrect for the merged pipeline**. SR100's INSERT actually has
+*four* NOT NULL target columns fed by nullable / outer-joined source
+expressions with no COALESCE, and ADD_USER_NAME is only the first one a
+default summary investigation trips on. The full set, in the order the
+INSERT fails on them (155-...-001.sql lines 139-183):
+
+| SR100 col (NOT NULL) | source expr | upstream nullable input |
+| --- | --- | --- |
+| `ADD_USER_NAME`  | `em.ADD_USER_NAME` (INNER JOIN EVENT_METRIC) | `nrt_investigation.add_user_name` (copied verbatim by event_metric SP line 661) |
+| `MMWRWK`         | `I.CASE_RPT_MMWR_WK` | `nrt_investigation.mmwr_week` |
+| `MMWRYR`         | `I.CASE_RPT_MMWR_YR` | `nrt_investigation.mmwr_year` |
+| `DATE_REPORTED`  | `rd1.DATE_MM_DD_YYYY` (LEFT JOIN RDB_DATE on `I.EARLIEST_RPT_TO_STATE_DT`) | `nrt_investigation.rpt_to_state_time` |
+
+(`MONTH_REPORTED` shares the RD1 join but is nullable, so it does not
+abort the INSERT; it just stays NULL when EARLIEST_RPT_TO_STATE_DT is NULL.)
+
+**Fixture-side fix that works today (no RTR edit):** author the summary
+investigation with all four upstream fields populated:
+`add_user_name`, `mmwr_week`, `mmwr_year`, `rpt_to_state_time` (the last set
+to a date present in RDB_DATE). This is exactly what
+`fixtures/30_sp_coverage/sr100.sql` (PHC 22024000) does, and it lands a
+verified SR100 row with **17/20 columns** populated in a single clean
+apply (event_metric PHCInvForm branch now carries a non-NULL ADD_USER_NAME
+because the source nrt_investigation.add_user_name is set).
+
+The 3 still-NULL columns — `NOTIF_CREATE_DATE`, `NOTIF_CREATE_MONTH`,
+`NOTIF_CREATE_YEAR` — derive from `LEFT JOIN RDB_DATE RD ON rd.date_key =
+src.NOTIFICATION_SEND_DT_KEY`; SUMMARY_REPORT_CASE.NOTIFICATION_SEND_DT_KEY
+is sentinel 1 for a summary investigation with no notification, so RD does
+not resolve. These are nullable in SR100 and require a notification with a
+send date wired to the summary report (LINK-level concern) — out of scope
+for the SR100 datamart fixture.
+
+The RTR-side observations above (event_metric branch should LEFT JOIN
+nrt_auth_user; SR100 should COALESCE its NOT NULL string cols; SR100
+should not swallow Msg 515) still stand as recommended hardening, but they
+are **not blockers** for fixture coverage now that the inputs are set.

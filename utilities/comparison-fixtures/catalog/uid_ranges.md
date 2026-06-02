@@ -1247,10 +1247,11 @@ populated by this edge.
 | 22021000 - 22021999 | `zz_lab100_enrich` (additional Result-type LAB_TEST rows + LAB_TEST_RESULT to extend lab100 col coverage beyond initial 22/69) | **allocated 2026-05-24**. Loop / Agent O. |
 | 22022000 - 22022999 | `zz_covid_lab_datamart_unblock` (COVID-coded lab observations linked to existing COVID PHC 22003000 to unblock covid_lab_datamart from 0/129) | **allocated 2026-05-24**. Loop / Agent P. |
 | 22023000 - 22023999 | `zz_hepatitis_datamart_round2` (fill the 69 remaining unpopulated cols on hepatitis_datamart via Tier-2-style participation rows + dim enrichment) | **allocated 2026-05-24**. Loop / Agent Q. |
-| 22024000 - 22024999 | `zz_covid_case_datamart_round2` (fill the 149 remaining unpopulated cols on covid_case_datamart via more answer rows + dim/participation fixes) | **allocated 2026-05-24**. Loop / Agent R. |
+| 22024000 - 22024999 | `zz_covid_case_datamart_round2` (Agent R) **superseded** by `sr100` (Agent R3-B, Round 3). | **re-allocated 2026-06-02** to `fixtures/30_sp_coverage/sr100.sql` (Loop / Agent R3-B), per the Round-3 reservation table below. Agent R's covid round-2 wrote 0 ODSE rows in this block (verified empty in baseline-merged DB). Used by sr100: 22024000 (PHC), 22024100/101/102 (SUM103/104/105 obs). See block detail below. |
 | 22025000 - 22025999 | `zz_inv_summ_datamart_unblock` (unblock inv_summ_datamart 0/58 — investigate the WHERE-clause requiring pre-existing rows from LOOP_round1) | **allocated 2026-05-24**. Loop / Agent S. |
 | 22026000 - 22026999 | `zz_covid_lab_celr_datamart_unblock` (unblock covid_lab_celr_datamart 0/101 — sibling of covid_lab_datamart with same SP pattern) | **allocated 2026-05-24**. Loop / Agent T. |
-| 22027000 - 22027999 | `zz_d_contact_record_enrich` (more answer rows / dim attrs on existing contact PHCs to lift d_contact_record from 42/66) | **allocated 2026-05-24**. Loop / Agent U. |
+| 22027000 - 22027999 | `zz_d_contact_record_enrich` (more answer rows / dim attrs on existing contact PHCs to lift d_contact_record from 42/66) | **allocated 2026-05-24**. Loop / Agent U. NOTE: this file inserts NO 22027xxx rows — it only enriches existing contact PHCs (the block is referenced only in a header comment). Sub-range 22027000-22027099 carved out below. |
+| 22027000 - 22027099 | `zz_tb_datamart_enrich_r3` (fill the 41 residual NULL TB_DATAMART columns sourced from dims/staging, not page-case answers — user_profile, confirmation_method[_group], nrt_investigation_notification, F_TB_PAM key repoint, D_PATIENT/INVESTIGATION/nrt_investigation attr fill, OUTBREAK_NM code) | **allocated 2026-06-02**. Loop / Agent R3-E. Carved from Agent U's unused 22027 block (U inserts nothing there). Used: confirmation_method 22027000-002, nrt_investigation_notification 22027010. |
 | 22028000 - 22028999 | `zz_d_investigation_repeat_round3` (more block-NM coverage via a NEW PHC (not 22006000 to avoid bug #13 TEXT pivot pollution) to lift d_investigation_repeat from 106/256) | **allocated 2026-05-24**. Loop / Agent V. |
 
 ### Tier 3 — TB Investigation full chain (22001000 - 22001999)
@@ -1509,6 +1510,38 @@ data will silently drop those answers in the orchestrated run.
 | 22007000-22007999 | Pertussis full chain | 30 observations (20 coded + 1 txt + 1 num + 7 date) attached to PHC 22007000 via nrt_investigation_observation 'InvFrmQ' edges. Mirrors BMIRD template. Net headline coverage: 0pp (PERTUSSIS_CASE not in rtr_target_columns.md scope) but populates out-of-scope PERTUSSIS_SUSPECTED_SOURCE_FLD and PERTUSSIS_TREATMENT_FIELD. |
 | 22008000-22008999 | LDF Foodborne | New Salmonellosis (10470) Investigation. 5 nrt_ldf_data rows on this PHC + 5 more on Mumps stub (22000030). Unlocked ldf_foodborne (0/12 -> 11/12) and grew ldf_dimensional_data + ldf_group. ldf_mumps stayed empty (cause TBD). |
 | 22029000-22029999 | LAB101 unblock (zz_lab101_unblock.sql) | I_Order/I_Result/'Result' 4-level lab hierarchy (22029300-22029302 keys / 22029400-22029402 UIDs) + root-order nrt_observation 22029500 + 35 coded child obs 22029600-22029634 (LAB329a..LAB363) + 35 LAB_RESULT_VAL 22029700-22029734 + I_Result-level LRV 22029699 + grouping 22029800/comment-group 22029801. Unblocks LAB101 0 -> 11/46 core cols; 35 EIP/NARMS/PFGE cols pend an SP step-3 (#tmp_ISOLATE_TRACKING_INIT) nuance. ORCH: 22029401 added to LAB_OBS_UIDS (merge_and_verify.sh:451). |
+
+### Tier 3 — SR100 datamart (22024000 - 22024999)
+
+Allocated by Tier 3 SR100 agent (Round 3, Agent R3-B). Source:
+`fixtures/30_sp_coverage/sr100.sql`. RTR bug addendum:
+`bugs/15_event_metric_add_user_name_null/findings.md`.
+
+Populates the empty `dbo.SR100` summary-report datamart (was 0/20 → 17/20).
+
+| UID | Symbolic name | Entity / column | Notes |
+| --- | --- | --- | --- |
+| 22024000 | @sr100_phc_uid | Summary-type `nrt_investigation.public_health_case_uid` (case_type_cd='S') → INVESTIGATION + SUMMARY_REPORT_CASE + EVENT_METRIC + SR100 | cd='10470' (Cholera), rpt_cnty_cd='13121' (Fulton County, state 13). Sets add_user_name, mmwr_week='14', mmwr_year='2026', rpt_to_state_time='2026-04-01' so SR100's four NOT NULL columns (ADD_USER_NAME, MMWRWK, MMWRYR, DATE_REPORTED) resolve. patient_id reuses foundation Patient 20000000 (read-only ref). |
+| 22024100 | @sr100_obs_sum103 | SUM103 `nrt_observation.observation_uid` (coded, summary case source) | ovc_code='PHC_LOCAL'. Drives SUMMARY_CASE_SRC / RPT_SOURCE. |
+| 22024101 | @sr100_obs_sum104 | SUM104 `nrt_observation.observation_uid` (numeric, summary case count) | ovn_numeric_value_1=17 → SR100.NBR_CASES. |
+| 22024102 | @sr100_obs_sum105 | SUM105 `nrt_observation.observation_uid` (text, summary case comments) | ovt_value_txt → SR100.REPORT_COMMENTS. |
+
+The fixture tail-EXECs (its own UID, in dependency order):
+`sp_nrt_investigation_postprocessing` → `sp_summary_report_case_postprocessing`
+→ `sp_event_metric_datamart_postprocessing` → `sp_sr100_datamart_postprocessing`.
+No new RDB_MODERN surrogate UIDs are allocated (INVESTIGATION_KEY,
+SUMMARY_REPORT_CASE, EVENT_METRIC keys are IDENTITY-assigned by the SPs).
+
+Unused UIDs in this block (22024001-22024099, 22024103-22024999) are
+reserved for future SR100 Tier 3 amendments.
+
+**ORCH_TODO** (not this fixture's responsibility): in
+`scripts/merge_and_verify.sh` Step 9, `sp_sr100_datamart_postprocessing`
+(line 528) runs BEFORE `sp_event_metric_datamart_postprocessing` (line
+538). SR100 INNER-JOINs EVENT_METRIC, so on the orchestrated pass SR100
+sees an empty EVENT_METRIC and inserts 0 rows. Move SR100's invocation to
+run AFTER event_metric (and after summary_report_case). The fixture's own
+tail-EXEC sequences these correctly for standalone verification.
 
 ## Round 3 loop reservations (overnight coverage top-up)
 

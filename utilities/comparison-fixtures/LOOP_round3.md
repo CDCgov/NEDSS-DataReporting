@@ -82,8 +82,30 @@ more columns, more tables, more tiers.
 | 22029000 - 22029999 | free |
 | 22030000+ | add a new row to `catalog/uid_ranges.md` when you allocate |
 
+## Open items / watch-list
+- R3-D (var) and R3-E (tb) fixtures do in-place UPDATEs to SHARED dims (D_PATIENT key 3,
+  F_TB_PAM, USER_PROFILE for 10009282) rather than purely additive rows. Verify via the
+  clean-baseline merge that they don't regress other tables; if they collide/regress,
+  quarantine and reshape as additive (new patient/provider rows) instead.
+- R3-B (sr100) + R3-D (var) hit Msg 2627 on incremental re-apply (agent-left rows / baseline
+  PK collisions) — being validated by the full merge checkpoint, not trusted incrementally.
+
 ## Iterations journal
 (append one line per firing: tick #, time, agents spawned/reconciled, coverage before→after)
 - (baseline established this session: 89.9% / 4165-4633; stack healthy)
 - tick 1: spawned R3-A (aggregate_report_datamart 0/42), R3-B (sr100 0/20), R3-C (ldf_bmird+ldf_hepatitis), R3-D (var_datamart 210/231). UID 22023xxx-22026xxx. Awaiting agents.
-- R3-A reconciled: zz_aggregate_report_enrich.sql applies clean but aggregate_report_datamart stays 0 — BUG-BLOCKED by RTR bug #11 (phantom cols NOTIFICATION_UPD_DT_KEY + NOTIFICATION_LAST_CHANGE_TIME). Fixture committed as prepared/ready-when-fixed. Target marked blocked (no re-spawn). No coverage delta. Spawned R3-E (TB_DATAMART remainder) as replacement, UID 22027xxx.
+- R3-A reconciled: zz_aggregate_report_enrich.sql applies clean but aggregate_report_datamart stays 0 — BUG-BLOCKED by RTR bug #11 (phantom cols NOTIFICATION_UPD_DT_KEY + NOTIFICATION_LAST_CHANGE_TIME). Fixture committed (83f66d74) as prepared/ready-when-fixed. Target marked blocked. Spawned R3-E (TB_DATAMART) UID 22027xxx.
+- Also committed: merge_and_verify holds the shared db lock for whole run (4de38524) — guards the `down -v` volume drop against concurrent DB users (user request).
+- R3-C reconciled & committed: ldf_bmird/ldf_hepatitis 0->populated (2 empty tables cleared). Verified LDF_BMIRD=1, LDF_HEPATITIS=1.
+- R3-B (sr100, claims 0->17/20), R3-D (var, +5), R3-E (tb, +~41 but via shared-dim UPDATEs): authored, NOT yet committed. Running a clean-baseline merge_and_verify checkpoint to validate all three + get authoritative coverage. Reconcile/commit them based on that result next tick.
+- ⚠️ CHECKPOINT FINDING: clean merge with all new fixtures + first REAL coverage_summary run gives **74.9%** (12 empty, var_datamart=0, LDF=0), far below the committed 89.9%. KEY: the 89.9% in coverage_merged.md was never freshly measured this session — merge_and_verify does NOT regenerate it (only coverage_summary.sh does). So the regression may be (a) my fixtures (var/tb mutate SHARED dims — strong suspects; tb also FAILED apply: GENERATED-ALWAYS period col Msg 13536) or (b) env/image drift making the committed 89.9% stale.
+  - tb quarantined (.generated-always-violation). All 4 session fixtures (sr100, var, ldf, aggregate) moved to /tmp/r3_held/ to measure the TRUE pristine baseline (merge+coverage running, log /tmp/baseline_truth.log).
+  - Loop EXPANSION paused (no new agents) until baseline truth known. If baseline ~89.9% → var/tb were regressors; re-add only additive sr100/ldf/aggregate. If baseline ~75% → env drift; the branch's coverage claims are stale (escalate to user).
+- RESOLVED: pristine baseline measured = **89.9%** (clean, var_datamart=2). So var/tb WERE the regressors (confirmed). Quarantined both. Re-validated additive trio (sr100+ldf+aggregate) via clean merge → **90.5%** (4165→~4190 cols), empty 5→3 (SR100 0→1, LDF_BMIRD 0→1 cleared), NO regression, NO apply errors. Committed. LDF_HEPATITIS still 0 (pipeline ordering: BMIRD half delivers, HEP half doesn't — next-iteration candidate, not a regression).
+
+## LESSONS (apply to all future ticks)
+1. merge_and_verify does NOT refresh coverage_merged.md — ALWAYS run scripts/coverage_summary.sh after, and trust only a fresh run (the committed 89.9% had been carried forward unverified).
+2. Fixtures MUST be additive: author NEW entities/rows in your UID block. NEVER UPDATE shared dims (D_PATIENT key 3 / F_*_PAM / shared USER_PROFILE) — that regressed var_datamart 2→0.
+3. Omit GENERATED ALWAYS period columns (refresh_datetime/max_datetime) from nrt_* INSERTs (Msg 13536) — killed the tb fixture.
+4. Validate every fixture on a CLEAN merge (not just incremental apply) before committing — agents' standalone validation can leave dirty rows and miss pipeline-ordering effects.
+5. Agents must NOT apply to the shared DB during authoring (some did, leaving PK-colliding rows).
