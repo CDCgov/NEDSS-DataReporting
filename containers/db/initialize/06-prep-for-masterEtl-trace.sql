@@ -3,13 +3,16 @@
 ------------------------------------------------
 USE [RDB]
 
-drop table D_INVESTIGATION_REPEAT;
-drop table L_INVESTIGATION_REPEAT;
-drop table S_INVESTIGATION_REPEAT;
+-- IF EXISTS so the script is idempotent and tolerant of RDB images where
+-- these tables are absent (the unguarded drops aborted nbs-mssql init on
+-- the latest image, exiting the container before liquibase could run).
+drop table if exists D_INVESTIGATION_REPEAT;
+drop table if exists L_INVESTIGATION_REPEAT;
+drop table if exists S_INVESTIGATION_REPEAT;
 
-drop table D_INVESTIGATION_REPEAT_INC;
-drop table L_INVESTIGATION_REPEAT_INC;
-drop table S_INVESTIGATION_REPEAT_INC;
+drop table if exists D_INVESTIGATION_REPEAT_INC;
+drop table if exists L_INVESTIGATION_REPEAT_INC;
+drop table if exists S_INVESTIGATION_REPEAT_INC;
 
 GO
 
