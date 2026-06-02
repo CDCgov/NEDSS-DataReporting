@@ -51,6 +51,26 @@ The same column also appears in the dynamic INSERT statement (line
 268) but the UPDATE fires first and errors, so the INSERT never
 runs.
 
+### Second phantom column (re-confirmed 2026-06-02)
+
+`NOTIFICATION_UPD_DT_KEY` is not the only phantom. The SP's UPDATE
+(line 190) and INSERT (lines 271, 289) also reference
+`NOTIFICATION_LAST_CHANGE_TIME`, which the target table likewise does
+**not** have:
+
+```sql
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME='AGGREGATE_REPORT_DATAMART' AND COLUMN_NAME LIKE 'NOTIFICATION%';
+-- Returns ONLY: NOTIFICATION_STATUS, NOTIFICATION_LOCAL_ID
+```
+
+So even after dropping `NOTIFICATION_UPD_DT_KEY`, the UPDATE would
+fail again on `NOTIFICATION_LAST_CHANGE_TIME` (next msg-207). Any fix
+must remove (or add) **both** columns. Both are sourced fine from
+`NOTIFICATION_EVENT.NOTIFICATION_UPD_DT_KEY` /
+`NOTIFICATION.NOTIFICATION_LAST_CHANGE_TIME` in `#AGG_EVENT` (lines
+118, 121) — the defect is purely the target-side reference.
+
 ## Why production likely hasn't seen this
 
 `AGGREGATE_REPORT_DATAMART` is a Tier 3 / niche path — only fires

@@ -1509,3 +1509,13 @@ data will silently drop those answers in the orchestrated run.
 | 22007000-22007999 | Pertussis full chain | 30 observations (20 coded + 1 txt + 1 num + 7 date) attached to PHC 22007000 via nrt_investigation_observation 'InvFrmQ' edges. Mirrors BMIRD template. Net headline coverage: 0pp (PERTUSSIS_CASE not in rtr_target_columns.md scope) but populates out-of-scope PERTUSSIS_SUSPECTED_SOURCE_FLD and PERTUSSIS_TREATMENT_FIELD. |
 | 22008000-22008999 | LDF Foodborne | New Salmonellosis (10470) Investigation. 5 nrt_ldf_data rows on this PHC + 5 more on Mumps stub (22000030). Unlocked ldf_foodborne (0/12 -> 11/12) and grew ldf_dimensional_data + ldf_group. ldf_mumps stayed empty (cause TBD). |
 | 22029000-22029999 | LAB101 unblock (zz_lab101_unblock.sql) | I_Order/I_Result/'Result' 4-level lab hierarchy (22029300-22029302 keys / 22029400-22029402 UIDs) + root-order nrt_observation 22029500 + 35 coded child obs 22029600-22029634 (LAB329a..LAB363) + 35 LAB_RESULT_VAL 22029700-22029734 + I_Result-level LRV 22029699 + grouping 22029800/comment-group 22029801. Unblocks LAB101 0 -> 11/46 core cols; 35 EIP/NARMS/PFGE cols pend an SP step-3 (#tmp_ISOLATE_TRACKING_INIT) nuance. ORCH: 22029401 added to LAB_OBS_UIDS (merge_and_verify.sh:451). |
+
+## Round 3 loop reservations (overnight coverage top-up)
+
+| Block | Agent | Target |
+| --- | --- | --- |
+| 22023000 - 22023999 | R3-A | aggregate_report_datamart (0/42) |
+| 22024000 - 22024999 | R3-B | sr100 / SR100 datamart (0/20) |
+| 22025000 - 22025999 | R3-C | ldf_bmird + ldf_hepatitis (LDF-flagged answers) |
+| 22026000 - 22026999 | R3-D | var_datamart (close remaining ~21 cols) |
+| 22027000 - 22027999 | R3-E | TB_DATAMART remainder (partial 95/318) |
