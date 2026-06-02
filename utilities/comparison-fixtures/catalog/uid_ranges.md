@@ -1552,3 +1552,53 @@ tail-EXEC sequences these correctly for standalone verification.
 | 22025000 - 22025999 | R3-C | ldf_bmird + ldf_hepatitis (LDF-flagged answers) |
 | 22026000 - 22026999 | R3-D | var_datamart (close remaining ~21 cols) |
 | 22027000 - 22027999 | R3-E | TB_DATAMART remainder (partial 95/318) |
+| 22028000 - 22028999 | R3-F | var_datamart fill via NEW complete varicella chain (additive) |
+| 22029000 - 22029999 | R3-G | tb_datamart fill via NEW complete TB chain (additive) |
+
+> **R3-G sub-range carve-out (allocated 2026-06-02).** The 22029000 block was
+> already in use by `zz_lab101_unblock.sql` (UIDs 22029000, 22029300-302,
+> 22029400-402, 22029500, 22029600-634, 22029699-734, 22029800-801, 22029999).
+> R3-G (`fixtures/30_sp_coverage/zz_tb_datamart_addl_chain.sql`) therefore lives
+> in the clear sub-range **22029020-22029129** (verified unused across all
+> fixtures). Used UIDs:
+> - `22029020` user_profile.NEDSS_ENTRY_ID (new add/edit/notif user)
+> - `22029021-22029026` surrogate dim keys (D_PROVIDER x3, D_ORGANIZATION x2, D_PATIENT)
+> - `22029031-22029035` D_PROVIDER/D_ORGANIZATION ORGANIZATION/PROVIDER_UIDs
+> - `22029040` D_PATIENT.PATIENT_UID + nrt_investigation.patient_id
+> - `22029050` notification.NOTIFICATION_KEY; `22029060` nrt_investigation_notification source_act_uid/notification_uid
+> - `22029100` NEW TB PHC (act_uid / public_health_case_uid / nrt_investigation); `22029101` case_management_uid
+> - `22029110-22029122` nbs_case_answer + nrt_page_case_answer rows (RVCT TUB answers)
+>
+> **ORCH_TODO:** add `22029100` to `scripts/merge_and_verify.sh` `PHC_UIDS` so
+> the new TB PHC is driven by the global Step-9 TB-PAM + TB datamart rebuild
+> (the fixture also tail-EXECs the full chain for 22029100 at apply time, so the
+> row exists either way; adding it to PHC_UIDS keeps it first-class under a
+> full Step-9 rebuild).
+
+> **R3-F sub-range carve-out (allocated 2026-06-02).** The 22028000 block was
+> already in use by `zz_d_investigation_repeat_round3` (Agent V, 22028000-22028381
+> + sentinel 22028999). R3-F
+> (`fixtures/30_sp_coverage/zz_var_datamart_addl_chain.sql`) therefore lives in
+> the clear sub-range **22028400-22028524** (verified unused across all fixtures).
+> Used UIDs:
+> - `22028400` NEW Varicella PHC (act_uid / public_health_case_uid /
+>   nrt_investigation / EVENT_METRIC.EVENT_UID / nrt_page_case_answer.act_uid /
+>   nrt_investigation_confirmation.public_health_case_uid)
+> - `22028401` case_management.case_management_uid
+> - `22028410` D_PATIENT.PATIENT_UID + PATIENT_KEY; nrt_investigation.patient_id
+> - `22028420-22028422` D_PROVIDER x3 (investigator / physician / reporter),
+>   PROVIDER_KEY=PROVIDER_UID; referenced by nrt_investigation investigator_id /
+>   physician_id / person_as_reporter_uid
+> - `22028430-22028431` D_ORGANIZATION x2 (reporting source / hospital),
+>   ORGANIZATION_KEY=ORGANIZATION_UID; referenced by org_as_reporter_uid /
+>   hospital_uid
+> - `22028440` USER_PROFILE.NEDSS_ENTRY_ID (creator/editor/notif submitter)
+> - `22028450` NOTIFICATION.NOTIFICATION_KEY (+ NOTIFICATION_EVENT keyed by
+>   patient_key 22028410)
+> - `22028500-22028524` nbs_case_answer + nrt_page_case_answer rows (VAR answers)
+>
+> **ORCH_TODO:** add `22028400` to `scripts/merge_and_verify.sh` `PHC_UIDS` so the
+> new Varicella PHC is driven by the global Step-9 VAR-PAM + var_datamart rebuild
+> (the fixture also tail-EXECs the full chain for 22028400 at apply time, so the
+> row exists either way; adding it to PHC_UIDS keeps it first-class under a full
+> Step-9 rebuild).

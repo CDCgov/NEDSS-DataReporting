@@ -1,0 +1,474 @@
+-- =====================================================================
+-- Tier 3 — ADDITIONAL fully-attributed Varicella Investigation (R3-F)
+-- =====================================================================
+-- Goal: raise dbo.var_datamart column coverage (210/231) by authoring a
+-- BRAND-NEW, fully-attributed Varicella investigation that populates the
+-- ~21 columns the existing baseline var_datamart row leaves NULL.
+--
+-- PURELY ADDITIVE. Every row this fixture writes is keyed in agent R3-F's
+-- reserved UID block 22028400-22028999. NOTHING shared / foundation is
+-- mutated:
+--   * The shared Varicella PHC 22002000 is NOT referenced or re-EXEC'd
+--     (the quarantined zz_var_datamart_enrich_r3.sql regressed var_datamart
+--     2->0 precisely by re-running sp_nrt_investigation_postprocessing +
+--     sp_f_var_pam_postprocessing + sp_var_datamart_postprocessing on the
+--     SHARED 22002000, churning the shared fact/dim rows. We do NOT repeat
+--     that — this fixture builds its own PHC and only EXECs the chain on it.)
+--   * Foundation D_PATIENT key 3 / patient 20000000, the shared USER_PROFILE,
+--     F_VAR_PAM existing rows — all untouched. We author our OWN D_PATIENT,
+--     D_PROVIDER(s), D_ORGANIZATION(s), USER_PROFILE, EVENT_METRIC,
+--     NOTIFICATION/NOTIFICATION_EVENT rows in our UID block so the NEW
+--     var_datamart row resolves every attribution column to OUR new dims.
+--
+-- WHY DIRECT RDB_MODERN DIM INSERTS (not just ODSE + SP chain)
+--   F_VAR_PAM resolves PERSON_KEY / PROVIDER_KEY / PHYSICIAN_KEY /
+--   PERSON_AS_REPORTER_KEY / ORG_AS_REPORTER_KEY / HOSPITAL_KEY by reading
+--   nrt_investigation's investigator_id / physician_id / person_as_reporter_uid
+--   / org_as_reporter_uid / hospital_uid / patient_id columns and joining
+--   D_PROVIDER.PROVIDER_UID / D_ORGANIZATION.ORGANIZATION_UID /
+--   D_PATIENT.PATIENT_UID (240 SP lines 64-114, 144-328). var_datamart then
+--   joins those keys back to the dims to surface the names/SSN/comments
+--   (250 SP #PATIENT/#PROVIDER/#PHYSICIAN/#REPORTER/#ORG_REPORTER/#HOSPITAL
+--   tables, lines 154-372). So the *_UID columns on our nrt_investigation row
+--   must point at OUR new dims, and the dims must carry the demographic /
+--   name fields. We author them directly in RDB_MODERN — the project's
+--   established additive pattern for dims with no per-row event SP partner.
+--
+-- TARGET COLUMNS THE BASELINE ROW LACKS, FILLED BY THE NEW ROW
+--   Patient demographics (D_PATIENT, our patient 22028410):
+--     PATIENT_SSN, PATIENT_NAME_SUFFIX, PATIENT_GENERAL_COMMENTS,
+--     PATIENT_PHONE_EXT_HOME, PATIENT_PHONE_EXT_WORK
+--     (+ RACE_CALCULATED, RACE_CALC_DETAILS already on baseline but
+--      re-populated here for the new row).
+--   Investigator (D_PROVIDER 22028420 via investigator_id):
+--     INVESTIGATOR_FIRST_NAME, INVESTIGATOR_LAST_NAME, INVESTIGATOR_PHONE_NUMBER
+--   Physician (D_PROVIDER 22028421 via physician_id):
+--     PHYSICIAN_FIRST_NAME, PHYSICIAN_LAST_NAME, PHYSICIAN_PHONE_NUMBER
+--   Reporter (D_PROVIDER 22028422 via person_as_reporter_uid):
+--     REPORTER_FIRST_NAME, REPORTER_LAST_NAME, REPORTER_PHONE_NUMBER
+--   Reporting source (D_ORGANIZATION 22028430 via org_as_reporter_uid):
+--     REPORTING_SOURCE_NAME
+--   Hospital (D_ORGANIZATION 22028431 via hospital_uid):
+--     HOSPITAL_NAME
+--   User attribution (USER_PROFILE nedss_entry_id 22028440 + EVENT_METRIC
+--   EVENT_UID=our PHC + NOTIFICATION submitted_by):
+--     INVESTIGATION_CREATED_BY, INVESTIGATION_LAST_UPDTD_BY,
+--     NOTIFICATION_SUBMITTER  (also NOTIFICATION_STATUS / NOTIFICATION_SENT_DATE)
+--   Multi-value confirmation method (3 nrt_investigation_confirmation rows):
+--     CONFIRMATION_METHOD_1, CONFIRMATION_METHOD_2, CONFIRMATION_METHOD_3,
+--     CONFIRMATION_METHOD_ALL  (codes LD/CD/E grounded in NBS_SRTE PHC_CONF_M,
+--     verified live 2026-06-02; descs are >2 chars so the 250 SP LEN()>2
+--     gate at lines 1038-1040 slots COL2/COL3).
+--
+-- VERIFICATION CALL-CHAIN (tail-EXECs at bottom), all on OUR PHC 22028400:
+--   sp_nrt_investigation_postprocessing  @id_list=22028400
+--       nrt_investigation -> INVESTIGATION; rebuilds confirmation_method +
+--       confirmation_method_group from our nrt_investigation_confirmation
+--       rows (005 SP lines 709-858) for OUR investigation_key only.
+--   sp_nrt_d_var_pam_postprocessing       @phc_uids=22028400     -> D_VAR_PAM
+--   sp_nrt_d_rash_loc_gen_postprocessing  @phc_uids=22028400     -> D_RASH_LOC_GEN
+--   sp_nrt_d_pcr_source_postprocessing    @phc_id_list=22028400  -> D_PCR_SOURCE
+--   sp_nrt_var_pam_ldf_postprocessing     @phc_uids=22028400     -> VAR_PAM_LDF
+--   sp_f_var_pam_postprocessing           @phc_id_list=22028400  -> F_VAR_PAM
+--   sp_var_datamart_postprocessing        @phc_uids=22028400     -> VAR_DATAMART
+--   (We DO tail-EXEC f_var_pam + var_datamart here, scoped to OUR new PHC,
+--    because the orchestrator Step-9 PHC_UIDS list does not include 22028400.
+--    These EXECs only INSERT a NEW fact/datamart row keyed to our PHC; they
+--    DELETE+reinsert only rows whose VAR_PAM_UID is in @phc_id_list = our PHC,
+--    so the shared 22002000 row is never touched.)
+--
+-- UID block (agent R3-F reserved): 22028400-22028999
+--   22028400  act / public_health_case / nrt_investigation PHC uid;
+--             EVENT_METRIC.EVENT_UID; nrt_page_case_answer.act_uid;
+--             nrt_investigation_confirmation.public_health_case_uid
+--   22028401  case_management.case_management_uid
+--   22028410  D_PATIENT.PATIENT_UID + PATIENT_KEY; nrt_investigation.patient_id
+--   22028420  D_PROVIDER investigator  (PROVIDER_UID/KEY); investigator_id
+--   22028421  D_PROVIDER physician     (PROVIDER_UID/KEY); physician_id
+--   22028422  D_PROVIDER reporter      (PROVIDER_UID/KEY); person_as_reporter_uid
+--   22028430  D_ORGANIZATION reporting source (ORG_UID/KEY); org_as_reporter_uid
+--   22028431  D_ORGANIZATION hospital         (ORG_UID/KEY); hospital_uid
+--   22028440  USER_PROFILE.NEDSS_ENTRY_ID (creator/editor/notif submitter)
+--   22028450  NOTIFICATION.NOTIFICATION_KEY
+--   22028500..22028524  nbs_case_answer + nrt_page_case_answer VAR rows
+--
+-- Foundation dependencies (READ-ONLY): @superuser_id 10009282 (add/chg user
+--   on ODSE rows only).  CONDITION 10030 (Varicella) must be in
+--   nrt_srte_condition_code with PORT_REQ_IND_CD='T' (orchestrator infra
+--   step + 240/250 gate) — provided by the merge pipeline.
+-- =====================================================================
+
+USE [NBS_ODSE];
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @phc_uid      bigint = 22028400;
+DECLARE @case_mgmt_uid bigint = 22028401;
+
+-- ----- ODSE: act parent -----
+INSERT INTO [dbo].[act] ([act_uid], [class_cd], [mood_cd]) VALUES
+    (@phc_uid, N'CASE', N'EVN');
+
+-- ----- ODSE: public_health_case -----
+INSERT INTO [dbo].[public_health_case]
+    ([public_health_case_uid], [add_time], [add_user_id], [case_type_cd],
+     [case_class_cd], [cd], [cd_desc_txt], [cd_system_cd], [cd_system_desc_txt],
+     [investigation_status_cd], [last_chg_time], [last_chg_user_id], [local_id],
+     [record_status_cd], [record_status_time], [status_cd], [status_time],
+     [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
+     [program_jurisdiction_oid], [outbreak_ind], [outbreak_name],
+     [mmwr_week], [mmwr_year])
+VALUES
+    (@phc_uid, '2026-05-01T00:00:00', @superuser_id, N'I',
+     N'C', N'10030', N'Varicella (Chickenpox)', N'NND', N'NND',
+     N'O', '2026-05-02T00:00:00', @superuser_id, N'CAS22028400GA01',
+     N'ACTIVE', '2026-05-01T00:00:00', N'A', '2026-05-01T00:00:00',
+     N'T', 1, N'GCD', N'130001',
+     22028400, N'N', NULL,
+     N'18', N'2026');
+
+-- ----- ODSE: act_id (PHC_LOCAL_ID) -----
+INSERT INTO [dbo].[act_id]
+    ([act_uid], [act_id_seq], [add_time], [add_user_id],
+     [assigning_authority_cd], [assigning_authority_desc_txt],
+     [last_chg_time], [last_chg_user_id], [record_status_cd],
+     [record_status_time], [root_extension_txt], [type_cd],
+     [type_desc_txt], [status_cd], [status_time])
+VALUES
+    (@phc_uid, 1, '2026-05-01T00:00:00', @superuser_id,
+     N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
+     '2026-05-01T00:00:00', @superuser_id, N'ACTIVE',
+     '2026-05-01T00:00:00', N'CAS22028400GA01', N'PHC_LOCAL_ID',
+     N'Local Public Health Case Identifier', N'A', '2026-05-01T00:00:00');
+
+-- ----- ODSE: case_management -----
+SET IDENTITY_INSERT [dbo].[case_management] ON;
+INSERT INTO [dbo].[case_management]
+    ([case_management_uid], [public_health_case_uid], [status_900],
+     [field_record_number], [surv_assigned_date],
+     [surv_closed_date], [case_closed_date])
+VALUES
+    (@case_mgmt_uid, @phc_uid, N'C',
+     N'FRN-VAR-ADDL-01', '2026-05-02T00:00:00',
+     '2026-05-30T00:00:00', '2026-05-30T00:00:00');
+SET IDENTITY_INSERT [dbo].[case_management] OFF;
+GO
+
+-- ----- ODSE: nbs_case_answer (referential mirror of the VAR answers) -----
+DECLARE @superuser_id_2 bigint = 10009282;
+DECLARE @phc_uid_2 bigint = 22028400;
+
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+INSERT INTO [dbo].[nbs_case_answer]
+    ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+     [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+     [last_chg_time], [last_chg_user_id],
+     [record_status_cd], [record_status_time], [seq_nbr])
+VALUES
+    (22028500, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'Y',        1442, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR101 VARICELLA_VACCINE
+    (22028501, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'OTH',      1363, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR103 RASH_LOCATION
+    (22028502, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'22943007', 1356, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR105 RASH_LOCATION_GENERAL
+    (22028503, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'Y',        1141, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR111 VESICLES
+    (22028504, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1432, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR113 MACULAR_PAPULAR
+    (22028505, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'Y',        1036, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR122 FEVER
+    (22028506, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'2026-04-25',1017,1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR123 FEVER_ONSET_DATE
+    (22028507, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1190, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR126 IMMUNOCOMPROMISED
+    (22028508, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'Y',        1187, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR128 PATIENT_VISIT_HC_PROVIDER
+    (22028509, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1126, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR129 COMPLICATIONS
+    (22028510, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1172, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR135 COMPLICATIONS_PNEUMONIA
+    (22028511, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1333, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR139 TREATED
+    (22028512, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1277, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR143 DEATH_AUTOPSY
+    (22028513, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1347, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR150 PREVIOUS_DIAGNOSIS
+    (22028514, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1446, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR154 EPI_LINKED
+    (22028515, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'133928008',1170, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR156 TRANSMISSION_SETTING
+    (22028516, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1184, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR158 HEALTHCARE_WORKER
+    (22028517, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'Y',        1210, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR170 LAB_TESTING
+    (22028518, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1084, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR171 DFA_TEST
+    (22028519, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'Y',        1241, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR174 PCR_TEST
+    (22028520, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'69640009', 1329, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR176 PCR_TEST_SOURCE
+    (22028521, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'10828004', 1016, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR178 PCR_TEST_RESULT
+    (22028522, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1343, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR180 CULTURE_TEST
+    (22028523, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1020, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0), -- VAR188 SEROLOGY_TEST
+    (22028524, @phc_uid_2, '2026-05-01T00:00:00', @superuser_id_2, N'N',        1024, 1, '2026-05-01T00:00:00', @superuser_id_2, N'ACTIVE', '2026-05-01T00:00:00', 0); -- VAR195 IGG_TEST
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+GO
+
+-- =====================================================================
+-- RDB_MODERN: new attribution dimensions + staging.
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+
+-- ---------------------------------------------------------------------
+-- D_PATIENT — our new patient, FULL demographics (the columns the
+-- baseline var_datamart row leaves NULL: SSN, name suffix, phone exts,
+-- general comments, plus race fields).
+--   var_datamart #PATIENT joins f.person_key -> d_patient.patient_key,
+--   and F_VAR_PAM resolves person_key from D_PATIENT.PATIENT_KEY where
+--   PATIENT_UID = nrt_investigation.patient_id (= 22028410).
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[D_PATIENT]
+    ([PATIENT_KEY], [PATIENT_UID], [PATIENT_LOCAL_ID],
+     [PATIENT_FIRST_NAME], [PATIENT_MIDDLE_NAME], [PATIENT_LAST_NAME],
+     [PATIENT_NAME_SUFFIX], [PATIENT_SSN], [PATIENT_GENERAL_COMMENTS],
+     [PATIENT_PHONE_HOME], [PATIENT_PHONE_EXT_HOME],
+     [PATIENT_PHONE_WORK], [PATIENT_PHONE_EXT_WORK],
+     [PATIENT_RACE_CALCULATED], [PATIENT_RACE_CALC_DETAILS],
+     [PATIENT_CURRENT_SEX], [PATIENT_DOB],
+     [PATIENT_STREET_ADDRESS_1], [PATIENT_CITY], [PATIENT_STATE], [PATIENT_ZIP])
+VALUES
+    (22028410, 22028410, N'PAT22028410GA01',
+     N'Rowan', N'Avery', N'Castellano',
+     N'Jr', N'555-22-8010', N'Patient reports household varicella exposure; cooperative for interview.',
+     N'4045550110', N'101',
+     N'4045550120', N'202',
+     N'2106-3', N'White',
+     N'M', '2014-06-15T00:00:00',
+     N'4820 Peachtree Industrial Blvd', N'Atlanta', N'GA', N'30341');
+
+-- ---------------------------------------------------------------------
+-- D_PROVIDER — investigator (22028420), physician (22028421),
+-- reporter (22028422). var_datamart surfaces PROVIDER_FIRST/LAST_NAME +
+-- PROVIDER_PHONE_WORK for each role.
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[D_PROVIDER]
+    ([PROVIDER_KEY], [PROVIDER_UID], [PROVIDER_FIRST_NAME],
+     [PROVIDER_LAST_NAME], [PROVIDER_PHONE_WORK])
+VALUES
+    (22028420, 22028420, N'Imani',  N'Okafor',     N'4045550220'),   -- investigator
+    (22028421, 22028421, N'Desmond',N'Whitfield',  N'4045550221'),   -- physician
+    (22028422, 22028422, N'Priya',  N'Ramaswamy',  N'4045550222');   -- reporter (person as reporter)
+
+-- ---------------------------------------------------------------------
+-- D_ORGANIZATION — reporting source (22028430) + hospital (22028431).
+-- var_datamart surfaces ORGANIZATION_NAME as REPORTING_SOURCE_NAME /
+-- HOSPITAL_NAME respectively.
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[D_ORGANIZATION]
+    ([ORGANIZATION_KEY], [ORGANIZATION_UID], [ORGANIZATION_NAME])
+VALUES
+    (22028430, 22028430, N'Fulton County Board of Health'),          -- org as reporter / reporting source
+    (22028431, 22028431, N'Grady Memorial Hospital');                -- hospital
+
+-- ---------------------------------------------------------------------
+-- USER_PROFILE — the user that created/edited the investigation and
+-- submitted its notification (NEDSS_ENTRY_ID 22028440). var_datamart
+-- emits TRIM(last)+','+TRIM(first) for INVESTIGATION_CREATED_BY,
+-- INVESTIGATION_LAST_UPDTD_BY (via EVENT_METRIC user ids) and
+-- NOTIFICATION_SUBMITTER (via notification.notification_submitted_by).
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[USER_PROFILE]
+    ([NEDSS_ENTRY_ID], [FIRST_NM], [LAST_NM], [USER_NM],
+     [PROVIDER_KEY], [LAST_UPD_TIME])
+VALUES
+    (22028440, N'Marisol', N'Delacroix', N'mdelacroix',
+     1, '2026-05-02T00:00:00');
+
+-- ---------------------------------------------------------------------
+-- EVENT_METRIC — keyed EVENT_UID = our PHC; ADD_USER_ID /
+-- LAST_CHG_USER_ID = our USER_PROFILE NEDSS_ENTRY_ID. var_datamart #BASE
+-- joins EVENT_METRIC e ON e.EVENT_UID = d.VAR_PAM_UID and reads
+-- e.ADD_USER_ID -> INVESTIGATION_CREATED_BY, e.LAST_CHG_USER_ID ->
+-- INVESTIGATION_LAST_UPDTD_BY (250 SP lines 553-555, 693).
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[EVENT_METRIC]
+    ([EVENT_TYPE], [EVENT_UID], [LOCAL_ID], [PROG_AREA_CD], [PROG_AREA_DESC_TXT],
+     [PROGRAM_JURISDICTION_OID], [JURISDICTION_CD], [RECORD_STATUS_CD],
+     [ADD_TIME], [ADD_USER_ID], [LAST_CHG_TIME], [LAST_CHG_USER_ID],
+     [ADD_USER_NAME], [LAST_CHG_USER_NAME])
+VALUES
+    (N'PHCInvForm', 22028400, N'CAS22028400GA01', N'GCD', N'General Communicable Disease',
+     22028400, N'130001', N'ACTIVE',
+     '2026-05-01T00:00:00', 22028440, '2026-05-02T00:00:00', 22028440,
+     N'Delacroix, Marisol', N'Delacroix, Marisol');
+
+-- ---------------------------------------------------------------------
+-- NOTIFICATION + NOTIFICATION_EVENT — drives NOTIFICATION_SUBMITTER /
+-- NOTIFICATION_STATUS / NOTIFICATION_SENT_DATE. var_datamart joins
+-- notification_event ne ON v.person_key = ne.patient_key (our patient
+-- key 22028410), then notification n ON ne.notification_key, then
+-- user_profile nu ON n.notification_submitted_by = nu.NEDSS_ENTRY_ID
+-- (250 SP lines 1445-1452). NOTIFICATION_SENT_DATE joins RDB_DATE on
+-- ne.NOTIFICATION_SENT_DT_KEY — left NULL here (RDB_DATE key optional;
+-- the submitter/status columns populate regardless).
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[NOTIFICATION]
+    ([NOTIFICATION_KEY], [NOTIFICATION_LOCAL_ID], [NOTIFICATION_STATUS],
+     [NOTIFICATION_SUBMITTED_BY])
+VALUES
+    (22028450, N'NOT22028450GA01', N'COMPLETED', 22028440);
+
+INSERT INTO [dbo].[NOTIFICATION_EVENT]
+    ([PATIENT_KEY], [NOTIFICATION_KEY], [COUNT])
+VALUES
+    (22028410, 22028450, 1);
+
+GO
+
+-- ---------------------------------------------------------------------
+-- nrt_investigation — our new Varicella investigation staging row.
+-- The *_uid attribution columns point at our new dims so F_VAR_PAM
+-- resolves the real keys (not sentinel 1):
+--   patient_id              = 22028410  -> D_PATIENT -> PERSON_KEY
+--   investigator_id         = 22028420  -> D_PROVIDER -> PROVIDER_KEY
+--   physician_id            = 22028421  -> D_PROVIDER -> PHYSICIAN_KEY
+--   person_as_reporter_uid  = 22028422  -> D_PROVIDER -> PERSON_AS_REPORTER_KEY
+--   org_as_reporter_uid     = 22028430  -> D_ORGANIZATION -> ORG_AS_REPORTER_KEY
+--   hospital_uid            = 22028431  -> D_ORGANIZATION -> HOSPITAL_KEY
+--   nac_page_case_uid       = 22028400  -> F_VAR_PAM VAR_PAM_UID grouping
+--   investigation_form_cd   = 'INV_FORM_VAR' (all VAR-PAM SP predicates)
+-- (refresh_datetime / max_datetime are GENERATED ALWAYS — omitted.)
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[nrt_investigation]
+    ([public_health_case_uid], [patient_id], [program_jurisdiction_oid],
+     [local_id], [shared_ind], [case_type_cd],
+     [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
+     [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
+     [investigation_form_cd], [case_management_uid],
+     [investigation_status_cd], [investigation_status],
+     [inv_case_status],
+     [status_time], [record_status_time], [raw_record_status_cd],
+     [add_user_id], [add_user_name], [add_time],
+     [last_chg_user_id], [last_chg_user_name], [last_chg_time],
+     [mmwr_week], [mmwr_year],
+     [nac_page_case_uid], [nac_last_chg_time],
+     [investigator_id], [physician_id], [person_as_reporter_uid],
+     [org_as_reporter_uid], [hospital_uid],
+     [outbreak_ind])
+VALUES
+    (22028400,                              -- public_health_case_uid
+     22028410,                              -- patient_id (our new patient)
+     22028400,                              -- program_jurisdiction_oid
+     N'CAS22028400GA01',                    -- local_id
+     N'T', N'I',                            -- shared_ind, case_type_cd
+     N'130001', N'ACTIVE',                  -- jurisdiction_cd, record_status_cd
+     N'EVN', N'CASE',                       -- mood_cd, class_cd
+     N'C', N'10030', N'Varicella (Chickenpox)', N'GCD',
+     N'INV_FORM_VAR',                       -- investigation_form_cd
+     22028401,                              -- case_management_uid
+     N'O', N'Open', N'Confirmed',
+     '2026-05-01T00:00:00', '2026-05-01T00:00:00', N'ACTIVE',
+     22028440, N'Delacroix, Marisol', '2026-05-01T00:00:00',
+     22028440, N'Delacroix, Marisol', '2026-05-02T00:00:00',
+     N'18', N'2026',
+     22028400, '2026-05-02T00:00:00',       -- nac_page_case_uid, nac_last_chg_time
+     22028420, 22028421, 22028422,          -- investigator_id, physician_id, person_as_reporter_uid
+     22028430, 22028431,                    -- org_as_reporter_uid, hospital_uid
+     N'N');                                 -- outbreak_ind
+
+-- ---------------------------------------------------------------------
+-- nrt_page_case_answer — VAR question rows (mirror of the full-chain
+-- template, keyed to our PHC 22028400).
+-- (refresh_datetime / max_datetime GENERATED ALWAYS — omitted.)
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[nrt_page_case_answer]
+    ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
+     [nbs_question_uid],
+     [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
+     [investigation_form_cd], [question_identifier], [data_location],
+     [code_set_group_id], [last_chg_time], [record_status_cd],
+     [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id],
+     [nbs_ui_component_uid], [nca_add_time], [nuim_record_status_cd])
+VALUES
+    (22028400, 22028500, 2, 1442, N'VAR_PAM', N'VARICELLA_VACCINE',         N'Y',        N'1', N'INV_FORM_VAR', N'VAR101', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'VARICELLA_VACCINE',         NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028501, 2, 1363, N'VAR_PAM', N'RASH_LOCATION',            N'OTH',      N'1', N'INV_FORM_VAR', N'VAR103', N'NBS_Case_Answer.answer_txt', 2780, '2026-05-01T00:00:00', N'ACTIVE', N'RASH_LOCATION',            NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028502, 2, 1356, N'VAR_PAM', N'RASH_LOCATION_GENERAL',    N'22943007', N'1', N'INV_FORM_VAR', N'VAR105', N'NBS_Case_Answer.answer_txt', 2790, '2026-05-01T00:00:00', N'ACTIVE', N'RASH_LOCATION_GENERAL',    NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028503, 2, 1141, N'VAR_PAM', N'VESICLES',                 N'Y',        N'1', N'INV_FORM_VAR', N'VAR111', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'VESICLES',                 NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028504, 2, 1432, N'VAR_PAM', N'MACULAR_PAPULAR',          N'N',        N'1', N'INV_FORM_VAR', N'VAR113', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'MACULAR_PAPULAR',          NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028505, 2, 1036, N'VAR_PAM', N'FEVER',                    N'Y',        N'1', N'INV_FORM_VAR', N'VAR122', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'FEVER',                    NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028506, 2, 1017, N'VAR_PAM', N'FEVER_ONSET_DATE',         N'2026-04-25',N'1',N'INV_FORM_VAR', N'VAR123', N'NBS_Case_Answer.answer_txt', NULL, '2026-05-01T00:00:00', N'ACTIVE', N'FEVER_ONSET_DATE',         NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028507, 2, 1190, N'VAR_PAM', N'IMMUNOCOMPROMISED',        N'N',        N'1', N'INV_FORM_VAR', N'VAR126', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'IMMUNOCOMPROMISED',        NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028508, 2, 1187, N'VAR_PAM', N'PATIENT_VISIT_HC_PROVIDER',N'Y',        N'1', N'INV_FORM_VAR', N'VAR128', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'PATIENT_VISIT_HC_PROVIDER',NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028509, 2, 1126, N'VAR_PAM', N'COMPLICATIONS',            N'N',        N'1', N'INV_FORM_VAR', N'VAR129', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'COMPLICATIONS',            NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028510, 2, 1172, N'VAR_PAM', N'COMPLICATIONS_PNEUMONIA',  N'N',        N'1', N'INV_FORM_VAR', N'VAR135', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'COMPLICATIONS_PNEUMONIA',  NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028511, 2, 1333, N'VAR_PAM', N'TREATED',                  N'N',        N'1', N'INV_FORM_VAR', N'VAR139', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'TREATED',                  NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028512, 2, 1277, N'VAR_PAM', N'DEATH_AUTOPSY',            N'N',        N'1', N'INV_FORM_VAR', N'VAR143', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'DEATH_AUTOPSY',            NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028513, 2, 1347, N'VAR_PAM', N'PREVIOUS_DIAGNOSIS',       N'N',        N'1', N'INV_FORM_VAR', N'VAR150', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'PREVIOUS_DIAGNOSIS',       NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028514, 2, 1446, N'VAR_PAM', N'EPI_LINKED',               N'N',        N'1', N'INV_FORM_VAR', N'VAR154', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'EPI_LINKED',               NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028515, 2, 1170, N'VAR_PAM', N'TRANSMISSION_SETTING',     N'133928008',N'1', N'INV_FORM_VAR', N'VAR156', N'NBS_Case_Answer.answer_txt', 2660, '2026-05-01T00:00:00', N'ACTIVE', N'TRANSMISSION_SETTING',     NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028516, 2, 1184, N'VAR_PAM', N'HEALTHCARE_WORKER',        N'N',        N'1', N'INV_FORM_VAR', N'VAR158', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'HEALTHCARE_WORKER',        NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028517, 2, 1210, N'VAR_PAM', N'LAB_TESTING',              N'Y',        N'1', N'INV_FORM_VAR', N'VAR170', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'LAB_TESTING',              NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028518, 2, 1084, N'VAR_PAM', N'DFA_TEST',                 N'N',        N'1', N'INV_FORM_VAR', N'VAR171', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'DFA_TEST',                 NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028519, 2, 1241, N'VAR_PAM', N'PCR_TEST',                 N'Y',        N'1', N'INV_FORM_VAR', N'VAR174', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'PCR_TEST',                 NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028520, 2, 1329, N'VAR_PAM', N'PCR_TEST_SOURCE',          N'69640009', N'1', N'INV_FORM_VAR', N'VAR176', N'NBS_Case_Answer.answer_txt', 2770, '2026-05-01T00:00:00', N'ACTIVE', N'PCR_TEST_SOURCE',          NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028521, 2, 1016, N'VAR_PAM', N'PCR_TEST_RESULT',          N'10828004', N'1', N'INV_FORM_VAR', N'VAR178', N'NBS_Case_Answer.answer_txt', 4200, '2026-05-01T00:00:00', N'ACTIVE', N'PCR_TEST_RESULT',          NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028522, 2, 1343, N'VAR_PAM', N'CULTURE_TEST',             N'N',        N'1', N'INV_FORM_VAR', N'VAR180', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'CULTURE_TEST',             NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028523, 2, 1020, N'VAR_PAM', N'SEROLOGY_TEST',            N'N',        N'1', N'INV_FORM_VAR', N'VAR188', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'SEROLOGY_TEST',            NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active'),
+    (22028400, 22028524, 2, 1024, N'VAR_PAM', N'IGG_TEST',                 N'N',        N'1', N'INV_FORM_VAR', N'VAR195', N'NBS_Case_Answer.answer_txt', 4150, '2026-05-01T00:00:00', N'ACTIVE', N'IGG_TEST',                 NULL, 1, NULL, 2, '2026-05-01T00:00:00', N'Active');
+
+-- ---------------------------------------------------------------------
+-- nrt_investigation_confirmation — THREE confirmation methods so the
+-- var_datamart PIVOT yields COL1/COL2/COL3 -> CONFIRMATION_METHOD_1/2/3.
+-- sp_nrt_investigation_postprocessing DELETE+reinserts confirmation_method_group
+-- for OUR investigation_key only (matched by case_uid=22028400), auto-creating
+-- any missing confirmation_method dim row. Codes LD/CD/E from NBS_SRTE
+-- PHC_CONF_M (verified live 2026-06-02); all descs > 2 chars.
+-- (refresh_datetime / max_datetime GENERATED ALWAYS — omitted.)
+-- ---------------------------------------------------------------------
+INSERT INTO [dbo].[nrt_investigation_confirmation]
+    ([public_health_case_uid], [confirmation_method_cd],
+     [confirmation_method_desc_txt], [confirmation_method_time], [batch_id])
+VALUES
+    (22028400, N'LD', N'Laboratory confirmed',                          '2026-05-10T00:00:00', 1),
+    (22028400, N'CD', N'Clinical diagnosis (non-laboratory confirmed)', '2026-05-10T00:00:00', 1),
+    (22028400, N'E',  N'Epidemiologically linked',                      '2026-05-10T00:00:00', 1);
+
+GO
+
+-- =====================================================================
+-- Tail-EXEC the SP chain, ALL scoped to OUR new PHC 22028400.
+-- Wrapped in TRY/CATCH so a single SP failure cannot abort the
+-- merge_and_verify.sh pipeline (project convention).
+-- =====================================================================
+
+-- A) nrt_investigation -> INVESTIGATION + rebuild confirmation_method(_group)
+BEGIN TRY
+    EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_nrt_investigation_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- B) D_VAR_PAM (root pivoted dim)
+BEGIN TRY
+    EXEC dbo.sp_nrt_d_var_pam_postprocessing @phc_uids = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_nrt_d_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- C) topic dims (RASH_LOC_GEN / PCR_SOURCE) + VAR_PAM_LDF
+BEGIN TRY
+    EXEC dbo.sp_nrt_d_rash_loc_gen_postprocessing @phc_uids = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_nrt_d_rash_loc_gen_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+BEGIN TRY
+    EXEC dbo.sp_nrt_d_pcr_source_postprocessing @phc_id_list = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_nrt_d_pcr_source_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+BEGIN TRY
+    EXEC dbo.sp_nrt_var_pam_ldf_postprocessing @phc_uids = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_nrt_var_pam_ldf_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- D) F_VAR_PAM fact (resolves our PERSON/PROVIDER/PHYSICIAN/REPORTER/ORG/HOSPITAL keys)
+BEGIN TRY
+    EXEC dbo.sp_f_var_pam_postprocessing @phc_id_list = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_f_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- E) VAR_DATAMART (the new fully-attributed row)
+BEGIN TRY
+    EXEC dbo.sp_var_datamart_postprocessing @phc_uids = N'22028400', @debug = 0;
+END TRY BEGIN CATCH
+    PRINT 'zz_var_datamart_addl_chain: sp_var_datamart_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
