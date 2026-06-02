@@ -192,7 +192,7 @@ VALUES
      N'2.16.840.1.114222.4.5.1', N'NEDSS Base System', N'TRMT',
      '2026-04-01T00:00:00', @superuser_id, N'TRT20100010GA01',
      N'STD', N'130001', 20100010,
-     N'PROCESSED', '2026-04-01T00:00:00',
+     N'ACTIVE', '2026-04-01T00:00:00',
      N'T', N'A', '2026-04-01T00:00:00',
      1, '2026-04-02T08:00:00', '2026-04-06T20:00:00',
      N'Tier 1 Treatment v2 — clinician comments on therapy course.');
@@ -254,7 +254,7 @@ VALUES
      N'TRMT',
      '2026-04-01T00:00:00', @superuser_id, N'TRT20100020GA01',
      N'STD', N'130001',
-     N'PROCESSED', '2026-04-01T00:00:00',
+     N'ACTIVE', '2026-04-01T00:00:00',
      N'F', N'A', '2026-04-01T00:00:00',
      1);
 
