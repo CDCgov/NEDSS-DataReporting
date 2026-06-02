@@ -670,7 +670,7 @@ BEGIN
                                                                 then 'NOTIFICATION_ACTUAL_METHOD_HIV'
                                                                 else 'NOTIFICATION_ACTUAL_METHOD_STD'
                                                             end
-                                                        )) as fl_fup_actual_ref_type,
+                                                        )) as fl_fup_actual_ref_type, -- this returns something like "3 - Dual"
                                                         case_review_status,
                                                         case_review_status_date,
                                                         fld_foll_up_internet_outcome                                                   as fl_fup_internet_outcome_cd,
