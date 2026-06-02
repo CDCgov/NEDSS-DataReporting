@@ -283,38 +283,6 @@ GO
 -- =====================================================================
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_vaccination WHERE vaccination_uid = 22020130)
 BEGIN
-    INSERT INTO dbo.nrt_vaccination
-        ( [vaccination_uid]
-        , [add_time], [add_user_id]
-        , [age_at_vaccination], [age_at_vaccination_unit]
-        , [last_chg_time], [last_chg_user_id]
-        , [local_id], [record_status_cd], [record_status_time]
-        , [vaccine_administered_date], [vaccine_dose_nbr]
-        , [vaccination_administered_nm], [vaccination_anatomical_site]
-        , [vaccine_expiration_dt], [vaccine_info_source]
-        , [vaccine_lot_number_txt], [vaccine_manufacturer_nm]
-        , [version_ctrl_nbr], [electronic_ind]
-        , [provider_uid], [organization_uid], [phc_uid], [patient_uid]
-        , [status_time]
-        , [prog_area_cd], [jurisdiction_cd], [program_jurisdiction_oid]
-        , [material_cd]
-        )
-    VALUES
-        ( 22020130
-        , '2026-04-15T10:00:00', 10009282
-        , N'45', N'Y'
-        , '2026-04-15T10:00:00', 10009282
-        , N'VAC22020130GA01', N'ACTIVE', '2026-04-15T10:00:00'
-        , '2026-04-15T10:00:00', 3
-        , N'COVID-19 vaccine, mRNA, bivalent', N'Left deltoid'
-        , '2027-06-30T00:00:00', N'Vaccine information statement'
-        , N'LOT-COV-MRNA-2026-A', N'Pfizer-BioNTech'
-        , 1, N'Y'
-        , 22020110, 22020120, 22003000, 22020100
-        , '2026-04-15T10:00:00'
-        , N'COV', N'130001', 22003000
-        , N'208'    -- COVID-19 mRNA — passes material_cd filter
-        );
 END
 GO
 
@@ -325,26 +293,6 @@ GO
 -- =====================================================================
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_investigation WHERE public_health_case_uid = 22003000)
 BEGIN
-    INSERT INTO dbo.nrt_investigation
-        ( [public_health_case_uid]
-        , [local_id]
-        , [add_time], [add_user_id]
-        , [last_chg_time], [last_chg_user_id]
-        , [activity_from_time]
-        , [record_status_cd], [record_status_time]
-        , [prog_area_cd], [jurisdiction_cd], [program_jurisdiction_oid]
-        , [cd], [cd_desc_txt]
-        )
-    VALUES
-        ( 22003000
-        , N'CAS22003000GA01'
-        , '2026-04-15T10:00:00', 10009282
-        , '2026-04-15T10:00:00', 10009282
-        , '2026-04-10T00:00:00'
-        , N'ACTIVE', '2026-04-15T10:00:00'
-        , N'COV', N'130001', 22003000
-        , N'11065', N'COVID-19'
-        );
 END
 GO
 

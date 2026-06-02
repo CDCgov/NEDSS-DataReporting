@@ -21,11 +21,6 @@ USE [RDB_MODERN];
 GO
 
 -- Minimal INSERT: just keys + a few non-NULL columns.
-INSERT INTO [dbo].[nrt_investigation_case_management]
-    (public_health_case_uid, case_management_uid, act_ref_type_cd, add_user_id)
-VALUES
-    (20000100, 20050011, N'INTV', 10009282),
-    (20050010, 20050011, N'INTV', 10009282);
 
 -- Enrich the v2 row (20050010) — all values fit the narrowest column
 -- (varchar(3) for *_ind cols, varchar(10) for adi_ehars_id /

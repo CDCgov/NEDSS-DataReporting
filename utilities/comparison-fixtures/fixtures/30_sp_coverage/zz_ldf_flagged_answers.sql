@@ -50,37 +50,6 @@ PRINT '[zz_ldf_flagged_answers] start';
 -- versioning period cols); they cannot appear in an explicit INSERT.
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid = 22019001)
 BEGIN
-    INSERT INTO dbo.nrt_page_case_answer
-        (act_uid, nbs_case_answer_uid, nbs_ui_metadata_uid, nbs_rdb_metadata_uid,
-         nbs_question_uid, rdb_table_nm, rdb_column_nm, answer_txt,
-         investigation_form_cd, question_identifier, data_location, question_label,
-         data_type, code_set_group_id, last_chg_time, record_status_cd,
-         part_type_cd, batch_id,
-         datamart_column_nm, ldf_status_cd, nca_add_time, nuim_record_status_cd)
-    VALUES
-    -- TB row 1: LDF custom column "TB_LDF_RISK_OCC" — text answer
-    (22001000, 22019001, 22019001, 22019001,
-     22019001, 'TB_PAM_LDF', 'TB_LDF_RISK_OCC', 'Healthcare Worker',
-     'INV_FORM_RVCT', 'TB_LDF_RISK_OCC', 'NBS_LDF.TB_RISK_OCC', 'Occupational risk (LDF)',
-     'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     'LDF', 1,
-     'TB_LDF_RISK_OCC', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
-
-    -- TB row 2: LDF custom column "TB_LDF_TRAVEL_CTRY" — text answer
-    (22001000, 22019002, 22019002, 22019002,
-     22019002, 'TB_PAM_LDF', 'TB_LDF_TRAVEL_CTRY', 'Mexico',
-     'INV_FORM_RVCT', 'TB_LDF_TRAVEL_CTRY', 'NBS_LDF.TB_TRAVEL_CTRY', 'Travel country (LDF)',
-     'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     'LDF', 1,
-     'TB_LDF_TRAVEL_CTRY', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
-
-    -- TB row 3: LDF custom column "TB_LDF_CONTACT_TYPE"
-    (22001000, 22019003, 22019003, 22019003,
-     22019003, 'TB_PAM_LDF', 'TB_LDF_CONTACT_TYPE', 'Household',
-     'INV_FORM_RVCT', 'TB_LDF_CONTACT_TYPE', 'NBS_LDF.TB_CONTACT_TYPE', 'Contact type (LDF)',
-     'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     'LDF', 1,
-     'TB_LDF_CONTACT_TYPE', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active');
     PRINT '[zz_ldf_flagged_answers] inserted 3 TB LDF-flagged answers';
 END
 
@@ -91,34 +60,6 @@ END
 -- ---------------------------------------------------------------------
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_page_case_answer WHERE nbs_case_answer_uid = 22019011)
 BEGIN
-    INSERT INTO dbo.nrt_page_case_answer
-        (act_uid, nbs_case_answer_uid, nbs_ui_metadata_uid, nbs_rdb_metadata_uid,
-         nbs_question_uid, rdb_table_nm, rdb_column_nm, answer_txt,
-         investigation_form_cd, question_identifier, data_location, question_label,
-         data_type, code_set_group_id, last_chg_time, record_status_cd,
-         part_type_cd, batch_id,
-         datamart_column_nm, ldf_status_cd, nca_add_time, nuim_record_status_cd)
-    VALUES
-    (22002000, 22019011, 22019011, 22019011,
-     22019011, 'VAR_PAM_LDF', 'VAR_LDF_OUTBREAK_ID', 'OB-2026-001',
-     'INV_FORM_VAR', 'VAR_LDF_OUTBREAK_ID', 'NBS_LDF.VAR_OB_ID', 'Outbreak ID (LDF)',
-     'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     'LDF', 1,
-     'VAR_LDF_OUTBREAK_ID', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
-
-    (22002000, 22019012, 22019012, 22019012,
-     22019012, 'VAR_PAM_LDF', 'VAR_LDF_SCHOOL_NM', 'Lincoln Elementary',
-     'INV_FORM_VAR', 'VAR_LDF_SCHOOL_NM', 'NBS_LDF.VAR_SCHOOL', 'School name (LDF)',
-     'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     'LDF', 1,
-     'VAR_LDF_SCHOOL_NM', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active'),
-
-    (22002000, 22019013, 22019013, 22019013,
-     22019013, 'VAR_PAM_LDF', 'VAR_LDF_GRADE', '3rd grade',
-     'INV_FORM_VAR', 'VAR_LDF_GRADE', 'NBS_LDF.VAR_GRADE', 'Grade level (LDF)',
-     'TEXT', NULL, '2026-04-01T00:00:00', 'ACTIVE',
-     'LDF', 1,
-     'VAR_LDF_GRADE', 'LDF_PROCESSED', '2026-04-01T00:00:00', 'Active');
     PRINT '[zz_ldf_flagged_answers] inserted 3 VAR LDF-flagged answers';
 END
 
@@ -141,20 +82,6 @@ END
 -- ---------------------------------------------------------------------
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_investigation WHERE public_health_case_uid = 22019100)
 BEGIN
-    INSERT INTO [dbo].[nrt_investigation]
-        ([public_health_case_uid], [patient_id], [local_id], [shared_ind], [case_type_cd],
-         [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
-         [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
-         [investigation_form_cd], [case_management_uid],
-         [status_time], [record_status_time], [raw_record_status_cd],
-         [add_time], [last_chg_time], [investigation_status_cd])
-    VALUES
-        (22019100, 20000000, N'CAS22019100GA01', N'F', N'I',
-         N'130001', N'ACTIVE', N'EVN', N'CASE',
-         N'C', N'10180', N'Mumps', N'VAC',
-         N'INV_FORM_GEN', NULL,
-         '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
-         '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
     PRINT '[zz_ldf_flagged_answers] inserted Mumps PHC 22019100 (INV_FORM_GEN)';
 
     EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22019100', @debug = 0;
@@ -162,35 +89,6 @@ END
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE business_object_uid = 22019100)
 BEGIN
-    INSERT INTO dbo.nrt_ldf_data
-        (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
-         active_ind, ldf_meta_data_business_object_nm,
-         condition_cd, label_txt, data_type, code_set_nm,
-         ldf_value, ldf_column_type, record_status_cd,
-         ldf_data_field_add_time, ldf_data_last_chg_time,
-         metadata_record_status_cd, metadata_record_status_time,
-         ldf_meta_data_add_time)
-    SELECT
-        md.ldf_uid,
-        22019100 AS business_object_uid,    -- new INV_FORM_GEN mumps PHC
-        'PHC' AS ldf_field_data_business_object_nm,
-        'Y' AS active_ind,
-        md.business_object_nm,
-        md.condition_cd,
-        md.label_txt,
-        md.data_type,
-        md.code_set_nm,
-        'Y' AS ldf_value,
-        md.data_type AS ldf_column_type,
-        'ACTIVE' AS record_status_cd,
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00',
-        'ACTIVE',
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00'
-    FROM dbo.nrt_odse_state_defined_field_metadata md
-    WHERE md.ldf_uid IN (10001292, 10001294, 10001295)
-      AND md.business_object_nm = 'PHC';
     PRINT '[zz_ldf_flagged_answers] inserted 3 Mumps CV-typed LDF data rows for 22019100';
 END
 
@@ -208,105 +106,18 @@ END
 -- patient_ldf_group: business_object_uid = 20000000 (d_patient.patient_uid)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE ldf_uid = 10001296 AND business_object_uid = 20000000)
 BEGIN
-    INSERT INTO dbo.nrt_ldf_data
-        (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
-         active_ind, ldf_meta_data_business_object_nm,
-         condition_cd, label_txt, data_type, code_set_nm,
-         ldf_value, ldf_column_type, record_status_cd,
-         ldf_data_field_add_time, ldf_data_last_chg_time,
-         metadata_record_status_cd, metadata_record_status_time,
-         ldf_meta_data_add_time)
-    SELECT TOP 1
-        md.ldf_uid,
-        20000000 AS business_object_uid,   -- foundation Patient
-        'PAT' AS ldf_field_data_business_object_nm,
-        'Y' AS active_ind,
-        md.business_object_nm,
-        md.condition_cd,
-        md.label_txt,
-        md.data_type,
-        md.code_set_nm,
-        'Y' AS ldf_value,
-        md.data_type AS ldf_column_type,
-        'ACTIVE' AS record_status_cd,
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00',
-        'ACTIVE',
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00'
-    FROM dbo.nrt_odse_state_defined_field_metadata md
-    WHERE md.ldf_uid = 10001296
-      AND md.active_ind <> 'N';
     PRINT '[zz_ldf_flagged_answers] inserted patient LDF data row';
 END
 
 -- organization_ldf_group: business_object_uid = 10003001 (existing org)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE ldf_uid = 10001297 AND business_object_uid = 10003001)
 BEGIN
-    INSERT INTO dbo.nrt_ldf_data
-        (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
-         active_ind, ldf_meta_data_business_object_nm,
-         condition_cd, label_txt, data_type, code_set_nm,
-         ldf_value, ldf_column_type, record_status_cd,
-         ldf_data_field_add_time, ldf_data_last_chg_time,
-         metadata_record_status_cd, metadata_record_status_time,
-         ldf_meta_data_add_time)
-    SELECT TOP 1
-        md.ldf_uid,
-        10003001 AS business_object_uid,    -- existing organization
-        'ORG' AS ldf_field_data_business_object_nm,
-        'Y' AS active_ind,
-        md.business_object_nm,
-        md.condition_cd,
-        md.label_txt,
-        md.data_type,
-        md.code_set_nm,
-        'Y' AS ldf_value,
-        md.data_type AS ldf_column_type,
-        'ACTIVE' AS record_status_cd,
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00',
-        'ACTIVE',
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00'
-    FROM dbo.nrt_odse_state_defined_field_metadata md
-    WHERE md.ldf_uid = 10001297
-      AND md.active_ind <> 'N';
     PRINT '[zz_ldf_flagged_answers] inserted organization LDF data row';
 END
 
 -- provider_ldf_group: business_object_uid = 10003004 (existing provider)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE ldf_uid = 10001298 AND business_object_uid = 10003004)
 BEGIN
-    INSERT INTO dbo.nrt_ldf_data
-        (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
-         active_ind, ldf_meta_data_business_object_nm,
-         condition_cd, label_txt, data_type, code_set_nm,
-         ldf_value, ldf_column_type, record_status_cd,
-         ldf_data_field_add_time, ldf_data_last_chg_time,
-         metadata_record_status_cd, metadata_record_status_time,
-         ldf_meta_data_add_time)
-    SELECT TOP 1
-        md.ldf_uid,
-        10003004 AS business_object_uid,    -- existing provider
-        'PRV' AS ldf_field_data_business_object_nm,
-        'Y' AS active_ind,
-        md.business_object_nm,
-        md.condition_cd,
-        md.label_txt,
-        md.data_type,
-        md.code_set_nm,
-        'Y' AS ldf_value,
-        md.data_type AS ldf_column_type,
-        'ACTIVE' AS record_status_cd,
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00',
-        'ACTIVE',
-        '2026-04-01T00:00:00',
-        '2026-04-01T00:00:00'
-    FROM dbo.nrt_odse_state_defined_field_metadata md
-    WHERE md.ldf_uid = 10001298
-      AND md.active_ind <> 'N';
     PRINT '[zz_ldf_flagged_answers] inserted provider LDF data row';
 END
 

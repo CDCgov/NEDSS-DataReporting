@@ -82,69 +82,6 @@ DELETE FROM dbo.nrt_page_case_answer
  WHERE nbs_case_answer_uid BETWEEN 22010000 AND 22010999;
 
 BEGIN
-    INSERT INTO [dbo].[nrt_page_case_answer]
-        ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
-         [nbs_question_uid],
-         [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
-         [investigation_form_cd], [question_identifier], [data_location],
-         [code_set_group_id], [last_chg_time], [record_status_cd],
-         [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id],
-         [data_type], [question_group_seq_nbr], [block_nm],
-         [unit_value], [unit_type_cd], [part_type_cd])
-    VALUES
-        -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 1
-        -- both PART_TYPE_CD's, both pointing to v2 Place (max coverage).
-        (22006000, 22010001, 1, 22010001,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'1',
-         N'PG_Pertussis_Investigation', N'INV900',
-         N'NBS_Case_Answer.answer_txt', NULL,
-         '2026-04-01T00:00:00', N'ACTIVE',
-         NULL, NULL, 1, NULL,
-         N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
-        (22006000, 22010002, 1, 22010002,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'1',
-         N'PG_Pertussis_Investigation', N'INV901',
-         N'NBS_Case_Answer.answer_txt', NULL,
-         '2026-04-01T00:00:00', N'ACTIVE',
-         NULL, NULL, 1, NULL,
-         N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsSexOfPHC'),
-
-        -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 2
-        -- Hangout points to foundation Place (minimal coverage variant).
-        (22006000, 22010003, 1, 22010003,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20000030^20040000^', N'2',
-         N'PG_Pertussis_Investigation', N'INV902',
-         N'NBS_Case_Answer.answer_txt', NULL,
-         '2026-04-01T00:00:00', N'ACTIVE',
-         NULL, NULL, 1, NULL,
-         N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
-        (22006000, 22010004, 1, 22010004,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^', N'2',
-         N'PG_Pertussis_Investigation', N'INV903',
-         N'NBS_Case_Answer.answer_txt', NULL,
-         '2026-04-01T00:00:00', N'ACTIVE',
-         NULL, NULL, 1, NULL,
-         N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsSexOfPHC'),
-
-        -- ===== Pertussis PHC 22006000 — answer_group_seq_nbr 3
-        -- Both PART_TYPE_CD's pointing to v2 Place tele variant
-        -- (PLACE_LOCATOR_UID = '20040010^20040011^20040012').  This is
-        -- the only D_PLACE row that populates PLACE_PHONE / PLACE_EMAIL
-        -- / PLACE_PHONE_EXT / PLACE_TELE_LOCATOR_UID / PLACE_PHONE_COMMENTS.
-        (22006000, 22010005, 1, 22010005,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^20040012', N'3',
-         N'PG_Pertussis_Investigation', N'INV904',
-         N'NBS_Case_Answer.answer_txt', NULL,
-         '2026-04-01T00:00:00', N'ACTIVE',
-         NULL, NULL, 1, NULL,
-         N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsHangoutOfPHC'),
-        (22006000, 22010006, 1, 22010006,
-         N'NRT_PAGE_CASE_ANSWER', NULL, N'20040010^20040011^20040012', N'3',
-         N'PG_Pertussis_Investigation', N'INV905',
-         N'NBS_Case_Answer.answer_txt', NULL,
-         '2026-04-01T00:00:00', N'ACTIVE',
-         NULL, NULL, 1, NULL,
-         N'TEXT', 1, NULL, NULL, N'LITERAL', N'PlaceAsSexOfPHC');
 END;
 GO
 

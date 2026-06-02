@@ -103,23 +103,6 @@ DECLARE @hep_ldf_2      bigint = 22025112;
 -- ---------------------------------------------------------------------
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_odse_state_defined_field_metadata WHERE ldf_uid = @bmird_ldf_1)
 BEGIN
-    INSERT INTO dbo.nrt_odse_state_defined_field_metadata
-        (ldf_uid, active_ind, add_time, business_object_nm, class_cd, code_set_nm,
-         condition_cd, data_type, field_size, label_txt,
-         record_status_time, record_status_cd)
-    VALUES
-        (@bmird_ldf_1, 'Y', '2026-04-01', 'PHC', 'CDC', NULL,
-         @bmird_cond, 'ST', '100', 'BMIRD LDF Outbreak Name',
-         '2026-04-01', 'ACTIVE'),
-        (@bmird_ldf_2, 'Y', '2026-04-01', 'PHC', 'CDC', NULL,
-         @bmird_cond, 'ST', '100', 'BMIRD LDF Serotype',
-         '2026-04-01', 'ACTIVE'),
-        (@hep_ldf_1, 'Y', '2026-04-01', 'PHC', 'CDC', NULL,
-         @hep_cond, 'ST', '100', 'HEP LDF Risk Factor',
-         '2026-04-01', 'ACTIVE'),
-        (@hep_ldf_2, 'Y', '2026-04-01', 'PHC', 'CDC', NULL,
-         @hep_cond, 'ST', '100', 'HEP LDF Exposure Source',
-         '2026-04-01', 'ACTIVE');
     PRINT '[ldf_answers_bmird_hepatitis] inserted 4 custom LDF metadata rows';
 END
 
@@ -130,33 +113,6 @@ END
 -- ---------------------------------------------------------------------
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_ldf_data WHERE ldf_uid = @bmird_ldf_1 AND business_object_uid = @bmird_phc)
 BEGIN
-    INSERT INTO dbo.nrt_ldf_data
-        (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
-         active_ind, ldf_meta_data_business_object_nm,
-         condition_cd, label_txt, data_type, code_set_nm,
-         ldf_value, ldf_column_type, record_status_cd,
-         ldf_data_field_add_time, ldf_data_last_chg_time,
-         metadata_record_status_cd, metadata_record_status_time,
-         ldf_meta_data_add_time)
-    VALUES
-        -- BMIRD answers on PHC 22005000 (cd 11717)
-        (@bmird_ldf_1, @bmird_phc, 'PHC', 'Y', 'PHC',
-         @bmird_cond, 'BMIRD LDF Outbreak Name', 'ST', NULL,
-         'OB-BMIRD-2026-01', 'ST', 'ACTIVE',
-         '2026-04-01', '2026-04-01', 'ACTIVE', '2026-04-01', '2026-04-01'),
-        (@bmird_ldf_2, @bmird_phc, 'PHC', 'Y', 'PHC',
-         @bmird_cond, 'BMIRD LDF Serotype', 'ST', NULL,
-         '19A', 'ST', 'ACTIVE',
-         '2026-04-01', '2026-04-01', 'ACTIVE', '2026-04-01', '2026-04-01'),
-        -- HEP answers on PHC 22008500 (cd 10110)
-        (@hep_ldf_1, @hep_phc, 'PHC', 'Y', 'PHC',
-         @hep_cond, 'HEP LDF Risk Factor', 'ST', NULL,
-         'International Travel', 'ST', 'ACTIVE',
-         '2026-04-01', '2026-04-01', 'ACTIVE', '2026-04-01', '2026-04-01'),
-        (@hep_ldf_2, @hep_phc, 'PHC', 'Y', 'PHC',
-         @hep_cond, 'HEP LDF Exposure Source', 'ST', NULL,
-         'Restaurant', 'ST', 'ACTIVE',
-         '2026-04-01', '2026-04-01', 'ACTIVE', '2026-04-01', '2026-04-01');
     PRINT '[ldf_answers_bmird_hepatitis] inserted 4 nrt_ldf_data answer rows';
 END
 

@@ -84,8 +84,6 @@ WHERE patient_uid = 20000000;
 -- ---------------------------------------------------------------------
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_patient WHERE patient_uid = 22003000)
 BEGIN
-    INSERT INTO dbo.nrt_patient (patient_uid, age_reported_unit_cd, record_status, add_time)
-    VALUES (22003000, N'Y', N'ACTIVE', '2026-04-01T00:00:00');
 END
 ELSE
 BEGIN

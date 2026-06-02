@@ -204,41 +204,6 @@ GO
 --     same SP's #PHC_UIDS filter at line 152-154 (NOT-IN list of
 --     PG_HEP*/INV_FORM_*/etc.).
 -- ---------------------------------------------------------------------
-INSERT INTO [dbo].[nrt_investigation]
-    ([public_health_case_uid], [patient_id], [program_jurisdiction_oid],
-     [local_id], [shared_ind], [case_type_cd],
-     [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
-     [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
-     [investigation_form_cd], [case_management_uid],
-     [investigation_status_cd], [investigation_status],
-     [inv_case_status],
-     [status_time], [record_status_time], [raw_record_status_cd],
-     [add_user_id], [add_user_name], [add_time],
-     [last_chg_user_id], [last_chg_user_name], [last_chg_time],
-     [mmwr_week], [mmwr_year],
-     [nac_page_case_uid],
-     [outbreak_ind])
-VALUES
-    (22004000,                              -- public_health_case_uid
-     20000000,                              -- patient_id (foundation Patient, inline per bug-5b)
-     22004000,                              -- program_jurisdiction_oid
-     N'CAS22004000GA01',                    -- local_id
-     N'T',                                  -- shared_ind
-     N'I',                                  -- case_type_cd
-     N'130001',                             -- jurisdiction_cd (Fulton)
-     N'ACTIVE',                             -- record_status_cd
-     N'EVN', N'CASE',                       -- mood_cd, class_cd
-     N'C', N'10311', N'Syphilis, primary', N'STD',
-     N'PG_STD_Investigation',               -- investigation_form_cd
-     22004001,                              -- case_management_uid (matches case_management)
-     N'O', N'Open',
-     N'Confirmed',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
-     10009282, N'Foundation, Superuser', '2026-04-01T00:00:00',
-     10009282, N'Foundation, Superuser', '2026-04-01T00:00:00',
-     N'14', N'2026',
-     22004000,                              -- nac_page_case_uid
-     N'N');                                 -- outbreak_ind
 
 -- ---------------------------------------------------------------------
 -- nrt_investigation_case_management — the staging row that the
@@ -248,14 +213,6 @@ VALUES
 -- ---------------------------------------------------------------------
 -- refresh_datetime + max_datetime are GENERATED ALWAYS (system-period) cols
 -- on nrt_investigation_case_management — exclude from INSERT column list.
-INSERT INTO [dbo].[nrt_investigation_case_management]
-    ([public_health_case_uid], [case_management_uid],
-     [status_900], [ca_patient_intv_status],
-     [field_foll_up_ooj_outcome])
-VALUES
-    (22004000, 22004001,
-     N'C', N'INTV',
-     N'COMPLETED');
 
 -- ---------------------------------------------------------------------
 -- D_INV_HIV — one row. The std_hiv_datamart SP reads HIV_* columns
@@ -387,13 +344,6 @@ VALUES (22004000, 22004100);
 -- correct CONFIRMATION_METHOD_KEY (resolved from
 -- confirmation_method_cd='LD') and a non-NULL CONFIRMATION_DT.
 -- ---------------------------------------------------------------------
-INSERT INTO [dbo].[nrt_investigation_confirmation]
-    ([public_health_case_uid], [confirmation_method_cd],
-     [confirmation_method_desc_txt], [confirmation_method_time],
-     [batch_id])
-VALUES
-    (22004000, N'LD', N'Laboratory confirmed',
-     '2026-04-01T00:00:00', 1);
 
 GO
 

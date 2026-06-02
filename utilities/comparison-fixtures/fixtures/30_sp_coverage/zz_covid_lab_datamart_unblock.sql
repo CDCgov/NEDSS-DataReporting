@@ -106,41 +106,21 @@ GO
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
                WHERE loinc_cd = '94309-2' AND condition_cd = '11065')
 BEGIN
-    INSERT INTO dbo.nrt_srte_Loinc_condition
-        (loinc_cd, condition_cd, disease_nm, status_cd, status_time, effective_from_time)
-    VALUES
-        ('94309-2', '11065', '2019 Novel Coronavirus', 'A',
-         '2026-04-01T00:00:00', '2026-04-01T00:00:00');
 END;
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
                WHERE loinc_cd = '94500-6' AND condition_cd = '11065')
 BEGIN
-    INSERT INTO dbo.nrt_srte_Loinc_condition
-        (loinc_cd, condition_cd, disease_nm, status_cd, status_time, effective_from_time)
-    VALUES
-        ('94500-6', '11065', '2019 Novel Coronavirus', 'A',
-         '2026-04-01T00:00:00', '2026-04-01T00:00:00');
 END;
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
                WHERE loinc_cd = '94531-1' AND condition_cd = '11065')
 BEGIN
-    INSERT INTO dbo.nrt_srte_Loinc_condition
-        (loinc_cd, condition_cd, disease_nm, status_cd, status_time, effective_from_time)
-    VALUES
-        ('94531-1', '11065', '2019 Novel Coronavirus', 'A',
-         '2026-04-01T00:00:00', '2026-04-01T00:00:00');
 END;
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_srte_Loinc_condition
                WHERE loinc_cd = '94533-7' AND condition_cd = '11065')
 BEGIN
-    INSERT INTO dbo.nrt_srte_Loinc_condition
-        (loinc_cd, condition_cd, disease_nm, status_cd, status_time, effective_from_time)
-    VALUES
-        ('94533-7', '11065', '2019 Novel Coronavirus', 'A',
-         '2026-04-01T00:00:00', '2026-04-01T00:00:00');
 END;
 
 GO
@@ -341,150 +321,11 @@ DECLARE @covid_material_uid     bigint = 22022010;
 -- nrt_observation Order row (83-column footprint, matching Tier 1 Lab fixture)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation WHERE observation_uid = @covid_lab_order_uid)
 BEGIN
-    INSERT INTO dbo.nrt_observation
-        ( [observation_uid], [class_cd], [mood_cd], [act_uid]
-        , [cd_desc_txt], [record_status_cd], [jurisdiction_cd]
-        , [program_jurisdiction_oid], [prog_area_cd], [pregnant_ind_cd]
-        , [local_id], [activity_to_time], [effective_from_time]
-        , [rpt_to_state_time], [electronic_ind], [version_ctrl_nbr]
-        , [ordering_person_id], [patient_id], [result_observation_uid]
-        , [author_organization_id], [ordering_organization_id]
-        , [performing_organization_id], [material_id], [obs_domain_cd_st_1]
-        , [processing_decision_cd], [cd], [shared_ind]
-        , [add_user_id], [add_user_name], [add_time]
-        , [last_chg_user_id], [last_chg_user_name], [last_chg_time]
-        , [ctrl_cd_display_form], [status_cd], [cd_system_cd]
-        , [cd_system_desc_txt], [ctrl_cd_user_defined_1], [alt_cd]
-        , [alt_cd_desc_txt], [alt_cd_system_cd], [alt_cd_system_desc_txt]
-        , [method_cd], [method_desc_txt], [target_site_cd]
-        , [target_site_desc_txt], [txt], [interpretation_cd]
-        , [interpretation_desc_txt], [report_observation_uid]
-        , [followup_observation_uid], [report_refr_uid], [report_sprt_uid]
-        , [morb_physician_id], [morb_reporter_id], [transcriptionist_id]
-        , [transcriptionist_val], [transcriptionist_first_nm]
-        , [transcriptionist_last_nm], [assistant_interpreter_id]
-        , [assistant_interpreter_val], [assistant_interpreter_first_nm]
-        , [assistant_interpreter_last_nm], [result_interpreter_id]
-        , [specimen_collector_id], [copy_to_provider_id]
-        , [lab_test_technician_id], [health_care_id], [morb_hosp_reporter_id]
-        , [accession_number], [morb_hosp_id]
-        , [transcriptionist_id_assign_auth]
-        , [transcriptionist_auth_type], [assistant_interpreter_id_assign_auth]
-        , [assistant_interpreter_auth_type], [priority_cd]
-        , [record_status_time], [status_time], [batch_id]
-        , [associated_phc_uids], [activity_from_time]
-        , [device_instance_id_1], [device_instance_id_2]
-        )
-    VALUES
-        -- COVID Lab Order (UID 22022000)
-        ( @covid_lab_order_uid, N'OBS', N'EVN', @covid_lab_order_uid
-        , N'SARS coronavirus 2 RNA [Presence] in Respiratory specimen by NAA with probe detection', N'PROCESSED', N'130001'
-        , 22022000, N'COV', N'N'
-        , N'OBS22022000GA01', '2026-04-10T08:00:00', '2026-04-09T18:00:00'
-        , '2026-04-10T10:00:00', N'Y', 1
-        , CAST(@foundation_provider_uid AS nvarchar(50)), @foundation_patient_uid
-                                      , CAST(@covid_lab_result_uid AS nvarchar(50))
-        , @foundation_org_uid, @foundation_org_uid
-        , @foundation_org_uid, @covid_material_uid, N'Order'
-        , N'AC', N'94309-2', N'T'
-        , @superuser_id, N'Foundation, Superuser', '2026-04-10T00:00:00'
-        , @superuser_id, N'Foundation, Superuser', '2026-04-10T00:00:00'
-        , N'LabReport', N'A', N'2.16.840.1.113883.6.1'
-        , N'LN', N'UDV1', N'SARS-COV-2-RNA'
-        , N'SARS-CoV-2 RNA NAA', N'L', N'Local'
-        , N'RT-PCR**Roche-Cobas-6800', N'Real-Time Reverse Transcriptase PCR', N'NASOPH'
-        , N'Nasopharyngeal', N'Tier 3 COVID Lab Order — SARS-CoV-2 RNA NAA.', NULL
-        , NULL, @covid_lab_order_uid
-        , NULL, @covid_lab_order_uid
-                                                                , @covid_lab_order_uid
-        , @foundation_provider_uid, @foundation_provider_uid, @foundation_provider_uid
-        , N'TRX-COV', N'Tara'
-        , N'COVTranscriber', @foundation_provider_uid
-        , N'AIN-COV', N'Cameron'
-        , N'COVInterpreter', @foundation_provider_uid
-        , @foundation_provider_uid, @foundation_provider_uid
-        , @foundation_provider_uid, @foundation_org_uid, @foundation_provider_uid
-        , N'ACC-COVID-22022000', @foundation_org_uid
-        , N'2.16.840.1.113883.4.6'
-        , N'NPI', N'2.16.840.1.113883.4.6'
-        , N'NPI', N'R'
-        , '2026-04-10T00:00:00', '2026-04-10T00:00:00', NULL
-        , N'22003000', '2026-04-09T18:00:00'
-        , N'DEV-COBAS-6800', N'DEV-SN-A1B2'
-        );
 END;
 
 -- nrt_observation Result row
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation WHERE observation_uid = @covid_lab_result_uid)
 BEGIN
-    INSERT INTO dbo.nrt_observation
-        ( [observation_uid], [class_cd], [mood_cd], [act_uid]
-        , [cd_desc_txt], [record_status_cd], [jurisdiction_cd]
-        , [program_jurisdiction_oid], [prog_area_cd], [pregnant_ind_cd]
-        , [local_id], [activity_to_time], [effective_from_time]
-        , [rpt_to_state_time], [electronic_ind], [version_ctrl_nbr]
-        , [ordering_person_id], [patient_id], [result_observation_uid]
-        , [author_organization_id], [ordering_organization_id]
-        , [performing_organization_id], [material_id], [obs_domain_cd_st_1]
-        , [processing_decision_cd], [cd], [shared_ind]
-        , [add_user_id], [add_user_name], [add_time]
-        , [last_chg_user_id], [last_chg_user_name], [last_chg_time]
-        , [ctrl_cd_display_form], [status_cd], [cd_system_cd]
-        , [cd_system_desc_txt], [ctrl_cd_user_defined_1], [alt_cd]
-        , [alt_cd_desc_txt], [alt_cd_system_cd], [alt_cd_system_desc_txt]
-        , [method_cd], [method_desc_txt], [target_site_cd]
-        , [target_site_desc_txt], [txt], [interpretation_cd]
-        , [interpretation_desc_txt], [report_observation_uid]
-        , [followup_observation_uid], [report_refr_uid], [report_sprt_uid]
-        , [morb_physician_id], [morb_reporter_id], [transcriptionist_id]
-        , [transcriptionist_val], [transcriptionist_first_nm]
-        , [transcriptionist_last_nm], [assistant_interpreter_id]
-        , [assistant_interpreter_val], [assistant_interpreter_first_nm]
-        , [assistant_interpreter_last_nm], [result_interpreter_id]
-        , [specimen_collector_id], [copy_to_provider_id]
-        , [lab_test_technician_id], [health_care_id], [morb_hosp_reporter_id]
-        , [accession_number], [morb_hosp_id]
-        , [transcriptionist_id_assign_auth]
-        , [transcriptionist_auth_type], [assistant_interpreter_id_assign_auth]
-        , [assistant_interpreter_auth_type], [priority_cd]
-        , [record_status_time], [status_time], [batch_id]
-        , [associated_phc_uids], [activity_from_time]
-        , [device_instance_id_1], [device_instance_id_2]
-        )
-    VALUES
-        ( @covid_lab_result_uid, N'OBS', N'EVN', @covid_lab_result_uid
-        , N'SARS coronavirus 2 RNA [Presence] in Respiratory specimen by NAA with probe detection', N'PROCESSED', N'130001'
-        , 22022001, N'COV', NULL
-        , N'OBS22022001GA01', '2026-04-10T08:30:00', '2026-04-09T18:00:00'
-        , '2026-04-10T10:00:00', N'Y', 1
-        , CAST(@foundation_provider_uid AS nvarchar(50)), @foundation_patient_uid, NULL
-        , @foundation_org_uid, @foundation_org_uid
-        , @foundation_org_uid, NULL, N'Result'
-        , NULL, N'94309-2', N'T'
-        , @superuser_id, N'Foundation, Superuser', '2026-04-10T08:30:00'
-        , @superuser_id, N'Foundation, Superuser', '2026-04-10T08:30:00'
-        , N'LabReport', N'A', N'2.16.840.1.113883.6.1'
-        , N'LN', NULL, NULL
-        , NULL, NULL, NULL
-        , N'RT-PCR**Roche-Cobas-6800', N'Real-Time Reverse Transcriptase PCR', NULL
-        , NULL, NULL, N'A'
-        , N'Abnormal', @covid_lab_order_uid
-        , NULL, @covid_lab_order_uid, @covid_lab_order_uid
-        , NULL, NULL, NULL
-        , NULL, NULL
-        , NULL, NULL
-        , NULL, NULL
-        , NULL, @foundation_provider_uid
-        , NULL, NULL
-        , NULL, NULL, NULL
-        , NULL, NULL
-        , NULL
-        , NULL, NULL
-        , NULL, NULL
-        , '2026-04-10T08:30:00', '2026-04-10T08:30:00', NULL
-        , N'22003000', '2026-04-09T18:00:00'
-        , N'DEV-COBAS-6800', N'DEV-SN-A1B2'
-        );
 END;
 
 -- nrt_observation_txt: result text (FT) + comment (N) for Result
@@ -492,67 +333,29 @@ END;
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
                WHERE observation_uid = @covid_lab_result_uid AND ovt_seq = 1)
 BEGIN
-    INSERT INTO dbo.nrt_observation_txt
-        (observation_uid, ovt_seq, ovt_txt_type_cd, ovt_value_txt, batch_id)
-    VALUES
-        (@covid_lab_result_uid, 1, N'O',
-         N'SARS-CoV-2 RNA DETECTED. Positive for SARS-CoV-2.', NULL);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
                WHERE observation_uid = @covid_lab_result_uid AND ovt_seq = 2)
 BEGIN
-    INSERT INTO dbo.nrt_observation_txt
-        (observation_uid, ovt_seq, ovt_txt_type_cd, ovt_value_txt, batch_id)
-    VALUES
-        (@covid_lab_result_uid, 2, N'N',
-         N'Result confirmed by retest. Patient notified.', NULL);
 END;
 
 -- nrt_observation_coded: coded result (Detected / Positive)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_coded
                WHERE observation_uid = @covid_lab_result_uid)
 BEGIN
-    INSERT INTO dbo.nrt_observation_coded
-        (observation_uid, ovc_code, ovc_code_system_cd, ovc_code_system_desc_txt,
-         ovc_display_name, ovc_alt_cd, ovc_alt_cd_desc_txt, ovc_alt_cd_system_cd,
-         ovc_alt_cd_system_desc_txt, batch_id)
-    VALUES
-        (@covid_lab_result_uid, N'260373001', N'2.16.840.1.113883.6.96',
-         N'SCT', N'Detected',
-         N'POS', N'Positive', N'L', N'Local', NULL);
 END;
 
 -- nrt_observation_numeric: numeric result
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_numeric
                WHERE observation_uid = @covid_lab_result_uid)
 BEGIN
-    INSERT INTO dbo.nrt_observation_numeric
-        (observation_uid, ovn_high_range, ovn_low_range,
-         ovn_comparator_cd_1, ovn_numeric_value_1, ovn_numeric_value_2,
-         ovn_numeric_unit_cd, ovn_separator_cd, ovn_seq, batch_id)
-    VALUES
-        (@covid_lab_result_uid, N'40.00', N'0.00', N'<',
-         25.0, 35.0, N'Ct', N'-', 1, NULL);
 END;
 
 -- nrt_observation_material: specimen material on Order
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_material
                WHERE act_uid = @covid_lab_order_uid)
 BEGIN
-    INSERT INTO dbo.nrt_observation_material
-        (act_uid, type_cd, material_id, subject_class_cd,
-         record_status, type_desc_txt, last_chg_time,
-         material_cd, material_nm, material_details,
-         material_collection_vol, material_collection_vol_unit,
-         material_desc, risk_cd, risk_desc_txt)
-    VALUES
-        (@covid_lab_order_uid, N'SPC', @covid_material_uid, N'MAT',
-         N'ACTIVE', N'Specimen', '2026-04-10T00:00:00',
-         N'258500001', N'Nasopharyngeal swab',
-         N'Nasopharyngeal swab, viral transport medium, refrigerated',
-         N'2', N'mL',
-         N'Nasopharyngeal specimen', N'B', N'Biohazard');
 END;
 
 GO
@@ -598,34 +401,6 @@ DECLARE @covid_lab_order_uid    bigint = 22022000;
 -- We use a minimal 12-column INSERT (vs the 83 the Tier 1 lab uses) —
 -- the SP only reads obs_domain_cd_st_1, cd, report_observation_uid, and
 -- batch_id from the AOE rows. Other cols default to NULL.
-INSERT INTO dbo.nrt_observation
-    ( [observation_uid], [class_cd], [mood_cd], [act_uid]
-    , [cd], [obs_domain_cd_st_1], [patient_id], [record_status_cd]
-    , [add_user_id], [add_time], [last_chg_time], [report_observation_uid]
-    , [version_ctrl_nbr], [electronic_ind], [shared_ind], [prog_area_cd]
-    , [jurisdiction_cd], [status_cd], [record_status_time], [status_time]
-    )
-SELECT
-    src.uid, N'OBS', N'EVN', src.uid,
-    src.cd, N'Result', @foundation_patient_uid, N'PROCESSED',
-    @superuser_id, '2026-04-10T08:30:00', '2026-04-10T08:30:00',
-    CAST(@covid_lab_order_uid AS nvarchar(50)),
-    1, N'Y', N'T', N'COV',
-    N'130001', N'A', '2026-04-10T08:30:00', '2026-04-10T08:30:00'
-FROM (VALUES
-    (CAST(22022100 AS bigint), N'95417-2'),  -- FIRST_TEST
-    (CAST(22022101 AS bigint), N'95418-0'),  -- EMPLOYED_IN_HEALTHCARE
-    (CAST(22022102 AS bigint), N'95419-8'),  -- SYMPTOMATIC_FOR_DISEASE
-    (CAST(22022103 AS bigint), N'77974-4'),  -- HOSPITALIZED
-    (CAST(22022104 AS bigint), N'95420-6'),  -- ICU
-    (CAST(22022105 AS bigint), N'95421-4'),  -- RESIDENT_CONGREGATE_SETTING
-    (CAST(22022106 AS bigint), N'82810-3'),  -- PREGNANT
-    (CAST(22022107 AS bigint), N'65222-2'),  -- ILLNESS_ONSET_DATE
-    (CAST(22022108 AS bigint), N'30525-0')   -- PATIENT_AGE
-) AS src(uid, cd)
-WHERE NOT EXISTS (
-    SELECT 1 FROM dbo.nrt_observation o WHERE o.observation_uid = src.uid
-);
 
 -- act parents for AOE observations (NBS_ODSE FK reference if act is FK).
 -- nrt_observation does NOT FK to act in RDB_MODERN, so this is optional.
@@ -634,39 +409,17 @@ WHERE NOT EXISTS (
 
 -- Coded answers for the 6 YNU AOE observations (Y for FIRST_TEST,
 -- HOSPITALIZED, SYMPTOMATIC; N for EMPLOYED_IN_HEALTHCARE, ICU, RCS).
-INSERT INTO dbo.nrt_observation_coded
-    (observation_uid, ovc_code, ovc_code_system_cd,
-     ovc_code_system_desc_txt, ovc_display_name, batch_id)
-SELECT src.uid, src.code, N'2.16.840.1.113883.6.96', N'SCT', src.display, NULL
-FROM (VALUES
-    (CAST(22022100 AS bigint), N'Y', N'Yes'),
-    (CAST(22022101 AS bigint), N'N', N'No'),
-    (CAST(22022102 AS bigint), N'Y', N'Yes'),
-    (CAST(22022103 AS bigint), N'Y', N'Yes'),
-    (CAST(22022104 AS bigint), N'N', N'No'),
-    (CAST(22022105 AS bigint), N'N', N'No'),
-    (CAST(22022106 AS bigint), N'60001007', N'Not Pregnant')
-) AS src(uid, code, display)
-WHERE NOT EXISTS (
-    SELECT 1 FROM dbo.nrt_observation_coded c WHERE c.observation_uid = src.uid
-);
 
 -- Txt answer for ILLNESS_ONSET_DATE (22022107)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_txt
                WHERE observation_uid = 22022107)
 BEGIN
-    INSERT INTO dbo.nrt_observation_txt
-        (observation_uid, ovt_seq, ovt_txt_type_cd, ovt_value_txt, batch_id)
-    VALUES (22022107, 1, NULL, N'2026-04-05', NULL);
 END;
 
 -- Numeric answer for PATIENT_AGE (22022108)
 IF NOT EXISTS (SELECT 1 FROM dbo.nrt_observation_numeric
                WHERE observation_uid = 22022108)
 BEGIN
-    INSERT INTO dbo.nrt_observation_numeric
-        (observation_uid, ovn_numeric_value_1, ovn_numeric_unit_cd, ovn_seq, batch_id)
-    VALUES (22022108, 35.0, N'a', 1, NULL);
 END;
 
 GO

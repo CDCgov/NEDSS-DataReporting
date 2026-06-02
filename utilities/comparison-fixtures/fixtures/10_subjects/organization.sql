@@ -258,40 +258,5 @@ GO
 USE [RDB_MODERN];
 GO
 
-INSERT INTO [dbo].[nrt_organization]
-    ([organization_uid], [local_id], [record_status],
-     [organization_name], [general_comments], [quick_code],
-     [stand_ind_class], [facility_id], [facility_id_auth],
-     [street_address_1], [street_address_2], [city], [state], [state_code], [zip],
-     [county], [county_code], [country], [country_code], [address_comments],
-     [phone_work], [phone_ext_work], [email], [phone_comments], [fax],
-     [entry_method],
-     [add_user_id], [add_user_name], [add_time],
-     [last_chg_user_id], [last_chg_user_name], [last_chg_time])
-VALUES
--- Foundation Organization (UID 20000020): minimal but valid row. Mirrors
--- the foundation ODSE row enriched above. Several optional columns left
--- NULL on purpose to exercise the SP's blank/null-handling branches in
--- the INSERT SELECT (lines 251-267).
-    (20000020, N'ORG20000020GA01', N'ACTIVE',
-     N'Foundation Organization', NULL, NULL,
-     NULL, N'11D2030855', N'CLIA (CMS)',
-     N'300 Organization Boulevard', NULL, N'Atlanta', N'Georgia', N'13', N'30303',
-     N'Fulton County', N'13121', N'United States', N'840', N'Organization work address',
-     N'404-555-0300', NULL, NULL, N'Organization work phone', N'404-555-0399',
-     N'ELECTRONIC',
-     10009282, N'Kent, Ariella', '2026-04-01T00:00:00',
-     10009282, N'Kent, Ariella', '2026-04-01T00:00:00'),
--- v2 Organization (UID 20030010): every column populated to maximize
--- D_ORGANIZATION coverage.
-    (20030010, N'ORG20030010GA01', N'ACTIVE',
-     N'Variant Hospital', N'Tier 1 variant organization — exercises every D_ORGANIZATION column.', N'V2QUICK',
-     N'General Medical and Surgical Hospitals', N'22D9999999', N'CLIA (CMS)',
-     N'3010 Variant Hospital Way', N'Building B', N'Atlanta', N'Georgia', N'13', N'30303',
-     N'Fulton County', N'13121', N'United States', N'840', N'v2 Organization work address',
-     N'404-555-3010', N'8765', N'variant.org@nbs.test', N'v2 Organization work phone', N'404-555-3099',
-     N'ELECTRONIC',
-     10009282, N'Kent, Ariella', '2026-04-01T00:00:00',
-     10009282, N'Kent, Ariella', '2026-04-01T00:00:00');
 
 GO

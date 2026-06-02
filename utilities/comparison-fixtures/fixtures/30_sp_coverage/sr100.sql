@@ -74,31 +74,6 @@ DECLARE @sr100_patient_uid    bigint = 20000000;  -- foundation Patient (read-on
 --    nrt_srte_state_county_code_value so SR100's INNER JOIN resolves.
 --    cd='10470' (Cholera) — present in RDB_MODERN.dbo.condition.
 -- =====================================================================
-INSERT INTO [dbo].[nrt_investigation]
-    ([public_health_case_uid], [patient_id], [local_id], [shared_ind], [case_type_cd],
-     [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
-     [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
-     [investigation_form_cd], [case_management_uid],
-     [status_time], [record_status_time], [raw_record_status_cd],
-     [add_time], [last_chg_time], [investigation_status_cd],
-     [rpt_cnty_cd], [add_user_id], [last_chg_user_id],
-     [add_user_name], [last_chg_user_name],
-     [mmwr_week], [mmwr_year], [rpt_to_state_time])
-VALUES
-    (@sr100_phc_uid, @sr100_patient_uid, N'CAS22024000GA01', N'T', N'S',
-     N'130001', N'ACTIVE', N'EVN', N'CASE',
-     N'C', N'10470', N'Cholera', N'FOOD',
-     N'INV_FORM_GEN', NULL,
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O',
-     N'13121', @superuser_id, @superuser_id,
-     N'SR100Loader, Fixture', N'SR100Loader, Fixture',
-     -- mmwr_week / mmwr_year feed INVESTIGATION.CASE_RPT_MMWR_WK / _YR ->
-     -- SR100.MMWRWK / MMWRYR (both NOT NULL in SR100, no COALESCE in the SP).
-     -- rpt_to_state_time feeds INVESTIGATION.EARLIEST_RPT_TO_STATE_DT, which
-     -- SR100 joins to RDB_DATE (RD1) to populate DATE_REPORTED / MONTH_REPORTED
-     -- (DATE_REPORTED is NOT NULL in SR100). 2026-04-01 exists in RDB_DATE.
-     N'14', N'2026', '2026-04-01T00:00:00');
 
 EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22024000', @debug = 0;
 
@@ -107,31 +82,10 @@ EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22024000', @debug = 0;
 --    SUM105 (text). Drives SUMMARY_REPORT_CASE via
 --    sp_summary_report_case_postprocessing.
 -- =====================================================================
-INSERT INTO [dbo].[nrt_observation]
-    ([observation_uid], [class_cd], [mood_cd], [cd], [cd_desc_txt],
-     [record_status_cd], [obs_domain_cd_st_1], [version_ctrl_nbr],
-     [add_user_id], [add_time], [last_chg_user_id], [last_chg_time])
-VALUES
-    (@sr100_obs_sum103, N'OBS', N'EVN', N'SUM103', N'Summary case source',   N'ACTIVE', N'Result', 1, @superuser_id, '2026-04-01T00:00:00', @superuser_id, '2026-04-01T00:00:00'),
-    (@sr100_obs_sum104, N'OBS', N'EVN', N'SUM104', N'Summary case count',    N'ACTIVE', N'Result', 1, @superuser_id, '2026-04-01T00:00:00', @superuser_id, '2026-04-01T00:00:00'),
-    (@sr100_obs_sum105, N'OBS', N'EVN', N'SUM105', N'Summary case comments', N'ACTIVE', N'Result', 1, @superuser_id, '2026-04-01T00:00:00', @superuser_id, '2026-04-01T00:00:00');
 
-INSERT INTO [dbo].[nrt_investigation_observation]
-    ([public_health_case_uid], [observation_id], [root_type_cd],
-     [branch_id], [branch_type_cd], [batch_id])
-VALUES
-    (@sr100_phc_uid, @sr100_obs_sum103, N'SummaryForm', @sr100_obs_sum103, N'InvFrmQ', NULL),
-    (@sr100_phc_uid, @sr100_obs_sum104, N'SummaryForm', @sr100_obs_sum104, N'InvFrmQ', NULL),
-    (@sr100_phc_uid, @sr100_obs_sum105, N'SummaryForm', @sr100_obs_sum105, N'InvFrmQ', NULL);
 
-INSERT INTO [dbo].[nrt_observation_coded] ([observation_uid], [ovc_code], [batch_id]) VALUES
-    (@sr100_obs_sum103, N'PHC_LOCAL', NULL);
 
-INSERT INTO [dbo].[nrt_observation_numeric] ([observation_uid], [ovn_seq], [ovn_numeric_value_1], [batch_id]) VALUES
-    (@sr100_obs_sum104, 1, 17, NULL);
 
-INSERT INTO [dbo].[nrt_observation_txt] ([observation_uid], [ovt_seq], [ovt_value_txt], [batch_id]) VALUES
-    (@sr100_obs_sum105, 1, N'17 cases of Cholera reported, week 14 2026.', NULL);
 
 -- =====================================================================
 -- 3) Tail-EXEC the dependency chain for SR100, in dependency order:

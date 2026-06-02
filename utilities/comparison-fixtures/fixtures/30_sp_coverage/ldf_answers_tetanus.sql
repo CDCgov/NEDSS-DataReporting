@@ -28,56 +28,12 @@ USE [RDB_MODERN];
 -- patient_id = 20000000 (foundation Patient) so the downstream Datamart
 -- chain doesn't drop the row via the sentinel-key cascade —
 -- see fixtures/10_subjects/investigation.sql for the convention.
-INSERT INTO [dbo].[nrt_investigation]
-    ([public_health_case_uid], [patient_id], [local_id], [shared_ind], [case_type_cd],
-     [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
-     [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
-     [investigation_form_cd], [case_management_uid],
-     [status_time], [record_status_time], [raw_record_status_cd],
-     [add_time], [last_chg_time], [investigation_status_cd])
-VALUES
-    (22000200, 20000000, N'CAS22000200GA01', N'F', N'I',
-     N'130001', N'ACTIVE', N'EVN', N'CASE',
-     N'C', N'10210', N'Tetanus', N'VAC',
-     N'INV_FORM_GEN', NULL,
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'O');
 
 EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22000200', @debug = 0;
 
 -- Author nrt_ldf_data answer rows for the first 5 Tetanus LDFs.
 -- Pulls ldf_uid + ldf_meta_data fields from nrt_odse_state_defined_field_metadata
 -- so we don't have to hard-code UIDs (the baseline LDF UIDs may shift).
-INSERT INTO [dbo].[nrt_ldf_data]
-    (ldf_uid, business_object_uid, ldf_field_data_business_object_nm,
-     active_ind, ldf_meta_data_business_object_nm,
-     condition_cd, label_txt, data_type, code_set_nm,
-     ldf_value, ldf_column_type, record_status_cd,
-     ldf_data_field_add_time, ldf_data_last_chg_time,
-     metadata_record_status_cd, metadata_record_status_time,
-     ldf_meta_data_add_time)
-SELECT TOP 5
-    md.ldf_uid,
-    22000200 AS business_object_uid,    -- Tetanus Investigation
-    'PHC' AS ldf_field_data_business_object_nm,
-    'Y' AS active_ind,
-    md.business_object_nm,
-    md.condition_cd,
-    md.label_txt,
-    md.data_type,
-    md.code_set_nm,
-    'Y' AS ldf_value,                    -- generic positive answer
-    md.data_type AS ldf_column_type,
-    'ACTIVE' AS record_status_cd,
-    '2026-04-01T00:00:00' AS ldf_data_field_add_time,
-    '2026-04-01T00:00:00' AS ldf_data_last_chg_time,
-    'ACTIVE' AS metadata_record_status_cd,  -- LDF_DATA.record_status_cd is varchar(8); 'LDF_PROCESSED' (13) would truncate. RTR bug.
-    '2026-04-01T00:00:00' AS metadata_record_status_time,
-    '2026-04-01T00:00:00' AS ldf_meta_data_add_time
-FROM dbo.nrt_odse_state_defined_field_metadata md
-WHERE md.business_object_nm = 'PHC'
-  AND md.condition_cd = '10210'
-ORDER BY md.ldf_uid;
 
 -- Run the LDF chain
 DECLARE @ldf_uids nvarchar(max);

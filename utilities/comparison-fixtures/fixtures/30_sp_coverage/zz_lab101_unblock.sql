@@ -163,12 +163,6 @@ BEGIN
         SET @i += 1;
     END;
 
-    INSERT INTO dbo.nrt_observation
-        (observation_uid, version_ctrl_nbr, cd, class_cd, local_id,
-         followup_observation_uid, add_time)
-    VALUES
-        (22029500, 1, N'CULT', N'OBS', N'OBS22029400GA01',
-         @csv, '2026-04-16T11:00:00');
 
     -- 35 child observations: cd = LAB329a, LAB330..LAB363.
     -- (LAB329a is special-cased; the rest are LAB<330+n>.)
@@ -179,10 +173,6 @@ BEGIN
         DECLARE @cd varchar(20) =
             CASE WHEN @i = 0 THEN 'LAB329a'
                  ELSE 'LAB' + CAST(329 + @i AS varchar(10)) END;
-        INSERT INTO dbo.nrt_observation
-            (observation_uid, version_ctrl_nbr, cd, class_cd, local_id, add_time)
-        VALUES
-            (@child_uid, 1, @cd, N'OBS', N'OBS22029400GA01', '2026-04-16T11:00:00');
         SET @i += 1;
     END;
 END

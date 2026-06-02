@@ -105,14 +105,6 @@ INSERT INTO @ContactRecCols (col_nm) VALUES
     (N'CTT_SIZE_BUILD'),
     (N'CTT_OTHER_ID_INFO');
 
-INSERT INTO dbo.NRT_METADATA_COLUMNS (TABLE_NAME, RDB_COLUMN_NM, LAST_CHG_TIME, LAST_CHG_USER_ID)
-SELECT N'D_CONTACT_RECORD', c.col_nm, GETDATE(), 10009282
-FROM @ContactRecCols c
-WHERE NOT EXISTS (
-    SELECT 1 FROM dbo.NRT_METADATA_COLUMNS m
-    WHERE m.TABLE_NAME = 'D_CONTACT_RECORD'
-      AND m.RDB_COLUMN_NM = c.col_nm
-);
 GO
 
 -- ---------------------------------------------------------------------
@@ -142,14 +134,6 @@ INSERT INTO @ContactAnswers (rdb_column_nm, answer_val) VALUES
     (N'CTT_SIZE_BUILD',             N'Medium'),
     (N'CTT_OTHER_ID_INFO',          N'Tattoo on left forearm');
 
-INSERT INTO dbo.NRT_CONTACT_ANSWER (contact_uid, rdb_column_nm, answer_val, answer_code)
-SELECT 22011000, a.rdb_column_nm, a.answer_val, NULL
-FROM @ContactAnswers a
-WHERE NOT EXISTS (
-    SELECT 1 FROM dbo.NRT_CONTACT_ANSWER e
-    WHERE e.contact_uid = 22011000
-      AND e.rdb_column_nm = a.rdb_column_nm
-);
 GO
 
 -- ---------------------------------------------------------------------
