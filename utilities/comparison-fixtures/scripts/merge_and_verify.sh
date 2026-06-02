@@ -35,6 +35,14 @@ readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly FIXTURES_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 readonly NEDSS_DR_ROOT="$( cd "$FIXTURES_ROOT/../.." && pwd )"
 
+# DB serialization. This script resets the baseline with `docker compose down -v`,
+# which DROPS the database volume. That must never run concurrently with another
+# process touching the DB (a fixture apply, a coverage refresh, a parallel loop
+# agent). Acquire the shared db lock for the entire run (see db_lock.sh) so the
+# volume drop and the subsequent reload are mutually exclusive with every other
+# db_lock holder.
+source "$SCRIPT_DIR/db_lock.sh"
+
 readonly FOUNDATION_SQL="$FIXTURES_ROOT/fixtures/00_foundation/00_foundation.sql"
 readonly TIER_1_DIR="$FIXTURES_ROOT/fixtures/10_subjects"
 readonly TIER_2_DIR="$FIXTURES_ROOT/fixtures/20_links"
@@ -640,6 +648,14 @@ print_coverage_summary() {
 main() {
   log "merge_and_verify.sh — running full Merge contract sequence"
   log "fixtures root: $FIXTURES_ROOT"
+
+  # Hold the shared db lock for the whole run. With a full reset this guards the
+  # destructive `docker compose down -v` (volume drop); with --skip-reset it still
+  # guards the load mutations. Released on any exit (success, error, or signal).
+  local lock_who="merge_and_verify[$$]"
+  [[ $SKIP_RESET -eq 0 ]] && lock_who="$lock_who FULL-RESET(down -v)" || lock_who="$lock_who load-only"
+  acquire_db_lock "$lock_who" || { log "ERROR: could not acquire db lock; aborting"; exit 1; }
+  trap 'release_db_lock' EXIT
 
   if [[ $SKIP_RESET -eq 0 ]]; then
     reset_baseline
