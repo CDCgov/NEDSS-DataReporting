@@ -53,3 +53,31 @@ The faithful, pipeline-produced coverage of the current ODSE fixtures is ~14%. T
 figure was overwhelmingly shortcut-driven. Recovering faithful coverage is a substantial
 fixture-fidelity project (chiefly: datamart routing metadata + real ODSE chains), distinct
 from the mechanical shortcut removal (which is complete on this branch).
+
+## P1 datamart-routing — root cause (deeper than expected)
+
+Traced the routing: `sp_investigation_event` (run by the service per investigation) builds
+the event payload's datamart routing from the investigation's **`nbs_case_answer`** rows
+joined `nbs_question_uid → nbs_ui_metadata (nuim) → nbs_rdb_metadata (nrdbm)` to yield
+`rdb_table_nm` per answer (routine 056, lines ~467-567). The service routes to those
+page-builder tables (PostProcessingService.java:345-356, `pbCache` from `rdb_table_name_list`).
+
+Empirical (TB PHC 22001000, full pipeline run):
+- It HAS 186 ODSE `nbs_case_answer` rows; 215 join to `nbs_ui_metadata`.
+- BUT most map to `nbs_rdb_metadata_uid = NULL` → `rdb_table_nm = NULL`. Only **2** distinct
+  tables resolve (`D_INV_CLINICAL`, `D_INV_LAB_FINDING`).
+- The **TB case datamart is never reached** — `nrt_investigation.rdb_table_name_list` is NULL,
+  and the service ran only the routing-agnostic / HEP/STD datamarts (whose forms are in
+  `v_nrt_nbs_page`), not TB/COVID/VAR/BMIRD.
+- Baked metadata is rich and present (nbs_ui_metadata 386 rows for INV_FORM_RVCT;
+  nbs_rdb_metadata 8092 rows) — so the gap is NOT missing metadata, it's that the synthetic
+  answers don't use the `nbs_question_uid`s that map through that metadata to datamart columns.
+
+**Conclusion:** faithful datamart coverage requires the synthetic page answers to be authored
+against the real page-builder metadata graph (question_uid → ui_metadata → rdb_metadata →
+datamart column), not arbitrary/partial question_uids. The shortcut hid this by hand-authoring
+resolved `nrt_page_case_answer` rows and force-running datamart SPs. This is a substantial
+fixture-authoring effort (P2/P3 are similar fidelity work), not a one-line routing fix.
+
+Tight-loop aid added: `docker-compose.override.yaml` (untracked) sets FIXED_DELAY_ID=2000 /
+FIXED_DELAY_DM=3000 on the service so the CDC→nrt→SP drain completes in seconds for iteration.
