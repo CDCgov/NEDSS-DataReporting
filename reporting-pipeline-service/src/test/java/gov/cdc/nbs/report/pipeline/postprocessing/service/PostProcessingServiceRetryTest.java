@@ -85,11 +85,13 @@ class PostProcessingServiceRetryTest {
     String invTopic = "dummy_investigation";
     String invKey = "{\"payload\":{\"public_health_case_uid\":234}}";
     String invMsg =
-        "{\"payload\":{\"public_health_case_uid\":234, \"rdb_table_name_list\":\"D_INV_CLINICAL,D_INV_ADMINISTRATIVE\"}}";
+        "{\"payload\":{\"public_health_case_uid\":234,"
+            + " \"rdb_table_name_list\":\"D_INV_CLINICAL,D_INV_ADMINISTRATIVE\"}}";
     String obsTopic = "dummy_observation";
     String obsKey = "{\"payload\":{\"observation_uid\":567}}";
     String obsMsg =
-        "{\"payload\":{\"observation_uid\":567, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"LabReport\"}}";
+        "{\"payload\":{\"observation_uid\":567, \"obs_domain_cd_st_1\":"
+            + " \"Order\",\"ctrl_cd_display_form\": \"LabReport\"}}";
 
     String patientUid = "123";
 
@@ -233,8 +235,13 @@ class PostProcessingServiceRetryTest {
 
     Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
     assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
-    assertEquals(3, datamartProcessor.retryCache.get(batchId).size());
-    assertTrue(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+    assertEquals(1, datamartProcessor.retryCache.get(batchId).size());
+    assertFalse(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+    assertTrue(
+        datamartProcessor
+            .retryCache
+            .get(batchId)
+            .containsKey(Entity.HEPATITIS_DATAMART.getEntityName()));
 
     String dmEntity = "DM^" + Entity.HEPATITIS_DATAMART.getEntityName();
     datamartProcessor.processRetryCache();
