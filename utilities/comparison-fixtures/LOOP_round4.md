@@ -232,3 +232,39 @@ this way; the reserved 22052xxx block went unused.)
   heavy auto-IDENTITY observation inserts pushed IDENT_CURRENT past other fixtures' HARDCODED
   IDENTITY_INSERT obs UIDs -> those fixtures silently skipped. QUARANTINED zz_lab100_101_fill.sql
   (.identity-flood-regresses-obs-tables). Re-validating TB-fix + hepatitis#2 alone.
+
+## ===== LOOP WOUND DOWN (diminishing returns) — final summary =====
+**Result: faithful coverage 14.0% -> 67.7%** (committed 415f324a) over 5 validated barrier-merge
+ticks on branch aw/remove-nrt-shortcut, NO shortcut, NO product/liquibase/seed/SRTE edits.
+
+Trajectory (each = clean merge_and_verify + coverage_summary, idle-verified, committed):
+- baseline (no-shortcut floor) 14.0%
+- tick1 TB datamart family (nbs_act_entity -> nac_page_case_uid -> F_TB_PAM) -> 52.4%  ... wait see below
+- (P1+P3 pre-loop: routing + patient link 14->42.1%); loop ticks: 42.1 ->52.4 ->61.6 ->65.2 ->67.2 ->67.7
+- Net per tick tapered: +10.3, +9.2, +3.6, +2.0, +0.5 -> hit the noise floor (covid_contact flakiness ~±0.9pt).
+
+Why stopped here (not 90%): the remaining gap is dominated by work that is OUT OF BOUNDS or needs a
+decision:
+1. **Seed/SRTE-gated (out of bounds per fixtures-only):** var_datamart (231; SRTE PORT_REQ_IND_CD),
+   covid_lab_datamart+celr (221; nrt_srte_Loinc_condition 11065, bug #16), aggregate_report (42; RTR
+   bug #11). ~494 cols (~11pts) need reference-data seeding.
+2. **Shared-dim-gated (forbidden by "never UPDATE shared dims"):** much of covid_case (~65) and
+   std_hiv (~70) tails are PHC-core / D_PATIENT / D_PROVIDER scalars — need richer shared foundation
+   rows, not additive fixtures.
+3. **Harness rework (deferred):** lab100/lab101 (79) need run_lab_chain() obs-list edits + a post-
+   Tier-3 lab-postprocessing re-run (LAB_TEST builds at Step5/7, before Tier-3). zz_lab100_101_fill.sql
+   is authored + quarantined pending that rework + review (it IDENTITY-flooded obs tables, LESSON 10).
+4. **Systemic hazard now gating further answer/obs fixtures:** LESSON 10 — every new auto-IDENTITY
+   answer/obs fixture risks colliding with OTHER fixtures' HARDCODED IDENTITY_INSERT blocks (caused
+   tick5's regression). Further coverage work should FIRST refactor all hardcoded IDENTITY_INSERT
+   nbs_case_answer/observation/act blocks in the suite to auto-IDENTITY.
+
+RECOMMENDED NEXT MOVES (need your steer):
+- A. Refactor the suite off hardcoded IDENTITY_INSERT (unblocks safe further answer/obs fixtures). HIGH leverage.
+- B. Do the lab100/101 harness rework (run_lab_chain + post-Tier3 lab re-run) -> ~79 cols.
+- C. Relax "fixtures-only" to allow the 3 reference-data seeds (var SRTE flag, covid LOINC, agg) -> ~+11pts toward 90%.
+- D. Accept 67.7% as the faithful additive ceiling; pivot to P3 (remaining link fidelity) or other work.
+- covid_contact_datamart is FLAKY (timing race in contact CDC event during drain) — worth stabilizing.
+
+Resumable: `rm utilities/comparison-fixtures/STOP_LOOP` then re-run the /loop prompt. All fixtures
+committed; quarantined: zz_hepatitis_obs_chain (wrong condition), zz_lab100_101_fill (IDENTITY flood).
