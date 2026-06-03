@@ -1602,3 +1602,6 @@ tail-EXEC sequences these correctly for standalone verification.
 > (the fixture also tail-EXECs the full chain for 22028400 at apply time, so the
 > row exists either way; adding it to PHC_UIDS keeps it first-class under a full
 > Step-9 rebuild).
+
+<!-- Round 4 (no-shortcut coverage recovery) -->
+| 22040000 - 22044999 | Round 4 loop authoring agents (P2 ODSE chains) |
