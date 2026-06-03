@@ -1,36 +1,27 @@
--- =====================================================================
--- Unit test: sp_d_morbidity_report_postprocessing populates
---            MORB_RPT_USER_COMMENT from an externally-entered morb
---            report's user comment.
+-- Unit test: sp_d_morbidity_report_postprocessing should populate
+-- MORB_RPT_USER_COMMENT from an externally-entered morb report's user comment.
 --
--- Regression coverage for RTR bug #3 (PR #837). A user comment on an
--- externally-entered Morbidity Report is stored in NBS as a C_Result
--- child observation (cd = MRB180, "User Report Comment") hung off the
--- morb Order via a C_Order ("MorbComment") wrapper. NBS flattens the
--- Order's descendant observation_uids into nrt_observation.
--- followup_observation_uid as a CSV, so the postprocessing SP walks that
--- CSV and selects the C_Result sibling to populate
--- MORB_RPT_USER_COMMENT.EXTERNAL_MORB_RPT_COMMENTS.
+-- Regression coverage for RTR bug #3 (PR #837). The comment lives in NBS as a
+-- C_Result child observation (cd MRB180, "User Report Comment") hung off the morb
+-- Order through a C_Order ("MorbComment") wrapper. NBS flattens the Order's child
+-- observation_uids into followup_observation_uid as a CSV, so the SP walks that CSV
+-- and picks the C_Result sibling.
 --
--- The pre-fix SP self-joined the Order to itself and filtered
--- obs_domain_cd_st_1 IN ('C_Order','C_Result') — impossible for the
--- Order row (domain 'Order') — so the table never populated.
+-- The old SP self-joined the Order to itself and filtered obs_domain_cd_st_1 IN
+-- ('C_Order','C_Result'), which the Order row (domain 'Order') never matches, so
+-- the table stayed empty.
 --
--- Shape modelled (minimal, mirrors a real UI-entered comment):
---   Order   92000001  obs_domain 'Order'    ctrl_cd_display_form 'MorbReport'
---     |-- followup_observation_uid CSV = '92000002,92000003'
---   C_Order 92000002  obs_domain 'C_Order'  ('MorbComment' wrapper) -- excluded
---   C_Result 92000003 obs_domain 'C_Result' (cd 'MRB180')           -- the comment
---     |-- nrt_observation_txt: 'comment from a user on an externally created morb report'
--- D_PATIENT 92000010 supplies the non-null PATIENT_KEY the
---   MORBIDITY_REPORT_EVENT insert requires (it runs before the comment insert).
--- =====================================================================
+-- Rows set up below:
+--   Order    92000001  domain 'Order'    followup CSV = '92000002,92000003'
+--   C_Order  92000002  domain 'C_Order'  ('MorbComment' wrapper, excluded)
+--   C_Result 92000003  domain 'C_Result' (cd 'MRB180', carries the comment text)
+--   D_PATIENT 92000010 gives MORBIDITY_REPORT_EVENT its non-null PATIENT_KEY.
 USE RDB_MODERN;
 
-DECLARE @order_uid   bigint = 92000001;   -- Morb Order (externally entered morb report)
-DECLARE @corder_uid  bigint = 92000002;   -- C_Order child (MorbComment wrapper) -- must be EXCLUDED
-DECLARE @cresult_uid bigint = 92000003;   -- C_Result child (MRB180 user comment) -- the comment row
-DECLARE @patient_uid bigint = 92000010;   -- patient the morb report is about
+DECLARE @order_uid   bigint = 92000001;   -- morb Order (externally entered report)
+DECLARE @corder_uid  bigint = 92000002;   -- C_Order wrapper, excluded
+DECLARE @cresult_uid bigint = 92000003;   -- C_Result, the comment row
+DECLARE @patient_uid bigint = 92000010;   -- patient the report is about
 
 -- ---- idempotent cleanup (test data only) ----
 DELETE FROM RDB_MODERN.dbo.MORBIDITY_REPORT_EVENT WHERE MORB_RPT_KEY IN (SELECT MORB_RPT_KEY FROM RDB_MODERN.dbo.MORBIDITY_REPORT WHERE morb_rpt_uid = @order_uid);
@@ -60,7 +51,7 @@ VALUES
    CAST(@corder_uid AS varchar(20)) + ',' + CAST(@cresult_uid AS varchar(20)),
    2);
 
--- ---- the C_Order child (MorbComment wrapper) -- a non-C_Result sibling that must be excluded ----
+-- ---- the C_Order child (MorbComment wrapper); a sibling that should be excluded ----
 INSERT INTO RDB_MODERN.dbo.nrt_observation
   (observation_uid, class_cd, mood_cd, obs_domain_cd_st_1, ctrl_cd_display_form,
    cd, cd_desc_txt, local_id, record_status_cd, shared_ind, status_cd,
@@ -72,7 +63,7 @@ VALUES
    @order_uid, 4,
    1);
 
--- ---- the C_Result child (MRB180 user comment) -- the user-comment row ----
+-- ---- the C_Result child (MRB180), the user comment ----
 INSERT INTO RDB_MODERN.dbo.nrt_observation
   (observation_uid, class_cd, mood_cd, obs_domain_cd_st_1,
    cd, cd_desc_txt, cd_system_cd, local_id, record_status_cd, shared_ind, status_cd,

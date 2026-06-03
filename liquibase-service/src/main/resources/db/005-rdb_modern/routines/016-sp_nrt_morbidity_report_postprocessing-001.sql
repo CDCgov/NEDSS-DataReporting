@@ -799,14 +799,11 @@ BEGIN
 		END;')
 
 
-        -- Find the morb Order's C_Result child (user-comment row) via the
-        -- staging-side projection of the act_relationship graph. The upstream
-        -- NRT row #nrt_morbidity_observation already carries
-        -- followup_observation_uid as a CSV of the Order's children
-        -- (mixed C_Order / C_Result / Result), so this step stays in
-        -- RDB_MODERN staging — no cross-DB read of nbs_odse.dbo.act_relationship.
-        -- The C_Result domain code is what distinguishes the user-comment row
-        -- from lab-result and C_Order siblings.
+        -- Grab the morb Order's user-comment row from staging. #nrt_morbidity_observation
+        -- already carries followup_observation_uid as a CSV of the Order's children, so we
+        -- split it here rather than reading nbs_odse.dbo.act_relationship across DBs. The
+        -- comment is the C_Result child, so filter on that domain code to skip the
+        -- C_Order and lab-result siblings.
         SET @sql = N'
         SELECT 	root.morb_Rpt_Key,
                 root.morb_rpt_uid,
