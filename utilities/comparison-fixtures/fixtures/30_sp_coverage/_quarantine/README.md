@@ -25,6 +25,24 @@ Fixtures here are excluded from `scripts/merge_and_verify.sh` (it globs
   case_lab_datamart fixture; NOT NULL constraint failure on apply
   (quarantined in the round-2 loop).
 
+- **`zz_hepatitis_obs_chain.sql.wrong-condition-no-datamart-row`**
+  (2026-06-03). R4-D's first attempt: 139 HEP question observations hung
+  off foundation PHC **22008500 (cond 10110)** to populate HEPATITIS_CASE
+  / hep100. It applied cleanly and the obs flowed all the way to
+  `v_rdb_obs_mapping` (139 rows verified live), but produced **zero**
+  HEPATITIS_CASE rows. ROOT CAUSE (proven live): `sp_hepatitis_case_datamart_postprocessing`
+  (routine 039) builds its insert from `#KEY_ATTR_INIT`, gated by
+  `investigation_form_cd LIKE 'INV_FORM_HEP%'`. Condition 10110 maps in
+  NBS_SRTE.condition_code to `investigation_form_cd='PG_Hepatitis_A_Acute_Investigation'`
+  (no match), AND in `nrt_datamart_metadata` condition 10110 maps ONLY to
+  `Hepatitis_Datamart` (routine 013), never `Hepatitis_Case` (039).
+  job_flow_log step `GENERATING #KEY_ATTR_INIT` = row_count 0. The
+  hepatitis_datamart SP (013) does NOT read obs at all, so these 139 obs
+  also add nothing there — pure dead weight + a Tier-3 drain-flood risk
+  (LESSON 8). Replaced by **`zz_hepatitis_case_chain.sql`** (new PHC
+  22043000 under cond **10481** → form `INV_FORM_HEPGEN`, which both maps
+  to Hepatitis_Case AND matches the `INV_FORM_HEP%` gate).
+
 ## History (2026-05-21, Agent B Phase-2 debug pass)
 
 This directory previously held COVID and Varicella full-chain fixtures
