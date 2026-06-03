@@ -220,3 +220,15 @@ IDENTITY_INSERT and let IDENTITY auto-assign; the pipeline keys page answers on
 (act_uid, nbs_question_uid, seq_nbr), so the surrogate UID is irrelevant. Guard on
 (act_uid, nbs_question_uid), NOT on a hardcoded nbs_case_answer_uid. (R4-M fixed zz_tb_datamart_fill.sql
 this way; the reserved 22052xxx block went unused.)
+- tick 5: R4-M TB fix (auto-IDENTITY, LESSON 10) + R4-O hepatitis_datamart_fill2 (PHC 22054000) ready;
+  PHC_UIDS += 22050000(in),22054000. R4-N lab100/101 fixture authored but its ORCH_TODO is complex
+  (run_lab_chain manual sp_observation_event/postproc lists + a NEW post-Step-9 lab-postproc re-run,
+  because LAB_TEST builds at Step5/7 pre-Tier-3) -> DEFERRED for human review (touches no-shortcut
+  manual-EXEC path). Lab fixture rides as additive ODSE rows; lab100/101 not expected to gain this tick.
+- tick 5 REGRESSION CAUGHT: merge gave 66.4% (DOWN from 67.2%, service idle so not drain-timeout).
+  TB fix worked (tb_datamart/tb_hiv 1->2, hepatitis 2->3) but 6 obs/lab/contact/vaccination tables
+  went empty (covid_contact, covid_vaccination, f_contact_record_case, f_vaccination, lab100,
+  lab_rpt_user_comment). CAUSE = LESSON 10 at the OBSERVATION/ACT level: zz_lab100_101_fill.sql's
+  heavy auto-IDENTITY observation inserts pushed IDENT_CURRENT past other fixtures' HARDCODED
+  IDENTITY_INSERT obs UIDs -> those fixtures silently skipped. QUARANTINED zz_lab100_101_fill.sql
+  (.identity-flood-regresses-obs-tables). Re-validating TB-fix + hepatitis#2 alone.
