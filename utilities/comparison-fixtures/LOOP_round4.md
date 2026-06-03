@@ -171,3 +171,24 @@ A heavy fixture (many observations) can outlast the Tier-3 drain timeout in merg
 re-run `bash scripts/coverage_summary.sh` and trust THAT. A coverage DROP right after a big
 observation fixture is drain-timeout until proven otherwise — re-measure before quarantining.
 - tick 2 UID allocations: R4-D hepatitis-fix 22043xxx, R4-E std_hiv 22044xxx, R4-F covid_case 22045xxx.
+- tick 2 (wave-2 reconcile, barrier merge running): 3 agents done.
+  - R4-D hepatitis: ROOT CAUSE = old chain used cond 10110 (Hep A) which fails routine 039's
+    INV_FORM_HEP% gate AND nrt_datamart_metadata maps 10110 only to Hepatitis_Datamart (not
+    Hepatitis_Case). FIX: new investigation under cond 10481 (->INV_FORM_HEPGEN, maps to
+    Hepatitis_Case) = zz_hepatitis_case_chain.sql (PHC 22043000); old chain quarantined; 22043000
+    added to PHC_UIDS. NOT seed-gated.
+  - R4-E std_hiv: zz_std_hiv_fill.sql, 112 answers (UIDs 22044xxx) — expects ~113 of 193 cols.
+  - R4-F covid_case: zz_covid_case_fill.sql, 105 repeating-group answers (UIDs 22045xxx) for
+    _1/_2/_3 columns — expects covid_case 209->~314.
+  - Validation merge in flight (sentinel /tmp/loop_tick2_merge.done); reconcile/commit next tick.
+
+## LESSON 9 (HIGH-VALUE LEAD): single D_INV_* dims need answer_group_seq_nbr IS NULL
+sp_s_pagebuilder_postprocessing (routine 007) builds the single (non-repeating) D_INV_* dim rows
+ONLY from nbs_case_answer with ANSWER_GROUP_SEQ_NBR **IS NULL** (text line ~103, coded ~191/193).
+But gen_page_answers.sql emits answer_group_seq_nbr=**0**, so generic answers route to
+D_INVESTIGATION_REPEAT, NOT the single dims. The D_INV_* dims that DID populate came from the
+curated full_chain answers (which carry NULL group-seq). => ENHANCING gen_page_answers.sql to also
+emit a NULL-group variant would populate the single D_INV_* dims for ALL routable investigations
+(STD/COVID/Pertussis/HepA) — a broad multi-table gain. CAUTION: repeating-block datamart columns
+(e.g. covid_case_datamart _1/_2/_3) DO need group_seq 1/2/3 — so it's NULL for single dims,
+1/2/3 for repeating blocks, NOT "always NULL". Candidate for the next authoring wave.
