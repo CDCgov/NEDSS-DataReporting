@@ -144,3 +144,15 @@ Gaps as of 42.1% baseline (col gap = total − populated):
    it) — answers on any other form resolve `rdb_table_nm=NULL` and route nothing.
 7. NEW: many condition-datamart SPs build FROM a fact/dim (e.g. `tb_datamart` ← `F_TB_PAM`). Check
    the SP's `FROM`/joins to find the real prerequisite before authoring blind.
+- tick 1 (partial reconcile): spawned 3 authoring agents (TB fact, COVID labs, hepatitis).
+  - COVID labs (covid_lab 0/120, celr 0/101): **OUT OF BOUNDS** — SEED-gated. sp_covid_lab_datamart
+    filters result LOINC ∈ nrt_srte_Loinc_condition WHERE condition_cd='11065', and the baseline
+    SRTE ships 0 such rows (production has them). Filed bugs/16_covid_lab_loinc_condition_seed_gap.
+    No-op fixture removed. Do NOT re-spawn (alongside var/aggregate).
+  - TB fact (tb_datamart 0/318 + tb_hiv 0/322 + f_tb_pam): fixture zz_tb_fact_chain.sql READY.
+    Root cause: F_TB_PAM key = nrt_investigation.nac_page_case_uid, set by sp_investigation_event
+    from nbs_act_entity rows — TB PHC 22001000 had none. Adds 3 nbs_act_entity (UIDs 22040000-02,
+    real org/provider keys) + last_chg bump. ODSE-only, no seed. Awaiting hepatitis agent before
+    the barrier merge.
+  - NEW LEAD: nbs_act_entity → nac_page_case_uid may gate facts for OTHER investigations too —
+    check after TB validates.
