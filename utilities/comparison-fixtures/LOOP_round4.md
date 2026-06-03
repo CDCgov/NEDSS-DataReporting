@@ -199,3 +199,7 @@ emit a NULL-group variant would populate the single D_INV_* dims for ALL routabl
   the last ~3 pts need the seed edits (var SRTE PORT_REQ_IND_CD, covid LOINC->11065, agg bug #11).
 - tick 3: spawned R4-G hepatitis_datamart fill (22046xxx), R4-H d_investigation_repeat fill
   (22047xxx), R4-I bmird_strep_pneumo fill (22048xxx).
+- tick 3 COMMITTED (6f893f55): 61.6% -> 65.2% (hepatitis_datamart 1->2 rows, d_inv_repeat 55->85,
+  bmird filled). Gains tapering (10.3/9.2/3.6) but net-positive, no regression.
+- tick 4: spawned R4-J d_inv_repeat-more-forms (22049xxx), R4-K tb dimensional tail (22050xxx),
+  R4-L covid_contact (22051xxx). Reachable ceiling ~87% (var/covid_lab*/aggregate out of bounds).
