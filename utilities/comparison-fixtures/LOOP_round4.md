@@ -156,3 +156,17 @@ Gaps as of 42.1% baseline (col gap = total − populated):
     the barrier merge.
   - NEW LEAD: nbs_act_entity → nac_page_case_uid may gate facts for OTHER investigations too —
     check after TB validates.
+- tick 1 RECONCILED & COMMITTED (daec7f89): 42.1% -> **52.4%** (empty 27->23), no regression.
+  TB family unlocked (zz_tb_fact_chain: nbs_act_entity -> nac_page_case_uid -> F_TB_PAM ->
+  tb_datamart + tb_hiv_datamart). Hepatitis chain committed but hep100/HEPATITIS_CASE still 0
+  (obs InvFrmQ graph not landing in HEPATITIS_CASE — FOLLOW-UP). COVID labs OUT OF BOUNDS (bug #16).
+  ⚠️ Merge drain (420s) timed out under the hep obs flood and mis-reported 20%; true 52.4% only
+  after the service drained to idle. FIXED: Tier-3 drain bumped to 900s.
+
+## LESSON 8 (CRITICAL): trust coverage only after the service is IDLE
+A heavy fixture (many observations) can outlast the Tier-3 drain timeout in merge_and_verify, so
+`print_coverage_summary` runs against a half-processed pipeline and reports a FALSE LOW number
+(saw 20% vs true 52.4%). ALWAYS, before reconciling/committing/declaring a regression: confirm
+`docker logs --tail 8 <service>` shows ≥3 recent "No ids to process from the topics", then
+re-run `bash scripts/coverage_summary.sh` and trust THAT. A coverage DROP right after a big
+observation fixture is drain-timeout until proven otherwise — re-measure before quarantining.

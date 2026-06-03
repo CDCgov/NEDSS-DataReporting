@@ -694,7 +694,11 @@ main() {
   apply_tier_2_fixtures
   log "Step 7: draining pipeline (Tier 2 links)..."; wait_for_pipeline_drain 300 || err "Tier 2 drain timed out (continuing)"
   apply_tier_3_fixtures
-  log "Step 9: draining pipeline (Tier 3)..."; wait_for_pipeline_drain 420 || err "Tier 3 drain timed out (continuing)"
+  # Tier 3 carries the heaviest load (datamart SPs + large observation fixtures e.g. the
+  # hepatitis obs chain's 139 obs). 420s was too short — drain gave up with the pipeline still
+  # processing, mis-reporting coverage as ~20%. 900s covers current fixtures; if a future fixture
+  # still overruns, the loop re-verifies service idle before trusting coverage_summary.
+  log "Step 9: draining pipeline (Tier 3)..."; wait_for_pipeline_drain 900 || err "Tier 3 drain timed out (continuing)"
 
   print_coverage_summary
   log "Merge complete (CDC pipeline; no nrt_* shortcut)."
