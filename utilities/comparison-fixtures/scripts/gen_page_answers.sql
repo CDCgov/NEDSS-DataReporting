@@ -10,20 +10,35 @@
 --
 -- Usage (capture the emitted INSERTs, then apply them to NBS_ODSE):
 --   sqlcmd -S localhost,3433 -U sa -C -h -1 -W \
---     -v ACT_UID=22001000 FORM_CD="PG_TB_LTBI_Investigation" BASE=92100000 \
+--     -v ACT_UID=22003000 \
 --     -i scripts/gen_page_answers.sql > /tmp/answers.sql
 --   sqlcmd ... -d NBS_ODSE -i /tmp/answers.sql
+--
+-- The form is DERIVED from the investigation's condition via
+-- NBS_SRTE.condition_code (condition_cd -> investigation_form_cd) so it matches
+-- exactly what sp_investigation_event joins on (routine 056, ~line 516-520):
+-- only answers on that form resolve a non-null rdb_table_nm, which the service
+-- (ProcessInvestigationDataUtil.java:459-468) aggregates into rdb_table_name_list
+-- to route the investigation to its condition datamart. Authoring answers against
+-- any other form (e.g. a rich PG_* form that the condition does NOT map to) is a
+-- no-op for routing. Conditions mapping to legacy forms with no page-builder rdb
+-- metadata (e.g. 10220 -> INV_FORM_RVCT) cannot route in this seed.
 --
 -- Skips questions the act already answers (additive). Coded answers resolve a
 -- valid code via Codeset_Group_Metadata -> Code_value_general (fallback 'Y').
 SET NOCOUNT ON;
 
-WITH mapped AS (
+WITH frm AS (
+    SELECT cc.investigation_form_cd AS form_cd
+    FROM NBS_ODSE.dbo.public_health_case phc
+    JOIN NBS_SRTE.dbo.condition_code cc ON cc.condition_cd = phc.cd
+    WHERE phc.public_health_case_uid = $(ACT_UID)
+), mapped AS (
     SELECT DISTINCT nuim.nbs_question_uid, nuim.data_type, nuim.code_set_group_id
     FROM NBS_ODSE.dbo.nbs_ui_metadata nuim
     JOIN NBS_ODSE.dbo.nbs_rdb_metadata nrdbm
          ON nrdbm.nbs_ui_metadata_uid = nuim.nbs_ui_metadata_uid
-    WHERE nuim.investigation_form_cd = '$(FORM_CD)'
+    WHERE nuim.investigation_form_cd = (SELECT form_cd FROM frm)
       AND nrdbm.rdb_table_nm IS NOT NULL
       AND nuim.nbs_question_uid IS NOT NULL
 ), todo AS (
