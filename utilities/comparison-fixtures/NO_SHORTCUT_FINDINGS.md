@@ -76,8 +76,48 @@ Empirical (TB PHC 22001000, full pipeline run):
 **Conclusion:** faithful datamart coverage requires the synthetic page answers to be authored
 against the real page-builder metadata graph (question_uid → ui_metadata → rdb_metadata →
 datamart column), not arbitrary/partial question_uids. The shortcut hid this by hand-authoring
-resolved `nrt_page_case_answer` rows and force-running datamart SPs. This is a substantial
-fixture-authoring effort (P2/P3 are similar fidelity work), not a one-line routing fix.
+resolved `nrt_page_case_answer` rows and force-running datamart SPs.
 
 Tight-loop aid added: `docker-compose.override.yaml` (untracked) sets FIXED_DELAY_ID=2000 /
 FIXED_DELAY_DM=3000 on the service so the CDC→nrt→SP drain completes in seconds for iteration.
+
+## P1 — RESOLVED. Coverage 14.0% → 34.4% (faithful, no shortcut)
+
+The routing mechanism is fully faithful; the gap was purely the synthetic answers. The exact
+end-to-end chain:
+
+1. **`sp_investigation_event`** (routine 056) gathers every `nbs_case_answer` for the PHC with
+   its resolved `rdb_table_nm`, but the join is **gated by the investigation's condition**:
+   `nbs_srte.condition_code cc ON cc.condition_cd = phc.cd` AND
+   `nuim.investigation_form_cd = cc.investigation_form_cd` (lines ~516-521). Answers on any
+   other form fall into the UNION's second arm and get `rdb_table_nm = NULL` (line 540).
+2. **`ProcessInvestigationDataUtil.java:459-468`** (the service) streams that answer array, takes
+   `distinct` `non-null` `rdb_table_nm`, comma-joins, and sets `rdb_table_name_list`. *(So the
+   list is computed in Java from the answers — no SP emits it; it is only ever hand-authored in
+   unit-test setup.sql, which is why it looked unpopulated.)*
+3. **`PostProcessingService.java:351-356`** splits `rdb_table_name_list` into `pbCache` →
+   `executeStoredProcForPageBuilder(tbl, uids)` populates each `D_INV_*` page-builder dimension.
+4. **Condition datamarts** (COVID_CASE_DATAMART, STD_HIV_DATAMART, …) are a *separate* path:
+   `sp_nrt_investigation_postprocessing` returns a DatamartData signal per PHC **iff the
+   condition is mapped in `nrt_datamart_metadata`** (it is: 11065→Covid_Case_Datamart,
+   10311→Std_Hiv_Datamart, etc. — 161 rows). The service then runs the mapped datamart SP.
+
+**Two mistakes in the first attempt**, both now fixed:
+- Authored answers against `PG_TB_LTBI_Investigation` while the TB PHC's condition (10220)
+  maps to **legacy `INV_FORM_RVCT`, which has ZERO page-builder rdb metadata** in this seed —
+  an unroutable dead end. `condition_code` for our fixtures routes only: **11065 →
+  PG_COVID-19_v1.1 (350 mapped q)** and **10311 → PG_STD_Investigation (364 q)**.
+- Targeted an arbitrary rich form instead of the condition's form, so the SP's condition-gated
+  join never matched.
+
+**Fix (fixtures only, no product change):** `scripts/gen_page_answers.sql` now derives the form
+from the act's condition via `condition_code` and emits one type-correct `nbs_case_answer` per
+remaining datamart-mapped question. Applied to the COVID + STD PHCs (`zz_page_answers_datamart_
+routing.sql`): resolvable `rdb_table_nm` went **0 → 26/27** each; `rdb_table_name_list` populated
+(was NULL); the `D_INV_*` dimensions populated; `sp_covid_case_datamart_postprocessing` /
+`sp_std_hiv_datamart_postprocessing` fire and populate. Overall column coverage **14.0% → 34.4%**
+(empty tables 60→33, fully-covered 33→58) from just these two investigations.
+
+Remaining headroom (next, not blocking): apply the generator to every routable investigation;
+COVID condition datamart column *values* are generic (coverage, not fidelity); TB/VAR need a
+condition that maps to a metadata-bearing form (or accept they don't route in this seed).
