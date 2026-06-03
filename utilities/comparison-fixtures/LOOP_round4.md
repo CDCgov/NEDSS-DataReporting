@@ -192,3 +192,10 @@ emit a NULL-group variant would populate the single D_INV_* dims for ALL routabl
 (STD/COVID/Pertussis/HepA) — a broad multi-table gain. CAUTION: repeating-block datamart columns
 (e.g. covid_case_datamart _1/_2/_3) DO need group_seq 1/2/3 — so it's NULL for single dims,
 1/2/3 for repeating blocks, NOT "always NULL". Candidate for the next authoring wave.
+- tick 2 COMMITTED (261a6bcb): 52.4% -> 61.6% (HEPATITIS_CASE+hep100 0->1, std_hiv 55->178,
+  covid_case 209->318). No regression.
+- CEILING FINDING: out-of-bounds cols = var_datamart 231 + covid_lab/celr/contact 315 +
+  aggregate_report 42 = ~588 (~12.8%). So fixtures-only ceiling ~= 87.2%, NOT 90%. Push to ~87%;
+  the last ~3 pts need the seed edits (var SRTE PORT_REQ_IND_CD, covid LOINC->11065, agg bug #11).
+- tick 3: spawned R4-G hepatitis_datamart fill (22046xxx), R4-H d_investigation_repeat fill
+  (22047xxx), R4-I bmird_strep_pneumo fill (22048xxx).
