@@ -109,7 +109,7 @@ BEGIN
                                                   elp.cd               AS                              [ph_elp_cd],
                                                   elp.use_cd           AS                              [ph_elp_use_cd],
                                                   REPLACE(tl.phone_nbr_txt, ' ', '')                   telephone_nbr,
-                                                  tl.extension_txt                                     extension_txt,
+                                                  NULLIF(LTRIM(RTRIM(tl.extension_txt)), '') AS      extension_txt,
                                                   STRING_ESCAPE(tl.email_address, 'json')              email_address,
                                                   elp.locator_desc_txt as                              [phone_comments]
                                            FROM nbs_odse.dbo.Entity_locator_participation elp WITH (NOLOCK)
