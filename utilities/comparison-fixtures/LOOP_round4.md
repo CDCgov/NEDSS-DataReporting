@@ -203,3 +203,8 @@ emit a NULL-group variant would populate the single D_INV_* dims for ALL routabl
   bmird filled). Gains tapering (10.3/9.2/3.6) but net-positive, no regression.
 - tick 4: spawned R4-J d_inv_repeat-more-forms (22049xxx), R4-K tb dimensional tail (22050xxx),
   R4-L covid_contact (22051xxx). Reachable ceiling ~87% (var/covid_lab*/aggregate out of bounds).
+- tick 4 COMMITTED (542ea424): 65.2% -> 67.2% (d_inv_repeat 85->229 rows, covid_contact 0->1).
+  tb_datamart stayed 1 row (R4-K 2nd TB investigation 22050000 did NOT land a datamart row - DEBUG).
+  Gains tapering: 10.3/9.2/3.6/2.0. Reachable remaining ~1022 cols (~22pts) -> ceiling ~89%.
+- tick 5: spawned R4-M tb-tail-debug (22052xxx), R4-N lab100+lab101 (22053xxx), R4-O
+  hepatitis_datamart remainder (22054xxx).
