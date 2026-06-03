@@ -170,3 +170,4 @@ A heavy fixture (many observations) can outlast the Tier-3 drain timeout in merg
 `docker logs --tail 8 <service>` shows ≥3 recent "No ids to process from the topics", then
 re-run `bash scripts/coverage_summary.sh` and trust THAT. A coverage DROP right after a big
 observation fixture is drain-timeout until proven otherwise — re-measure before quarantining.
+- tick 2 UID allocations: R4-D hepatitis-fix 22043xxx, R4-E std_hiv 22044xxx, R4-F covid_case 22045xxx.
