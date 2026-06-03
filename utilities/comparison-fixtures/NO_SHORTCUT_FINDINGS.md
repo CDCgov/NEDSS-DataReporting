@@ -10,7 +10,15 @@ reporting-pipeline-service runs `sp_*_event` + postprocessing + datamart SPs):
 - Repaired 20 strip-damaged Tier-3 fixtures (empty `IF`/`TRY` wrappers) — all parse-clean.
 - The clean pipeline run completes end-to-end with **no apply errors**.
 
-## Headline result: coverage 90.5% → **14.0%**
+## STATUS UPDATE (recovery in progress): 14.0% → **42.1%** faithfully, no shortcut
+
+Faithful coverage has been recovered from the 14.0% no-shortcut floor to **42.1%** via two
+fixture-only fixes (see the two "RESOLVED" sections at the bottom). Progression:
+`14.0% → 34.4%` (datamart routing) `→ 37.7%` (all routable subjects) `→ 42.1%` (patient link
+unlocks condition datamarts). No product/liquibase-routine changes. Remaining gaps documented
+inline (VAR_DATAMART / F_TB_PAM still empty; pure-`nrt` enrich fixtures = P2).
+
+## Original headline result: coverage 90.5% → **14.0%**
 
 | | shortcut (committed baseline) | real pipeline (no shortcut) |
 | --- | --- | --- |
@@ -121,3 +129,27 @@ routing.sql`): resolvable `rdb_table_nm` went **0 → 26/27** each; `rdb_table_n
 Remaining headroom (next, not blocking): apply the generator to every routable investigation;
 COVID condition datamart column *values* are generic (coverage, not fidelity); TB/VAR need a
 condition that maps to a metadata-bearing form (or accept they don't route in this seed).
+
+## P3 / condition datamarts — RESOLVED via patient link. 37.7% → 42.1%
+
+The empty condition datamarts were NOT a routing problem — `ProcessDatamartData.java:113-115`
+**drops any DatamartData whose `patientUid` is NULL**, and the `*_investigation_full_chain.sql`
+fixtures created the PHC but never a patient *subject* link. So `sp_investigation_event` left
+`nrt_investigation.patient_id` NULL and every condition datamart was silently skipped.
+
+Fix (`zz_investigation_patient_links.sql`): add a `SubjOfPHC` participation (act=PHC,
+subject=foundation patient 20000000, class PSN/CASE) for all 8 investigation subjects. Result:
+`patient_id` resolves → DatamartData `patient_uid` non-null → the service fires the
+condition datamart SP that `nrt_datamart_metadata` maps for each condition. Newly populating:
+**COVID_CASE_DATAMART, STD_HIV_DATAMART, D_TB_PAM, HEPATITIS_DATAMART**. This is the same link
+fidelity the morb-comment `PATIENT_KEY` gap needed — the Tier-2 investigation↔patient link.
+
+### Remaining condition-datamart gaps (triaged, lower ROI)
+- **VAR_DATAMART = 0**: `sp_var_datamart_postprocessing` (lines 129-132) inner-joins
+  `NRT_SRTE_condition_code cc ON cc.condition_cd='10030' AND cc.PORT_REQ_IND_CD='T'`. Our seed's
+  SRTE row for Varicella (10030) does not satisfy `PORT_REQ_IND_CD='T'` — an SRTE-reference-data
+  flag, not an investigation-fixture gap. Fix = seed/patch that SRTE flag (verify against real NBS).
+- **F_TB_PAM = 0 (while D_TB_PAM = 1)**: `sp_f_tb_pam_postprocessing` gates on
+  `investigation_form_cd='INV_FORM_RVCT'` (our TB PHC matches), but the TB *fact* table needs
+  prerequisite dimension keys / measures (treatment, dispositions) the generic fixture lacks.
+  The TB *dimension* populates; the fact needs richer TB-specific source data.
