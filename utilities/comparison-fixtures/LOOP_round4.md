@@ -208,3 +208,15 @@ emit a NULL-group variant would populate the single D_INV_* dims for ALL routabl
   Gains tapering: 10.3/9.2/3.6/2.0. Reachable remaining ~1022 cols (~22pts) -> ceiling ~89%.
 - tick 5: spawned R4-M tb-tail-debug (22052xxx), R4-N lab100+lab101 (22053xxx), R4-O
   hepatitis_datamart remainder (22054xxx).
+
+## LESSON 10 (latent fixture hazard): never IDENTITY_INSERT hardcoded nbs_case_answer UIDs
+zz_page_answers_datamart_routing.sql inserts ~1376 nbs_case_answer rows via AUTO-IDENTITY, driving
+IDENT_CURRENT('nbs_case_answer') high (~2205xxxx). Any fixture that applies AFTER it (alphabetically
+later zz_*) and uses `SET IDENTITY_INSERT nbs_case_answer ON` with HARDCODED UIDs in that range will
+collide: a guard like `IF NOT EXISTS(... nbs_case_answer_uid = <hardcoded>)` sees the auto-row already
+occupying that UID and SILENTLY SKIPS the whole INSERT (0 answers -> no D_*_PAM -> no datamart row).
+This is exactly why R4-K's TB 2nd row never landed. FIX/RULE: for nbs_case_answer, DROP
+IDENTITY_INSERT and let IDENTITY auto-assign; the pipeline keys page answers on
+(act_uid, nbs_question_uid, seq_nbr), so the surrogate UID is irrelevant. Guard on
+(act_uid, nbs_question_uid), NOT on a hardcoded nbs_case_answer_uid. (R4-M fixed zz_tb_datamart_fill.sql
+this way; the reserved 22052xxx block went unused.)
