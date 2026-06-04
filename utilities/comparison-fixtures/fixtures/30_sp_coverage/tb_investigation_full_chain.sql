@@ -180,13 +180,16 @@ GO
 DECLARE @superuser_id_2 bigint = 10009282;
 DECLARE @tb_full_phc_uid_2 bigint = 22001000;
 
--- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column. We want
--- our allocated UIDs (22001100+) for stable cross-fixture references,
--- so flip IDENTITY_INSERT for the duration of this INSERT block.
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
-
+-- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column. We let it
+-- AUTO-assign (LESSON 10: hardcoded IDENTITY_INSERT UIDs collide with the
+-- auto-IDENTITY flood and the guard silently skips the whole INSERT). The
+-- pipeline keys page answers on (act_uid, nbs_question_uid, seq_nbr), so
+-- the surrogate UID is irrelevant. Guard on the natural key.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_case_answer]
+               WHERE act_uid = @tb_full_phc_uid_2 AND nbs_question_uid = 1079 AND answer_group_seq_nbr IS NULL)
+BEGIN
 INSERT INTO [dbo].[nbs_case_answer]
-    ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+    ([act_uid], [add_time], [add_user_id],
      [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
      [last_chg_time], [last_chg_user_id],
      [record_status_cd], [record_status_time], [seq_nbr])
@@ -194,71 +197,70 @@ VALUES
     -- TUB119 DISEASE_SITE -> 'Pulmonary' (PHVS_TB_ADDL_SITE code 39607008
     --   Pulmonary; drives D_DISEASE_SITE + D_DISEASE_SITE_GROUP + the
     --   CALC_DISEASE_SITE='Pulmonary' branch in 147 SP lines 859-865.)
-    (22001100, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'39607008', 1079, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB167 ADDL_RISK -> 73211009 Diabetes Mellitus (PHVS_TB_RISK_FACTORS;
     --   drives D_ADDL_RISK + D_ADDL_RISK_GROUP.)
-    (22001101, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'73211009', 1230, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB154 HIV_STATUS -> 260385009 Negative (PHVS_HIV_STATUS; drives
     --   D_TB_HIV row.)
-    (22001102, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'260385009', 1273, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB155 HIV_STATE_PATIENT_NUM -> 'HIV-STATE-TB-01' (text; no code set)
-    (22001103, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'HIV-STATE-TB-01', 1323, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB156 HIV_CITY_CNTY_PATIENT_NUM -> 'HIV-CITY-TB-01' (text)
-    (22001104, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'HIV-CITY-TB-01', 1034, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB229 MOVE_STATE -> '13' Georgia (STATE_CCD; drives D_MOVE_STATE.)
-    (22001105, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'13', 1248, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB228 MOVE_CNTY -> '13121' Fulton County (COUNTY_CCD;
     --   drives D_MOVE_CNTY.)
-    (22001106, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'13121', 1055, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB230 MOVE_CNTRY -> '840' US (PHVS_TB_BIRTH_CNTRY group 4260;
     --   drives D_MOVE_CNTRY. CODE_SET_GROUP_ID 77777 is a special-case
     --   country-direct lookup; we use the standard codeset path.)
-    (22001107, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'840', 1243, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB225 MOVED_WHERE -> 'C1512888' Out of the U.S.
     --   (PHVS_TB_DIS_ACQ_JUR; drives D_MOVED_WHERE.)
-    (22001108, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'C1512888', 1256, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB235 GT_12_REAS -> '258143003' Non-adherence
     --   (PHVS_TB_EXTEND_REAS; drives D_GT_12_REAS.)
-    (22001109, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'258143003', 1318, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB237 HC_PROV_TY -> '310174000' Private Outpatient
     --   (PHVS_TB_HC_PRAC_TY; drives D_HC_PROV_TY_3.)
-    (22001110, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'310174000', 1071, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB129 SMR_EXAM_TY -> '108257001' Pathology/Cytology
     --   (PHVS_TB_MICRO_EX_TY; drives D_SMR_EXAM_TY.)
-    (22001111, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'108257001', 1174, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB114 OUT_OF_CNTRY -> 'PHC2' (one of the PHVS_TB_BIRTH_CNTRY codes;
     --   drives D_OUT_OF_CNTRY. Note: 147-tb_pam SP excludes TUB114 from
     --   the main pivot — this row lives so the 190-out_of_cntry SP picks
     --   it up.)
-    (22001112, @tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'PHC2', 1080, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
-
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+END
 
 GO
 

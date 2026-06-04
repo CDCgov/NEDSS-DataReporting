@@ -149,3 +149,25 @@ land. If incremental work plateaus below that, that's the ceiling — wind down 
   source -> out of scope this pass). All convert via R4-M pattern (auto-IDENTITY + natural-key guard),
   coverage-neutral. A.1 spawned: 1 agent converting ALL ~18 nbs_case_answer IDENTITY_INSERT blocks
   (incl. zz_var_datamart_enrich UPDATE repointing). Validate next tick: merge must HOLD >=67.7%.
+
+## LESSON 11 (Phase-A fix-up): natural-key guards must include the DISTINGUISHING column
+Converting nbs_case_answer IDENTITY_INSERT->auto requires a new idempotency guard. A guard of just
+`IF NOT EXISTS(act_uid=X AND nbs_question_uid=Q)` is WRONG when another fixture answers the same
+(act,Q) with a different answer_group_seq_nbr/seq — chiefly zz_page_answers_datamart_routing.sql,
+which answers ALL mapped questions of the form at answer_group_seq_nbr=0 and sorts BEFORE the *_fill
+files. The guard then matches page_answers' row -> the whole block SILENTLY SKIPS (saw std_hiv_datamart
+167->66, inv_hiv 17->2). FIX: each block's guard must match ONLY its own rows by adding the
+distinguishing column: single-dim fills (std_hiv_fill, hepatitis_datamart_fill2) use
+`AND answer_group_seq_nbr IS NULL`; repeating fills (covid_case_fill, d_inv_repeat_fill/fill2) use the
+block's `AND answer_group_seq_nbr = 1` (or its group). (Validate by checking whether any earlier
+fixture answers the guard's (act,Q) at a different group.)
+- Phase-A validation merge: 67.5% (net -0.2) but per-table delta exposed std_hiv -101 / inv_hiv -15
+  (masked by flaky covid_contact +42, d_contact_record +39 returning). NOT committed. Spawning guard fix-up.
+- PHASE A DONE: re-validation #2 = 68.2% (net +22 vs 67.7%), std_hiv restored 167->178, d_var_pam
+  restored (varicella reverted to safe-hardcoded - it's below the auto-IDENTITY flood range so was never
+  at risk; converting it had regressed d_var_pam -101). 8 files converted to auto-IDENTITY+distinguishing
+  guards (covid/tb full_chain, zz_covid_case_fill, zz_d_inv_repeat_fill, zz_d_inv_repeat_fill2,
+  zz_hepatitis_datamart_enrich, zz_std_hiv_fill, zz_tb_datamart_enrich); varicella_full_chain +
+  zz_var_datamart_enrich intentionally left hardcoded (below flood, collision-safe). L10 hazard
+  eliminated for all flood-range nbs_case_answer blocks. d_place -6 = FLAKY (3rd timing-variant dim
+  with covid_contact/d_contact_record; went 37->37->31 across runs independent of fixture changes).

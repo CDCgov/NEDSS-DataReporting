@@ -213,122 +213,119 @@ GO
 DECLARE @superuser_id_2 bigint = 10009282;
 DECLARE @covid_full_phc_uid_2 bigint = 22003000;
 
--- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column. We want
--- our allocated UIDs (22003100+) for stable cross-fixture references,
--- so flip IDENTITY_INSERT for the duration of this INSERT block.
--- (Restored from quarantine 2026-05-21: missing IDENTITY_INSERT was the
--- sole cause of the merged-pipeline TB regression — when this fixture
--- failed mid-apply, scripts/merge_and_verify.sh's `set -euo pipefail`
--- aborted Step 8 before TB's tail-EXECs ran, leaving D_TB_PAM/F_TB_PAM
--- at 0. Adding IDENTITY_INSERT matches the TB-fixture convention from
--- commit a7757dbc.)
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
-
+-- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column. We let it
+-- AUTO-assign (LESSON 10: hardcoded IDENTITY_INSERT UIDs collide with the
+-- auto-IDENTITY flood from zz_page_answers_datamart_routing.sql and the
+-- guard silently skips the whole INSERT). The pipeline keys page answers
+-- on (act_uid, nbs_question_uid, seq_nbr), so the surrogate UID is
+-- irrelevant. Guard on the natural key (act_uid, first nbs_question_uid).
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_case_answer]
+               WHERE act_uid = @covid_full_phc_uid_2 AND nbs_question_uid = 10001378 AND answer_group_seq_nbr IS NULL)
+BEGIN
 INSERT INTO [dbo].[nbs_case_answer]
-    ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+    ([act_uid], [add_time], [add_user_id],
      [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
      [last_chg_time], [last_chg_user_id],
      [record_status_cd], [record_status_time], [seq_nbr])
 VALUES
     -- ===== Symptoms (PHVS YNU code_set_group_id 4150) =====
     -- 386661006 FEVER -> Y
-    (22003100, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001378, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 43724002 CHILLS_RIGORS -> Y
-    (22003101, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001379, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 271795006 FATIGUE_MALAISE -> Y
-    (22003102, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001380, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 25064002 HEADACHE -> Y
-    (22003103, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001382, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 68962001 MYALGIA -> Y
-    (22003104, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001383, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 419284004 ALT_MENTAL_STATUS -> N
-    (22003105, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10001390, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 16932000 NAUSEA -> N
-    (22003106, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10001394, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 62315008 DIARRHEA -> N
-    (22003107, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10001395, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 21522001 ABDOMINAL_PAIN -> N
-    (22003108, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10001396, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Disposition (4150) =====
     -- 309904001 HOSPITAL_ICU_STAY -> N
-    (22003109, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004144, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS540 US_HC_WORKER_IND -> N
-    (22003110, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004148, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Exposure (4150) =====
     -- INV664 TRAVEL_DOMESTICALLY -> N
-    (22003111, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004151, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TRAVEL38 TRAVEL_INTERNATIONAL -> N
-    (22003112, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004153, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 473085002 CRUISE_TRAVEL_EXP -> N
-    (22003113, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004155, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 445000002 AIR_TRAVEL_EXP -> N
-    (22003114, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004160, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS684 WORKPLACE_EXP -> N
-    (22003115, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004157, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS559 ANIMAL_EXPOSURE_IND -> N
-    (22003116, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10004165, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Labs =====
     -- INV290 TEST_TYPE -> '94309-2' SARS coronavirus 2 RNA NAA (code_set_group 108020)
-    (22003117, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'94309-2', 10001370, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- INV291 TEST_RESULT -> '10828004' Positive (code_set_group 108610)
-    (22003118, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'10828004', 10001371, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- LAB606 PERFORMING_LAB_TYPE -> 'PHC1317' Hospital Laboratory (108620)
-    (22003119, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'PHC1317', 10001374, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Comorbidity / Status (4150) =====
     -- ARB017 HYPERTENSION -> N
-    (22003120, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'N', 10000075, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- INV576 Symptomatic -> Y
-    (22003121, @covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+    (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
      N'Y', 10001027, 1, '2026-04-01T00:00:00', @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
-
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+END
 
 GO
 

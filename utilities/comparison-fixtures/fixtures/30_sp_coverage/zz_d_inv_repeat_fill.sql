@@ -185,114 +185,119 @@ DECLARE @su   bigint   = 10009282;
 DECLARE @t    datetime = '2026-04-03T00:00:00';
 DECLARE @tbl  bigint   = 22047000;
 
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+-- nbs_case_answer_uid is IDENTITY; let it AUTO-assign (LESSON 10:
+-- hardcoded IDENTITY_INSERT UIDs collide with the auto-IDENTITY flood and
+-- the guard silently skips the whole INSERT). Guard on the natural key.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_case_answer]
+               WHERE act_uid = @tbl AND nbs_question_uid = 10011154 AND answer_group_seq_nbr = 1)
+BEGIN
 INSERT INTO [dbo].[nbs_case_answer]
-    ([nbs_case_answer_uid],[act_uid],[add_time],[add_user_id],[answer_txt],
+    ([act_uid],[add_time],[add_user_id],[answer_txt],
      [nbs_question_uid],[nbs_question_version_ctrl_nbr],[last_chg_time],
      [last_chg_user_id],[record_status_cd],[record_status_time],[seq_nbr],
      [answer_group_seq_nbr])
 VALUES
     -- ADM_ADV_EVE_IND (q 10011154, CODED YNU csg 4150)
-    (22047100,@tbl,@t,@su,N'N',10011154,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047101,@tbl,@t,@su,N'Y',10011154,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047102,@tbl,@t,@su,N'N',10011154,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10011154,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Y',10011154,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'N',10011154,1,@t,@su,N'ACTIVE',@t,3,3),
     -- ADM_ADV_EVE_MNFSTN_DT (q 10012235, CODED csg 118700)
-    (22047103,@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047104,@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047105,@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,3,3),
     -- ADM_LINKED_CASE_NBR (q 10012173, TEXT)
-    (22047106,@tbl,@t,@su,N'LINK-22047000-A',10012173,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047107,@tbl,@t,@su,N'LINK-22047000-B',10012173,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047108,@tbl,@t,@su,N'LINK-22047000-C',10012173,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'LINK-22047000-A',10012173,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'LINK-22047000-B',10012173,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'LINK-22047000-C',10012173,1,@t,@su,N'ACTIVE',@t,3,3),
     -- ADM_PREV_STATE_CASE_NBR (q 10012175, TEXT)
-    (22047109,@tbl,@t,@su,N'PSC-001',10012175,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047110,@tbl,@t,@su,N'PSC-002',10012175,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047111,@tbl,@t,@su,N'PSC-003',10012175,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'PSC-001',10012175,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'PSC-002',10012175,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'PSC-003',10012175,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_CHEST_STDY_TYPE (q 10010264, CODED csg 115430)
-    (22047112,@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047113,@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047114,@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_CHEST_STUDY_DT (q 10012166, DATE)
-    (22047115,@tbl,@t,@su,N'2026-03-10',10012166,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047116,@tbl,@t,@su,N'2026-03-12',10012166,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047117,@tbl,@t,@su,N'2026-03-14',10012166,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-10',10012166,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-12',10012166,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-14',10012166,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_DIAGNOSIS_TYPE (q 10012174, CODED csg 118230)
-    (22047118,@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047119,@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047120,@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_EVIDENCE_CAVITY (q 10012167, CODED csg 4150)
-    (22047121,@tbl,@t,@su,N'N',10012167,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047122,@tbl,@t,@su,N'Y',10012167,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047123,@tbl,@t,@su,N'N',10012167,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10012167,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Y',10012167,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'N',10012167,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_EVIDENCE_MILIARY_TB (q 10012168, CODED csg 4150)
-    (22047124,@tbl,@t,@su,N'N',10012168,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047125,@tbl,@t,@su,N'N',10012168,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047126,@tbl,@t,@su,N'Y',10012168,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10012168,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'N',10012168,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'Y',10012168,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_PREVIOUS_ILLNESS_DT (q 10006140, DATE)
-    (22047127,@tbl,@t,@su,N'2026-02-01',10006140,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047128,@tbl,@t,@su,N'2026-02-05',10006140,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047129,@tbl,@t,@su,N'2026-02-09',10006140,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-02-01',10006140,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-02-05',10006140,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-02-09',10006140,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CLN_RSLT_CHEST_STDY (q 10010265, CODED csg 115120)
-    (22047130,@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047131,@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047132,@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,3,3),
     -- CMP_ADVERSE_EVENT (q 10012234, CODED csg 118520)
-    (22047133,@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047134,@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047135,@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_ANTI_MIC_SUSC_RSLT_DT (q 10012206, DATE)
-    (22047136,@tbl,@t,@su,N'2026-03-15',10012206,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047137,@tbl,@t,@su,N'2026-03-17',10012206,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047138,@tbl,@t,@su,N'2026-03-19',10012206,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-15',10012206,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-17',10012206,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-19',10012206,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_GENE_IDENTIFIER (q 10010295, CODED csg 118040)
-    (22047139,@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047140,@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047141,@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_AMINO_ACID (q 10012213, TEXT)
-    (22047142,@tbl,@t,@su,N'Ser315Thr',10012213,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047143,@tbl,@t,@su,N'Lys43Arg',10012213,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047144,@tbl,@t,@su,N'Asp94Gly',10012213,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'Ser315Thr',10012213,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Lys43Arg',10012213,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'Asp94Gly',10012213,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_INDEL (q 10012214, CODED csg 118130)
-    (22047145,@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047146,@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047147,@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_NUCLIC_ACID (q 10012212, TEXT)
-    (22047148,@tbl,@t,@su,N'katG c.944G>C',10012212,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047149,@tbl,@t,@su,N'rpoB c.1349C>T',10012212,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047150,@tbl,@t,@su,N'gyrA c.280G>A',10012212,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'katG c.944G>C',10012212,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'rpoB c.1349C>T',10012212,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'gyrA c.280G>A',10012212,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_REPRTD_DT (q 10012209, DATE)
-    (22047151,@tbl,@t,@su,N'2026-03-20',10012209,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047152,@tbl,@t,@su,N'2026-03-22',10012209,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047153,@tbl,@t,@su,N'2026-03-24',10012209,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-20',10012209,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-22',10012209,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-24',10012209,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_SPC_COLC_DT (q 10012208, DATE)
-    (22047154,@tbl,@t,@su,N'2026-03-05',10012208,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047155,@tbl,@t,@su,N'2026-03-07',10012208,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047156,@tbl,@t,@su,N'2026-03-09',10012208,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-05',10012208,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-07',10012208,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-09',10012208,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_SPEC_TY (q 10012210, CODED csg 117770)
-    (22047157,@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047158,@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047159,@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_TST_MTHD (q 10012215, CODED csg 118630)
-    (22047160,@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047161,@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047162,@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_TST_RSLT (q 10012211, CODED csg 118600)
-    (22047163,@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047164,@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047165,@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,3,3),
     -- TRT_CMPLT_TRT_PREV_DIAG (q 10012176, CODED csg 4150)
-    (22047166,@tbl,@t,@su,N'N',10012176,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047167,@tbl,@t,@su,N'Y',10012176,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047168,@tbl,@t,@su,N'N',10012176,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10012176,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Y',10012176,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'N',10012176,1,@t,@su,N'ACTIVE',@t,3,3),
     -- TRT_DRG_USD_TRT_MDR_TB (q 10012229, CODED csg 117700)
-    (22047169,@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047170,@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047171,@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,3,3),
     -- TRT_DUR_DRG_ADMINSTRD (q 10012230, CODED csg 118300)
-    (22047172,@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047173,@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047174,@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,3,3);
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+    (@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,3,3);
+END
 GO
 
 -- =====================================================================
@@ -360,73 +365,78 @@ DECLARE @su  bigint   = 10009282;
 DECLARE @t   datetime = '2026-04-03T00:00:00';
 DECLARE @tri bigint = 22047500;
 
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+-- nbs_case_answer_uid is IDENTITY; let it AUTO-assign (LESSON 10:
+-- hardcoded IDENTITY_INSERT UIDs collide with the auto-IDENTITY flood and
+-- the guard silently skips the whole INSERT). Guard on the natural key.
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_case_answer]
+               WHERE act_uid = @tri AND nbs_question_uid = 10009139 AND answer_group_seq_nbr = 1)
+BEGIN
 INSERT INTO [dbo].[nbs_case_answer]
-    ([nbs_case_answer_uid],[act_uid],[add_time],[add_user_id],[answer_txt],
+    ([act_uid],[add_time],[add_user_id],[answer_txt],
      [nbs_question_uid],[nbs_question_version_ctrl_nbr],[last_chg_time],
      [last_chg_user_id],[record_status_cd],[record_status_time],[seq_nbr],
      [answer_group_seq_nbr])
 VALUES
     -- EPI_OTHER_MEAT_TYPE (q 10009139, TEXT)
-    (22047600,@tri,@t,@su,N'Wild boar',10009139,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047601,@tri,@t,@su,N'Bear',10009139,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047602,@tri,@t,@su,N'Cougar',10009139,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'Wild boar',10009139,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'Bear',10009139,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'Cougar',10009139,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_SPECIMEN_ANALYZED_DT (q 10002105, DATE)
-    (22047603,@tri,@t,@su,N'2026-03-11',10002105,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047604,@tri,@t,@su,N'2026-03-13',10002105,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047605,@tri,@t,@su,N'2026-03-15',10002105,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'2026-03-11',10002105,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'2026-03-13',10002105,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'2026-03-15',10002105,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_SPECIMEN_TYPE (q 10001372, CODED csg 113080)
-    (22047606,@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047607,@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047608,@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_STRAIN_TYPE (q 10009134, CODED csg 113150)
-    (22047609,@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047610,@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047611,@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,3,3),
     -- LAB_SUSPECT_MEAT_TESTED (q 10009145, CODED csg 113350)
-    (22047612,@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047613,@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047614,@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_CONSUMED_DT (q 10009140, DATE)
-    (22047615,@tri,@t,@su,N'2026-02-20',10009140,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047616,@tri,@t,@su,N'2026-02-22',10009140,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047617,@tri,@t,@su,N'2026-02-24',10009140,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'2026-02-20',10009140,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'2026-02-22',10009140,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'2026-02-24',10009140,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_COOKING_METHOD (q 10009143, CODED csg 113300)
-    (22047618,@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047619,@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047620,@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_LARVA_SUSPECT_MEAT (q 10009144, CODED csg 112930)
-    (22047621,@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047622,@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047623,@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_MEAT_COMMENTS (q 10009146, TEXT)
-    (22047624,@tri,@t,@su,N'Home-processed, undercooked',10009146,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047625,@tri,@t,@su,N'Shared at family event',10009146,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047626,@tri,@t,@su,N'Frozen >30 days',10009146,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'Home-processed, undercooked',10009146,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'Shared at family event',10009146,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'Frozen >30 days',10009146,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_MEAT_PREPARATION (q 10009142, CODED csg 113190)
-    (22047627,@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047628,@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047629,@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_SUSPECT_MEAT_TYPE (q 10009138, CODED csg 113020)
-    (22047630,@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047631,@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047632,@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,3,3),
     -- RSK_WHERE_MEAT_OBTAINED (q 10009141, CODED csg 112900)
-    (22047633,@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047634,@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047635,@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,3,3),
     -- TRV_DESTINATION_TYPE (q 10006155, CODED csg 3010)
-    (22047636,@tri,@t,@su,N'DOM',10006155,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047637,@tri,@t,@su,N'INTL',10006155,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047638,@tri,@t,@su,N'DOM',10006155,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'DOM',10006155,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'INTL',10006155,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'DOM',10006155,1,@t,@su,N'ACTIVE',@t,3,3),
     -- TRV_DURATION_OUTSIDE_US (q 10006160, NUMERIC unit_type_cd=CODED ->
     --   SP-gated, likely WON'T pivot; authored for completeness)
-    (22047639,@tri,@t,@su,N'14',10006160,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047640,@tri,@t,@su,N'21',10006160,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047641,@tri,@t,@su,N'7',10006160,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'14',10006160,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'21',10006160,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'7',10006160,1,@t,@su,N'ACTIVE',@t,3,3),
     -- TRV_TRAVEL_COUNTY (q 10006156, CODED county csg 110410)
-    (22047642,@tri,@t,@su,N'13001',10006156,1,@t,@su,N'ACTIVE',@t,1,1),
-    (22047643,@tri,@t,@su,N'13003',10006156,1,@t,@su,N'ACTIVE',@t,2,2),
-    (22047644,@tri,@t,@su,N'13001',10006156,1,@t,@su,N'ACTIVE',@t,3,3);
-SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+    (@tri,@t,@su,N'13001',10006156,1,@t,@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'13003',10006156,1,@t,@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'13001',10006156,1,@t,@su,N'ACTIVE',@t,3,3);
+END
 GO
