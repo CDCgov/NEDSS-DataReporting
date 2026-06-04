@@ -285,6 +285,71 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
             COMMIT TRANSACTION;
 
 
+            BEGIN TRANSACTION
+
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = 'MODIFY MISMATCHED COLUMN TYPES IN ' + @tgt_table_nm;
+
+                -- For columns that exist in both target and source but with different types,
+                -- SQL Server does not allow ALTER COLUMN between incompatible types (e.g. float -> date).
+                -- Instead, drop the column from the target and re-add it with the correct type.
+                -- The UPDATE step that follows will repopulate the values from the incoming data.
+                set @temp_sql = '
+                WITH type_mismatch_cte AS (
+                    SELECT
+                        src.COLUMN_NAME,
+                        src.DATA_TYPE                  AS src_data_type,
+                        src.CHARACTER_MAXIMUM_LENGTH   AS src_char_max_len,
+                        src.NUMERIC_PRECISION          AS src_num_prec,
+                        src.NUMERIC_SCALE              AS src_num_scale
+                    FROM INFORMATION_SCHEMA.COLUMNS src
+                    INNER JOIN INFORMATION_SCHEMA.COLUMNS tgt
+                        ON  src.COLUMN_NAME   = tgt.COLUMN_NAME
+                        AND src.TABLE_SCHEMA  = tgt.TABLE_SCHEMA
+                    WHERE src.TABLE_NAME  = ''' + @tmp_DynDm_INCOMING_DATA + '''
+                      AND tgt.TABLE_NAME  = ''' + @tgt_table_nm + '''
+                      AND src.TABLE_SCHEMA = ''dbo''
+                      AND tgt.TABLE_SCHEMA = ''dbo''
+                      AND src.DATA_TYPE   <> tgt.DATA_TYPE
+                )
+                SELECT @altercolsOUT = STRING_AGG(
+                    CAST(
+                        ''ALTER TABLE dbo.' + @tgt_table_nm + ' DROP COLUMN '' + QUOTENAME(COLUMN_NAME) + '';'' +
+                        ''ALTER TABLE dbo.' + @tgt_table_nm + ' ADD ''   + QUOTENAME(COLUMN_NAME) + '' '' + src_data_type +
+                        CASE
+                            WHEN src_data_type IN (''decimal'', ''numeric'')
+                                THEN ''('' + CAST(src_num_prec AS NVARCHAR) + '','' + CAST(src_num_scale AS NVARCHAR) + '')''
+                            WHEN src_data_type = ''varchar''
+                                THEN ''('' + CASE WHEN src_char_max_len = -1 THEN ''MAX'' ELSE CAST(src_char_max_len AS NVARCHAR) END + '')''
+                            ELSE ''''
+                        END + '' NULL''
+                        AS NVARCHAR(MAX)
+                    ),
+                    '';'')
+                FROM type_mismatch_cte';
+
+                DECLARE @altercols_type NVARCHAR(MAX);
+
+                if @debug = 'true'
+                select @Proc_Step_Name, @temp_sql;
+
+                exec sp_executesql @temp_sql, N'@altercolsOUT NVARCHAR(MAX) OUTPUT', @altercolsOUT = @altercols_type OUTPUT;
+
+                IF (@altercols_type IS NOT NULL)
+                BEGIN
+                    if @debug = 'true'
+                    select @Proc_Step_Name, @altercols_type;
+
+                    exec sp_executesql @altercols_type;
+                END;
+
+                SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+                INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+                VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+
+            COMMIT TRANSACTION;
+
+
             IF OBJECT_ID('dbo.tmp_DynDm_Inactive_Investigations_'+@datamart_suffix, 'U') IS NOT NULL
             BEGIN
 
