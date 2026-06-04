@@ -879,13 +879,22 @@ BEGIN
 
         BEGIN TRANSACTION
 
+            -- Bug #17: serialize allocation of nrt_lab_test_key IDENTITY values across concurrent /
+            -- retried postprocessing sessions. The sibling routine
+            -- (sp_d_labtest_result_postprocessing) races on the analogous
+            -- nrt_lab_test_result_group_key allocation; guard this key-gen the same way with an
+            -- exclusive application lock so concurrent sessions cannot interleave the
+            -- read/RESEED/INSERT and collide (Error 2627), deadlock (Error 1205) or drop inserts.
+            EXEC sp_getapplock @Resource = 'nrt_lab_test_key_keygen',
+                @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
+
             SELECT @rdb_last_refresh_time = GETDATE()
-            
+
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING keys for #lab_test_N';
 
             INSERT INTO [dbo].nrt_lab_test_key (LAB_TEST_UID)
-            SELECT LAB_TEST_UID 
+            SELECT LAB_TEST_UID
             FROM #lab_test_N
 
             SELECT @RowCount_no = @@ROWCOUNT;

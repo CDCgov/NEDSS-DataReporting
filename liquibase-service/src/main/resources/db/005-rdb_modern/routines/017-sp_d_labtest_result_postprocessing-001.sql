@@ -869,7 +869,17 @@ BEGIN
 
 		--------------------------------------------------------------------------------------------------------------------------------------------
 
-		BEGIN TRANSACTION 
+		BEGIN TRANSACTION
+
+			-- Bug #17: the IDENT_CURRENT + DBCC CHECKIDENT(RESEED) + INSERT pattern below is NOT
+			-- atomic. DBCC CHECKIDENT is a non-transactional metadata operation that escapes the
+			-- UPDLOCK/HOLDLOCK taken on the MAX read, so concurrent / retried postprocessing sessions
+			-- interleave here and either collide on the IDENTITY (Error 2627 duplicate PRIMARY KEY),
+			-- deadlock (Error 1205), or silently drop each other's inserts. Serialize the whole
+			-- read-MAX/RESEED/INSERT critical section with an exclusive application lock so only one
+			-- session allocates keys for this table at a time.
+			EXEC sp_getapplock @Resource = 'nrt_lab_test_result_group_key_keygen',
+				@LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING keys for new TEST_RESULT_GROUP ';
@@ -881,12 +891,20 @@ BEGIN
 			IF @curr_test_result_grp_key < @max_test_result_grp_key
 				DBCC CHECKIDENT ('[dbo].nrt_lab_test_result_group_key', RESEED, @max_test_result_grp_key);
 
+			-- Bug #17: de-dup against COMMITTED state (no NOLOCK) while holding the exclusive
+			-- applock, and recompute the set of new UIDs here (rather than relying solely on
+			-- #TEST_Result_Group_N, which was built with a NOLOCK EXCEPT before the lock was taken and
+			-- can be corrupted by a concurrent INSERT / DBCC CHECKIDENT(RESEED) scan anomaly that
+			-- spuriously drops a genuinely-new UID -> silent lost insert). Driving the de-dup from
+			-- #TMP_Lab_Result_Val and re-checking the key table under the lock guarantees every new
+			-- active UID is inserted exactly once.
 			INSERT INTO [dbo].nrt_lab_test_result_group_key (LAB_TEST_UID)
-			SELECT DISTINCT n.lab_test_uid
-			FROM #TEST_Result_Group_N n
-			LEFT JOIN [dbo].nrt_lab_test_result_group_key ck WITH (NOLOCK)
-				ON ck.LAB_TEST_UID = n.LAB_TEST_UID
-			WHERE ck.LAB_TEST_UID IS NULL
+			SELECT DISTINCT f.lab_test_uid
+			FROM #TMP_Lab_Result_Val f
+			LEFT JOIN [dbo].nrt_lab_test_result_group_key ck
+				ON ck.LAB_TEST_UID = f.LAB_TEST_UID
+			WHERE f.RECORD_STATUS_CD <> 'INACTIVE'
+				AND ck.LAB_TEST_UID IS NULL
 
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
