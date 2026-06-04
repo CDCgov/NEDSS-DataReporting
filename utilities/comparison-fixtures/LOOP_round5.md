@@ -282,3 +282,11 @@ reclassification workaround did NOT fix it (race is also driven by the covid-lab
 
 ### Quarantined (NOT their fault — gated on bug #17): zz_lab100_101_fill.sql, zz_bmird_antimicrobial.sql.
 Resumable: `rm utilities/comparison-fixtures/STOP_LOOP`, fix bug #17, then re-run /loop.
+
+## ===== ROUND 5 RESUMED (bug #17 fixed) =====
+- Bug #17 FIXED on this branch (aw/fix-bug17-labtest-keygen-race, commit 0fbda311): sp_getapplock
+  serializes the lab key-gen in routines 017+018 (the race caused 2627/1205/silent-lost-inserts ->
+  fail-fast skips -> the d_var_pam/obs-set flakiness). TDD'd (LabTestKeyGenConcurrencyTest: RED 149/960
+  -> GREEN 960/960). => the obs fail-fast path is now closed; coverage should be STABLE + the obs-heavy
+  fixtures can land. RE-LANDED zz_lab100_101_fill.sql (~+79) + zz_bmird_antimicrobial.sql (~+41) from
+  quarantine. Barrier-merging to validate (expect coverage UP + d_var_pam stable at 127, no flaky skips).
