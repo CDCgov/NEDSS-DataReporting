@@ -320,3 +320,17 @@ hepatitis_datamart +21 (D_INV_EPIDEMIOLOGY/TRAVEL/VACCINATION single-dim answers
 d_investigation_repeat +8 (8 more _OTH cols at group-5, PHCs 22003000/22049000/22047000/22007000/22004000).
 err2627/1205=0 err547=0, d_var_pam stable. NOTE: summary/sr100 coverage is harness-Step-8.7-assisted
 (documented, transparent) pending the bug #21 service-timing fix.
+
+### R6 tick 3 (2026-06-04) — HIT THE BUG #20 BATCH CEILING; reverted to clean 77.6%
+Targeted LDF subsystem + std_hiv + covid_case. All THREE landed real gains (LDF +15 incl 2 empty
+tables org/patient_ldf_group 0->3/3; covid_case +6/investigation +4; std_hiv +4) BUT each enlarges/
+perturbs the CDC batch past the bug #20 fail-fast threshold -> non-deterministic collateral on a
+shifting low-priority victim (full set: morbidity_report_datamart 130->0; minus std: place tables
+d_inv_place_repeat 44->1 + d_place 37->31; ldf-only: morb_rpt_user_comment 8->0). Bisected by serial
+quarantine; confirmed it is BATCH-SIZE-sensitive, not a single culprit. Ticks 1-2 (answer-only, smaller)
+verified genuinely clean via RAW git diff. DECISION: reverted all 3 fixtures to _quarantine
+(.gated-on-bug20-* / .suspect-bug20-*) + restored committed coverage; net committed gain this tick = 0.
+Filed bug #22 (LDF source + seed/chain gating) + updated bug #20 (batch-size collateral + the awk-bold
+verification blindspot -> use raw git diff). The high-value remaining wins (LDF/covid/std, + the obs-heavy
+lab/bmird) are ALL gated on the bug #20 service fault-isolation fix. Session committed total: 75.6%->77.6%
+(ticks 1-2). PAUSED for a user decision on bug #20 (the durable unblock).

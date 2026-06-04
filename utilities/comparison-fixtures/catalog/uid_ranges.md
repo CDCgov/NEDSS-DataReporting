@@ -1638,3 +1638,8 @@ tail-EXEC sequences these correctly for standalone verification.
 | 22067000 - 22067999 | R6t2 hepatitis answer-tail agent — allocated 2026-06-04. hepatitis_datamart/hep100 NULL column tail via additional investigation ANSWERS on existing hep PHC(s). Non-obs. |
 | 22068000 - 22068999 | R6t2 d_investigation_repeat-2 agent — allocated 2026-06-04. Remaining d_investigation_repeat NULL cols (243/300) via _OTH/other repeat answers on PHCs NOT covered by zz_d_investigation_repeat_forms.sql. New file zz_d_investigation_repeat_forms_2.sql. Non-obs. |
 | (reuses 22065000) | R6t2 summary-debug agent — wire/trigger sp_summary_report_case_postprocessing + sp_sr100_datamart_postprocessing (currently not firing); owns merge_and_verify.sh Step-9 + zz_summary_report_case.sql this tick. |
+
+<!-- Round 6 tick 3 (non-obs-heavy) -->
+| 22069000 - 22069999 | R6t3 LDF subsystem agent — allocated 2026-06-04. The empty LDF cluster (ldf_bmird/foodborne/hepatitis/mumps/tetanus 0/7, organization/patient/provider_ldf_group 0/3, tb_pam_ldf/var_pam_ldf 0/3) + partials ldf_data 9/17, ldf_dimensional_data 9/16, d_ldf_meta_data 12/14, via LDF (local-data-field) answers. Non-obs. May discover an SRTE LDF-metadata seed gate (document as OOB if so, bug #16 precedent). |
+| 22070000 - 22070999 | R6t3 std_hiv_datamart agent — allocated 2026-06-04. std_hiv_datamart 223/248 (+25 non-PATIENT cols) via STD/HIV investigation ANSWERS on existing STD PHC chain. Non-obs. |
+| 22071000 - 22071999 | R6t3 covid_case_datamart agent — allocated 2026-06-04. covid_case_datamart 372/383 (+11) + investigation 63/71 via COVID investigation ANSWERS on existing COVID PHC chain. Non-obs. |
