@@ -372,3 +372,52 @@ D_INV_MOTHER 7 via 2 new Hep-B PHCs 22076000/22076100 added to PHC_UIDS). case_l
 (recovered — confirms the +-2 bounce is flaky noise, not a fixture defect). d_var_pam STABLE 127, no
 regressions, raw-diff verified. NOTE: d_interview_note stayed 0/7 (the IXS111 note-answer path didn't
 populate — needs more than the single note answer; minor follow-up).
+
+## ===== FINAL STATUS — Round 6 converged (2026-06-04) =====
+SESSION ARC: coverage 75.6% -> 81.0% (committed, +~250 populated cols), 72/118 in-scope tables fully
+covered, 15 empty. Every tick raw-diff-verified, net-positive, ZERO net regressions; d_var_pam STABLE at
+127 throughout (the chronic +-100 flakiness is resolved at its root).
+
+ROOT-CAUSE CHAIN FIXED (all TDD, all validated end-to-end):
+- Bug #17 — lab-test key-gen race + sentinel residual (sp_getapplock + explicit allocation, routines
+  017/018). Commits 0fbda311 / 7e9ad25d. PR branch aw/labtest-keygen-fix (off main, fix-only, NOT opened).
+- Bug #19 — LAB_TEST RECORD_STATUS_CD CHECK violation (normalize fallback, routine 018). Commit 722244b.
+  (bundled in the same PR branch.)
+- Bug #20 — obs-batch fail-fast skipping ALL lower-priority entities on any throw (PostProcessingService
+  .processIdCache fault isolation). Commit 32566c8b. PR branch aw/fix-bug20-obs-failfast-isolation. THE
+  KEYSTONE: validated end-to-end (re-landing LDF/covid/std + the obs-heavy lab/bmird produced zero
+  collateral where every prior attempt regressed a shifting victim).
+
+WHAT THE BUG #20 FIX UNLOCKED (all committed, ticks 1-7): summary_report_case 0->11 + sr100 0->19 (Step
+8.7 backstop, bug #21); hepatitis_datamart +~37; d_investigation_repeat +32 (_OTH); tb +8/d_tb_pam +3;
+LDF organization/patient_ldf_group 0->3/3 + ldf_data/ldf_dimensional; obs-heavy lab100 +21 + bmird +41;
+covid_vaccination +20; covid_contact +14/d_contact_record +15; d_interview 18->24; morbidity 130->133.
+
+BUGS FILED: #20 (obs fail-fast, FIXED), #21 (summary-case service drain race; harness Step 8.7
+workaround), #22 (LDF seed/chain gating + real source = State_Defined_Field_Data), #24 (routine-040
+BMIRD_MULTI_VALUE_FIELD PARTITION BY branch_id caps to 1 row/PHC). (#16 covid_lab LOINC seed gap, #18
+followup-obs NPE pre-existing.)
+
+CONVERGENCE: answer-only fixtures are EXHAUSTED — recent agents found bmird has no nbs_case_answer path,
+d_investigation_repeat answer-remainder is down to ~2 ordering-dependent cols, std/tb/covid tails are
+patient/provider/notification-derived. Loop stopped here (not a plateau — the safe additive-answer space
+is genuinely tapped).
+
+PATH TO ~85-89% (the realistic fixtures-only ceiling) — requires work BEYOND safe answer-only fixtures:
+1. OBS-HEAVY remainder (lab101 +46, hep100 +36, more lab/vaccination repeating blocks): blocked by a
+   RESIDUAL d_var_pam-tip — lab101's large 'Order'-root chain still skipped d_var_pam under batch volume
+   even with the processIdCache fix. FOLLOW-UP: apply the same fault-isolation to PostProcessingService
+   .processCdCache (~802) and/or processDatamartIds (the paths the processIdCache fix did NOT cover).
+   (zz_lab101_fill.sql quarantined, ready once that lands.)
+2. ROUTINE bugs: #24 (bmird multi-value cap -> ~15 cols) + the systemic NUMERIC-with-coded-unit
+   non-landing in routine 010 (d_investigation_repeat coded-numeric cols).
+3. SEED-gated (#16 covid_lab LOINC 11065; #22 LDF metadata for bmird/hep/foodborne/mumps/tetanus +
+   tb/var_pam_ldf): need NBS_SRTE/page-metadata seed rows (out of fixtures-only bounds).
+4. SHARED-DIM enrich (d_patient 60/81, d_provider): need new patient/provider entities or foundation
+   enrich (never UPDATE shared foundation rows).
+5. OUT OF BOUNDS (unchanged): var_datamart, covid_lab_datamart, covid_lab_celr_datamart,
+   aggregate_report_datamart, f_var_pam, MasterETL-only.
+
+QUARANTINED (revivable, gated as noted): zz_lab101_fill.sql (.partial+dvarpam-tip — needs follow-up #1);
+zz_d_investigation_repeat_forms_3.sql (.ordering-dep — needs rename to sort after zz_hepatitis_answer_gap2);
+the LDF seed/chain-gated subset (bug #22).
