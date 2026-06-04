@@ -35,3 +35,14 @@ the genuine wins LDF (+15, 2 empty tables), covid_case (+10), std_hiv (+4) are a
 .gated-on-bug20-* / .suspect-bug20-* pending the service fault-isolation fix. METHOD NOTE: verify with a
 RAW git diff of coverage_merged.md (git diff HEAD -- .../coverage_merged.md | grep '^[+-]| dbo\.') — an
 awk split on the pop/total cell silently mis-parses **bold** fully-covered cells and hides their regressions.
+
+## RESOLVED (2026-06-04, commit 32566c8b on aw/fix-bug20-obs-failfast-isolation, merged to remove-nrt)
+FIXED via fault isolation in PostProcessingService.processIdCache: each entity is now processed
+independently and a throw re-queues ONLY the failed entity (not all lower-priority ones). TDD:
+PostProcessingServiceRetryTest.testFaultIsolation_lowerPriorityEntityProcessedWhenHigherPriorityFails
+(RED before, GREEN after). VALIDATED END-TO-END: re-landing the 3 previously-collateral-causing fixtures
+(LDF +12 incl 2 empty tables, covid_case +6/investigation +4, std_hiv +4) now produces ZERO collateral —
+morbidity_report_datamart (130/133), d_inv_place_repeat (44/44), d_place (37/37), l_inv_place_repeat,
+morb_rpt_user_comment (8/8), f_vaccination all STABLE — where every prior attempt regressed one of them.
+Coverage 77.6%->78.1%. This also unblocks the obs-heavy lab100/101 + bmird fixtures (quarantined
+.gated-on-obs-failfast) for re-landing.

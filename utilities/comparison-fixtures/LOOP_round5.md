@@ -334,3 +334,12 @@ Filed bug #22 (LDF source + seed/chain gating) + updated bug #20 (batch-size col
 verification blindspot -> use raw git diff). The high-value remaining wins (LDF/covid/std, + the obs-heavy
 lab/bmird) are ALL gated on the bug #20 service fault-isolation fix. Session committed total: 75.6%->77.6%
 (ticks 1-2). PAUSED for a user decision on bug #20 (the durable unblock).
+
+### R6 tick 4 (2026-06-04) — BUG #20 FIXED + validated; +26, 77.6%->78.1%, ZERO collateral
+Fixed bug #20 (PostProcessingService fault isolation, commit 32566c8b, TDD-proven, merged to remove-nrt).
+Re-landed the 3 quarantined fixtures (LDF org/patient_ldf_group 0->3/3 + ldf_data ->15; covid_case ->378
++ investigation ->67; std_hiv ->227) — ALL landed together with ZERO collateral (morbidity/place-repeat/
+morb_rpt_user_comment/f_vaccination all STABLE), proving the fault isolation eliminated the batch fail-fast
+collateral that blocked every prior tick-3 attempt. err2627/1205=0, err547=0, idle-drained. Verified with
+RAW git diff. NEXT: the obs-heavy lab100/101 + bmird (still in _quarantine .gated-on-obs-failfast, +120)
+are now UNBLOCKED — re-land them; ceiling rises toward ~85-89%.
