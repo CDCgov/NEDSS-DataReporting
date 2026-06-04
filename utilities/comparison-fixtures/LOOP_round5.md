@@ -195,3 +195,6 @@ needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FRO
   d_contact_record +39, f_contact_record_case +11, morb_rpt_user_comment +8 (CLOSES #26), lab_rpt_user_comment
   +8, lab100 +5, d_place +6 (all the formerly-"flaky" tables now STABLE+populated - LESSON 12 confirmed:
   they were fail-fast-skipped by the morb-515 throw). morb 515 throw GONE. Phase B (lab) now safe.
+- #26 marked complete (keystone closed it). tick: spawned Phase B (lab, now safe post-keystone:
+  un-quarantine + date-children fix + harness ORCH_TODO) and STD-C (dedicated entities + PHC enrich
+  22004000, UID 22057xxx) in parallel.
