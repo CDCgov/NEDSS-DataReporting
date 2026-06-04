@@ -35,3 +35,16 @@ serialize + live-guard the key-gen critical section. Either/both:
   Also drop the WITH (NOLOCK) on the key lookups.
 Confidence: HIGH (reproduced the exact statement + colliding key under concurrency; proved clean
 first-time + steady-state paths do not throw; confirmed single-instance source/RDB data for 22065010).
+
+## FIXED (2026-06-04, branch aw/fix-bug18-followup-obs-npe -> on aw/odse-test-seed) — TDD
+Fix (routine 006): after BEGIN TRANSACTION, acquire an exclusive applock
+(sp_getapplock @Resource='nrt_notification_key_keygen', @LockOwner='Transaction' -> released at COMMIT)
+and then REFRESH the at-SP-start NOTIFICATION_KEY snapshots in #temp_ntf_table and #temp_ntf_event_table
+from the now-current nrt_notification_key / NOTIFICATION_EVENT, so a notification_uid another session
+just keyed is no longer treated as new. Mirrors the bug #17 sp_getapplock approach; the snapshot refresh
+additionally handles the stale-guard facet specific to this routine.
+
+TDD: LabTestKeyGenConcurrencyTest.concurrentNotificationPostprocessingDoesNotRaceOnNewNotificationKeys
+(15 rounds x 16 threads on the same fresh notification_uid). Empirically: RED = 2/16 parallel calls
+threw 2627 (duplicate NOTIFICATION PK) on the old routine; GREEN = 0/48 across 3 rounds on the fixed
+routine + the committed test passes (test-unit). Exactly one NOTIFICATION row / key lands per uid.

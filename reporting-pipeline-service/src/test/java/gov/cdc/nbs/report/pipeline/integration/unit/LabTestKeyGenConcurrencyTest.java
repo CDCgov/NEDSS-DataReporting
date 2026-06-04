@@ -60,6 +60,9 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
   // Distinct, well out-of-range UID/key base so we never collide with seeded fixture data.
   private static final long UID_BASE = 970_000_000L;
 
+  // Bug #26: separate out-of-range base for the notification key-gen race test.
+  private static final long NOTIF_UID_BASE = 971_000_000L;
+
   private static final int THREADS = 32;
   private static final int ROUNDS = 30;
 
@@ -73,6 +76,9 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
 
   // All UIDs inserted across the whole test, for guaranteed cleanup.
   private final List<Long> insertedUids = new CopyOnWriteArrayList<>();
+
+  // Bug #26: notification_uids inserted by the notification race test, for guaranteed cleanup.
+  private final List<Long> insertedNotifUids = new CopyOnWriteArrayList<>();
 
   /**
    * Reuse an already-running nbs-mssql+liquibase stack on the fixed compose port (3433) if one is
@@ -157,25 +163,59 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
 
   @AfterEach
   void cleanup() throws SQLException {
-    if (insertedUids.isEmpty()) {
+    if (insertedUids.isEmpty() && insertedNotifUids.isEmpty()) {
       return;
     }
-    String csv = csv(insertedUids);
     try (Connection conn = connection();
         Statement st = conn.createStatement()) {
-      // Delete in FK-safe order: child result tables -> grouping -> key -> LAB_TEST.
-      st.execute("DELETE FROM " + DB + "LAB_TEST_RESULT WHERE LAB_TEST_UID IN (" + csv + ")");
-      st.execute("DELETE FROM " + DB + "LAB_RESULT_VAL WHERE LAB_TEST_UID IN (" + csv + ")");
-      st.execute("DELETE FROM " + DB + "TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (" + csv + ")");
-      st.execute(
-          "DELETE FROM "
-              + DB
-              + "nrt_lab_test_result_group_key WHERE LAB_TEST_UID IN ("
-              + csv
-              + ")");
-      st.execute("DELETE FROM " + DB + "LAB_TEST WHERE LAB_TEST_UID IN (" + csv + ")");
+      if (!insertedUids.isEmpty()) {
+        String csv = csv(insertedUids);
+        // Delete in FK-safe order: child result tables -> grouping -> key -> LAB_TEST.
+        st.execute("DELETE FROM " + DB + "LAB_TEST_RESULT WHERE LAB_TEST_UID IN (" + csv + ")");
+        st.execute("DELETE FROM " + DB + "LAB_RESULT_VAL WHERE LAB_TEST_UID IN (" + csv + ")");
+        st.execute(
+            "DELETE FROM " + DB + "TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (" + csv + ")");
+        st.execute(
+            "DELETE FROM "
+                + DB
+                + "nrt_lab_test_result_group_key WHERE LAB_TEST_UID IN ("
+                + csv
+                + ")");
+        st.execute("DELETE FROM " + DB + "LAB_TEST WHERE LAB_TEST_UID IN (" + csv + ")");
+        insertedUids.clear();
+      }
+      if (!insertedNotifUids.isEmpty()) {
+        String ncsv = csv(insertedNotifUids);
+        // FK-safe order: NOTIFICATION_EVENT + NOTIFICATION (via key) -> key -> source.
+        st.execute(
+            "DELETE e FROM "
+                + DB
+                + "NOTIFICATION_EVENT e JOIN "
+                + DB
+                + "nrt_notification_key k ON e.NOTIFICATION_KEY = k.d_notification_key"
+                + " WHERE k.notification_uid IN ("
+                + ncsv
+                + ")");
+        st.execute(
+            "DELETE n FROM "
+                + DB
+                + "NOTIFICATION n JOIN "
+                + DB
+                + "nrt_notification_key k ON n.NOTIFICATION_KEY = k.d_notification_key"
+                + " WHERE k.notification_uid IN ("
+                + ncsv
+                + ")");
+        st.execute(
+            "DELETE FROM " + DB + "nrt_notification_key WHERE notification_uid IN (" + ncsv + ")");
+        st.execute(
+            "DELETE FROM "
+                + DB
+                + "nrt_investigation_notification WHERE notification_uid IN ("
+                + ncsv
+                + ")");
+        insertedNotifUids.clear();
+      }
     }
-    insertedUids.clear();
   }
 
   @Test
@@ -470,6 +510,152 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
       st.execute(sb.toString());
     } catch (SQLException e) {
       fail("Failed to seed LAB_TEST rows: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Bug #26 (sibling of bug #17): sp_nrt_notification_postprocessing allocated d_notification_key
+   * (IDENTITY on nrt_notification_key, no unique index on notification_uid) and inserted into
+   * NOTIFICATION using a NOTIFICATION_KEY-IS-NULL guard snapshotted at SP start with (NOLOCK). Two
+   * concurrent first-time batches for the same notification_uid both saw NULL, both minted a key,
+   * and both INSERTed the same NOTIFICATION PK -> Error 2627 (and a sibling 547 one statement
+   * later). This test fires many threads at the SAME brand-new notification_uid per round and
+   * asserts no thread throws and exactly one NOTIFICATION row lands per uid. RED against the
+   * pre-fix routine; GREEN after the applock + snapshot-refresh fix.
+   */
+  @Test
+  void concurrentNotificationPostprocessingDoesNotRaceOnNewNotificationKeys() throws Exception {
+    final int rounds = 15;
+    final int threadsPerRound = 16;
+
+    // One fresh notification per round; all threads in a round hammer the SAME uid to maximize the
+    // first-time key-gen / NOTIFICATION-insert race.
+    List<Long> uids = new ArrayList<>();
+    for (int r = 0; r < rounds; r++) {
+      long uid = NOTIF_UID_BASE + r;
+      uids.add(uid);
+      insertedNotifUids.add(uid);
+    }
+    seedNotifications(uids);
+
+    List<Throwable> failures = new CopyOnWriteArrayList<>();
+    AtomicInteger keyViolations = new AtomicInteger();
+
+    for (long uid : uids) {
+      CountDownLatch ready = new CountDownLatch(threadsPerRound);
+      CountDownLatch go = new CountDownLatch(1);
+      CountDownLatch done = new CountDownLatch(threadsPerRound);
+      ExecutorService pool = Executors.newFixedThreadPool(threadsPerRound);
+      try {
+        for (int t = 0; t < threadsPerRound; t++) {
+          pool.submit(
+              () -> {
+                try (Connection conn = connection();
+                    Statement st = conn.createStatement()) {
+                  ready.countDown();
+                  go.await();
+                  st.execute(
+                      "EXEC "
+                          + DB
+                          + "sp_nrt_notification_postprocessing @notification_uids='"
+                          + uid
+                          + "'");
+                } catch (SQLException e) {
+                  String msg = e.getMessage();
+                  if (msg != null
+                      && (msg.contains("2627")
+                          || msg.contains("PRIMARY KEY")
+                          || msg.contains("duplicate key")
+                          || msg.contains("1205")
+                          || msg.toLowerCase().contains("deadlock"))) {
+                    keyViolations.incrementAndGet();
+                  }
+                  failures.add(e);
+                } catch (Throwable e) {
+                  failures.add(e);
+                } finally {
+                  done.countDown();
+                }
+              });
+        }
+        assertTrue(ready.await(60, TimeUnit.SECONDS), "threads did not reach the start latch");
+        go.countDown();
+        assertTrue(done.await(120, TimeUnit.SECONDS), "threads did not finish in time");
+      } finally {
+        pool.shutdownNow();
+      }
+    }
+
+    if (!failures.isEmpty()) {
+      log.error(
+          "{} thread(s) threw; {} were notification key-gen race errors (2627/1205)",
+          failures.size(),
+          keyViolations.get());
+      for (Throwable f : failures) {
+        log.error("thread failure: {}", f.getMessage());
+      }
+    }
+
+    assertTrue(
+        failures.isEmpty(),
+        () ->
+            "Expected no exceptions from concurrent notification postprocessing, but "
+                + failures.size()
+                + " thread(s) threw ("
+                + keyViolations.get()
+                + " key-gen race errors: 2627 PK violation / 1205 deadlock). First: "
+                + failures.get(0).getMessage());
+
+    // Exactly one NOTIFICATION row per notification_uid: no duplicate-PK survivor, no lost insert.
+    try (Connection conn = connection();
+        Statement st = conn.createStatement();
+        var rs =
+            st.executeQuery(
+                "SELECT COUNT(*) AS total, COUNT(DISTINCT k.notification_uid) AS uids FROM "
+                    + DB
+                    + "nrt_notification_key k JOIN "
+                    + DB
+                    + "NOTIFICATION n ON n.NOTIFICATION_KEY = k.d_notification_key "
+                    + "WHERE k.notification_uid IN ("
+                    + csv(uids)
+                    + ")")) {
+      assertTrue(rs.next(), "count query returned no rows");
+      assertEquals(
+          rounds, rs.getInt("uids"), "expected exactly one NOTIFICATION per notification_uid");
+      assertEquals(
+          rs.getInt("uids"),
+          rs.getInt("total"),
+          "duplicate NOTIFICATION rows detected for a notification_uid (key-gen race survivor)");
+    }
+  }
+
+  private void seedNotifications(List<Long> uids) throws SQLException {
+    try (Connection conn = connection();
+        Statement st = conn.createStatement()) {
+      StringBuilder sb = new StringBuilder("SET NOCOUNT ON; ");
+      for (Long uid : uids) {
+        // Fresh notification_uid (unseen by nrt_notification_key) so every call hits the first-time
+        // key-gen + NOTIFICATION-insert path. Borrow an existing investigation context (PHC
+        // 20000100 /
+        // condition 10110 / patient 20000000, the Hep-A foundation case) so the NOTIFICATION_EVENT
+        // insert's NOT-NULL INVESTIGATION_KEY/CONDITION_KEY are satisfied and the SP commits --
+        // otherwise step 6 throws 515 and rolls back before the step-5 race can surface.
+        sb.append(
+            "INSERT INTO "
+                + DB
+                + "nrt_investigation_notification (source_act_uid, notification_uid,"
+                + " public_health_case_uid, condition_cd, local_patient_uid, notif_status,"
+                + " notif_local_id) VALUES ("
+                + uid
+                + ", "
+                + uid
+                + ", 20000100, '10110', 20000000, 'C', 'NOTIF-RACE-"
+                + uid
+                + "'); ");
+      }
+      st.execute(sb.toString());
+    } catch (SQLException e) {
+      fail("Failed to seed nrt_investigation_notification rows: " + e.getMessage());
     }
   }
 
