@@ -1628,3 +1628,8 @@ tail-EXEC sequences these correctly for standalone verification.
 | 22061000 - 22061999 | R5 inc-w2 bmird antimicrobial batch graph |
 | 22062000 - 22062999 | R5 inc-w2 d_inv_place_repeat |
 | 22063000 - 22063999 | R5 inc-w2 covid_contact contact-side investigation |
+
+<!-- Round 6 (post key-gen fixes; non-obs-heavy targets, run until user stops) -->
+| 22064000 - 22064999 | R6 d_investigation_repeat agent — allocated 2026-06-04. Additional investigation repeating-group form answers (d_inv_*_repeat column gaps). Investigation/answer-driven (NO new observations — must not enlarge the obs batch / bug #20 fail-fast). |
+| 22065000 - 22065999 | R6 summary_report agent — allocated 2026-06-04. summary_report_case / sr100 fields. Notification/investigation-driven (NO new observations). |
+| 22066000 - 22066999 | R6 tb gap agent — allocated 2026-06-04. tb_datamart + tb_hiv_datamart NON-PATIENT column gap (~25 cols) via RVCT form answers on the existing TB PHC chain. Answer/investigation-driven (NO new observations). |

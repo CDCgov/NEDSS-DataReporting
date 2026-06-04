@@ -290,3 +290,24 @@ Resumable: `rm utilities/comparison-fixtures/STOP_LOOP`, fix bug #17, then re-ru
   -> GREEN 960/960). => the obs fail-fast path is now closed; coverage should be STABLE + the obs-heavy
   fixtures can land. RE-LANDED zz_lab100_101_fill.sql (~+79) + zz_bmird_antimicrobial.sql (~+41) from
   quarantine. Barrier-merging to validate (expect coverage UP + d_var_pam stable at 127, no flaky skips).
+
+## Round 6 (2026-06-04) — post key-gen-fix resume
+All 3 key-gen defects fixed+merged to remove-nrt (db216afd): #17 race (sp_getapplock), #17 residual
+(explicit alloc, key>=2), #19 LAB_TEST 547 (RECORD_STATUS_CD normalize). Verified err2627/1205=0,
+err547=0. Isolated PR branch aw/labtest-keygen-fix (off main, fix-only, NOT opened). Filed bug #20
+(obs fail-fast = the flakiness root; recommend service fault-isolation). lab100/101 + bmird stay
+quarantined (.gated-on-obs-failfast) until #20. RESUME loop on NON-OBS-HEAVY targets (investigation/
+answer/notification-driven only — adding observations re-trips #18 + STD dyn-datamart throws → fail-fast
+collateral). Run until the user stops it (no plateau auto-wind-down). Targets: d_investigation_repeat
+forms, summary_report_case/sr100, tb non-PATIENT gap, then more investigation/condition tails.
+
+### R6 tick 1 (2026-06-04, post key-gen-fix) — net +34, 75.6%->76.3%, ZERO regressions
+First clean net-positive since the key-gen fixes: flakiness GONE (d_var_pam STABLE, no fail-fast
+collateral), err2627/1205=0, err547=0, 53 "No ids" idle. Landed: d_investigation_repeat +24 (_OTH
+free-text cols via OTH^ answers, group-4 guard, 6 page-builder PHCs); tb_datamart +3 / tb_hiv_datamart
++3 / d_tb_pam +3 (RVCT PRIMARY_GUARD_1/2_BIRTH_COUNTRY + INIT_REGIMEN_START_DATE on PHC 22050000);
+hepatitis_datamart +1. WIP (uncommitted): zz_summary_report_case.sql + PHC_UIDS 22065000 — upstream
+chain CORRECT (ODSE PHC case_type='S' 10110, nrt_investigation_notification=1, SummaryNotification
+investigation-observation present) but SUMMARY_REPORT_CASE/SR100 stay 0; only sp_inv_summary_datamart
+ran, not sp_summary_report_case/sp_sr100 -> they appear not wired into merge_and_verify Step-9 (or need
+EVENT_METRIC first). Next tick: debug-agent to wire/trigger the summary report-case + sr100 SPs.
