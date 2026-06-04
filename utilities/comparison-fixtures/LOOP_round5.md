@@ -175,3 +175,18 @@ fixture answers the guard's (act,Q) at a different group.)
   MIS-attributed to IDENTITY flood, but observation/act are NOT identity columns (survey) -> real cause
   unknown. Re-quarantined zz_lab100_101_fill.sql (.regresses-6-obs-tables-cause-TBD); spawned read-only
   B-diagnosis agent. Proceeding with Phase C (COVID dedicated patient+PHC, 22055xxx) in parallel.
+
+## LESSON 12 (KEYSTONE): the morb-515 throw + fail-fast skip is the real flakiness/lab-regression cause
+LAB_REGRESSION_DIAGNOSIS.md: the service processes each ~20s CDC batch with a FAIL-FAST short-circuit
+(PostProcessingService.processIdCache:749-799) — the first entity whose SP THROWS sets
+processingFailed=true and ALL lower-priority entities are SKIPPED (priority OBSERVATION=14 < CONTACT=15
+< TREATMENT=16 < VACCINATION=17). The morb foundation observation ALREADY throws Error 515
+(MORBIDITY_REPORT_EVENT.PATIENT_KEY cannot be NULL) EVERY run (verified in job_flow_log). So whenever
+contact/vaccination co-batch with that throwing OBSERVATION, they're skipped -> THIS is why covid_contact
+/ d_contact_record / f_vaccination / d_place are "flaky" (not benign timing), and why the lab fixture's
++80 obs deterministically zeroed 6 tables (bigger batch -> guaranteed co-batch).
+=> KEYSTONE FIX (item D + prerequisite for B + addresses #26): author the missing patient-subject link on
+the morb report so sp_nrt_morbidity_report_postprocessing succeeds -> OBSERVATION stops throwing ->
+contact/vaccination/lab never skipped -> those tables populate DETERMINISTICALLY. Lab fixture (B) also
+needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FROM_TIME channel (routine
+020 hard convert(datetime) throws otherwise). Spawned morb-fix agent (parallel with COVID-C).
