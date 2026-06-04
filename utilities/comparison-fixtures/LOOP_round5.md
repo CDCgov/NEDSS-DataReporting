@@ -216,3 +216,5 @@ needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FRO
   forms TBRD/Monkeypox/Babesiosis/CarbonMonoxide, PHC_UIDS += 22060000/200/400/600). TB-C
   (zz_tb_dedicated_entities) COVERAGE-NEUTRAL (tb_datamart/tb_hiv unchanged - the ~25 TB gap is not
   PATIENT_*-shaped; kept as harmless additive fidelity). d_place +6 flaky. No regression.
+- INCREMENTAL wave-2: spawned bmird-antimicrobial (22061xxx ~40), d_inv_place_repeat (22062xxx ~43),
+  covid_contact-side (22063xxx ~43). 74.1% -> ceiling ~89%.
