@@ -244,3 +244,41 @@ act_relationship producing a null in the JSON) and fix its ODSE data so processO
 -> stabilizes d_var_pam/vaccination/contact AND lets bmird-antimicrobial + future obs fixtures land.
 HOLDING the wave-2 commit (d_inv_place +43, covid_contact +25 are clean gains) until d_var_pam is stable
 post-fix. bmird-antimicrobial stays quarantined pending the fix (NOT its fault).
+
+## ===== ROUND 5 WOUND DOWN — final summary =====
+**Result: 67.7% (R5 start) -> 75.6% (committed e0dfc3d1).** Session total across R4+R5: **14.0% -> 75.6%**
+faithful, no-shortcut, no product/liquibase/seed edits.
+
+### A-B-C-D status
+- **A (IDENTITY refactor) DONE** (2ba4f24d): all flood-prone nbs_case_answer IDENTITY_INSERT -> auto-IDENTITY
+  + distinguishing-key guards (LESSON 11). L10 hazard eliminated. Coverage-neutral. (varicella left hardcoded
+  - below flood range, safe.)
+- **C (dedicated patients + enriched PHCs) DONE**: COVID +54, STD +10/+35(casemgmt), TB-C (coverage-neutral).
+- **D (covid_contact flakiness) DONE via the KEYSTONE morb-fix** (f26dc05b, +183, closed #26): PATSBJ link
+  on morb Order 20080010 stopped the morb-515 throw -> fixed the 1st fail-fast skip.
+- **B (lab100/101) DEFERRED + quarantined** — gated on bug #17 (below).
+
+### Incremental gains (R5): std_hiv casemgmt +35/d_case_mgmt +25, d_investigation_repeat +~37 (8 new
+forms: TB_LTBI/Trichinellosis/STEC/Cyclo/Salmonella/Malaria/TBRD/Monkeypox/Babesiosis/CarbonMonoxide),
+d_inv_place_repeat +43, covid_contact +25, hepatitis +.
+
+### THE GATING BLOCKER — bug #17 (out of bounds; needs YOUR call)
+`sp_d_labtest_result_postprocessing`/`sp_d_lab_test_postprocessing` (routines 017/018) generate IDENTITY
+keys for nrt_lab_test_result_group_key / nrt_lab_test_key with a NON-ATOMIC IDENT_CURRENT+RESEED+INSERT
+pattern that RACES under concurrent processObservation -> intermittent Error 2627 (PK dup key 1) ->
+DataProcessingException -> fail-fast skip of CONTACT/TREATMENT/VACCINATION-priority entities. This makes
+d_var_pam + f_vaccination + covid_contact_datamart + lab_rpt_user_comment + lab100 + d_place +
+d_contact_record FLAKY (±~100 cols run-to-run; the "74-76%" band reflects which ones got skipped). It also
+blocks obs-heavy fixtures (lab Phase B, bmird-antimicrobial) from landing reliably. The morb-component
+reclassification workaround did NOT fix it (race is also driven by the covid-lab obs) and broke lab tables
+-> reverted. This is a ROUTINE concurrency bug, OUT OF BOUNDS for fixtures-only.
+
+### Recommended next moves (need your decision)
+1. **Fix bug #17 upstream** (atomic/idempotent key allocation in routines 017/018) -> stabilizes coverage
+   measurement AND unlocks lab100/101 + bmird-antimicrobial (re-land both from _quarantine/). HIGHEST leverage.
+2. Fix bug #18 (followup-obs NPE, cosmetic log noise) + bug #16 (covid lab LOINC seed) if pursuing those datamarts.
+3. After #17: re-land bmird-antimicrobial (~+41) + lab100/101 (~+79) + resume incremental toward the ~89%
+   fixtures-only ceiling (var/covid_lab/aggregate remain seed/bug out-of-bounds).
+
+### Quarantined (NOT their fault — gated on bug #17): zz_lab100_101_fill.sql, zz_bmird_antimicrobial.sql.
+Resumable: `rm utilities/comparison-fixtures/STOP_LOOP`, fix bug #17, then re-run /loop.
