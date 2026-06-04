@@ -282,6 +282,28 @@ class PostProcessingServiceRetryTest {
   }
 
   @Test
+  void testProcessIndependentProcessingOnFailure() {
+    String topic = "dummy_datamart";
+    String hepDmMsg =
+        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\","
+            + "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+    String genDmMsg =
+        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\","
+            + "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+
+    when(investigationRepositoryMock.executeStoredProcForHepDatamart(anyString()))
+        .thenThrow(new RuntimeException(errorMsg));
+
+    postProcessingServiceMock.processDmMessage(topic, hepDmMsg);
+    postProcessingServiceMock.processDmMessage(topic, genDmMsg);
+    postProcessingServiceMock.processDatamartIds();
+
+    // Verify Hepatitis failed but Generic_Case was processed anyway
+    verify(investigationRepositoryMock).executeStoredProcForHepDatamart(anyString());
+    verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(anyString());
+  }
+
+  @Test
   void testProcessRetryMultiId() {
     String investigationKey = "{\"payload\":{\"public_health_case_uid\":123}}";
     String notificationKey = "{\"payload\":{\"notification_uid\":124}}";
@@ -304,6 +326,34 @@ class PostProcessingServiceRetryTest {
     Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
     assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
     assertTrue(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+  }
+
+  @Test
+  void testProcessRetryDynamicDatamart() {
+    String investigationKey = "{\"payload\":{\"public_health_case_uid\":123}}";
+    String invTopic = "dummy_investigation";
+    postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+    postProcessingServiceMock.processCachedIds();
+
+    // Setup: Simulate dynamic datamart failure
+    List<DatamartData> dmDataList = new ArrayList<>();
+    DatamartData dd = new DatamartData();
+    dd.setDatamart("DYN_DM");
+    dd.setPublicHealthCaseUid(123L);
+    dmDataList.add(dd);
+
+    when(postProcRepositoryMock.executeStoredProcForInvSummaryDatamart(any(), any(), any()))
+        .thenReturn(dmDataList);
+    doThrow(new RuntimeException(errorMsg))
+        .when(postProcRepositoryMock)
+        .executeStoredProcForDynDatamart("DYN_DM", "123");
+
+    postProcessingServiceMock.processDatamartIds();
+
+    // The failure should be caught and enqueued for retry
+    assertFalse(datamartProcessor.retryCache.isEmpty());
+    assertTrue(
+        datamartProcessor.retryCache.values().stream().anyMatch(dm -> dm.containsKey("DYN_DM")));
   }
 
   @Test
