@@ -462,6 +462,68 @@ VALUES
      N'A', '2026-04-04T00:00:00', N'Component');
 
 -- =====================================================================
+-- v2 Morb Order patient-subject participation (PATSBJ).
+--
+-- KEYSTONE FIX (Round 5 LESSON 12): the Morbidity postprocessing SP
+-- (016-sp_nrt_morbidity_report_postprocessing) resolves
+-- MORBIDITY_REPORT_EVENT.PATIENT_KEY at line 986 via
+--     left join dbo.d_patient pat ON n.patient_id = pat.patient_uid
+-- where n = #morb_obs_reference (= dbo.nrt_observation). PATIENT_KEY is
+-- NOT COALESCEd and the target column is NOT NULL, so a NULL
+-- nrt_observation.patient_id throws SQL Error 515 ("Cannot insert the
+-- value NULL into column 'PATIENT_KEY'") on EVERY run.
+--
+-- The suite is now fully CDC-driven: morbidity.sql no longer hand-writes
+-- nrt_observation; that row is materialized by the pipeline
+-- (observation -> sp_observation_event JSON -> reporting-pipeline-service
+-- -> nrt_observation). The service sets nrt_observation.patient_id ONLY
+-- when the Order observation carries a PERSON participation whose
+-- type_cd is 'PATSBJ' or 'SubjOfMorbReport' and subject_class_cd='PSN'
+-- (ProcessObservationDataUtil.transformPersonParticipations, lines
+-- 113-122: case "PATSBJ","SubjOfMorbReport" -> setPatientId(entityId)).
+-- The morb Order acts had ZERO participations, so patient_id stayed
+-- NULL -> the 515 throw -> the fail-fast short-circuit in
+-- PostProcessingService.processIdCache skipped CONTACT/VACCINATION/lab in
+-- the same CDC batch (LESSON 12).
+--
+-- This additive PATSBJ participation links the v2 Morb Order (20080010)
+-- to the foundation Patient (20000000, which HAS a D_PATIENT row,
+-- PATIENT_KEY=4). The event SP projects it (its filter is
+-- p.act_uid = o.observation_uid AND p.record_status_cd='ACTIVE', joining
+-- nbs_odse.dbo.person; 20000000 is an ACTIVE PSN person) -> the service
+-- sets nrt_observation.patient_id=20000000 -> the SP join resolves
+-- PATIENT_KEY -> MORBIDITY_REPORT_EVENT INSERT succeeds -> no 515.
+--
+-- (Mirrors how investigations get their patient via the SubjOfPHC
+-- participation in fixtures/20_links/patient_phc.sql; PAR_TYPE 'PATSBJ'
+-- is the production patient-subject participation type for observations.)
+-- Composite PK is (act_uid, subject_entity_uid, type_cd) — no surrogate
+-- UID needed.
+-- =====================================================================
+INSERT INTO [dbo].[participation]
+    ([act_uid], [subject_entity_uid], [type_cd],
+     [act_class_cd], [subject_class_cd],
+     [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
+     [record_status_cd], [record_status_time],
+     [status_cd], [status_time],
+     [type_desc_txt])
+VALUES
+    (@dbo_Act_morb_v2_order_uid,      -- act_uid (OBS; v2 Morb Order)
+     @foundation_patient_uid,         -- subject_entity_uid (PSN; foundation Patient 20000000)
+     N'PATSBJ',                       -- type_cd (patient-subject of observation)
+     N'OBS',                          -- act_class_cd
+     N'PSN',                          -- subject_class_cd (PERSON; required for setPatientId)
+     '2026-04-04T00:00:00',           -- add_time
+     @superuser_id,                   -- add_user_id
+     '2026-04-04T00:00:00',           -- last_chg_time
+     @superuser_id,                   -- last_chg_user_id
+     N'ACTIVE',                       -- record_status_cd (event SP filters = 'ACTIVE')
+     '2026-04-04T00:00:00',           -- record_status_time
+     'A',                             -- status_cd
+     '2026-04-04T00:00:00',           -- status_time
+     N'Patient Subject');
+
+-- =====================================================================
 -- v2 Morb Order act_id row.
 -- =====================================================================
 INSERT INTO [dbo].[act_id]

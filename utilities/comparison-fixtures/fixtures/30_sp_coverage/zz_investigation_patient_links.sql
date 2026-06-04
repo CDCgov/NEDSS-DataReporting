@@ -28,8 +28,16 @@ SELECT 20000000, phc.public_health_case_uid, 'SubjOfPHC', 'CASE',
        '2026-04-01', 10009282, '2026-04-01', 10009282, 'ACTIVE', '2026-04-01',
        'A', '2026-04-01', 'PSN', 'Subject of Public Health Case'
 FROM NBS_ODSE.dbo.public_health_case phc
+-- NOTE: 22003000 (COVID full-chain) is INTENTIONALLY OMITTED here. Round 5
+-- item C (zz_covid_dedicated_entities.sql) authors a dedicated, richly-
+-- attributed COVID patient (22055000) and links it as 22003000's SubjOfPHC
+-- so the covid_case_datamart PATIENT_* columns populate. Adding the sparse
+-- foundation patient 20000000 here would create a SECOND SubjOfPHC row on
+-- 22003000 (this fixture sorts AFTER zz_covid_dedicated_entities.sql), making
+-- nrt_investigation.patient_id non-deterministic. Keep exactly one SubjOfPHC
+-- for 22003000 (-> 22055000).
 WHERE phc.public_health_case_uid IN
-        (22001000, 22002000, 22003000, 22004000, 22005000, 22006000, 22007000, 22008500)
+        (22001000, 22002000, 22004000, 22005000, 22006000, 22007000, 22008500)
   AND NOT EXISTS (SELECT 1 FROM NBS_ODSE.dbo.participation p
                   WHERE p.act_uid = phc.public_health_case_uid
                     AND p.subject_entity_uid = 20000000

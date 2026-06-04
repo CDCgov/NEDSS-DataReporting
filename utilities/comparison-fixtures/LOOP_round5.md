@@ -190,3 +190,8 @@ the morb report so sp_nrt_morbidity_report_postprocessing succeeds -> OBSERVATIO
 contact/vaccination/lab never skipped -> those tables populate DETERMINISTICALLY. Lab fixture (B) also
 needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FROM_TIME channel (routine
 020 hard convert(datetime) throws otherwise). Spawned morb-fix agent (parallel with COVID-C).
+- PHASE C (COVID) + KEYSTONE morb-fix COMMITTED: 68.2% -> 72.1% (+183 cols!), NO regressions.
+  covid_case_datamart +54 (dedicated patient/provider/org 22055xxx + enriched PHC), covid_contact +51,
+  d_contact_record +39, f_contact_record_case +11, morb_rpt_user_comment +8 (CLOSES #26), lab_rpt_user_comment
+  +8, lab100 +5, d_place +6 (all the formerly-"flaky" tables now STABLE+populated - LESSON 12 confirmed:
+  they were fail-fast-skipped by the morb-515 throw). morb 515 throw GONE. Phase B (lab) now safe.

@@ -145,6 +145,39 @@ INSERT INTO [dbo].[act] ([act_uid], [class_cd], [mood_cd]) VALUES
 --   code_value_general PHC_CLASS 'C' (Confirmed).
 --   code_value_general PHC_IN_STS 'O' (Open).
 --   jurisdiction_code '130001' Fulton County.
+-- PHC-CORE SCALAR ENRICHMENT (Round 5 item C, Part 2):
+--   The columns below feed sp_covid_case_datamart_postprocessing Step 4
+--   (#COVID_CASE_CORE_DATA, routine 310 lines 168-204) via NRT_INVESTIGATION
+--   (which the service rebuilds from this public_health_case row). Each
+--   value uses a realistic COVID scenario + a valid coded value resolved
+--   from the SRTE code sets (verified live 2026-06-04):
+--     hospitalized_ind_cd      'Y'        (YNU)          -> HSPTLIZD_IND
+--     hospitalized_admin_time/_discharge_time/_duration_amt -> HSPTL_* (admit/discharge/duration)
+--     diagnosis_time           -> DIAGNOSIS_DT
+--     effective_from_time/_to_time -> ILLNESS_ONSET_DT / ILLNESS_END_DT
+--     effective_duration_amt   14 / _unit_cd 'D' (DUR_UNIT Days) -> ILLNESS_DURATION / _UNIT
+--     pat_age_at_onset         47 / _unit_cd 'Y' (P_AGE_UNIT Years) -> PATIENT_ONSET_AGE / _UNIT
+--     pregnant_ind_cd          'N'        (YNU; male patient)  -> PATIENT_PREGNANT_IND
+--     outcome_cd               'D'        (PHC_OUTCM Died) -> DIE_FROM_ILLNESS_IND
+--     deceased_time            -> INV_DEATH_DT
+--     day_care_ind_cd          'N' / food_handler_ind_cd 'N' (YNU) -> DAYCARE_ASSOC_IND / FOOD_HANDLER_IND
+--     disease_imported_cd      'OOS'      (PHC_IMPRT Out of state) -> DISEASE_IMPORTED_IND
+--     imported_country_cd '840' (US) / imported_state_cd '12' (FL) /
+--       imported_county_cd '12086' (Miami-Dade) / imported_city_desc_txt 'Miami'
+--       -> IMPORT_FROM_CNTRY / _STATE / _CNTY / _CITY
+--     transmission_mode_cd     'OTH'      (PHVS_TRANSMISSIONMODE_ARBOVIRUS Other; COVID respiratory not enumerated) -> TRANSMISSION_MODE_CD
+--     detection_method_cd      'PHC2112'  (PHC_DET_MT Laboratory reported) -> DETECT_METHOD_CD
+--     rpt_source_cd            'LA'       (PHC_RPT_SRC_T Laboratory) -> RPT_SOURCE_CD
+--     txt                      -> INV_COMMENTS ; activity_from_time -> INV_START_DT
+--     investigator_assigned_time -> INV_ASSIGNED_DT ; rpt_form_cmplt_time -> INV_RPT_DT
+--     rpt_to_county_time / rpt_to_state_time -> EARLIEST_RPT_TO_CNTY_DT / _ST_DT
+--     inv_priority_cd          'HIGH'     (NBS_PRIORITY) -> CTT_INV_PRIORITY_CD
+--     infectious_from_date / infectious_to_date -> CTT_INFECTIOUS_FROM_DT / _TO_DT
+--     contact_inv_status_cd    'O'        (PHC_IN_STS Open) -> CTT_INV_STATUS
+--     contact_inv_txt          -> CTT_INV_COMMENTS
+--   GENERATED ALWAYS period cols are omitted. NOTES / INV_STATE_CASE_ID /
+--   INV_LEGACY_CASE_ID are NOT public_health_case scalars (NRT_INVESTIGATION
+--   derives them from NBS_Note / other paths) and are deliberately left.
 INSERT INTO [dbo].[public_health_case]
     ([public_health_case_uid], [add_time], [add_user_id], [case_type_cd],
      [case_class_cd], [cd], [cd_desc_txt], [cd_system_cd], [cd_system_desc_txt],
@@ -152,7 +185,20 @@ INSERT INTO [dbo].[public_health_case]
      [record_status_cd], [record_status_time], [status_cd], [status_time],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
      [program_jurisdiction_oid], [outbreak_ind], [outbreak_name],
-     [mmwr_week], [mmwr_year])
+     [mmwr_week], [mmwr_year],
+     [hospitalized_ind_cd], [hospitalized_admin_time], [hospitalized_discharge_time],
+     [hospitalized_duration_amt], [diagnosis_time],
+     [effective_from_time], [effective_to_time],
+     [effective_duration_amt], [effective_duration_unit_cd],
+     [pat_age_at_onset], [pat_age_at_onset_unit_cd], [pregnant_ind_cd],
+     [outcome_cd], [deceased_time], [day_care_ind_cd], [food_handler_ind_cd],
+     [disease_imported_cd], [imported_country_cd], [imported_state_cd],
+     [imported_county_cd], [imported_city_desc_txt],
+     [transmission_mode_cd], [detection_method_cd], [rpt_source_cd], [txt],
+     [activity_from_time], [investigator_assigned_time], [rpt_form_cmplt_time],
+     [rpt_to_county_time], [rpt_to_state_time],
+     [inv_priority_cd], [infectious_from_date], [infectious_to_date],
+     [contact_inv_status_cd], [contact_inv_txt])
 VALUES
     (@covid_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
@@ -160,7 +206,20 @@ VALUES
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'COV', N'130001',
      22003000, N'N', NULL,
-     N'14', N'2026');
+     N'14', N'2026',
+     N'Y', '2026-03-20T08:00:00', '2026-03-30T10:00:00',
+     10, '2026-03-18T00:00:00',
+     '2026-03-12T00:00:00', '2026-04-02T00:00:00',
+     14, N'D',
+     47, N'Y', N'N',
+     N'D', '2026-04-02T12:00:00', N'N', N'N',
+     N'OOS', N'840', N'12',
+     N'12086', N'Miami',
+     N'OTH', N'PHC2112', N'LA', N'COVID-19 confirmed case; patient hospitalized and expired.',
+     '2026-03-15T00:00:00', '2026-03-16T00:00:00', '2026-04-05T00:00:00',
+     '2026-03-16T00:00:00', '2026-03-17T00:00:00',
+     N'HIGH', '2026-03-10T00:00:00', '2026-03-25T00:00:00',
+     N'O', N'Contact tracing initiated for household and workplace contacts.');
 
 -- =====================================================================
 -- ODSE: act_id (PHC_LOCAL_ID) — matches the canonical Investigation pattern
