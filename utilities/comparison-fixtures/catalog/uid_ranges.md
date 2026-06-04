@@ -1643,3 +1643,8 @@ tail-EXEC sequences these correctly for standalone verification.
 | 22069000 - 22069999 | R6t3 LDF subsystem agent — allocated 2026-06-04. The empty LDF cluster (ldf_bmird/foodborne/hepatitis/mumps/tetanus 0/7, organization/patient/provider_ldf_group 0/3, tb_pam_ldf/var_pam_ldf 0/3) + partials ldf_data 9/17, ldf_dimensional_data 9/16, d_ldf_meta_data 12/14, via LDF (local-data-field) answers. Non-obs. May discover an SRTE LDF-metadata seed gate (document as OOB if so, bug #16 precedent). |
 | 22070000 - 22070999 | R6t3 std_hiv_datamart agent — allocated 2026-06-04. std_hiv_datamart 223/248 (+25 non-PATIENT cols) via STD/HIV investigation ANSWERS on existing STD PHC chain. Non-obs. |
 | 22071000 - 22071999 | R6t3 covid_case_datamart agent — allocated 2026-06-04. covid_case_datamart 372/383 (+11) + investigation 63/71 via COVID investigation ANSWERS on existing COVID PHC chain. Non-obs. |
+
+<!-- Round 6 tick 6 (post bug #20 fix — obs/contact/vaccination now SAFE from fail-fast collateral) -->
+| 22072000 - 22072999 | R6t6 covid_vaccination agent — covid_vaccination_datamart 39/60 (+21) via vaccination ODSE entities on the COVID case chain. Obs/vaccination now safe (bug #20 fixed). |
+| 22073000 - 22073999 | R6t6 contact agent — d_contact_record 40/66 + covid_contact_datamart 76/94 via contact-record ODSE entities. Contact now safe (bug #20 fixed). |
+| 22074000 - 22074999 | R6t6 lab101 agent — investigate why lab101 stayed 0/46 after zz_lab100_101_fill; author what it needs (likely a distinct lab/result shape or CELR-style path). |

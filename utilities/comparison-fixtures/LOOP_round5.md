@@ -352,3 +352,15 @@ that bounced +-100 all effort), f_vaccination/covid_contact/morbidity/morb_rpt_u
 stable. err2627/1205=0, err547=0, idle-drained, raw-diff verified. Proves the full root-cause chain:
 fault isolation (bug #20) means the obs-batch throw no longer skips lower-priority entities. NOTE:
 lab101 stayed 0/46 (separate gap — needs more than zz_lab100_101_fill provides; not a regression).
+
+### R6 tick 6 (2026-06-04) — covid_vaccination + contact land; +49, 79.5%->80.5%, d_var_pam stable
+Crossed 80%. covid_vaccination_datamart 39->59 (+20, full ODSE vaccination chain), covid_contact_datamart
+76->90 (+14) + d_contact_record 40->55 (+15, via CT_CONTACT_ANSWER -> nrt_metadata_columns pivot — found
+CT_CONTACT_ANSWER was empty). d_var_pam STABLE at 127. Quarantined zz_lab101_fill.sql (partial +5/46 AND
+its big 'Order'-root lab chain tipped d_var_pam -101 under batch volume — a residual skip beyond the
+processIdCache fault-isolation; revisit as a bug #20 follow-up: check processCdCache/processDatamartIds).
+Notes (minor residuals, NOT fixture defects): case_lab_datamart bounces +-2 and a single
+sp_nrt_notification_postprocessing 2627 on the summary notification 22065010 persist — small residual
+flakiness vs the old +-100 d_var_pam swings. The zz_var_datamart_enrich CONFIRMATION_METHOD FK 547 seen
+mid-debug was TRANSIENT (dim-ordering race), not deterministic — applied clean on retry. Two contact
+IDENTITY traps fixed (ct_contact_answer needed SET IDENTITY_INSERT). Block 22072xxx/22073xxx.

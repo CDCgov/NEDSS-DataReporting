@@ -1,0 +1,444 @@
+-- =====================================================================
+-- Tier 3 (NO-SHORTCUT, ODSE-ONLY) — land dbo.LAB101 (was 0/46)
+-- Agent R6t6-lab101. UID block 22074000-22074999 (catalog/uid_ranges.md).
+-- =====================================================================
+-- Branch aw/remove-nrt-shortcut: authors ONLY NBS_ODSE rows (act /
+-- observation / obs_value_* / act_relationship / act_id / participation).
+-- CDC -> nrt_observation; service sp_observation_event + ProcessObservation
+-- DataUtil; orchestrator Step-5 sp_d_lab_test_postprocessing +
+-- sp_d_labtest_result_postprocessing; Step-9 sp_lab101_datamart_post-
+-- processing turn these into LAB101 rows. NO nrt_* INSERT, NO EXEC sp_,
+-- NO liquibase/seed/SRTE/routine edits.
+--
+-- ---------------------------------------------------------------------
+-- ROOT CAUSE — WHY LAB101 STAYED 0/46 AFTER zz_lab100_101_fill.sql
+-- ---------------------------------------------------------------------
+-- VERIFIED LIVE (RDB_MODERN, 2026-06-04):
+--   * The prior fixture's full I_Order/I_Result/Result + 35 LABxxx chain
+--     IS present in LAB_TEST (37 I_Result rows, ROOT_ORDERED_TEST_PNTR =
+--     22053500), and LAB_RESULT_VAL / TEST_RESULT_GROUPING / LAB_TEST_
+--     RESULT all landed (37 / 37 / 38 rows). Yet LAB101 = 0.
+--   * sp_lab101_datamart_postprocessing (020) STEP 2 (#tmp_I_Result_vals,
+--     lines 51-70) reads dbo.nrt_observation.followup_observation_uid of
+--     the I_Result's ROOT_ORDERED_TEST_PNTR observation and filters it to
+--     LAB_TEST_TYPE='I_Result'. Every I_Result row's ROOT_ORDERED_TEST_PNTR
+--     is 22053500, whose obs_domain_cd_st_1 = 'I_Order'.
+--   * nrt_observation(22053500).followup_observation_uid IS NULL (verified;
+--     ALL 22053xxx rows have NULL followup), so STEP 2 returns 0 rows and
+--     the whole LAB101 chain starves -> 0/46.
+--
+-- WHY THE FOLLOWUP CSV IS NULL (the actual gate — bug #16):
+--   followup_observation_uid is written by the reporting-pipeline-service
+--   (ProcessObservationDataUtil.transformFollowupObservations), NOT by the
+--   routines. That method, at its first line inside the per-child loop, runs
+--       assertDomainCdMatches(obsDomainCdSt1, ORDER);     // ORDER = "Order"
+--   (ProcessObservationDataUtil.java:310, assert at :573-577). When the ROOT
+--   observation's obs_domain_cd_st_1 != exactly 'Order' it THROWS
+--   IllegalArgumentException, the catch (:327) swallows it, and
+--   setFollowUpObservationUid is NEVER called. The prior fixture's root was
+--   obs_domain_cd_st_1='I_Order', so its followup CSV could never populate.
+--   (This is the empty bugs/16_followup_observations_npe_null_domain stub:
+--    an 'I_Order'/'R_Order' root can NEVER get a followup CSV through the
+--    real pipeline. Only an 'Order'-domain root does — proven by the working
+--    CDC CELR lab 20070010 (domain 'Order') whose followup = '20070020,
+--    20070021', and by bug #3's morb fix walking a 'C_Result' followup off
+--    an 'Order' root.)
+--
+-- ---------------------------------------------------------------------
+-- THE FIX — author an 'Order'-DOMAIN root above the I_Order
+-- ---------------------------------------------------------------------
+-- The service sets report_observation_uid for EVERY observation whose COMP
+-- parent's domain CONTAINS "Order" (ProcessObservationDataUtil:352,
+-- parentDomainCd.contains(ORDER) — true for 'Order','I_Order','C_Order').
+-- The followup walk in sp_observation_event (055, lines 132-153) is a 4-level
+-- source->target descendant union off the root, so an 'Order' root reaches
+-- I_Result GRANDCHILDREN. So we author a 3-tier ODSE hierarchy:
+--
+--   Order root 22074500  (obs_domain_cd_st_1='Order')   <-- followup-bearing
+--        ^ COMP
+--   I_Order    22074501  (obs_domain_cd_st_1='I_Order')
+--        ^ COMP
+--   Result     22074502  (obs_domain_cd_st_1='Result')  + 35 I_Result
+--   I_Result   22074600..22074634 (cd LAB329a,LAB330..LAB363)
+--
+-- RESOLUTION (verified against routines 018 / 020 + service):
+--   * Order root 22074500 is domain 'Order' -> assert passes -> service
+--     writes its followup_observation_uid = the 4-level descendant CSV,
+--     which INCLUDES the 35 I_Result grandchildren + the Result + I_Order.
+--   * Each I_Result child's COMP parent is the I_Order (domain 'I_Order'
+--     contains "Order") -> report_observation_uid = 22074501 ->
+--     LAB_TEST.PARENT_TEST_PNTR = 22074501 (an 'I_Order' row), satisfying
+--     sp_lab101 step 3's "...where lab_test_type='I_Order'" join (020:179).
+--   * The I_Order's COMP parent is the Order root (domain 'Order') ->
+--     I_Order.report_observation_uid = 22074500. For an I_Result,
+--     sp_d_lab_test_postprocessing (018:406) computes ROOT_ORDERED_TEST_PNTR
+--     = parent_test(=I_Order 22074501).report_observation_uid = 22074500.
+--     So every I_Result's ROOT_ORDERED_TEST_PNTR = the 'Order' root, whose
+--     followup CSV IS populated -> sp_lab101 step 2 #tmp_I_Result_vals
+--     resolves -> step 3 (#tmp_ISOLATE_TRACKING_INIT, from LAB_RESULT_VAL of
+--     those I_Result uids) drives the 35-col trtdN pivot -> LAB101 lands.
+--   * The 35 obs_value_coded.display_name -> TEST_RESULT_VAL_CD_DESC (017
+--     :731-733) feed LAB1..LAB35; the 7 datetime pivot cds (LAB334/349/350/
+--     356/357/361/362) carry obs_value_date.from_time -> FROM_TIME so the
+--     hard convert(datetime) in 020:839-845 only ever sees a datetime or
+--     NULL and cannot throw.
+--
+-- DISTINCT FROM THE PRIOR FIXTURE: this lands LAB101 because the followup-
+-- bearing root is a true 'Order' (not 'I_Order'). It reuses NO 22053xxx UID
+-- and edits nothing; it is an independent, idempotent NOT-EXISTS-guarded add
+-- in block 22074xxx. (The dormant 22053xxx I_Order-rooted chain is harmless:
+-- its followup stays NULL by design and contributes 0 LAB101 rows.)
+--
+-- ---------------------------------------------------------------------
+-- ORCH_TODO (REQUIRED — without these the orchestrator never feeds these
+--            observations to the lab postprocessing / datamart SPs):
+--   1. scripts/merge_and_verify.sh run_lab_chain() (~lines 322-324): add the
+--      new lab observation UIDs to the sp_observation_event @obs_id_list AND
+--      the two postprocessing @obs_ids lists:
+--        22074500,22074501,22074502
+--      (the 35 I_Result children 22074600-22074634 are reached via the Order
+--       root's followup CSV; do NOT add them to @obs_ids — the postprocessing
+--       SP reaches them via the followup traversal, mirroring the existing
+--       C_Order/C_Result precedent and the 22053xxx pattern.)
+--   2. scripts/merge_and_verify.sh LAB_OBS_UIDS (~line 486): add the
+--      I_Result test UID sp_lab101 keys on:  22074601
+--      (any I_Result uid works; its ROOT_ORDERED_TEST_PNTR=22074500 drives
+--       sp_lab101 step 2. 22074601 chosen as the first LAB330 child.)
+--
+--   ** ORDERING ** — same caveat as zz_lab100_101_fill.sql: the lab
+--   postprocessing SPs (sp_d_lab_test_postprocessing / sp_d_labtest_result_
+--   postprocessing) that BUILD LAB_TEST/LAB_RESULT_VAL from nrt_observation
+--   run at Step 5/7, before the Step-9 drain has CDC-mirrored these rows. So
+--   the orchestrator MUST, AFTER the Step-9 drain confirms idle and BEFORE
+--   the lab101 datamart SP, re-run the two lab postprocessing SPs once more
+--   with the extended @obs_ids:
+--     EXEC dbo.sp_d_lab_test_postprocessing       @obs_ids = N'<existing>,22074500,22074501,22074502', @debug = 0;
+--     EXEC dbo.sp_d_labtest_result_postprocessing @obs_ids = N'<existing>,22074500,22074501,22074502', @debug = 0;
+--
+-- ---------------------------------------------------------------------
+-- SEED note: LAB101 isolate-tracking columns derive entirely from the
+-- LABxxx coded/txt/date values authored here; no LOINC->condition seed is
+-- involved (contrast covid_lab bug #16-seed). NOT seed-gated.
+-- =====================================================================
+
+USE [NBS_ODSE];
+GO
+
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @pat_uid      bigint = 20000000;   -- D_PATIENT (foundation)
+DECLARE @prov_uid     bigint = 20000010;   -- D_PROVIDER (foundation)
+DECLARE @org_uid      bigint = 20000020;   -- D_ORGANIZATION (foundation)
+
+DECLARE @order_root bigint = 22074500;   -- 'Order' root (followup-bearing)
+DECLARE @i_order    bigint = 22074501;   -- 'I_Order'
+DECLARE @resulted   bigint = 22074502;   -- 'Result' (specimen-detail source)
+
+-- ---------------------------------------------------------------------
+-- act parents: Order root + I_Order + Result + 35 I_Result children.
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid = @order_root)
+    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd])
+    SELECT v, N'OBS', N'EVN'
+    FROM (VALUES (22074500),(22074501),(22074502)) AS t(v);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid = 22074600)
+BEGIN
+    DECLARE @c int = 0;
+    WHILE @c < 35
+    BEGIN
+        INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22074600 + @c, N'OBS', N'EVN');
+        SET @c += 1;
+    END;
+END
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @pat_uid      bigint = 20000000;
+DECLARE @prov_uid     bigint = 20000010;
+DECLARE @org_uid      bigint = 20000020;
+DECLARE @order_root bigint = 22074500;
+DECLARE @i_order    bigint = 22074501;
+DECLARE @resulted   bigint = 22074502;
+
+-- ---------------------------------------------------------------------
+-- Order ROOT observation (obs_domain_cd_st_1 = 'Order').
+-- THIS is the row whose followup_observation_uid the service populates
+-- (assert at ProcessObservationDataUtil:310 passes only for 'Order').
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.observation WHERE observation_uid = @order_root)
+    INSERT INTO [dbo].[observation]
+        ([observation_uid],[add_time],[add_user_id],[cd],[cd_desc_txt],
+         [cd_system_cd],[cd_system_desc_txt],
+         [last_chg_time],[last_chg_user_id],[local_id],
+         [obs_domain_cd_st_1],[obs_domain_cd],[ctrl_cd_display_form],
+         [record_status_cd],[record_status_time],[status_cd],[status_time],
+         [subject_person_uid],[shared_ind],[version_ctrl_nbr],
+         [prog_area_cd],[jurisdiction_cd],[program_jurisdiction_oid],
+         [electronic_ind],[method_cd],[method_desc_txt],[target_site_cd],[target_site_desc_txt],
+         [effective_from_time])
+    VALUES
+        (@order_root, '2026-04-22T08:00:00', @superuser_id,
+         N'CULT', N'Bacterial culture — isolate tracking (order)',
+         N'L', N'Local',
+         '2026-04-22T08:00:00', @superuser_id, N'OBS22074500GA01',
+         N'Order', N'Order', N'LabReport',
+         N'PROCESSED', '2026-04-22T08:00:00', N'A', '2026-04-22T08:00:00',
+         @pat_uid, N'T', 1,
+         N'ENT', N'130001', 20074500,
+         N'Y', N'CULT', N'Culture', N'STOOL', N'Stool specimen',
+         '2026-04-21T18:00:00');
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @pat_uid      bigint = 20000000;
+DECLARE @prov_uid     bigint = 20000010;
+DECLARE @org_uid      bigint = 20000020;
+DECLARE @order_root bigint = 22074500;
+DECLARE @i_order    bigint = 22074501;
+DECLARE @resulted   bigint = 22074502;
+
+-- ---------------------------------------------------------------------
+-- I_Order observation (obs_domain_cd_st_1 = 'I_Order'). COMP child of the
+-- Order root. Same local_id across the chain so the SP's local_id joins
+-- line up.
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.observation WHERE observation_uid = @i_order)
+    INSERT INTO [dbo].[observation]
+        ([observation_uid],[add_time],[add_user_id],[cd],[cd_desc_txt],
+         [cd_system_cd],[cd_system_desc_txt],
+         [last_chg_time],[last_chg_user_id],[local_id],
+         [obs_domain_cd_st_1],[obs_domain_cd],[ctrl_cd_display_form],
+         [record_status_cd],[record_status_time],[status_cd],[status_time],
+         [subject_person_uid],[shared_ind],[version_ctrl_nbr],
+         [prog_area_cd],[jurisdiction_cd],[program_jurisdiction_oid],
+         [electronic_ind],[method_cd],[method_desc_txt],[target_site_cd],[target_site_desc_txt])
+    VALUES
+        (@i_order, '2026-04-22T08:30:00', @superuser_id,
+         N'CULT', N'Bacterial culture — isolate tracking',
+         N'L', N'Local',
+         '2026-04-22T08:30:00', @superuser_id, N'OBS22074500GA01',
+         N'I_Order', N'I_Order', N'LabReport',
+         N'PROCESSED', '2026-04-22T08:30:00', N'A', '2026-04-22T08:30:00',
+         @pat_uid, N'T', 1,
+         N'ENT', N'130001', 20074500,
+         N'Y', N'CULT', N'Culture', N'STOOL', N'Stool specimen');
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @pat_uid      bigint = 20000000;
+DECLARE @order_root bigint = 22074500;
+DECLARE @i_order    bigint = 22074501;
+DECLARE @resulted   bigint = 22074502;
+
+-- ---------------------------------------------------------------------
+-- 'Result'-type test (specimen-detail source for #tmp_RESULTED_TEST_DETAIL1,
+-- 020:148-191). COMP child of the I_Order. The service routes a followup of
+-- domain 'Result' to result_observation_uid.
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.observation WHERE observation_uid = @resulted)
+    INSERT INTO [dbo].[observation]
+        ([observation_uid],[add_time],[add_user_id],[cd],[cd_desc_txt],
+         [cd_system_cd],[cd_system_desc_txt],
+         [last_chg_time],[last_chg_user_id],[local_id],
+         [obs_domain_cd_st_1],[obs_domain_cd],[ctrl_cd_display_form],
+         [record_status_cd],[record_status_time],[status_cd],[status_time],
+         [subject_person_uid],[shared_ind],[version_ctrl_nbr],
+         [prog_area_cd],[jurisdiction_cd],[program_jurisdiction_oid],
+         [electronic_ind],[target_site_cd],[target_site_desc_txt],[effective_from_time])
+    VALUES
+        (@resulted, '2026-04-22T09:30:00', @superuser_id,
+         N'CULT', N'Bacterial culture — Salmonella isolate',
+         N'L', N'Local',
+         '2026-04-22T09:30:00', @superuser_id, N'OBS22074500GA01',
+         N'Result', N'Result', N'LabReport',
+         N'PROCESSED', '2026-04-22T09:30:00', N'A', '2026-04-22T09:30:00',
+         @pat_uid, N'T', 1,
+         N'ENT', N'130001', 20074500,
+         N'Y', N'STOOL', N'Stool specimen', '2026-04-21T18:00:00');
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @pat_uid      bigint = 20000000;
+
+-- ---------------------------------------------------------------------
+-- 35 LABxxx isolate-tracking I_Result children (22074600-22074634).
+-- cd: LAB329a, LAB330..LAB363. display_name -> TEST_RESULT_VAL_CD_DESC ->
+-- LAB1..LAB35 in the LAB101 trtdN pivot (020:457-684). COMP children of the
+-- I_Order so the Order root's 4-level followup walk reaches them.
+--
+-- DATE PIVOT COLUMNS: LAB334/349/350/356/357/361/362 source the seven
+-- datetime pivots (020:462/477/478/484/485/489/490, each gated FROM_TIME IS
+-- NOT NULL; converted at 020:839-845). FROM_TIME = obs_value_date.from_time
+-- (017:740). So ONLY those date children carry an obs_value_date; the rest
+-- leave FROM_TIME NULL and their LABn pivot stays NULL (convert sees NULL).
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.observation WHERE observation_uid = 22074600)
+BEGIN
+    DECLARE @date_cds TABLE (cd nvarchar(20) PRIMARY KEY);
+    INSERT INTO @date_cds(cd) VALUES
+        (N'LAB334'),(N'LAB349'),(N'LAB350'),(N'LAB356'),(N'LAB357'),(N'LAB361'),(N'LAB362');
+
+    DECLARE @c int = 0;
+    WHILE @c < 35
+    BEGIN
+        DECLARE @child bigint = 22074600 + @c;
+        DECLARE @cd nvarchar(20) =
+            CASE WHEN @c = 0 THEN N'LAB329a'
+                 ELSE N'LAB' + CAST(329 + @c AS nvarchar(10)) END;
+
+        INSERT INTO [dbo].[observation]
+            ([observation_uid],[add_time],[add_user_id],[cd],[cd_desc_txt],
+             [cd_system_cd],[cd_system_desc_txt],
+             [last_chg_time],[last_chg_user_id],[local_id],
+             [obs_domain_cd_st_1],[obs_domain_cd],[ctrl_cd_display_form],
+             [record_status_cd],[record_status_time],[status_cd],[status_time],
+             [subject_person_uid],[shared_ind],[version_ctrl_nbr],
+             [prog_area_cd],[jurisdiction_cd],[program_jurisdiction_oid],[electronic_ind])
+        VALUES
+            (@child, '2026-04-22T09:15:00', @superuser_id,
+             @cd, N'Isolate-tracking element ' + @cd,
+             N'L', N'Local',
+             '2026-04-22T09:15:00', @superuser_id, N'OBS22074500GA01',
+             N'I_Result', N'I_Result', N'LabReport',
+             N'PROCESSED', '2026-04-22T09:15:00', N'A', '2026-04-22T09:15:00',
+             @pat_uid, N'T', 1,
+             N'ENT', N'130001', 20074500, N'Y');
+
+        -- coded value -> TEST_RESULT_VAL_CD_DESC (the value most LABn pivots land)
+        INSERT INTO [dbo].[obs_value_coded]
+            ([observation_uid],[code],[code_system_cd],[code_system_desc_txt],
+             [display_name],[alt_cd],[alt_cd_desc_txt],[alt_cd_system_cd],[alt_cd_system_desc_txt])
+        VALUES
+            (@child, N'VAL' + CAST(@c AS nvarchar(10)), N'L', N'Local',
+             N'Value for ' + @cd,
+             N'POS', N'Positive', N'L', N'Local');
+
+        -- some pivot cols read LAB_RESULT_TXT_VAL instead of CD_DESC -> add txt
+        INSERT INTO [dbo].[obs_value_txt]
+            ([observation_uid],[obs_value_txt_seq],[txt_type_cd],[value_txt])
+        VALUES
+            (@child, 1, N'FT', N'Isolate-tracking text result for ' + @cd);
+
+        -- date children only -> obs_value_date -> FROM_TIME (datetime)
+        IF EXISTS (SELECT 1 FROM @date_cds WHERE cd = @cd)
+            INSERT INTO [dbo].[obs_value_date]
+                ([observation_uid],[obs_value_date_seq],[from_time],[to_time])
+            VALUES
+                (@child, 1, '2026-04-22T00:00:00', '2026-04-22T00:00:00');
+
+        SET @c += 1;
+    END;
+END
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @order_root bigint = 22074500;
+DECLARE @i_order    bigint = 22074501;
+
+-- ---------------------------------------------------------------------
+-- act_id on the Order root (local id -> LAB_RPT_LOCAL_ID feed).
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.act_id WHERE act_uid = @order_root AND act_id_seq = 1)
+    INSERT INTO [dbo].[act_id]
+        ([act_uid],[act_id_seq],[add_time],[add_user_id],
+         [assigning_authority_cd],[assigning_authority_desc_txt],
+         [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+         [root_extension_txt],[type_cd],[type_desc_txt],[status_cd],[status_time])
+    VALUES
+        (@order_root, 1, '2026-04-22T08:00:00', @superuser_id,
+         N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
+         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         N'OBS22074500GA01', N'OBS_LOCAL_ID', N'Local Observation Identifier', N'A', '2026-04-22T08:00:00');
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @order_root bigint = 22074500;
+DECLARE @i_order    bigint = 22074501;
+DECLARE @resulted   bigint = 22074502;
+
+-- ---------------------------------------------------------------------
+-- act_relationship COMP edges (child=source, parent=target, ACTIVE) — the
+-- exact shape sp_observation_event (055:132-176) walks for both the followup
+-- descendant union and the parent_observations (report_observation_uid) feed:
+--   I_Order   -> Order root          (so I_Order.report_observation_uid=root)
+--   Result    -> I_Order             (followup grandchild, domain 'Result')
+--   35 I_Result -> I_Order           (report_observation_uid=I_Order; reached
+--                                      as Order-root followup grandchildren)
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid = @i_order AND target_act_uid = @order_root AND type_cd = N'COMP')
+    INSERT INTO [dbo].[act_relationship]
+        ([source_act_uid],[target_act_uid],[type_cd],[add_time],[add_user_id],
+         [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+         [sequence_nbr],[source_class_cd],[target_class_cd],[status_cd],[status_time],[type_desc_txt])
+    VALUES
+        (@i_order, @order_root, N'COMP', '2026-04-22T08:30:00', @superuser_id,
+         '2026-04-22T08:30:00', @superuser_id, N'ACTIVE', '2026-04-22T08:30:00',
+         1, N'OBS', N'OBS', N'A', '2026-04-22T08:30:00', N'Component');
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @i_order    bigint = 22074501;
+DECLARE @resulted   bigint = 22074502;
+
+-- Result + 35 I_Result children -> I_Order (COMP). source class OBS, target OBS.
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid = @resulted AND target_act_uid = @i_order AND type_cd = N'COMP')
+    INSERT INTO [dbo].[act_relationship]
+        ([source_act_uid],[target_act_uid],[type_cd],[add_time],[add_user_id],
+         [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+         [sequence_nbr],[source_class_cd],[target_class_cd],[status_cd],[status_time],[type_desc_txt])
+    SELECT s.v, @i_order, N'COMP', '2026-04-22T09:15:00', @superuser_id,
+           '2026-04-22T09:15:00', @superuser_id, N'ACTIVE', '2026-04-22T09:15:00',
+           ROW_NUMBER() OVER (ORDER BY s.v), N'OBS', N'OBS', N'A', '2026-04-22T09:15:00', N'Component'
+    FROM (
+        SELECT 22074502 AS v
+        UNION ALL SELECT 22074600 + n FROM (
+            SELECT TOP (35) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1 AS n
+            FROM sys.all_objects
+        ) AS nums
+    ) AS s;
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @pat_uid      bigint = 20000000;
+DECLARE @prov_uid     bigint = 20000010;
+DECLARE @org_uid      bigint = 20000020;
+DECLARE @order_root bigint = 22074500;
+
+-- ---------------------------------------------------------------------
+-- Participations on the Order root so demographics/facility resolve on the
+-- derived LAB_TEST_RESULT (mirrors the LAB100 Part-A pattern):
+--   PATSBJ patient, ORD ordering provider, AUT reporting org, ORD ordering org.
+-- ---------------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM dbo.participation WHERE act_uid = @order_root AND subject_entity_uid = @pat_uid AND type_cd = N'PATSBJ')
+    INSERT INTO [dbo].[participation]
+        ([subject_entity_uid],[act_uid],[type_cd],[act_class_cd],[add_time],[add_user_id],
+         [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+         [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
+    VALUES
+        (@pat_uid,  @order_root, N'PATSBJ', N'OBS', '2026-04-22T08:00:00', @superuser_id,
+         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         N'A', '2026-04-22T08:00:00', N'PSN', N'Patient Subject'),
+        (@prov_uid, @order_root, N'ORD',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
+         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         N'A', '2026-04-22T08:00:00', N'PSN', N'Ordering Provider'),
+        (@org_uid,  @order_root, N'AUT',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
+         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         N'A', '2026-04-22T08:00:00', N'ORG', N'Author/Reporting Organization'),
+        (@org_uid,  @order_root, N'ORD',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
+         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         N'A', '2026-04-22T08:00:00', N'ORG', N'Ordering Organization');
+GO
+
+-- ---------------------------------------------------------------------
+-- Closing last_chg_time bump on the Order root so CDC re-emits the row with
+-- the COMP edges + participations present (matches existing-fixture style).
+-- ---------------------------------------------------------------------
+UPDATE dbo.observation
+SET last_chg_time = '2026-04-22T10:00:00'
+WHERE observation_uid = 22074500;
+GO
