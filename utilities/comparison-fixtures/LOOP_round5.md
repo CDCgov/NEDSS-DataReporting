@@ -171,3 +171,7 @@ fixture answers the guard's (act,Q) at a different group.)
   zz_var_datamart_enrich intentionally left hardcoded (below flood, collision-safe). L10 hazard
   eliminated for all flood-range nbs_case_answer blocks. d_place -6 = FLAKY (3rd timing-variant dim
   with covid_contact/d_contact_record; went 37->37->31 across runs independent of fixture changes).
+- Phase B BLOCKED on re-diagnosis: the tick5 lab-fixture regression (6 obs tables emptied) was
+  MIS-attributed to IDENTITY flood, but observation/act are NOT identity columns (survey) -> real cause
+  unknown. Re-quarantined zz_lab100_101_fill.sql (.regresses-6-obs-tables-cause-TBD); spawned read-only
+  B-diagnosis agent. Proceeding with Phase C (COVID dedicated patient+PHC, 22055xxx) in parallel.
