@@ -208,3 +208,6 @@ needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FRO
   patient/provider/org (22057xxx) + PHC enrich. Quarantining lab RESTORED d_var_pam(127)/
   covid_vaccination(39)/f_vaccination(6) -> CONFIRMED lab fixture was the regressor. d_place -6 = flaky
   bounce (accepted). A/C done, D done (keystone), B deferred. Moving to incremental P1/P2/P3.
+- INCREMENTAL wave 1: spawned TB-C dedicated entities (22058xxx -> tb_datamart/tb_hiv PATIENT_*/PHYS_*),
+  std_hiv D_CASE_MANAGEMENT chain (22059xxx -> FL_*/INIT_*/OOJ_*/CA_*/SURV_*), d_inv_repeat more forms
+  (22060xxx). 72.2% -> ceiling ~89%.
