@@ -343,3 +343,12 @@ morb_rpt_user_comment/f_vaccination all STABLE), proving the fault isolation eli
 collateral that blocked every prior tick-3 attempt. err2627/1205=0, err547=0, idle-drained. Verified with
 RAW git diff. NEXT: the obs-heavy lab100/101 + bmird (still in _quarantine .gated-on-obs-failfast, +120)
 are now UNBLOCKED — re-land them; ceiling rises toward ~85-89%.
+
+### R6 tick 5 (2026-06-04) — OBS-HEAVY re-land lands; +66, 78.1%->79.5%, d_var_pam STABLE
+The culmination of the bug #17/#19/#20 arc: re-landed the obs-heavy lab100/101 + bmird fixtures (the
+ORIGINAL bug #20 casualties). bmird_strep_pneumo_datamart 78->119 (+41), lab100 36->57 (+21),
+ldf_dimensional_data 9->12, lab_test +1. ZERO collateral — d_var_pam STABLE at 127 (the chronic victim
+that bounced +-100 all effort), f_vaccination/covid_contact/morbidity/morb_rpt_user_comment/place all
+stable. err2627/1205=0, err547=0, idle-drained, raw-diff verified. Proves the full root-cause chain:
+fault isolation (bug #20) means the obs-batch throw no longer skips lower-priority entities. NOTE:
+lab101 stayed 0/46 (separate gap — needs more than zz_lab100_101_fill provides; not a regression).
