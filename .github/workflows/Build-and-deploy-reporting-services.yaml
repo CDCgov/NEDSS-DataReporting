@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - rel-**
+      - alpha-trigger/**
     #      Uncomment the following line only to test the build and deploy from private branches.
     #      - CNDIT-*
     #      - CNDE-*
@@ -22,12 +23,13 @@ jobs:
       contents: read
       security-events: write
     name: Build Reporting Pipeline Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
+    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@cm/fix
     with:
       microservice_name: nbs7-reporting-pipeline
       dockerfile_relative_path: -f ./reporting-pipeline-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "21"
+      create_octopus_release: true
     secrets:
       NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
 
@@ -37,11 +39,12 @@ jobs:
       contents: read
       security-events: write
     name: Build Liquibase Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
+    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@cm/fix
     with:
       microservice_name: nbs7-liquibase
       dockerfile_relative_path: -f ./liquibase-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "21"
+      create_octopus_release: true
     secrets:
       NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
