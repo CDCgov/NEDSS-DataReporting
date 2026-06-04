@@ -1648,3 +1648,7 @@ tail-EXEC sequences these correctly for standalone verification.
 | 22072000 - 22072999 | R6t6 covid_vaccination agent — covid_vaccination_datamart 39/60 (+21) via vaccination ODSE entities on the COVID case chain. Obs/vaccination now safe (bug #20 fixed). |
 | 22073000 - 22073999 | R6t6 contact agent — d_contact_record 40/66 + covid_contact_datamart 76/94 via contact-record ODSE entities. Contact now safe (bug #20 fixed). |
 | 22074000 - 22074999 | R6t6 lab101 agent — investigate why lab101 stayed 0/46 after zz_lab100_101_fill; author what it needs (likely a distinct lab/result shape or CELR-style path). |
+
+<!-- Round 6 tick 7 (conservative answer-only; avoid Confirmation_method + big obs chains) -->
+| 22075000 - 22075999 | R6t7 interview agent — d_interview 18/24 + d_interview_note 0/7 via interview ODSE entities on existing investigation chain. Interview entity (priority 10), now safe (bug #20). |
+| 22076000 - 22076999 | R6t7 hepatitis-tail agent — hepatitis_datamart 181/209 remaining answer-reachable D_INV cols via additional answers on existing hep PHCs. Answer-only. |

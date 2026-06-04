@@ -364,3 +364,11 @@ sp_nrt_notification_postprocessing 2627 on the summary notification 22065010 per
 flakiness vs the old +-100 d_var_pam swings. The zz_var_datamart_enrich CONFIRMATION_METHOD FK 547 seen
 mid-debug was TRANSIENT (dim-ordering race), not deterministic — applied clean on retry. Two contact
 IDENTITY traps fixed (ct_contact_answer needed SET IDENTITY_INSERT). Block 22072xxx/22073xxx.
+
+### R6 tick 7 (2026-06-04) — interview + hepatitis-tail; +24, 80.5%->81.0%, d_var_pam stable
+d_interview 18->24 (FULLY covered — 6 LDF-pivot cols via 6 nbs_answer on interview 20090010; ORCH: added
+post-Tier-3 run_interview_chain 'Step 8.8'). hepatitis_datamart 182->198 (+16 D_INV_RISK_FACTOR 9 +
+D_INV_MOTHER 7 via 2 new Hep-B PHCs 22076000/22076100 added to PHC_UIDS). case_lab_datamart 33->35
+(recovered — confirms the +-2 bounce is flaky noise, not a fixture defect). d_var_pam STABLE 127, no
+regressions, raw-diff verified. NOTE: d_interview_note stayed 0/7 (the IXS111 note-answer path didn't
+populate — needs more than the single note answer; minor follow-up).
