@@ -408,7 +408,23 @@ BEGIN
                 WHEN tst.LAB_TEST_Type = 'Order' THEN tst.LAB_TEST_pntr
                 ELSE tst.LAB_TEST_pntr
             END AS root_ordered_test_pntr,
-            COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) AS record_status_cd_for_result_drug,
+            -- Bug #19: LAB_TEST.RECORD_STATUS_CD = COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
+            -- this column). RECORD_STATUS_CD_MERGE is normalized (PROCESSED/''/NULL/UNPROCESSED* ->
+            -- ACTIVE, LOG_DEL -> INACTIVE) but is NULL when root_ordered_test_pntr does not resolve
+            -- (merge_order join miss). Previously this fallback passed the RAW ancestor
+            -- record_status_cd straight through, so a 'PROCESSED' (or any non-ACTIVE/INACTIVE) value
+            -- leaked into the LAB_TEST insert and violated CHK_LABTEST_RECORD_STATUS (Error 547),
+            -- failing the whole obs batch. Normalize it identically to RECORD_STATUS_CD_MERGE so the
+            -- inserted RECORD_STATUS_CD is always a valid ('ACTIVE'/'INACTIVE') value (or NULL).
+            CASE
+                WHEN COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd)
+                     IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED')
+                  OR COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) IS NULL
+                    THEN 'ACTIVE'
+                WHEN COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) = 'LOG_DEL'
+                    THEN 'INACTIVE'
+                ELSE COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd)
+            END AS record_status_cd_for_result_drug,
             parent_test.report_sprt_uid AS root_thru_srpt,
             parent_test.report_refr_uid AS root_thru_refr
         INTO #hierarchical_data

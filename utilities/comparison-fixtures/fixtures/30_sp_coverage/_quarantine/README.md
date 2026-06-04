@@ -43,6 +43,25 @@ Fixtures here are excluded from `scripts/merge_and_verify.sh` (it globs
   22043000 under cond **10481** → form `INV_FORM_HEPGEN`, which both maps
   to Hepatitis_Case AND matches the `INV_FORM_HEP%` gate).
 
+## Restored
+
+- **`zz_lab100_101_fill.sql`** (bug #19, fixed 2026-06-04). Was quarantined
+  as `.bug19-labtest-record-status-547`: re-landing it tripped
+  `CHK_LABTEST_RECORD_STATUS` (Error 547) inside `sp_d_lab_test_postprocessing`
+  at the "INSERTING new entries to LAB_TEST" step. ROOT CAUSE (proven via a
+  reduced data-driven unit test, `reporting-pipeline-service/.../testData/unit/bug19_labtest_record_status/`):
+  routine 018 derived `LAB_TEST.RECORD_STATUS_CD` as
+  `COALESCE(#merge_order.RECORD_STATUS_CD_MERGE, #hierarchical_data.RECORD_STATUS_CD_FOR_RESULT_DRUG)`.
+  The first source is normalized (PROCESSED→ACTIVE etc.) but is NULL when
+  `root_ordered_test_pntr` does not resolve (merge_order join miss); the
+  fallback then passed the RAW ancestor `record_status_cd` ('PROCESSED')
+  straight into the insert. The working `zz_covid_lab_datamart_unblock.sql`
+  never hit this because its simple Order/Result chain resolves
+  `root_ordered_test_pntr`, so the normalized 'ACTIVE' wins first. FIX:
+  routine 018 (line ~411) now normalizes the fallback identically to
+  `RECORD_STATUS_CD_MERGE`, so no fixture can trip the CHECK. The fixture had
+  no genuine data error, so it is restored unchanged.
+
 ## History (2026-05-21, Agent B Phase-2 debug pass)
 
 This directory previously held COVID and Varicella full-chain fixtures
