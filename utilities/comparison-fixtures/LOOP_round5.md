@@ -218,3 +218,29 @@ needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FRO
   PATIENT_*-shaped; kept as harmless additive fidelity). d_place +6 flaky. No regression.
 - INCREMENTAL wave-2: spawned bmird-antimicrobial (22061xxx ~40), d_inv_place_repeat (22062xxx ~43),
   covid_contact-side (22063xxx ~43). 74.1% -> ceiling ~89%.
+
+## LESSON 13 (2nd fail-fast trigger): "Followup Observations JSON array null" throw
+Wave-2 caused d_var_pam -101 AGAIN (fail-fast skip). Service log: repeated ProcessObservationDataUtil
+"Error processing Followup Observations JSON array from observation data: null" (OBSERVATION-priority
+throw). bmird-antimicrobial's 45-obs graph enlarged the obs batch so a throwing obs co-batched with the
+varicella entity -> skipped. This is a SECOND keystone-class latent throw (distinct from the morb-515
+keystone): some observation's followup_observation structure is malformed/null and ProcessObservation
+DataUtil chokes building the followup JSON. QUARANTINED zz_bmird_antimicrobial (batch-enlarger that
+exposed it) -> kept d_inv_place_repeat(+43) + covid_contact-side(+25). NEXT KEYSTONE: find the obs with
+the bad followup linkage (log referenced obs 22043149 / hepatitis range; could be bmird's own ItemToRow
+graph producing a null followup) and fix the ODSE data so processObservation stops throwing -> re-land
+bmird + immunize future obs-heavy fixtures. (Same class as morb-515: fix the throw, not the batch.)
+
+## LESSON 13 CORRECTED + KEYSTONE #2: the "Followup Observations JSON array null" throw is PRE-EXISTING
+With bmird-antimicrobial QUARANTINED, d_var_pam was STILL -101 and the "Followup Observations JSON array
+null" / "Error processing observation data ... DataProcessingException" errors STILL fired (on COMMITTED
+obs ids: 22048xxx zz_bmird_fill + 22043xxx hepatitis_case_chain + 20080xxx morb + 22022xxx covid-lab-unblock).
+=> bmird-antimicrobial was WRONGLY blamed. The real cause is a PRE-EXISTING latent obs throw in
+ProcessObservationDataUtil (building the Followup Observations JSON) that fail-fast-skips whichever
+low-priority entity co-batches with it -> d_var_pam (varicella) is CHRONICALLY FLAKY 127<->26 (batch-timing),
+same class as the morb-515 keystone. This injects +-100 measurement noise and blocks obs-heavy fixtures.
+KEYSTONE #2 (spawned): find the obs whose followup_observation linkage is malformed/null (COMP/followup
+act_relationship producing a null in the JSON) and fix its ODSE data so processObservation stops throwing
+-> stabilizes d_var_pam/vaccination/contact AND lets bmird-antimicrobial + future obs fixtures land.
+HOLDING the wave-2 commit (d_inv_place +43, covid_contact +25 are clean gains) until d_var_pam is stable
+post-fix. bmird-antimicrobial stays quarantined pending the fix (NOT its fault).
