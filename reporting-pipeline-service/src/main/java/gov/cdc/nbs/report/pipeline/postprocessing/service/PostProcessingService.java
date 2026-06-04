@@ -752,6 +752,14 @@ public class PostProcessingService {
       String keyTopic = entry.getKey();
       List<Long> ids = entry.getValue();
 
+      if (processingFailed) {
+        if (batchId != null) {
+          Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
+          retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+        }
+        continue;
+      }
+
       logIdProcessing(ids.size(), keyTopic, batchId);
 
       Entity entity = getEntityByTopic(keyTopic);
@@ -763,29 +771,14 @@ public class PostProcessingService {
         // do not count failed retries here to avoid double counting
         incrementIf(ppMsgSuccess, ids.size(), batchId == null);
       } catch (Exception e) {
-        // Bug #20: fault isolation. A throw while processing one entity must NOT skip the
-        // remaining (lower-priority) entities in this batch — that previously caused a single
-        // transient failure to silently drop every downstream entity (and its datamarts) for
-        // the batch. Process every entity independently and re-queue only the entity that
-        // actually failed: the first failure creates the retry batch (stashing the
-        // page-builder / observation fan-out caches once); subsequent failures add just their
-        // own ids to the same batch. The batch is still marked failed (for retry) via
-        // processingFailed.
         incrementIf(ppMsgFailure, ids.size(), batchId == null);
         logger.error(
             errorMessage(
                 entity.getEntityName(),
                 listToParameterString(ids),
                 new Exception(e.getClass().getSimpleName())));
-        if (!processingFailed) {
-          batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
-        } else if (batchId != null) {
-          retryCache
-              .get(batchId)
-              .computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>())
-              .addAll(ids);
-        }
         processingFailed = true;
+        batchId = buildRetryCache(batchId, keyTopic, ids, pbCache, obsCache, e);
       }
     }
 
