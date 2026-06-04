@@ -89,7 +89,7 @@ IF EXISTS (
       AND name = 'FL_FUP_ACTUAL_REF_TY'
       AND system_type_id = 167
       AND collation_name IS NOT NULL
-      AND max_length <> 100
+      AND max_length <> 25
 )
 BEGIN
     ALTER TABLE [dbo].[DM_INV_HIV]
