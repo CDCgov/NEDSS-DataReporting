@@ -144,3 +144,8 @@ land. If incremental work plateaus below that, that's the ceiling — wind down 
 
 ## Iterations journal
 - R5 baseline: 67.7% (415f324a). Plan A->B->C->D then incremental. STOP_LOOP cleared to start.
+- A.0 survey done (IDENTITY_REFACTOR_PLAN.md): 42 IDENTITY_INSERT blocks, 40 LEAF / 0 truly REFERENCED
+  (0 FKs to these PKs). Flood-prone = nbs_case_answer ONLY (case_management/nbs_act_entity have no auto
+  source -> out of scope this pass). All convert via R4-M pattern (auto-IDENTITY + natural-key guard),
+  coverage-neutral. A.1 spawned: 1 agent converting ALL ~18 nbs_case_answer IDENTITY_INSERT blocks
+  (incl. zz_var_datamart_enrich UPDATE repointing). Validate next tick: merge must HOLD >=67.7%.
