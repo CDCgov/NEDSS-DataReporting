@@ -46,3 +46,33 @@ morbidity_report_datamart (130/133), d_inv_place_repeat (44/44), d_place (37/37)
 morb_rpt_user_comment (8/8), f_vaccination all STABLE — where every prior attempt regressed one of them.
 Coverage 77.6%->78.1%. This also unblocks the obs-heavy lab100/101 + bmird fixtures (quarantined
 .gated-on-obs-failfast) for re-landing.
+
+## RE-CHARACTERIZED + REVERTED (2026-06-04, revert commit c4882ef2)
+On review this is NOT a clean service bug, and the "fix" was reverted. Evidence:
+- The batch fail-fast is INTENTIONAL defer-and-retry, not a drop: deferred entities flow through a
+  deliberate fully-@Scheduled recovery machine — retryCache -> processRetryCache (re-runs
+  processIdCache) -> after maxRetries -> processBackfills -> backfillEvent re-queues STATUS_READY ->
+  loop. That is at-least-once / eventual-consistency by design.
+- The fault-isolation change converted intentional batch-atomic retry into per-entity isolation — a
+  semantic change, and one with mixed effects (empirically it RETAINED d_var_pam/place in the harness
+  drain window [81.0%] but LOST d_interview_note [0 vs 7 without it]).
+- The earlier d_var_pam causal story was wrong: d_var_pam is priority 0, produced inside INVESTIGATION
+  (priority 8) processing; the throws blamed (observation=14, notification=9) sort AFTER it.
+
+ROOT CAUSE is the POISON throws that make a batch fail-fast in the first place — mostly bad-synthetic-
+data / robustness symptoms, NOT the fail-fast itself:
+- bug #17 (key-gen race) — real, fixed.
+- propagating SP errors: sp_dyn_dm_main/createdm STD (50000/206), sp_aggregate_report (207),
+  sp_nrt_notification 2627 (PK dup on summary notification 22065010). These re-throw deterministically,
+  so any innocent entity co-batched with them is starved until SUSPENDED — that co-batching is
+  timing-dependent (the observed "flakiness").
+- bug #18 (followup-obs NPE) — separately blocks lab101/CELR followup chains (followup_observation_uid
+  stays NULL for non-'Order'-domain roots).
+
+PRINCIPLED FIX (keeps the intended design): eliminate the poisons (fix the throwing SPs / bad data),
+so no batch ever poisons -> innocents never deferred -> coverage reached via the normal path with no
+service-semantic change. Pursuing bug #18 first (it also unblocks obs-heavy lab coverage).
+
+NOTE: with the fault-isolation reverted, measured coverage returns to ~78% (flaky on d_var_pam/place
+depending on poison co-batching). coverage_merged.md (81.0%) reflects the pre-revert run and will be
+refreshed after the poison fixes + a fresh measurement.

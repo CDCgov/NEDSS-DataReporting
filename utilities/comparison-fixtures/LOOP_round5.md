@@ -421,3 +421,13 @@ PATH TO ~85-89% (the realistic fixtures-only ceiling) — requires work BEYOND s
 QUARANTINED (revivable, gated as noted): zz_lab101_fill.sql (.partial+dvarpam-tip — needs follow-up #1);
 zz_d_investigation_repeat_forms_3.sql (.ordering-dep — needs rename to sort after zz_hepatitis_answer_gap2);
 the LDF seed/chain-gated subset (bug #22).
+
+## CORRECTION (2026-06-04) — bug #20 REVERTED (commit c4882ef2)
+The bug #20 "obs fail-fast" fix was reverted: the fail-fast is INTENTIONAL defer-and-retry-backfill
+(@Scheduled retryCache/processRetryCache/backfillEvent), not a drop. The coverage flakiness was
+symptomatic of POISON throws (bug #17 key-gen [fixed]; propagating SP errors std-dyn 206 /
+notification-2627 / aggregate-207; bug #18 followup-NPE), mostly bad-data/robustness — NOT the fail-fast.
+Principled path: fix the poisons (starting bug #18), keep the intended design. With the fix reverted,
+honest coverage is ~78% (flaky); the 81.0% figures above were partly propped by the reverted semantic
+change and will be re-measured after the poison fixes. Bugs #17/#19 stand (real, fixed). PR branch
+aw/fix-bug20-obs-failfast-isolation deleted.
