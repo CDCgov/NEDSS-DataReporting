@@ -198,3 +198,13 @@ needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FRO
 - #26 marked complete (keystone closed it). tick: spawned Phase B (lab, now safe post-keystone:
   un-quarantine + date-children fix + harness ORCH_TODO) and STD-C (dedicated entities + PHC enrich
   22004000, UID 22057xxx) in parallel.
+- Phase B (lab) RE-QUARANTINED (2nd regression): even post-keystone + date-fix, the lab fixture still
+  triggers a throw -> fail-fast skip, zeroing covid_vaccination(-39)/f_vaccination(-6)/d_var_pam(-101)
+  (lowest-priority entities). lab100 did +21 but collateral -146 >> gain. Date-fix (code-verified, not
+  executed) was insufficient; the real throwing statement is elsewhere (sp_observation_event or
+  017/d_lab_test). LAB DEFERRED for the night (~79 cols, repeatedly destabilizing, low ROI vs incremental
+  P1/P2/P3). Keeping STD-C (std_hiv +10). Re-validating STD-C alone.
+- STD-C COMMITTED (lab quarantined): 72.1% -> 72.2%. std_hiv_datamart +10 (178->188) via dedicated
+  patient/provider/org (22057xxx) + PHC enrich. Quarantining lab RESTORED d_var_pam(127)/
+  covid_vaccination(39)/f_vaccination(6) -> CONFIRMED lab fixture was the regressor. d_place -6 = flaky
+  bounce (accepted). A/C done, D done (keystone), B deferred. Moving to incremental P1/P2/P3.

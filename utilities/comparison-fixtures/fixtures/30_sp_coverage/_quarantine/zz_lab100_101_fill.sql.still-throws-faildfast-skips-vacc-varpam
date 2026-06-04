@@ -392,8 +392,24 @@ VALUES
 
 -- 35 LABxxx isolate-tracking I_Result children + obs_value_coded.
 -- cd: LAB329a, LAB330..LAB363. display_name -> TEST_RESULT_VAL_CD_DESC ->
--- LAB1..LAB35 in the LAB101 pivot. Date-style fields (LAB6/21/22/28/29/33/34)
--- carry an MM-DD-YYYY display the SP converts to a datetime.
+-- LAB1..LAB35 in the LAB101 pivot.
+--
+-- DATE PIVOT COLUMNS (CRITICAL — routine 020 hard convert(datetime)):
+-- The seven datetime pivot positions LAB6/21/22/28/29/33/34 (sp_lab101 lines
+-- 839-845 do `convert(datetime, replace(LAB.LABn,'-',' '),0)`) are sourced
+-- from the trtdN.FROM_TIME channel — trtd6=LAB334, trtd21=LAB349,
+-- trtd22=LAB350, trtd28=LAB356, trtd29=LAB357, trtd33=LAB361, trtd34=LAB362
+-- (lines 462/477/478/484/485/489/490, each gated AND FROM_TIME IS NOT NULL).
+-- FROM_TIME = nrt_observation_date.ovd_from_date = obs_value_date.from_time
+-- (routine 017 line 740). So the date children must carry an obs_value_date
+-- with a real datetime; the convert() then only ever sees a datetime string
+-- or NULL and CANNOT throw. The other children get NO obs_value_date (FROM_TIME
+-- stays NULL -> those LABn pivots stay NULL -> not date-converted). We feed the
+-- date through obs_value_date, NOT obs_value_coded.display_name (the date pivots
+-- never read CD_DESC), so the display_name below is plain descriptive text.
+DECLARE @date_cds TABLE (cd nvarchar(20) PRIMARY KEY);
+INSERT INTO @date_cds(cd) VALUES
+    (N'LAB334'),(N'LAB349'),(N'LAB350'),(N'LAB356'),(N'LAB357'),(N'LAB361'),(N'LAB362');
 SET @c = 0;
 WHILE @c < 35
 BEGIN
@@ -420,15 +436,14 @@ BEGIN
          @pat_uid, N'T', 1,
          N'ENT', N'130001', 20053500, N'Y');
 
-    -- value: date-style for the date columns, descriptive text otherwise.
+    -- coded value -> TEST_RESULT_VAL_CD_DESC. Plain descriptive text for ALL
+    -- children (incl. date cds): the date pivots read FROM_TIME, not CD_DESC.
     INSERT INTO [dbo].[obs_value_coded]
         ([observation_uid],[code],[code_system_cd],[code_system_desc_txt],
          [display_name],[alt_cd],[alt_cd_desc_txt],[alt_cd_system_cd],[alt_cd_system_desc_txt])
     VALUES
         (@child, N'VAL' + CAST(@c AS nvarchar(10)), N'L', N'Local',
-         CASE WHEN @cd IN (N'LAB334',N'LAB349',N'LAB354',N'LAB360',N'LAB361',N'LAB362',N'LAB363')
-              THEN N'04-21-2026'                         -- date-typed pivot cols
-              ELSE N'Value for ' + @cd END,
+         N'Value for ' + @cd,
          N'POS', N'Positive', N'L', N'Local');
 
     -- a few pivot cols read LAB_RESULT_TXT_VAL instead of CD_DESC -> add txt too.
@@ -436,6 +451,15 @@ BEGIN
         ([observation_uid],[obs_value_txt_seq],[txt_type_cd],[value_txt])
     VALUES
         (@child, 1, N'FT', N'Isolate-tracking text result for ' + @cd);
+
+    -- DATE children only: author obs_value_date so CDC -> nrt_observation_date
+    -- -> FROM_TIME (datetime). Non-date children get NO obs_value_date, so their
+    -- FROM_TIME stays NULL and routine 020's convert(datetime) yields NULL.
+    IF EXISTS (SELECT 1 FROM @date_cds WHERE cd = @cd)
+        INSERT INTO [dbo].[obs_value_date]
+            ([observation_uid],[obs_value_date_seq],[from_time],[to_time])
+        VALUES
+            (@child, 1, '2026-04-21T00:00:00', '2026-04-21T00:00:00');
 
     SET @c += 1;
 END;

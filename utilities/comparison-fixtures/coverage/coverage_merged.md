@@ -1,6 +1,6 @@
 # Coverage: merged fixture (full chain)
 
-Generated: 2026-06-04 07:02:16 UTC
+Generated: 2026-06-04 07:28:47 UTC
 
 This report is produced by `scripts/coverage_summary.sh` against the
 RDB_MODERN state after `scripts/merge_and_verify.sh` has run end-to-end.
@@ -13,14 +13,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 ## Summary
 
 - In-scope target tables: 118
-- Fully covered (all columns populated for at least one row): 67
-- Partially covered (some columns populated): 31
+- Fully covered (all columns populated for at least one row): 66
+- Partially covered (some columns populated): 32
 - Empty (table exists, 0 rows): 19
 - Missing (table not present in live RDB_MODERN): 1
 
 - Total columns across in-scope tables: 4652
-- Columns with ≥1 populated row: 3356
-- Overall column coverage: 72.1%
+- Columns with ≥1 populated row: 3361
+- Overall column coverage: 72.2%
 
 ## Per-table coverage
 
@@ -63,14 +63,14 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_move_state_group | 3 | 1 | **1/1** |
 | dbo.d_moved_where | 4 | 6 | **6/6** |
 | dbo.d_moved_where_group | 3 | 1 | **1/1** |
-| dbo.d_organization | 15 | 30 | **30/30** |
+| dbo.d_organization | 17 | 30 | **30/30** |
 | dbo.d_out_of_cntry | 5 | 6 | **6/6** |
 | dbo.d_out_of_cntry_group | 3 | 1 | **1/1** |
-| dbo.d_patient | 10 | 81 | 60/81 |
+| dbo.d_patient | 11 | 81 | 60/81 |
 | dbo.d_pcr_source | 3 | 6 | **6/6** |
 | dbo.d_pcr_source_group | 2 | 1 | **1/1** |
-| dbo.d_place | 10 | 37 | **37/37** |
-| dbo.d_provider | 22 | 34 | 32/34 |
+| dbo.d_place | 4 | 37 | 31/37 |
+| dbo.d_provider | 25 | 34 | 32/34 |
 | dbo.d_rash_loc_gen | 3 | 6 | **6/6** |
 | dbo.d_rash_loc_gen_group | 2 | 1 | **1/1** |
 | dbo.d_smr_exam_ty | 3 | 6 | **6/6** |
@@ -79,7 +79,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.d_tb_pam | 2 | 166 | 158/166 |
 | dbo.d_vaccination | 4 | 21 | **21/21** |
 | dbo.d_var_pam | 1 | 129 | 127/129 |
-| dbo.etl_dq_log | 1572 | 15 | **15/15** |
+| dbo.etl_dq_log | 1831 | 15 | **15/15** |
 | dbo.event_metric | 29 | 28 | **28/28** |
 | dbo.event_metric_inc | 29 | 28 | **28/28** |
 | dbo.f_contact_record_case | 3 | 11 | **11/11** |
@@ -94,9 +94,9 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.hepatitis_datamart | 3 | 209 | 160/209 |
 | dbo.inv_hiv | 2 | 19 | 17/19 |
 | dbo.inv_summ_datamart | 22 | 58 | **58/58** |
-| dbo.investigation | 23 | 71 | 62/71 |
+| dbo.investigation | 23 | 71 | 63/71 |
 | dbo.job_batch_rebuild_log | MISSING | - | - |
-| dbo.job_flow_log | 30180 | 15 | 14/15 |
+| dbo.job_flow_log | 30393 | 15 | 14/15 |
 | dbo.l_inv_place_repeat | 1 | 2 | 1/2 |
 | dbo.l_investigation_repeat | 12 | 2 | **2/2** |
 | dbo.l_investigation_repeat_inc | 6 | 2 | **2/2** |
@@ -117,7 +117,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.ldf_mumps | 0 | 7 | 0/7 |
 | dbo.ldf_tetanus | 0 | 7 | 0/7 |
 | dbo.ldf_vaccine_prevent_diseases | 1 | 8 | **8/8** |
-| dbo.lookup_table_n_rept | 2 | 2 | **2/2** |
+| dbo.lookup_table_n_rept | 1 | 2 | **2/2** |
 | dbo.morb_rpt_user_comment | 1 | 8 | **8/8** |
 | dbo.morbidity_report | 3 | 30 | **30/30** |
 | dbo.morbidity_report_datamart | 2 | 133 | 130/133 |
@@ -132,7 +132,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 | dbo.rdb_date | 14976 | 11 | **11/11** |
 | dbo.result_comment_group | 7 | 3 | **3/3** |
 | dbo.sr100 | 0 | 20 | 0/20 |
-| dbo.std_hiv_datamart | 1 | 248 | 178/248 |
+| dbo.std_hiv_datamart | 1 | 248 | 188/248 |
 | dbo.summary_case_group | 1 | 2 | 1/2 |
 | dbo.summary_report_case | 0 | 12 | 0/12 |
 | dbo.tb_datamart | 2 | 318 | 293/318 |
@@ -148,7 +148,7 @@ A column is "populated" if at least one row has a non-NULL value for it.
 
 ## Categorization
 
-### Fully covered (67)
+### Fully covered (66)
 
 Tables where every column has at least one row with a non-NULL value.
 
@@ -179,7 +179,6 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.d_out_of_cntry_group
 - dbo.d_pcr_source
 - dbo.d_pcr_source_group
-- dbo.d_place
 - dbo.d_rash_loc_gen
 - dbo.d_rash_loc_gen_group
 - dbo.d_smr_exam_ty
@@ -220,7 +219,7 @@ Tables where every column has at least one row with a non-NULL value.
 - dbo.treatment_event
 - dbo.user_profile
 
-### Partially covered (31)
+### Partially covered (32)
 
 Tables with rows but at least one column never populated. These are the
 candidates for Tier 3 gap-driven coverage work.
@@ -237,6 +236,7 @@ candidates for Tier 3 gap-driven coverage work.
 - dbo.d_investigation_repeat
 - dbo.d_ldf_meta_data
 - dbo.d_patient
+- dbo.d_place
 - dbo.d_provider
 - dbo.d_tb_pam
 - dbo.d_var_pam

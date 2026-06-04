@@ -308,11 +308,20 @@ run_notification_chain() {
   sql_q RDB_MODERN "EXEC dbo.sp_nrt_notification_postprocessing @notification_uids = N'20000110,20060010', @debug = 0" >/dev/null || true
 }
 
+# NOTE (Round 5, Phase B): this function is DEAD CODE on the no-shortcut flow.
+# main() does NOT call run_tier_1_chains/rerun_tier_1_chains (its only callers),
+# so run_lab_chain never executes — the reporting-pipeline-service runs the lab
+# chain (sp_observation_event -> sp_d_lab_test_postprocessing ->
+# sp_d_labtest_result_postprocessing -> sp_lab100/101_datamart_postprocessing,
+# PostProcessingService.processObservation:1245-1278) off the Tier-3 CDC events.
+# The zz_lab100_101_fill.sql obs UIDs (22053010,22053011,22053500,22053501,
+# 22053502) are therefore reproduced/processed by CDC in the Step-9 drain; they
+# are listed here only for catalog parity with the live obsCache LAB_REPORT path.
 run_lab_chain() {
-  log "  lab (foundation 20000120 + v2 Order 20070010)"
-  sql_q RDB_MODERN "EXEC dbo.sp_observation_event @obs_id_list = N'20000120,20070010'" >/dev/null
-  sql_q RDB_MODERN "EXEC dbo.sp_d_lab_test_postprocessing @obs_ids = N'20000120,20070010', @debug = 0" >/dev/null
-  sql_q RDB_MODERN "EXEC dbo.sp_d_labtest_result_postprocessing @obs_ids = N'20000120,20070010', @debug = 0" >/dev/null
+  log "  lab (foundation 20000120 + v2 Order 20070010 + Tier-3 lab fill 22053xxx)"
+  sql_q RDB_MODERN "EXEC dbo.sp_observation_event @obs_id_list = N'20000120,20070010,22053010,22053011,22053500,22053501,22053502'" >/dev/null
+  sql_q RDB_MODERN "EXEC dbo.sp_d_lab_test_postprocessing @obs_ids = N'20000120,20070010,22053010,22053011,22053500,22053501,22053502', @debug = 0" >/dev/null
+  sql_q RDB_MODERN "EXEC dbo.sp_d_labtest_result_postprocessing @obs_ids = N'20000120,20070010,22053010,22053011,22053500,22053501,22053502', @debug = 0" >/dev/null
 }
 
 run_morbidity_chain() {
@@ -470,7 +479,11 @@ readonly PAT_UIDS='20000000,20020010,20020020'
 readonly PRV_UIDS='20000010,20010010'
 readonly ORG_UIDS='20000020,20030010'
 readonly NOTIF_UIDS='20000110,20060010'
-readonly LAB_OBS_UIDS='20000120,20070010,20070011,22022000,22029401'
+# NOTE: used only by run_datamart_sps() which is DEAD CODE (never called by main();
+# the lab100/101 datamart SPs are run by the service per-CDC-batch, not here).
+# Tier-3 lab-fill Result/I_Result test UIDs (22053011 LAB100, 22053501 LAB101)
+# added for catalog parity; the live datamart run keys on the service's labIds.
+readonly LAB_OBS_UIDS='20000120,20070010,20070011,22022000,22029401,22053011,22053501'
 readonly MORB_OBS_UIDS='20000130,20080010'
 readonly OBS_UIDS='20000120,20070010,20070011,22022000,20000130,20080010'
 readonly VAC_UIDS='20000160,20110010'
@@ -698,6 +711,15 @@ main() {
   # hepatitis obs chain's 139 obs). 420s was too short — drain gave up with the pipeline still
   # processing, mis-reporting coverage as ~20%. 900s covers current fixtures; if a future fixture
   # still overruns, the loop re-verifies service idle before trusting coverage_summary.
+  #
+  # LAB100/101 (zz_lab100_101_fill.sql, 22053xxx): NO manual re-processing is wired
+  # here on purpose. The reporting-pipeline-service consumes the Tier-3 lab obs CDC
+  # events during THIS drain and itself runs the full lab chain incl. the lab100/101
+  # datamart SPs (PostProcessingService.processObservation:1245-1278). The fixture
+  # header's "re-run lab postprocessing after Step-9" ORCH_TODO predated the
+  # CDC-only flow and the dead manual EXEC helpers — adding it would be a no-op.
+  # The keystone morb-fix (f26dc05b) stopped the OBSERVATION-priority morb-515 throw,
+  # so the lab obs in the same batch are no longer fail-fast-skipped.
   log "Step 9: draining pipeline (Tier 3)..."; wait_for_pipeline_drain 900 || err "Tier 3 drain timed out (continuing)"
 
   print_coverage_summary

@@ -130,6 +130,39 @@ INSERT INTO [dbo].[act] ([act_uid], [class_cd], [mood_cd]) VALUES
 --   code_value_general PHC_CLASS 'C' (Confirmed).
 --   code_value_general PHC_IN_STS 'O' (Open).
 --   jurisdiction_code '130001' Fulton County (used by Tier 1 v2 inv).
+-- PHC-CORE SCALAR ENRICHMENT (Round 5 item C — STD, Part 2):
+--   The columns below feed sp_std_hiv_datamart_postprocessing (routine 026)
+--   via the INV alias = #tmp_investigation / INVESTIGATION, which the service
+--   rebuilds from this public_health_case row through nrt_investigation
+--   (CDC -> sp_investigation_event 056 -> nrt_investigation ->
+--   sp_nrt_investigation_postprocessing 005 -> INVESTIGATION). 026 reads
+--   these INV.* columns (NOT the dim/CM-sourced ones); each value uses a
+--   realistic Syphilis-primary scenario + a valid coded value resolved from
+--   the SRTE code sets (verified live 2026-06-04). The mapping chain is
+--   public_health_case.<col> --(056)--> nrt_investigation.<col> --(005)-->
+--   #tmp_investigation/INVESTIGATION.<COL> --(026 INV.<COL>)--> STD_HIV_DATAMART:
+--     hospitalized_ind_cd 'N' (056 decodes via INV128->YNU 'No')   -> HSPTLIZD_IND
+--     outcome_cd          'N' (056 decodes via INV145->YNU 'No')   -> DIE_FRM_THIS_ILLNESS_IND
+--       (patient survives — no deceased_time, so INVESTIGATION_DEATH_DATE stays NULL, correct)
+--     disease_imported_cd 'OOS' (056 decodes via INV152 'Out of State') -> DISEASE_IMPORTED_IND
+--     imported_country_cd '840' (US) / imported_state_cd '13' (GA) /
+--       imported_county_cd '13089' (DeKalb) / imported_city_desc_txt 'Decatur'
+--       (these feed IMPORT_FRM_* on INVESTIGATION; not all surface in 026 but valid)
+--     pat_age_at_onset 33 / _unit_cd 'Y' (P_AGE_UNIT Years)  -> PATIENT_AGE_AT_ONSET / _UNIT
+--     pregnant_ind_cd  'N' (YNU; male patient)               -> PATIENT_PREGNANT_IND
+--     diagnosis_time / effective_from_time(onset) / effective_to_time(end) /
+--       effective_duration_amt 21 / _unit_cd 'D' (DUR_UNIT Days)  -> diagnosis/illness dates+duration
+--     detection_method_cd 'PHC2112' (PHC_DET_MT Laboratory reported) -> DETECTION_METHOD_DESC_TXT
+--     rpt_source_cd       'LA'      (PHC_RPT_SRC_T Laboratory)      -> RPT_SRC_CD / RPT_SRC_CD_DESC
+--     referral_basis_cd   'P1'      (REFERRAL_BASIS P1 Partner, Sex; 056:311-315 decodes) -> REFERRAL_BASIS
+--     txt (general comments)        -> INV_COMMENTS (not an STD_HIV_DATAMART col; harmless/realistic)
+--     activity_from_time -> INV_START_DT ; activity_to_time -> INV_CLOSE_DT
+--     investigator_assigned_time -> INV_ASSIGNED_DT ; rpt_form_cmplt_time -> INV_RPT_DT
+--     rpt_to_county_time / rpt_to_state_time -> EARLIEST_RPT_TO_CNTY/STATE_DT
+--     transmission_mode_cd '1' (PHVS_TRANSMISSIONCATEGORY_STD Adult heterosexual contact)
+--   GENERATED ALWAYS period cols are omitted. INVESTIGATION_STATUS / INV_CASE_STATUS /
+--   OUTBREAK_* / mmwr / jurisdiction already set above/below. NOTES / INV_STATE_CASE_ID
+--   are NOT public_health_case scalars and are deliberately left.
 INSERT INTO [dbo].[public_health_case]
     ([public_health_case_uid], [add_time], [add_user_id], [case_type_cd],
      [case_class_cd], [cd], [cd_desc_txt], [cd_system_cd], [cd_system_desc_txt],
@@ -137,7 +170,16 @@ INSERT INTO [dbo].[public_health_case]
      [record_status_cd], [record_status_time], [status_cd], [status_time],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
      [program_jurisdiction_oid], [outbreak_ind], [outbreak_name],
-     [mmwr_week], [mmwr_year])
+     [mmwr_week], [mmwr_year],
+     [hospitalized_ind_cd], [outcome_cd], [disease_imported_cd],
+     [imported_country_cd], [imported_state_cd], [imported_county_cd], [imported_city_desc_txt],
+     [pat_age_at_onset], [pat_age_at_onset_unit_cd], [pregnant_ind_cd],
+     [diagnosis_time], [effective_from_time], [effective_to_time],
+     [effective_duration_amt], [effective_duration_unit_cd],
+     [detection_method_cd], [rpt_source_cd], [referral_basis_cd], [txt],
+     [activity_from_time], [activity_to_time],
+     [investigator_assigned_time], [rpt_form_cmplt_time],
+     [rpt_to_county_time], [rpt_to_state_time], [transmission_mode_cd])
 VALUES
     (@std_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10311', N'Syphilis, primary', N'NND', N'NND',
@@ -145,7 +187,16 @@ VALUES
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'STD', N'130001',
      22004000, N'N', NULL,
-     N'14', N'2026');
+     N'14', N'2026',
+     N'N', N'N', N'OOS',
+     N'840', N'13', N'13089', N'Decatur',
+     33, N'Y', N'N',
+     '2026-04-05T00:00:00', '2026-03-28T00:00:00', '2026-04-18T00:00:00',
+     21, N'D',
+     N'PHC2112', N'LA', N'P1', N'Syphilis primary confirmed by darkfield + RPR/TP-PA; partner services initiated.',
+     '2026-04-03T00:00:00', '2026-04-30T00:00:00',
+     '2026-04-03T00:00:00', '2026-04-20T00:00:00',
+     '2026-04-02T00:00:00', '2026-04-03T00:00:00', N'1');
 
 -- =====================================================================
 -- ODSE: act_id (PHC_LOCAL_ID)
