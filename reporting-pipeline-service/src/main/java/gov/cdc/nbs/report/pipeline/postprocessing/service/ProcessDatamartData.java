@@ -518,44 +518,41 @@ public class ProcessDatamartData {
 
   private void processDynDatamart(BatchProcessingState state, List<DatamartData> dmDataList) {
     if (!dmDataList.isEmpty()) {
-      Map<String, String> datamartPhcIdMap =
+      Map<String, List<Long>> datamartPhcIdMap =
           dmDataList.stream()
               .collect(
                   Collectors.groupingBy(
                       DatamartData::getDatamart,
                       Collectors.mapping(
-                          dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
-                          Collectors.joining(","))));
+                          DatamartData::getPublicHealthCaseUid, Collectors.toList())));
 
       List<CompletableFuture<Void>> futures = new ArrayList<>();
       datamartPhcIdMap.forEach(
-          (datamart, phcIds) ->
-              futures.add(
-                  CompletableFuture.runAsync(
-                      () -> {
-                        logger.info(
-                            "Executing stored proc: sp_dyn_datamart_postprocessing '{}', '{}'",
+          (datamart, phcIds) -> {
+            String phcIdsString =
+                phcIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+            futures.add(
+                CompletableFuture.runAsync(
+                    () -> {
+                      logger.info(
+                          "Executing stored proc: sp_dyn_datamart_postprocessing '{}', '{}'",
+                          datamart,
+                          phcIdsString);
+                      try {
+                        procRepository.executeStoredProcForDynDatamart(datamart, phcIdsString);
+                        logExecutionCompleted("sp_dyn_datamart_postprocessing");
+                        incrementIf(ppDmSuccess, !state.isRetry);
+                      } catch (Exception e) {
+                        incrementIf(ppDmFailure, !state.isRetry);
+                        logger.error("Error processing dynamic datamart: {}", datamart, e);
+                        state.registerFailure(
                             datamart,
-                            phcIds);
-                        try {
-                          procRepository.executeStoredProcForDynDatamart(datamart, phcIds);
-                          logExecutionCompleted("sp_dyn_datamart_postprocessing");
-                          incrementIf(ppDmSuccess, !state.isRetry);
-                        } catch (Exception e) {
-                          incrementIf(ppDmFailure, !state.isRetry);
-                          logger.error("Error processing dynamic datamart: {}", datamart, e);
-                          state.registerFailure(
-                              datamart,
-                              Collections.singletonMap(
-                                  INVESTIGATION.getEntityName(),
-                                  Arrays.stream(phcIds.split(","))
-                                      .map(String::trim)
-                                      .map(Long::parseLong)
-                                      .collect(Collectors.toList())),
-                              e);
-                        }
-                      },
-                      dynDmExecutor)));
+                            Collections.singletonMap(INVESTIGATION.getEntityName(), phcIds),
+                            e);
+                      }
+                    },
+                    dynDmExecutor));
+          });
 
       // Wait for all async tasks to complete before returning
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
