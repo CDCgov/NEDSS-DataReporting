@@ -646,11 +646,6 @@ BEGIN
                                                          from fn_get_value_by_cvg(fld_foll_up_prov_exm_reason, 'PRVDR_EXAM_REASON'))   as fl_fup_prov_exm_reason,
                                                         fld_foll_up_prov_diagnosis,
                                                         LEFT(fld_foll_up_prov_diagnosis, 3)                                            as fl_fup_prov_diagnosis,
-                                                        
-                                                        -- (select *
-                                                        --  from fn_get_value_by_cvg(fld_foll_up_notification_plan,
-                                                        --                           'NOTIFICATION_PLAN'))                                as fl_fup_notification_plan_cd,
-
                                                         (select *
                                                         from fn_get_value_by_cvg(fld_foll_up_notification_plan,
                                                             case
