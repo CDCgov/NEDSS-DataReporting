@@ -11,6 +11,7 @@ import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
@@ -570,8 +571,11 @@ public class ProcessObservationDataUtil {
     return mapper.apply(node);
   }
 
-  private void assertDomainCdMatches(String value, String... vals) {
-    if (Arrays.stream(vals).noneMatch(value::equals)) {
+  void assertDomainCdMatches(String value, String... vals) {
+    // Bug #18: null-safe comparison. A NULL obs_domain_cd_st_1 is simply "not a valid domain" and
+    // must take the clean IllegalArgumentException path (caught + skipped upstream like any
+    // non-'Order'/'Result' value), not blow up with an NPE from a bound `value::equals` reference.
+    if (Arrays.stream(vals).noneMatch(v -> Objects.equals(value, v))) {
       throw new IllegalArgumentException("obsDomainCdSt1: " + value + " is not valid for the {}");
     }
   }
