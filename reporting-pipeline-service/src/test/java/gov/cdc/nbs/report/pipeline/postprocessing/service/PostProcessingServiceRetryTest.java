@@ -105,7 +105,13 @@ class PostProcessingServiceRetryTest {
 
     Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
     assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
-    assertEquals(6, postProcessingServiceMock.retryCache.get(batchId).size());
+    // Bug #20 fault isolation: only the entity that actually failed (PATIENT) is re-queued for
+    // retry. The lower-priority INVESTIGATION and OBSERVATION entities are processed, not skipped,
+    // so their entity topics are NOT in the retry batch (previously all three were re-queued).
+    var retryMap = postProcessingServiceMock.retryCache.get(batchId);
+    assertTrue(retryMap.containsKey(patTopic));
+    assertFalse(retryMap.containsKey(invTopic));
+    assertFalse(retryMap.containsKey(obsTopic));
 
     postProcessingServiceMock.processRetryCache();
     verify(postProcRepositoryMock, never())
@@ -128,6 +134,33 @@ class PostProcessingServiceRetryTest {
             0);
 
     verify(postProcRepositoryMock, times(3)).executeStoredProcForPatientIds(anyString());
+  }
+
+  @Test
+  void testFaultIsolation_lowerPriorityEntityProcessedWhenHigherPriorityFails() {
+    // Bug #20: a throw while processing one entity must NOT skip unrelated lower-priority
+    // entities in the same batch. Here PATIENT (priority 5) fails; TREATMENT (priority 16)
+    // must still be processed (its SP invoked) rather than silently skipped + deferred.
+    String patTopic = "dummy_patient";
+    String patKey = "{\"payload\":{\"patient_uid\":123}}";
+    String trtTopic = "dummy_treatment";
+    String trtKey = "{\"payload\":{\"treatment_uid\":789}}";
+
+    when(postProcRepositoryMock.executeStoredProcForPatientIds("123"))
+        .thenThrow(new RuntimeException(errorMsg));
+
+    postProcessingServiceMock.processNrtMessage(patTopic, patKey, patKey);
+    postProcessingServiceMock.processNrtMessage(trtTopic, trtKey, trtKey);
+    postProcessingServiceMock.processCachedIds();
+
+    // the lower-priority entity is still processed despite the higher-priority failure
+    verify(postProcRepositoryMock).executeStoredProcForTreatment(anyString());
+
+    // only the entity that actually failed (PATIENT) is re-queued for retry; TREATMENT is not
+    assertFalse(postProcessingServiceMock.retryCache.isEmpty());
+    Long batchId = postProcessingServiceMock.retryCache.entrySet().iterator().next().getKey();
+    assertTrue(postProcessingServiceMock.retryCache.get(batchId).containsKey(patTopic));
+    assertFalse(postProcessingServiceMock.retryCache.get(batchId).containsKey(trtTopic));
   }
 
   @Test
