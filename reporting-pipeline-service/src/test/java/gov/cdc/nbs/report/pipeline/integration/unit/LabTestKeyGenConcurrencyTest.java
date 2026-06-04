@@ -329,6 +329,126 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
     }
   }
 
+  /**
+   * Deterministic (single-threaded) regression for the RESIDUAL bug #17 facet that the concurrency
+   * test above could not catch: the sentinel-slot re-assignment on a never-used (empty) key table.
+   *
+   * <p>{@code nrt_lab_test_result_group_key} carries a default sentinel row {@code
+   * TEST_RESULT_GRP_KEY = 1, LAB_TEST_UID NULL} (backfilled from the {@code TEST_RESULT_GROUPING}
+   * default record). On a from-scratch pipeline run the key table can be momentarily EMPTY and in
+   * the never-used IDENTITY seed state (IDENT_CURRENT = seed = 1, LastValue NULL). The old key-gen
+   * computed {@code @max = ISNULL(MAX,0) = 0}, so its reseed guard {@code @curr(1) < @max(0)} was
+   * FALSE -- no reseed ran -- and SQL Server's empty-table seed quirk made the first auto-IDENTITY
+   * INSERT assign {@code TEST_RESULT_GRP_KEY = 1} to a REAL lab test, silently consuming the
+   * sentinel slot. A subsequent sentinel/grouping (re)insert then collided on PRIMARY KEY value (1)
+   * -> Error 2627, deterministically (no concurrency required).
+   *
+   * <p>This test reproduces that exact state with a single thread: it snapshots and TRUNCATEs the
+   * key table (TRUNCATE restores the never-used seed state), seeds one brand-new lab test, invokes
+   * the SP once, and asserts (a) no 2627, (b) the new key is >= 2 (the sentinel slot 1 was NOT
+   * consumed), and (c) a default sentinel row (key=1, LAB_TEST_UID NULL) can still be inserted
+   * without a PK collision. It then restores the snapshotted rows. RED against the pre-fix routine
+   * (new lab test lands at key=1, sentinel reinsert throws 2627); GREEN against the
+   * explicit-allocation (MAX+ROW_NUMBER, base = ISNULL(MAX,1)) routine.
+   */
+  @Test
+  void emptyKeyTableDoesNotReassignSentinelSlot() throws Exception {
+    long newUid = UID_BASE + 900_000L;
+    insertedUids.add(newUid);
+
+    try (Connection conn = connection();
+        Statement st = conn.createStatement()) {
+      // Snapshot the live key table so we can restore it after the destructive TRUNCATE.
+      st.execute(
+          "IF OBJECT_ID('tempdb..##gk_snapshot') IS NOT NULL DROP TABLE ##gk_snapshot;"
+              + " SELECT TEST_RESULT_GRP_KEY, LAB_TEST_UID INTO ##gk_snapshot FROM "
+              + DB
+              + "nrt_lab_test_result_group_key;");
+
+      try {
+        // Reproduce the from-scratch never-used empty-table state: TRUNCATE resets the IDENTITY to
+        // the never-used seed (IDENT_CURRENT=1, LastValue NULL) and clears every row including the
+        // sentinel -- exactly the state that made the old key-gen assign key=1 to a real lab test.
+        st.execute("TRUNCATE TABLE " + DB + "nrt_lab_test_result_group_key");
+
+        // One brand-new Result lab test -> the SP must allocate a NEW group key for it.
+        st.execute(
+            "INSERT INTO "
+                + DB
+                + "LAB_TEST (LAB_TEST_KEY, LAB_TEST_UID, LAB_TEST_TYPE, RECORD_STATUS_CD)"
+                + " VALUES ("
+                + newUid
+                + ", "
+                + newUid
+                + ", 'Result', 'ACTIVE')");
+
+        // Invoke the SP. Against the pre-fix routine this lands the new test at
+        // TEST_RESULT_GRP_KEY=1.
+        st.execute(
+            "EXEC " + DB + "sp_d_labtest_result_postprocessing @pLabResultList='" + newUid + "'");
+
+        // Assertion 1: the new lab test must NOT have taken the sentinel slot (key=1); it must be
+        // >=2.
+        try (var rs =
+            st.executeQuery(
+                "SELECT TEST_RESULT_GRP_KEY FROM "
+                    + DB
+                    + "nrt_lab_test_result_group_key WHERE LAB_TEST_UID = "
+                    + newUid)) {
+          assertTrue(rs.next(), "new lab test got no group key allocated");
+          long key = rs.getLong("TEST_RESULT_GRP_KEY");
+          assertTrue(
+              key >= 2,
+              "Sentinel slot re-assignment: new lab test was allocated TEST_RESULT_GRP_KEY="
+                  + key
+                  + " (must be >= 2; key=1 is reserved for the default sentinel).");
+        }
+
+        // Assertion 2: the default sentinel (key=1, LAB_TEST_UID NULL) can still be inserted --
+        // i.e.
+        // the slot was preserved -- without a 2627 PRIMARY KEY collision.
+        try {
+          st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key ON");
+          st.execute(
+              "INSERT INTO "
+                  + DB
+                  + "nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)"
+                  + " VALUES (1, NULL)");
+        } catch (SQLException e) {
+          String msg = e.getMessage();
+          if (msg != null && (msg.contains("2627") || msg.contains("PRIMARY KEY"))) {
+            fail(
+                "Sentinel-slot collision: inserting the default sentinel (key=1) threw a duplicate"
+                    + " PRIMARY KEY (2627) because a real lab test already consumed key=1. "
+                    + msg);
+          }
+          throw e;
+        } finally {
+          st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key OFF");
+        }
+      } finally {
+        // Restore: clear our test rows, then re-insert the snapshot under IDENTITY_INSERT, and
+        // realign the IDENTITY seed with the restored MAX so the shared stack is left intact.
+        st.execute("TRUNCATE TABLE " + DB + "nrt_lab_test_result_group_key");
+        st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key ON");
+        st.execute(
+            "INSERT INTO "
+                + DB
+                + "nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)"
+                + " SELECT TEST_RESULT_GRP_KEY, LAB_TEST_UID FROM ##gk_snapshot");
+        st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key OFF");
+        st.execute(
+            "DECLARE @m BIGINT = (SELECT ISNULL(MAX(TEST_RESULT_GRP_KEY),1) FROM "
+                + DB
+                + "nrt_lab_test_result_group_key);"
+                + " DBCC CHECKIDENT('"
+                + DB
+                + "nrt_lab_test_result_group_key', RESEED, @m) WITH NO_INFOMSGS;");
+        st.execute("IF OBJECT_ID('tempdb..##gk_snapshot') IS NOT NULL DROP TABLE ##gk_snapshot;");
+      }
+    }
+  }
+
   private void seedLabTests(List<Long> uids) throws SQLException {
     try (Connection conn = connection();
         Statement st = conn.createStatement()) {

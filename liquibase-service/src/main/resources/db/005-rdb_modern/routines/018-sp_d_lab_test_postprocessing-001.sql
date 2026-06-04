@@ -33,7 +33,8 @@ BEGIN
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     DECLARE @Dataflow_Name VARCHAR(200) = 'D_LAB_TEST Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_lab_test_postprocessing';
-    DECLARE @rdb_last_refresh_time datetime; 
+    DECLARE @rdb_last_refresh_time datetime;
+    DECLARE @applock_rc INT;
 
     BEGIN TRY
 
@@ -901,8 +902,14 @@ BEGIN
             -- nrt_lab_test_result_group_key allocation; guard this key-gen the same way with an
             -- exclusive application lock so concurrent sessions cannot interleave the
             -- read/RESEED/INSERT and collide (Error 2627), deadlock (Error 1205) or drop inserts.
-            EXEC sp_getapplock @Resource = 'nrt_lab_test_key_keygen',
+            EXEC @applock_rc = sp_getapplock @Resource = 'nrt_lab_test_key_keygen',
                 @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
+
+            -- Bug #17 (residual): sp_getapplock returns < 0 on timeout/deadlock/error. The original
+            -- EXEC ignored the return code, letting a failed acquisition proceed UNSERIALIZED. Fail
+            -- loudly so the caller retries rather than racing on the IDENTITY allocation.
+            IF @applock_rc < 0
+                THROW 50018, 'sp_getapplock failed to acquire nrt_lab_test_key_keygen (serialization lost)', 1;
 
             SELECT @rdb_last_refresh_time = GETDATE()
 
