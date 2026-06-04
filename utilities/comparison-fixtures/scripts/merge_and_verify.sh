@@ -474,7 +474,7 @@ apply_tier_3_fixtures() {
 #   Treatment:     20000150, 20100010, 20100020
 #   Interview:     20000140, 20090010
 
-readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22002000,22003000,22004000,22005000,22007000,22008000,22008500,22009000,22010000,22019100,22043000,22046000,22047000,22047500,22049000,22049200,22049400,22049500,22050000,22054000,22060000,22060200,22060400,22060600,22063100'
+readonly PHC_UIDS='20000100,20050010,22000010,22000020,22000030,22000040,22000050,22000060,22000070,22000080,22000090,22000100,22000200,22001000,22002000,22003000,22004000,22005000,22007000,22008000,22008500,22009000,22010000,22019100,22043000,22046000,22047000,22047500,22049000,22049200,22049400,22049500,22050000,22054000,22060000,22060200,22060400,22060600,22063100,22065000'
 readonly PAT_UIDS='20000000,20020010,20020020'
 readonly PRV_UIDS='20000010,20010010'
 readonly ORG_UIDS='20000020,20030010'
@@ -535,6 +535,45 @@ run_repeated_place_postprocessing() {
   batch_id=$(date +%y%m%d%H%M%S)
   sql_q RDB_MODERN "EXEC dbo.sp_repeated_place_postprocessing @batch_id = $batch_id, @phc_id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || {
     log "    (errored or no-op — see job_flow_log)"
+  }
+}
+
+# Step 8.7 — Summary / SR100 datamarts (sp_summary_report_case_postprocessing +
+# sp_sr100_datamart_postprocessing).
+#
+# WHY THIS IS WIRED HERE (not left to the service):
+# The no-shortcut flow relies on reporting-pipeline-service
+# PostProcessingService.processSummaryCases() to fire these two SPs whenever an
+# Investigation CDC event carries case_type_cd='S' (extractSummaryCase ->
+# sumCache -> processSummaryCases). That path DID fire in the merge run (both
+# SPs appear in job_flow_log keyed on 22065000), but produced 0 rows:
+#   - sp_summary_report_case_postprocessing's CTE SumRptWork INNER JOINs
+#     nrt_investigation_observation (root_type_cd='SummaryNotification'); when the
+#     summary SP fires inside the same investigation-event drain, that obs row is
+#     not reliably materialized yet, so step "Generating #tmp_SumRptWork" = 0.
+#   - sp_sr100_datamart_postprocessing then has no SUMMARY_REPORT_CASE parent row,
+#     and additionally INNER JOINs EVENT_METRIC on inv_local_id.
+# Running them HERE — after the Tier-3 drain, when nrt_investigation,
+# nrt_investigation_observation (SummaryNotification), nrt_investigation_notification,
+# the INVESTIGATION dim, CONDITION, and EVENT_METRIC are all fully materialized —
+# makes population deterministic. Idempotent (UPDATE-then-INSERT on existing rows).
+#
+# Order matters: event_metric first (SR100 INNER JOINs EVENT_METRIC.local_id),
+# then summary_report_case (SR100 reads SUMMARY_REPORT_CASE), then sr100.
+# SR100.DATE_REPORTED/MONTH_REPORTED are NOT NULL and map from
+# INVESTIGATION.EARLIEST_RPT_TO_STATE_DT via RDB_DATE; the summary fixture
+# (zz_summary_report_case.sql) sets public_health_case.rpt_to_state_time so that
+# date resolves (RDB_DATE covers 2020-2030).
+run_summary_datamarts() {
+  log "Step 8.7: summary datamarts (event_metric -> summary_report_case -> sr100) over PHC_UIDS"
+  sql_q RDB_MODERN "EXEC dbo.sp_event_metric_datamart_postprocessing @phc_uids = N'$PHC_UIDS', @obs_uids = N'$OBS_UIDS', @notif_uids = N'$NOTIF_UIDS', @ct_uids = N'$CT_UIDS', @vax_uids = N'$VAC_UIDS', @debug = 0" >/dev/null 2>&1 || {
+    log "    (event_metric errored or no-op — see job_flow_log)"
+  }
+  sql_q RDB_MODERN "EXEC dbo.sp_summary_report_case_postprocessing @id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || {
+    log "    (summary_report_case errored or no-op — see job_flow_log)"
+  }
+  sql_q RDB_MODERN "EXEC dbo.sp_sr100_datamart_postprocessing @id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || {
+    log "    (sr100 errored or no-op — see job_flow_log)"
   }
 }
 
@@ -655,7 +694,9 @@ print_coverage_summary() {
     SELECT 'D_VACCINATION',                COUNT(*) FROM dbo.D_VACCINATION WHERE VACCINATION_UID >= 20000000 UNION ALL
     SELECT 'F_VACCINATION',                COUNT(*) FROM dbo.F_VACCINATION UNION ALL
     SELECT 'D_CONTACT_RECORD',             COUNT(*) FROM dbo.D_CONTACT_RECORD UNION ALL
-    SELECT 'F_CONTACT_RECORD_CASE',        COUNT(*) FROM dbo.F_CONTACT_RECORD_CASE
+    SELECT 'F_CONTACT_RECORD_CASE',        COUNT(*) FROM dbo.F_CONTACT_RECORD_CASE UNION ALL
+    SELECT 'SUMMARY_REPORT_CASE',          COUNT(*) FROM dbo.SUMMARY_REPORT_CASE UNION ALL
+    SELECT 'SR100',                        COUNT(*) FROM dbo.SR100
     ORDER BY tbl;
   "
 
@@ -721,6 +762,13 @@ main() {
   # The keystone morb-fix (f26dc05b) stopped the OBSERVATION-priority morb-515 throw,
   # so the lab obs in the same batch are no longer fail-fast-skipped.
   log "Step 9: draining pipeline (Tier 3)..."; wait_for_pipeline_drain 900 || err "Tier 3 drain timed out (continuing)"
+
+  # Step 8.7: deterministically populate SUMMARY_REPORT_CASE + SR100 after all
+  # nrt_* state (incl. nrt_investigation_observation SummaryNotification +
+  # EVENT_METRIC) is materialized. The service's processSummaryCases() fires
+  # these during the drain but races the obs-row materialization (0 rows); this
+  # post-drain run guarantees population. Idempotent.
+  run_summary_datamarts
 
   print_coverage_summary
   log "Merge complete (CDC pipeline; no nrt_* shortcut)."

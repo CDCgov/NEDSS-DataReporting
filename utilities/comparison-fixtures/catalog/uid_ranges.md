@@ -1633,3 +1633,8 @@ tail-EXEC sequences these correctly for standalone verification.
 | 22064000 - 22064999 | R6 d_investigation_repeat agent — allocated 2026-06-04. Additional investigation repeating-group form answers (d_inv_*_repeat column gaps). Investigation/answer-driven (NO new observations — must not enlarge the obs batch / bug #20 fail-fast). |
 | 22065000 - 22065999 | R6 summary_report agent — allocated 2026-06-04. summary_report_case / sr100 fields. Notification/investigation-driven (NO new observations). |
 | 22066000 - 22066999 | R6 tb gap agent — allocated 2026-06-04. tb_datamart + tb_hiv_datamart NON-PATIENT column gap (~25 cols) via RVCT form answers on the existing TB PHC chain. Answer/investigation-driven (NO new observations). |
+
+<!-- Round 6 tick 2 (non-obs-heavy) -->
+| 22067000 - 22067999 | R6t2 hepatitis answer-tail agent — allocated 2026-06-04. hepatitis_datamart/hep100 NULL column tail via additional investigation ANSWERS on existing hep PHC(s). Non-obs. |
+| 22068000 - 22068999 | R6t2 d_investigation_repeat-2 agent — allocated 2026-06-04. Remaining d_investigation_repeat NULL cols (243/300) via _OTH/other repeat answers on PHCs NOT covered by zz_d_investigation_repeat_forms.sql. New file zz_d_investigation_repeat_forms_2.sql. Non-obs. |
+| (reuses 22065000) | R6t2 summary-debug agent — wire/trigger sp_summary_report_case_postprocessing + sp_sr100_datamart_postprocessing (currently not firing); owns merge_and_verify.sh Step-9 + zz_summary_report_case.sql this tick. |

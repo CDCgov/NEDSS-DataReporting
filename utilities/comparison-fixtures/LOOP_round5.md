@@ -311,3 +311,12 @@ chain CORRECT (ODSE PHC case_type='S' 10110, nrt_investigation_notification=1, S
 investigation-observation present) but SUMMARY_REPORT_CASE/SR100 stay 0; only sp_inv_summary_datamart
 ran, not sp_summary_report_case/sp_sr100 -> they appear not wired into merge_and_verify Step-9 (or need
 EVENT_METRIC first). Next tick: debug-agent to wire/trigger the summary report-case + sr100 SPs.
+
+### R6 tick 2 (2026-06-04) — net +59, 76.3%->77.6%, ZERO regressions; 2 empty tables filled
+Landed: summary_report_case 0->11 + sr100 0->19 (via new merge_and_verify Step 8.7 run_summary_datamarts
+backstop — realizes the documented Merge-contract Step 9; needed because the service races on summary
+cases mid-drain, filed bug #21; SR100 also needed fixture rpt_to_state_time to clear NOT-NULL Error 515),
+hepatitis_datamart +21 (D_INV_EPIDEMIOLOGY/TRAVEL/VACCINATION single-dim answers on Hep-A PHC 20000100),
+d_investigation_repeat +8 (8 more _OTH cols at group-5, PHCs 22003000/22049000/22047000/22007000/22004000).
+err2627/1205=0 err547=0, d_var_pam stable. NOTE: summary/sr100 coverage is harness-Step-8.7-assisted
+(documented, transparent) pending the bug #21 service-timing fix.
