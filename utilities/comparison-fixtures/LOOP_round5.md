@@ -211,3 +211,8 @@ needs its date-children remapped to {LAB334,349,350,356,357,361,362} via the FRO
 - INCREMENTAL wave 1: spawned TB-C dedicated entities (22058xxx -> tb_datamart/tb_hiv PATIENT_*/PHYS_*),
   std_hiv D_CASE_MANAGEMENT chain (22059xxx -> FL_*/INIT_*/OOJ_*/CA_*/SURV_*), d_inv_repeat more forms
   (22060xxx). 72.2% -> ceiling ~89%.
+- INCREMENTAL wave-1 COMMITTED: 72.2% -> 74.1% (+85 cols). std_hiv-casemgmt: std_hiv_datamart +35
+  (188->223) + d_case_management +25 (41->66). d_inv_repeat-more: d_investigation_repeat +19 (4 new
+  forms TBRD/Monkeypox/Babesiosis/CarbonMonoxide, PHC_UIDS += 22060000/200/400/600). TB-C
+  (zz_tb_dedicated_entities) COVERAGE-NEUTRAL (tb_datamart/tb_hiv unchanged - the ~25 TB gap is not
+  PATIENT_*-shaped; kept as harmless additive fidelity). d_place +6 flaky. No regression.
