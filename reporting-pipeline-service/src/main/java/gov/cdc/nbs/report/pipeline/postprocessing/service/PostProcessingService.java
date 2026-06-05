@@ -1328,7 +1328,7 @@ public class PostProcessingService {
       return null;
     }
 
-    batchId = dmProcessor.getBatchId(batchId, e);
+    batchId = dmProcessor.nextBatchId(batchId, e);
 
     Map<String, Queue<Long>> retryMap =
         retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());

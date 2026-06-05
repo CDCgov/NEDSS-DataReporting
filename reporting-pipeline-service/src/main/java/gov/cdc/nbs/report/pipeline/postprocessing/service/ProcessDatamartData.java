@@ -159,7 +159,7 @@ public class ProcessDatamartData {
 
   protected boolean processDmCache(Map<String, Map<String, List<Long>>> dmCache, Long batchId) {
     List<Long> ldfUids = new ArrayList<>();
-    boolean failed = false;
+    BatchProcessingState state = new BatchProcessingState(batchId);
 
     Timer.Sample sample = metrics.startSample();
 
@@ -174,40 +174,35 @@ public class ProcessDatamartData {
 
       List<Long> uids = getUids(dmValues, INVESTIGATION);
 
-      if (failed) {
-        updateRetryCache(batchId, dmKey, dmValues);
-      } else {
-        if (batchId != null) {
-          logger.info(
-              "Retrying {} id(s) from datamart topic: {}, attempt #{} for batch id: {}",
-              uids.size(),
-              dmKey,
-              retryAttempts.getOrDefault(batchId, 0) + 1,
-              batchId);
-        }
+      if (state.isRetry) {
+        logger.info(
+            "Retrying {} id(s) from datamart topic: {}, attempt #{} for batch id: {}",
+            uids.size(),
+            dmKey,
+            retryAttempts.getOrDefault(state.getBatchId(), 0) + 1,
+            state.getBatchId());
+      }
 
-        try {
-          processDatamart(dmKey, dmValues, ldfUids);
-          incrementIf(ppDmSuccess, batchId == null);
-        } catch (Exception e) {
-          incrementIf(ppDmFailure, batchId == null);
-          logger.error(
-              errorMessage(
-                  dmKey, listToParameterString(uids), new Exception(e.getClass().getSimpleName())));
-          failed = true;
-          batchId = buildRetryCache(batchId, dmKey, dmValues, e);
-        }
+      try {
+        processDatamart(dmKey, dmValues, ldfUids);
+        incrementIf(ppDmSuccess, !state.isRetry);
+      } catch (Exception e) {
+        incrementIf(ppDmFailure, !state.isRetry);
+        logger.error(
+            errorMessage(
+                dmKey, listToParameterString(uids), new Exception(e.getClass().getSimpleName())));
+        state.registerFailure(dmKey, dmValues, e);
       }
     }
 
-    failed = processLdfVaccinePreventDm(batchId, ldfUids, failed);
+    processLdfVaccinePreventDm(state, ldfUids);
 
     if (dmCache.containsKey(MULTI_ID_DATAMART)) {
-      failed = processMultiIdDatamart(batchId, dmCache.get(MULTI_ID_DATAMART), failed);
+      processMultiIdDatamart(state, dmCache.get(MULTI_ID_DATAMART));
     }
 
     metrics.stopSample(sample, processTimer);
-    return !failed;
+    return !state.hasFailed();
   }
 
   private void incrementIf(Counter cnt, boolean notRetry) {
@@ -384,8 +379,8 @@ public class ProcessDatamartData {
     }
   }
 
-  private boolean processLdfVaccinePreventDm(Long batchId, List<Long> ldfUids, boolean failed) {
-    if (!failed && !ldfUids.isEmpty()) {
+  private void processLdfVaccinePreventDm(BatchProcessingState state, List<Long> ldfUids) {
+    if (!ldfUids.isEmpty()) {
 
       String cases = listToParameterString(ldfUids);
       try {
@@ -394,19 +389,17 @@ public class ProcessDatamartData {
             invRepository::executeStoredProcForLdfVacPreventDiseasesDatamart,
             cases,
             this::checkResult);
-        incrementIf(ppDmSuccess, batchId == null);
+        incrementIf(ppDmSuccess, !state.isRetry);
       } catch (Exception e) {
-        incrementIf(ppDmFailure, batchId == null);
+        incrementIf(ppDmFailure, !state.isRetry);
         String ldfType = LDF_VACCINE_PREVENT_DISEASES.getEntityName();
         String dmKey = "LDF," + ldfType;
 
         logger.error(errorMessage(ldfType, cases, new Exception(e.getClass().getSimpleName())));
-        buildRetryCache(
-            batchId, dmKey, Collections.singletonMap(INVESTIGATION.getEntityName(), ldfUids), e);
-        failed = true;
+        state.registerFailure(
+            dmKey, Collections.singletonMap(INVESTIGATION.getEntityName(), ldfUids), e);
       }
     }
-    return failed;
   }
 
   private void processLdfLegacy(String ldfType, String cases) {
@@ -465,95 +458,104 @@ public class ProcessDatamartData {
    *
    * @param dmMulti
    */
-  private boolean processMultiIdDatamart(
-      Long batchId, Map<String, List<Long>> dmMulti, boolean failed) {
-    if (failed) {
-      updateRetryCache(batchId, MULTI_ID_DATAMART, dmMulti);
-    } else {
-      String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-      String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-      String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-      String patString = listToParameterString(dmMulti.get(PATIENT.getEntityName()));
-      String provString = listToParameterString(dmMulti.get(PROVIDER.getEntityName()));
-      String orgString = listToParameterString(dmMulti.get(ORGANIZATION.getEntityName()));
+  private void processMultiIdDatamart(BatchProcessingState state, Map<String, List<Long>> dmMulti) {
+    String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
+    String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
+    String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
+    String patString = listToParameterString(dmMulti.get(PATIENT.getEntityName()));
+    String provString = listToParameterString(dmMulti.get(PROVIDER.getEntityName()));
+    String orgString = listToParameterString(dmMulti.get(ORGANIZATION.getEntityName()));
 
-      int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
-      int totalLengthMorbReportDM =
-          obsString.length()
-              + patString.length()
-              + provString.length()
-              + orgString.length()
-              + invString.length();
+    int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
+    int totalLengthMorbReportDM =
+        obsString.length()
+            + patString.length()
+            + provString.length()
+            + orgString.length()
+            + invString.length();
 
-      try {
-        if (totalLengthInvSummary > 0) {
-          // reusing the same DTO class for Dynamic Marts
-          logger.info(
-              "Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'",
-              invString,
-              notifString,
-              obsString);
-          List<DatamartData> dmDataList =
-              procRepository.executeStoredProcForInvSummaryDatamart(
-                  invString, notifString, obsString);
-          logExecutionCompleted("sp_inv_summary_datamart_postprocessing");
-          processDynDatamart(dmDataList, batchId);
-          incrementIf(ppDmSuccess, batchId == null);
-        } else {
-          logger.info("No updates to INV_SUMMARY Datamart");
-        }
-
-        if (totalLengthMorbReportDM > 0) {
-          logger.info(
-              "Executing stored proc: sp_morbidity_report_datamart_postprocessing '{}', '{}', '{}', '{}', '{}'",
-              obsString,
-              patString,
-              provString,
-              orgString,
-              invString);
-          procRepository.executeStoredProcForMorbidityReportDatamart(
-              obsString, patString, provString, orgString, invString);
-          logExecutionCompleted("sp_morbidity_report_datamart_postprocessing");
-          incrementIf(ppDmSuccess, batchId == null);
-        } else {
-          logger.info("No updates to MORBIDITY_REPORT_DATAMART");
-        }
-      } catch (Exception e) {
-        incrementIf(ppDmFailure, batchId == null);
-        logger.error(
-            errorMessage(
-                MULTI_ID_DATAMART, invString, new Exception(e.getClass().getSimpleName())));
-        buildRetryCache(batchId, MULTI_ID_DATAMART, dmMulti, e);
-        failed = true;
+    try {
+      if (totalLengthInvSummary > 0) {
+        // reusing the same DTO class for Dynamic Marts
+        logger.info(
+            "Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'",
+            invString,
+            notifString,
+            obsString);
+        List<DatamartData> dmDataList =
+            procRepository.executeStoredProcForInvSummaryDatamart(
+                invString, notifString, obsString);
+        logExecutionCompleted("sp_inv_summary_datamart_postprocessing");
+        processDynDatamart(state, dmDataList);
+        incrementIf(ppDmSuccess, !state.isRetry);
+      } else {
+        logger.info("No updates to INV_SUMMARY Datamart");
       }
+
+      if (totalLengthMorbReportDM > 0) {
+        logger.info(
+            "Executing stored proc: sp_morbidity_report_datamart_postprocessing '{}', '{}', '{}',"
+                + " '{}', '{}'",
+            obsString,
+            patString,
+            provString,
+            orgString,
+            invString);
+        procRepository.executeStoredProcForMorbidityReportDatamart(
+            obsString, patString, provString, orgString, invString);
+        logExecutionCompleted("sp_morbidity_report_datamart_postprocessing");
+        incrementIf(ppDmSuccess, !state.isRetry);
+      } else {
+        logger.info("No updates to MORBIDITY_REPORT_DATAMART");
+      }
+    } catch (Exception e) {
+      incrementIf(ppDmFailure, !state.isRetry);
+      logger.error(
+          errorMessage(MULTI_ID_DATAMART, invString, new Exception(e.getClass().getSimpleName())));
+      state.registerFailure(MULTI_ID_DATAMART, dmMulti, e);
     }
-    return failed;
   }
 
-  private void processDynDatamart(List<DatamartData> dmDataList, Long batchId) {
+  private void processDynDatamart(BatchProcessingState state, List<DatamartData> dmDataList) {
     if (!dmDataList.isEmpty()) {
-      Map<String, String> datamartPhcIdMap =
+      Map<String, List<Long>> datamartPhcIdMap =
           dmDataList.stream()
               .collect(
                   Collectors.groupingBy(
                       DatamartData::getDatamart,
                       Collectors.mapping(
-                          dmData -> String.valueOf(dmData.getPublicHealthCaseUid()),
-                          Collectors.joining(","))));
+                          DatamartData::getPublicHealthCaseUid, Collectors.toList())));
 
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
       datamartPhcIdMap.forEach(
-          (datamart, phcIds) ->
-              CompletableFuture.runAsync(
-                  () -> {
-                    logger.info(
-                        "Executing stored proc: sp_dyn_datamart_postprocessing '{}', '{}'",
-                        datamart,
-                        phcIds);
-                    procRepository.executeStoredProcForDynDatamart(datamart, phcIds);
-                    logExecutionCompleted("sp_dyn_datamart_postprocessing");
-                    incrementIf(ppDmSuccess, batchId == null);
-                  },
-                  dynDmExecutor));
+          (datamart, phcIds) -> {
+            String phcIdsString =
+                phcIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+            futures.add(
+                CompletableFuture.runAsync(
+                    () -> {
+                      logger.info(
+                          "Executing stored proc: sp_dyn_datamart_postprocessing '{}', '{}'",
+                          datamart,
+                          phcIdsString);
+                      try {
+                        procRepository.executeStoredProcForDynDatamart(datamart, phcIdsString);
+                        logExecutionCompleted("sp_dyn_datamart_postprocessing");
+                        incrementIf(ppDmSuccess, !state.isRetry);
+                      } catch (Exception e) {
+                        incrementIf(ppDmFailure, !state.isRetry);
+                        logger.error("Error processing dynamic datamart: {}", datamart, e);
+                        state.registerFailure(
+                            datamart,
+                            Collections.singletonMap(INVESTIGATION.getEntityName(), phcIds),
+                            e);
+                      }
+                    },
+                    dynDmExecutor));
+          });
+
+      // Wait for all async tasks to complete before returning
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
   }
 
@@ -574,7 +576,8 @@ public class ProcessDatamartData {
     if (totalLengthEventMetric > 0) {
       Timer.Sample sample = metrics.startSample();
       logger.info(
-          "Executing stored proc: sp_event_metric_datamart_postprocessing '{}', '{}', '{}', '{}', '{}'",
+          "Executing stored proc: sp_event_metric_datamart_postprocessing '{}', '{}', '{}', '{}',"
+              + " '{}'",
           invString,
           obsString,
           notifString,
@@ -658,6 +661,24 @@ public class ProcessDatamartData {
     }
   }
 
+  protected long nextBatchId(Long batchId, Exception e) {
+    if (batchId == null) {
+      batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
+      retryAttempts.put(batchId, 0);
+    } else {
+      retryAttempts.merge(batchId, 1, Integer::sum);
+    }
+
+    Throwable cause = e;
+    while (cause.getCause() != null) {
+      cause = cause.getCause(); // unwrap nested exceptions
+    }
+    String errorMsg = cause.getMessage();
+    errorMap.put(batchId, errorMsg);
+
+    return batchId;
+  }
+
   /**
    * Persists failed entities for backfill processing into the database.
    *
@@ -731,68 +752,21 @@ public class ProcessDatamartData {
     return false;
   }
 
-  private Long buildRetryCache(
-      Long batchId, String dmKey, Map<String, List<Long>> idMap, Exception e) {
-
-    // skip retrying for non-positive value
-    if (maxRetries <= 0) {
-      return null;
-    }
-
-    batchId = getBatchId(batchId, e);
-    updateRetryCache(batchId, dmKey, idMap);
-
-    return batchId;
-  }
-
-  protected Long getBatchId(Long batchId, Exception e) {
-    if (batchId == null) {
-      batchId = (System.currentTimeMillis() << 10) | INSTANCE_ID;
-      retryAttempts.put(batchId, 0);
-    } else {
-      retryAttempts.merge(batchId, 1, Integer::sum);
-    }
-
-    Throwable cause = e;
-    while (cause.getCause() != null) {
-      cause = cause.getCause(); // unwrap nested exceptions
-    }
-    String errorMsg = cause.getMessage();
-    errorMap.put(batchId, errorMsg);
-
-    return batchId;
-  }
-
   void updateRetryCache(Long batchId, BackfillData bfd) {
+    backfillAttempts.put(batchId, bfd.getRetryCount());
+    retryAttempts.put(batchId, bfd.getRetryCount());
+    errorMap.put(batchId, bfd.getErrDescription());
 
     String dmKey = bfd.getEntity().substring("DM^".length());
-
-    // Parse recordUidList into a map
-    String recordUidList = bfd.getRecordUidList();
     Map<String, List<Long>> idMap =
-        Arrays.stream(recordUidList.split("\\s+"))
+        Arrays.stream(bfd.getRecordUidList().split("\\s+"))
             .map(token -> token.split(":", 2))
             .collect(
                 Collectors.toMap(
                     parts -> parts[0],
                     parts -> Arrays.stream(parts[1].split(",")).map(Long::valueOf).toList()));
-    backfillAttempts.put(batchId, bfd.getRetryCount());
-    retryAttempts.put(batchId, bfd.getRetryCount());
-    errorMap.put(batchId, bfd.getErrDescription());
-
-    updateRetryCache(batchId, dmKey, idMap);
-  }
-
-  private void updateRetryCache(Long batchId, String dmKey, Map<String, List<Long>> idMap) {
-    if (batchId != null) {
-      Map<String, Queue<Long>> dmMap =
-          retryCache
-              .computeIfAbsent(batchId, k -> new ConcurrentHashMap<>())
-              .computeIfAbsent(dmKey, k -> new ConcurrentHashMap<>());
-      idMap.forEach(
-          (key, value) ->
-              dmMap.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(value));
-    }
+    BatchProcessingState state = new BatchProcessingState(batchId);
+    state.updateRetryCache(dmKey, idMap);
   }
 
   private <T> void executeDmProc(
@@ -853,6 +827,76 @@ public class ProcessDatamartData {
       if ("Error".equals(dme.getDatamart())) {
         throw new DataProcessingException(dme.getStoredProcedure());
       }
+    }
+  }
+
+  private class BatchProcessingState {
+    // final because this never changes after initialization
+    final boolean isRetry;
+
+    // volatile ensures threads reading these outside the sync block see the latest values
+    // immediately
+    private volatile Long batchId;
+    private volatile boolean failed = false;
+
+    // No volatile needed; only accessed inside the synchronized block
+    private boolean retryCountIncremented = false;
+
+    BatchProcessingState(Long batchId) {
+      this.batchId = batchId;
+      this.isRetry = (batchId != null);
+    }
+
+    // synchronized ensures only one thread can evaluate and update the state at a time
+    synchronized void registerFailure(String dmKey, Map<String, List<Long>> idMap, Exception e) {
+      this.failed = true;
+
+      if (this.batchId == null) {
+        // The first thread to fail gets here, generates the ID, and locks it in for the rest
+        this.buildRetryCache(dmKey, idMap, e);
+        this.retryCountIncremented = true;
+      } else {
+        if (this.isRetry && !this.retryCountIncremented) {
+          this.buildRetryCache(dmKey, idMap, e);
+          this.retryCountIncremented = true;
+        } else {
+          // Subsequent threads see the initialized batchId and safely append to it
+          this.updateRetryCache(dmKey, idMap);
+
+          Throwable cause = e;
+          while (cause.getCause() != null) {
+            cause = cause.getCause();
+          }
+          // errorMap is a ConcurrentHashMap, so this is safe
+          errorMap.put(this.batchId, cause.getMessage());
+        }
+      }
+    }
+
+    private void buildRetryCache(String dmKey, Map<String, List<Long>> idMap, Exception e) {
+      // skip retrying for non-positive value
+      if (maxRetries > 0) {
+        this.batchId = nextBatchId(this.batchId, e);
+        this.updateRetryCache(dmKey, idMap);
+      }
+    }
+
+    private void updateRetryCache(String dmKey, Map<String, List<Long>> idMap) {
+      Map<String, Queue<Long>> dmMap =
+          retryCache
+              .computeIfAbsent(batchId, k -> new ConcurrentHashMap<>())
+              .computeIfAbsent(dmKey, k -> new ConcurrentHashMap<>());
+      idMap.forEach(
+          (key, value) ->
+              dmMap.computeIfAbsent(key, k -> new ConcurrentLinkedQueue<>()).addAll(value));
+    }
+
+    public boolean hasFailed() {
+      return failed;
+    }
+
+    public Long getBatchId() {
+      return batchId;
     }
   }
 }
