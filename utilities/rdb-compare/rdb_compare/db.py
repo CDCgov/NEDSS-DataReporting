@@ -12,12 +12,17 @@ from __future__ import annotations
 import pymssql
 
 
-def connect(host, port, user, password, database="master"):
+def connect(host, port, user, password, database="master", timeout=0):
     """Open an autocommit pymssql connection to the SQL Server instance.
 
     ``database`` defaults to ``master`` because the comparison reaches both RDB
     and RDB_MODERN through fully qualified three-part names rather than the
     connection's current database.
+
+    ``timeout`` is the per-query timeout in seconds (0 = wait forever). A
+    non-zero value lets a pathologically slow per-table comparison (an unindexed
+    cross-DB join over a large reference table) abort and be recorded as a
+    per-table error instead of hanging the whole run.
     """
     return pymssql.connect(
         server=host,
@@ -26,6 +31,7 @@ def connect(host, port, user, password, database="master"):
         password=password,
         database=database,
         autocommit=True,
+        timeout=timeout,
     )
 
 

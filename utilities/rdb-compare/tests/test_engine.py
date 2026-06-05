@@ -55,13 +55,16 @@ def test_build_value_diff_sql_composite_key():
 class FakeConn:
     """Stands in for a pymssql connection; dispatches on SQL substrings."""
 
-    def __init__(self, counts, overlap, diffs):
+    def __init__(self, counts, overlap, diffs, key_dup=False):
         self._counts = list(counts)  # consumed in call order: RDB then MODERN
         self._overlap = overlap
         self._diffs = diffs
+        self._key_dup = key_dup       # True => key-uniqueness probe reports a dup
 
 
 def _fake_run_query(conn, sql):
+    if "[dup]" in sql:  # key-uniqueness probe: one row iff non-unique
+        return [{"dup": 1}] if conn._key_dup else []
     if "COUNT(*)" in sql and "matched_keys" not in sql:
         return [{"n": conn._counts.pop(0)}]
     if "matched_keys" in sql:
@@ -148,6 +151,28 @@ def test_compare_table_no_key_counts_only(monkeypatch):
     assert res.modern_count == 10
     assert res.columns == []
     assert res.error == "no usable key; counts only"
+
+
+def test_compare_table_nonunique_key_degrades_to_counts(monkeypatch):
+    """A resolved key that repeats (reference table) must not fan out: the probe
+    trips and the table degrades to counts-only instead of joining."""
+    monkeypatch.setattr(db, "run_query", _fake_run_query)
+    # diffs/overlap would be wrong to reach; key_dup=True trips the probe first.
+    conn = FakeConn(
+        counts=[158776, 125548], overlap=None, diffs=[], key_dup=True
+    )
+
+    res = compare_table(
+        conn, "REF_FORMCODE_TRANSLATION", ["NBS_QUESTION_UID"],
+        ["CODE", "CODE_SHORT_DESC_TXT"], "RDB", "RDB_MODERN",
+    )
+
+    assert res.rdb_count == 158776
+    assert res.modern_count == 125548
+    assert res.columns == []                 # never ran the fan-out join
+    assert res.matched_keys == 0
+    assert "not unique" in res.error
+    assert "RDB" in res.error
 
 
 def test_compare_table_records_sql_error(monkeypatch):

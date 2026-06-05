@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 from datetime import datetime, timezone
 
 from rdb_compare import db, discovery, engine, keys, report
@@ -53,6 +54,19 @@ def _parse_args(argv):
     )
     p.add_argument("--sample-cap", type=int, default=20, help="Max sample rows per column.")
     p.add_argument(
+        "--query-timeout",
+        type=int,
+        default=120,
+        help="Per-query timeout in seconds (0 = no limit). A table whose "
+        "cross-DB join exceeds this is recorded as an error and the run "
+        "continues.",
+    )
+    p.add_argument(
+        "--progress",
+        action="store_true",
+        help="Print per-table progress to stderr (table index, presence, timing).",
+    )
+    p.add_argument(
         "--fail-on-new",
         action="store_true",
         help="Exit non-zero if any NEW (unexplained) difference is found.",
@@ -67,9 +81,16 @@ def _common_columns(conn, rdb_db, modern_db, table):
     return [c for c in rdb_cols if c.upper() in modern_cols]
 
 
+def _progress(args, msg):
+    """Emit a per-table progress line to stderr when --progress is set."""
+    if args.progress:
+        print(msg, file=sys.stderr, flush=True)
+
+
 def run(args) -> RunReport:
     registry = build_default_registry()
-    conn = db.connect(args.host, args.port, args.user, args.password)
+    timeout = getattr(args, "query_timeout", 0)
+    conn = db.connect(args.host, args.port, args.user, args.password, timeout=timeout)
 
     tables = discovery.discover(
         conn, args.rdb, args.modern, registry,
@@ -83,7 +104,10 @@ def run(args) -> RunReport:
         discovered=len(tables),
     )
 
-    for table in tables:
+    total = len(tables)
+    for i, table in enumerate(tables, 1):
+        _progress(args, f"[{i}/{total}] {table} ...")
+        started = time.monotonic()
         try:
             common = _common_columns(conn, args.rdb, args.modern, table)
             key_cols = keys.resolve_keys(table, common)
@@ -100,6 +124,22 @@ def run(args) -> RunReport:
                 result.error = (result.error + "; " + note) if result.error else note
         except Exception as exc:  # noqa: BLE001 -- isolate per-table failures
             result = TableResult(table=table, presence=Presence.BOTH, error=str(exc))
+            # A query timeout (or any driver-level error) can leave the shared
+            # connection unusable for subsequent tables; reconnect so one bad
+            # table cannot cascade into a wall of errors.
+            try:
+                conn = db.connect(
+                    args.host, args.port, args.user, args.password, timeout=timeout
+                )
+            except Exception:  # noqa: BLE001
+                pass
+        elapsed = time.monotonic() - started
+        _progress(
+            args,
+            f"[{i}/{total}] {table} {result.presence.value} "
+            f"rdb={result.rdb_count} modern={result.modern_count} "
+            f"{elapsed:.1f}s{' ERR' if result.error else ''}",
+        )
         report_obj.tables.append(result)
 
     report_obj.compared = sum(1 for t in report_obj.tables if not t.skipped)

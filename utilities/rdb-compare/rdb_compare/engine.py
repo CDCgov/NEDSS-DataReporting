@@ -64,6 +64,26 @@ def build_count_sql(table, db):
     return f"SELECT COUNT(*) AS [n] FROM {_qualified(db, table)}"
 
 
+def build_key_duplicate_probe_sql(table, key_cols, db):
+    """Build SQL that returns one row iff the key is *non-unique* in ``db``.
+
+    A resolved ``*_UID`` / ``*_LOCAL_ID`` key is only a valid join key if it
+    uniquely identifies a row. On reference / lookup tables a ``*_UID`` column
+    can repeat across many rows; joining ``RDB`` to ``RDB_MODERN`` on such a key
+    fans out into a many-to-many (near-cartesian) product that can balloon to
+    billions of row pairs and hang the run. This probe -- a cheap single-scan
+    ``GROUP BY ... HAVING COUNT(*) > 1`` capped at one row -- lets the engine
+    detect that case up front and degrade to counts-only instead.
+    """
+    keys = ", ".join(f"[{k}]" for k in key_cols)
+    not_null = " AND ".join(f"[{k}] IS NOT NULL" for k in key_cols)
+    return (
+        f"SELECT TOP 1 1 AS [dup] FROM {_qualified(db, table)} "
+        f"WHERE {not_null} "
+        f"GROUP BY {keys} HAVING COUNT(*) > 1"
+    )
+
+
 def build_key_overlap_sql(table, key_cols, rdb_db, modern_db):
     """Build SQL returning ``matched_keys``, ``rdb_only_keys``, ``modern_only_keys``.
 
@@ -130,6 +150,21 @@ def compare_table(
         if not key_cols:
             result.error = "no usable key; counts only"
             return result
+
+        # Guard against a non-unique resolved key: joining on a key that repeats
+        # (common on reference / lookup tables whose *_UID column is a FK, not a
+        # row id) fans the comparison out into a near-cartesian product. Detect
+        # it cheaply on either side and degrade to counts-only rather than hang.
+        for side_db in (rdb_db, modern_db):
+            dup = db.run_query(
+                conn, build_key_duplicate_probe_sql(table, key_cols, side_db)
+            )
+            if dup:
+                result.error = (
+                    f"key {'+'.join(key_cols)} not unique in {side_db}; "
+                    "counts only (would fan out)"
+                )
+                return result
 
         overlap = db.run_query(
             conn, build_key_overlap_sql(table, key_cols, rdb_db, modern_db)
