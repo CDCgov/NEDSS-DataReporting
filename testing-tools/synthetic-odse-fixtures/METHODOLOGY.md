@@ -42,9 +42,8 @@ and there is no Phase A.
    `scripts/coverage_summary.sh` from a fresh from-scratch run) is the
    measured-populated count over 4,633, so the fraction is of *this file*
    rather than of "everything RDB_MODERN could be." That definition is
-   load-bearing for the whole project. The current faithful figure is in
-   the ~80% range (≈78–81%); the old ~90.5%/89.9% headline was an artifact
-   of the now-removed NRT-staging shortcut (see below). The gap between
+   load-bearing for the whole project. The current figure is in
+   the ~80% range (≈78–81%). The gap between
    measured-populated and statically-extracted (3,593) write
    pairs reflects columns that populate without appearing on the left
    side of an `INSERT`/`UPDATE`/`MERGE`: DDL `DEFAULT` clauses,
@@ -143,19 +142,12 @@ which columns populated, which deliberately skipped (with reason and
 SP-body citation), which gap findings, which `LINK_REQUIRED` edges for
 a later tier to provide.
 
-## The NRT-staging shortcut — removed on this branch
+## ODSE-only fixtures
 
 In production, `nrt_*` rows are written by SQL Server CDC → Debezium → Kafka → kafka-connect JDBC
-sink. Earlier iterations bypassed that for speed: agents hand-authored `nrt_*` staging rows (and ran
-the postprocessing SPs by hand) alongside the ODSE INSERTs, so the local pipeline didn't need CDC
-standing up — ~5-minute cycles instead of half-hour ones.
-
-That shortcut made RDB_MODERN coverage an artifact of the hand-authored staging rather than of the
-real ODSE→RTR transformation: it both **inflated** coverage (~90% vs ~14% from the real pipeline) and
-confounded the RDB-vs-RDB_MODERN comparison. **This branch removes the shortcut entirely** — no `nrt_*`
-INSERTs, no manual `EXEC sp_*`. The full pipeline runs on every `merge_and_verify.sh`, so coverage is
-exactly what RTR produces from the ODSE fixtures. Cost: a cycle is now ~15–20 min (image rebuild + CDC
-drain). See `NO_SHORTCUT_FINDINGS.md`.
+sink. The fixtures author only `NBS_ODSE` rows — no `nrt_*` INSERTs, no manual `EXEC sp_*` — and the
+full pipeline runs on every `merge_and_verify.sh`, so RDB_MODERN coverage is exactly what RTR produces
+from the ODSE fixtures. A from-scratch cycle is ~15–20 min (image rebuild + CDC drain).
 
 ## Tier composition
 
@@ -189,9 +181,8 @@ incrementally. A parent loop reconciles the worktrees via cherry-pick
 under a `mkdir`-based DB lock (`scripts/db_lock.sh`) and a single
 foreground re-apply. Because UID-range discipline keeps agents from
 colliding, per-table gains are additive. Multi-agent loops drove the
-bulk of the climb from the 14% no-shortcut floor to the current ~80%,
-with SP-level defects logged as `bugs/<N>_*/findings.md` rather than
-fixed mid-loop.
+bulk of the climb to the current ~80% coverage, with SP-level defects
+logged as `bugs/<N>_*/findings.md` rather than fixed mid-loop.
 
 ## Reproducibility
 

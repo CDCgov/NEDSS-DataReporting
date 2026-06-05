@@ -228,10 +228,10 @@ No (d) entries.
    tables + 12 d_*_group tables + `tb_pam_ldf` in one fixture.
    Similarly a Varicella Investigation would unblock `d_var_pam`,
    `f_var_pam`, `d_rash_loc_gen`, `var_pam_ldf`. This dovetails
-   with the multi-condition fan-out workstream — but the existing
-   fan-out (`multi_condition_investigations.sql`) author only
-   `nrt_investigation` shortcut rows, *not* the full
-   `nbs_case_answer` + form-id chain that TB-PAM postprocessing
+   with the multi-condition fan-out workstream — but
+   `multi_condition_investigations.sql` is currently a stub, so the
+   TB/Var families still need the full ODSE `act` + `public_health_case`
+   + `nbs_case_answer` + form-id chain that TB-PAM postprocessing
    requires.
 
 4. **The dyn_dm chain (sp_dyn_dm_*) is never invoked by the
@@ -255,11 +255,10 @@ No (d) entries.
 
 ## Overlap with multi-condition fan-out
 
-The multi-condition fan-out workstream (`multi_condition_investigations.sql`)
-currently authors `nrt_investigation` rows for 10 condition codes. The
-bucket (c) tables below would be unblocked once that workstream extends
-to author the full `nbs_case_answer` / form-id chain (not just the
-nrt_investigation shortcut):
+`multi_condition_investigations.sql` is currently a stub (no investigations
+authored). The bucket (c) tables below would be unblocked by authoring full
+ODSE condition chains — `act` + `public_health_case` + `nbs_case_answer` /
+form-id — for these conditions:
 
 - **TB family** (Investigation 22000010, condition 10220, INV_FORM_RVCT):
   `d_tb_pam`, `d_tb_hiv`, `d_addl_risk`(+group), `d_disease_site`(+group),

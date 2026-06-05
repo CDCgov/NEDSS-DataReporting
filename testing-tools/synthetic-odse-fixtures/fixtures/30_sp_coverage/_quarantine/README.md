@@ -55,8 +55,8 @@ per-fixture recipes in `../../../ODSE_ONLY_CONVERSION.md`.
 - **`f_page_case_unblock.sql.odse-only-form_cd-derived-from-condition_code`** —
   only content was `UPDATE nrt_investigation SET INVESTIGATION_FORM_CD=...`.
   That value is derived by 056-sp_investigation_event from ODSE PHC `cd='10110'`
-  + SRTE `condition_code` (form_cd is not a PHC column). Redundant once the
-  legacy hand-authored nrt shortcut is gone.
+  + SRTE `condition_code` (form_cd is not a PHC column) — redundant under the
+  ODSE-only design.
 - **`zz_inv_summ_datamart_unblock.sql.odse-only-inv_summ_datamart-sp-derived`** —
   injected one synthetic INV_SUMM_DATAMART row "even if the SP no-ops". 045 already
   produces real rows for the 30 investigations; the seed was cosmetic. (No bug #21

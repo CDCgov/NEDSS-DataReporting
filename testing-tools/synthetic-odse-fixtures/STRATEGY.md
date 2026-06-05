@@ -85,14 +85,10 @@ Debezium → Kafka → kafka-connect JDBC sink**. The `sp_<entity>_event` SP is
 downstream consumption; it does not `INSERT INTO nrt_*`. (Verified directly
 in the SP body — see Provider canary findings.)
 
-On this branch fixtures are **ODSE-only**: we author the `nbs_odse.dbo.*`
+The fixtures are **ODSE-only**: we author the `nbs_odse.dbo.*`
 INSERTs and let the real pipeline produce everything downstream. There are
-no hand-authored `nrt_*` rows and no manual `EXEC sp_*` in the fixtures.
-Earlier iterations took a shortcut — hand-writing synthetic `nrt_<entity>`
-staging rows and running the postprocessing SPs by hand — but that made
-coverage an artifact of the staging we authored rather than of the real
-ODSE→RTR transform, so it was removed. (See `NO_SHORTCUT_FINDINGS.md` and
-METHODOLOGY.md's "NRT-staging shortcut — removed on this branch".)
+no hand-authored `nrt_*` rows and no manual `EXEC sp_*` in the fixtures, so
+coverage is exactly what the real ODSE→RTR transform produces.
 
 ```
 ODSE INSERTs                               (in fixture .sql)
@@ -108,7 +104,7 @@ RDB_MODERN dimensions / facts
 
 The full stack (CDC + Kafka + kafka-connect + reporting-pipeline-service)
 runs on every `merge_and_verify.sh`, so coverage is exactly what RTR
-produces from the ODSE fixtures. Cost: a cycle is now ~15–20 min (image
+produces from the ODSE fixtures. A from-scratch cycle is ~15–20 min (image
 rebuild + CDC drain).
 
 Authoring guidance: to know which ODSE columns a target needs, read the
@@ -529,8 +525,7 @@ Captured here so they don't get lost as we focus on v1:
 
 ## Progress log
 
-The iterative coverage-recovery log (Rounds 1-6) and per-session journals were
+The iterative coverage log (Rounds 1-6) and per-session journals were
 removed during PR cleanup — they were agent-process artifacts. The durable outcomes
-are captured in `NO_SHORTCUT_FINDINGS.md` (the recovery arc + root causes) and
-`../../bugs/` (the RTR defects found). Regenerate current coverage with
+are captured in `../../bugs/` (the RTR defects found). Regenerate current coverage with
 `scripts/coverage_summary.sh`.

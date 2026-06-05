@@ -201,9 +201,7 @@ counts, anything that surprised you.
 
 - Live coverage is in the **~80% range (≈78–81%)** on a clean
   from-scratch `merge_and_verify.sh` run on branch `aw/odse-test-seed`;
-  regenerate the exact figure with `scripts/coverage_summary.sh`. (The
-  older ~90% headline was an artifact of the now-removed NRT-staging
-  shortcut — see `NO_SHORTCUT_FINDINGS.md`.)
+  regenerate the exact figure with `scripts/coverage_summary.sh`.
 - `fixtures/_quarantine/` holds bug-gated obs-heavy / seed-gated
   fixtures whose target columns are therefore *not* populated on a
   faithful run — mark them `BLOCKED` / `INFERRED`, not VERIFIED.

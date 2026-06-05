@@ -3,30 +3,21 @@
 Synthetic `NBS_ODSE` INSERT fixtures that drive RDB_MODERN coverage through the **real** NBS
 RTR pipeline, for a planned RDB-vs-RDB_MODERN comparison against MasterETL.
 
-## What this branch does — the no-NRT-shortcut conversion
+## How these fixtures work — ODSE-only
 
-The fixtures were originally hand-authored with CDC-bypass *shortcuts* — direct `nrt_*` INSERTs
-and manual `EXEC sp_*_postprocessing` calls — which made RDB_MODERN look ~90% covered. This
-branch **removes every shortcut** so coverage is produced only by the genuine pipeline:
+The fixtures are **ODSE-only**: they author `NBS_ODSE` rows and let the **real** NBS RTR pipeline
+derive everything downstream, exactly as in production:
 
 ```
 NBS_ODSE → SQL Server CDC → Debezium → Kafka → kafka-connect sink → nrt_*
          → reporting-pipeline-service (sp_*_event + postprocessing + datamart SPs) → RDB_MODERN
 ```
 
-Fixtures are **ODSE-only**: no `nrt_*` INSERTs, no `EXEC sp_*`. Everything downstream is derived
-by the service from the ODSE rows, exactly as in production.
-
-### Headline finding
-Removing the shortcut dropped measured coverage from **90.5% → 14%** — i.e. ~84 points were a
-shortcut artifact, not pipeline output. That both inflated RTR coverage and confounded the
-intended comparison. Faithful, fixtures-only coverage was then recovered to the **~80%** range by
-fixing fixture fidelity (datamart-routing metadata, investigation↔patient links, real ODSE
-chains, dedicated entities, obs-heavy lab/bmird) and by fixing genuine pipeline bugs. The full
-arc and root causes are in [`NO_SHORTCUT_FINDINGS.md`](./NO_SHORTCUT_FINDINGS.md).
+No `nrt_*` INSERTs and no `EXEC sp_*` in the fixtures — RDB_MODERN coverage is exactly what RTR
+produces from the ODSE rows. Current coverage is in the **~80%** range (see [Coverage](#coverage)).
 
 ## RTR bugs found
-Authoring against the real pipeline surfaced defects the shortcut had masked. Fixed here (TDD):
+Authoring against the real pipeline surfaced these defects, fixed via TDD:
 
 | Bug | Defect | Fix |
 |---|---|---|
@@ -83,7 +74,7 @@ testing-tools/synthetic-odse-fixtures/
 |---|---|
 | [`STRATEGY.md`](./STRATEGY.md) | Build order, tiers, merge contract, UID registry, coverage-report schema. |
 | [`METHODOLOGY.md`](./METHODOLOGY.md) | How the fixtures were reverse-engineered: RDB_MODERN targets → SP chain → ODSE inputs. |
-| [`NO_SHORTCUT_FINDINGS.md`](./NO_SHORTCUT_FINDINGS.md) | The shortcut-removal finding + faithful-coverage recovery arc + root causes. |
+| [`NO_SHORTCUT_FINDINGS.md`](./NO_SHORTCUT_FINDINGS.md) | Retrospective: the faithful-coverage recovery arc + datamart-routing / patient-link root causes. |
 | [`LINEAGE.md`](./LINEAGE.md) | Data-lineage reference. |
 | [`../../bugs/`](../../bugs) | RTR defects found, with repros + fix status (`bugs/README.md` indexes them). |
 | [`catalog/rtr_target_columns.md`](./catalog/rtr_target_columns.md) | The (table, column) pairs RTR writes — the coverage universe. |

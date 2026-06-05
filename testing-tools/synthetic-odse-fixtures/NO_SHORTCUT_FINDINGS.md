@@ -1,115 +1,93 @@
-# No-NRT-shortcut conversion — findings (branch `aw/remove-nrt-shortcut`)
+# The NRT shortcut: why coverage read 90.5%, and why it is now ~80% faithfully
 
-## What was done
-Removed all CDC-bypass shortcuts from the comparison fixtures and ran the **real**
-pipeline (ODSE → SQL Server CDC → Debezium → Kafka → kafka-connect sink → `nrt_*` →
-reporting-pipeline-service runs `sp_*_event` + postprocessing + datamart SPs):
-- Removed every `nrt_*` INSERT (50 files) and every manual `EXEC sp_*` (45 files / 97 EXECs).
-- Rewired `merge_and_verify.sh` to bring up the full stack, apply ODSE fixtures tier-by-tier,
-  and drain the pipeline (no manual SP EXEC); hardened `sql_i`.
-- Repaired 20 strip-damaged Tier-3 fixtures (empty `IF`/`TRY` wrappers) — all parse-clean.
-- The clean pipeline run completes end-to-end with **no apply errors**.
+This file is the record of a detour the fixture-authoring agents took and then had to undo.
+The intent was always **ODSE-only** fixtures — author `NBS_ODSE` rows and let the real RTR
+pipeline (CDC → Debezium → Kafka → kafka-connect → `nrt_*` → reporting-pipeline-service SPs)
+derive RDB_MODERN. This is the one place that documents how that intent briefly slipped, what
+it cost, and how faithful coverage was rebuilt. Everywhere else, ODSE-only is simply the design.
 
-## Current status: 14.0% → **~80%** faithfully, no shortcut
+## What happened
 
-Faithful coverage was recovered from the 14.0% no-shortcut floor to the **~80%** range
-(≈78–81%; regenerate with `scripts/coverage_summary.sh`). Arc: `14% → 34%` (datamart-routing
-metadata) `→ 42%` (investigation↔patient links unlock condition datamarts) `→ ~72%` (dedicated
-entities + std/hiv case-mgmt + d_investigation_repeat forms) `→ ~78%` (summary_report_case/SR100 +
-hepatitis + tb) `→ ~80%` (LDF, covid_vaccination, contact, interview; obs-heavy lab/bmird). All
-fixture-fidelity work — fixtures stay ODSE-only; no shortcut reintroduced.
+Running the full pipeline end-to-end needs CDC + Kafka + kafka-connect + the service standing
+up and draining on every iteration — a ~15–30 min loop. To move faster, the agents **invented
+a shortcut**: hand-author the `nrt_*` staging rows directly and run the postprocessing SPs by
+hand (`EXEC sp_*`), bypassing CDC entirely. That cut the loop to ~5 minutes — but it made
+RDB_MODERN coverage an artifact of the staging the agents wrote, not of the real ODSE→RTR
+transform. It both **inflated** apparent coverage and **confounded** the RDB-vs-RDB_MODERN
+comparison the fixtures exist to support.
 
-Two classes of remaining gap, both documented:
-- **Real pipeline bugs** the shortcut had masked — fixed here via TDD: lab key-gen race (#17),
+The shortcut was removed: every `nrt_*` INSERT (50 files) and every manual `EXEC sp_*` (45 files
+/ 97 EXECs) deleted, `merge_and_verify.sh` rewired to bring up the full stack and drain the
+pipeline (no manual SP EXEC), and 20 strip-damaged Tier-3 fixtures repaired (empty `IF`/`TRY`
+wrappers) so all parse clean. The fixtures have been ODSE-only ever since, and the clean pipeline
+run completes end-to-end with no apply errors.
+
+## The coverage numbers
+
+| | with shortcut | real pipeline (ODSE-only) |
+| --- | --- | --- |
+| Overall column coverage | **90.5%** (4165/4633) | **14.0%** |
+| Fully / Partial / Empty | 76 / 36 / 5 | 33 / 24 / 60 |
+
+~84 percentage points of the apparent coverage were the shortcut, not pipeline output. Faithful
+coverage was then rebuilt from the 14.0% floor to the **~80%** range (≈78–81%; regenerate with
+`scripts/coverage_summary.sh`) by fixing fixture fidelity — never by reintroducing a shortcut.
+The arc:
+
+`14% → 34%` datamart-routing metadata · `→ 42%` investigation↔patient links unlock condition
+datamarts · `→ ~72%` dedicated entities + std/hiv case-mgmt + d_investigation_repeat forms ·
+`→ ~78%` summary_report_case/SR100 + hepatitis + tb · `→ ~80%` LDF, covid_vaccination, contact,
+interview, obs-heavy lab/bmird.
+
+Two classes of remaining gap, both documented in `../../bugs/`:
+- **Real pipeline bugs** the shortcut had masked — fixed via TDD: lab key-gen race (#17),
   `LAB_TEST` record-status CHECK (#19), notification key-gen race (#26), followup-obs NPE (#18).
 - **Structurally out of reach** for ODSE-only fixtures: seed-gated (#16 covid_lab LOINC, #22 LDF
   metadata), routine defects (#24 bmird multi-value cap, #25 dyn-datamart date/float), and
   out-of-bounds datamarts (var_datamart, covid_lab*, aggregate_report, f_var_pam, MasterETL-only).
-  These bound the realistic fixtures-only ceiling at ~85–89%. See `../../bugs/`.
+  These bound the realistic fixtures-only ceiling at ~85–89%.
 
 > The coverage figure varies slightly run-to-run: the service's batch processing is an *intentional*
 > fail-fast defer-and-retry (bug #20 — investigated, "fixed", then reverted as not-a-bug), so a batch
 > that hits a residual poison (#25 dyn-datamart, #21 summary-case race) defers its co-batched
 > entities. That is the real source of the historical "flakiness" — not bad fixture data.
 
-The detailed root-cause analyses below (datamart routing; the condition-datamart patient link)
-document *how* the recovery began and remain accurate.
-
-## Original headline result: coverage 90.5% → **14.0%**
-
-| | shortcut (committed baseline) | real pipeline (no shortcut) |
-| --- | --- | --- |
-| Overall column coverage | **90.5%** (4165/4633) | **14.0%** |
-| Fully / Partial / Empty | 76 / 36 / 5 | 33 / 24 / 60 |
-
-**~84 percentage points of the prior coverage were an artifact of the hand-authored
-`nrt_*`/`EXEC` shortcut, not produced by the real ODSE→CDC→RTR pipeline from the same
-ODSE fixtures.** This quantifies the quality risk raised earlier (the shortcut both
-inflated RTR coverage and confounded the RDB-vs-RDB_MODERN comparison).
-
-## Where the coverage went (decomposition)
+## Where the 76 points went (decomposition)
 - **Entity/dimension path WORKS faithfully:** D_PATIENT, D_PROVIDER, INVESTIGATION,
   LAB_TEST, MORBIDITY_REPORT, F_PAGE_CASE all populate from ODSE via the service's
   postprocessing SPs. The conversion mechanism is sound.
 - **Condition-specific datamarts DON'T fire (biggest loss).** `nrt_investigation.rdb_table_name_list`
-  is NULL for every investigation, so the service can't route investigations to
+  was NULL for every investigation, so the service couldn't route investigations to
   `covid_case_datamart`/`tb_datamart`/`var_datamart`/`bmird_*`/`std_hiv_*` (each 100–300 cols
-  = most of the column universe). The synthetic investigations lack the page/condition→datamart
-  routing metadata real NBS investigations carry. The old merge masked this by running all ~40
+  = most of the column universe). The synthetic investigations lacked the page/condition→datamart
+  routing metadata real NBS investigations carry. The shortcut masked this by running all ~40
   datamart SPs manually with hardcoded UID lists. The service DID run the routing-agnostic
   datamarts (case_lab, hepatitis, inv_summary, morbidity_report, dyn for STD/HEP).
 - **Pure-`nrt` enrich fixtures** (e.g. `zz_bmird_strep_pneumo_datamart_enrich`) had **no ODSE
-  backing at all** — they only ever hand-authored `nrt_*` rows. They are now no-ops; their
+  backing at all** — they only ever hand-authored `nrt_*` rows, so they became no-ops; their
   coverage cannot be reproduced from ODSE without authoring full ODSE chains.
 - **Value / Tier-2-link fidelity gaps:** e.g. the morb user comment needs the Tier-2 patient
   link to resolve `PATIENT_KEY` before the comment row inserts.
 
-## What faithful coverage recovery requires (NOT done — scoping for decision)
-1. **Datamart routing:** make synthetic investigations carry the page/condition metadata so the
-   service derives `rdb_table_name_list` and routes to condition datamarts (investigate the
-   `NBS_page`/`Page_cond_mapping`/page-builder path), OR accept datamarts need explicit invocation.
-2. **Author real ODSE chains** for the pure-`nrt` enrich fixtures (biggest manual effort).
-3. **Resolve Tier-2 link timing/fidelity** (patient↔morb, etc.).
-4. Remaining 2nd-class shortcuts: ~several fixtures still seed `RDB_MODERN` dims directly +
-   retained `nrt_*` UPDATE statements.
+The two root causes that unblocked the bulk of the recovery are below; both are durable facts
+about how ODSE-only fixtures must be authored, independent of the shortcut.
 
-## Bottom line
-The faithful, pipeline-produced coverage of the current ODSE fixtures is ~14%. The 90.5%
-figure was overwhelmingly shortcut-driven. Recovering faithful coverage is a substantial
-fixture-fidelity project (chiefly: datamart routing metadata + real ODSE chains), distinct
-from the mechanical shortcut removal (which is complete on this branch).
+## Root cause #1 — datamart routing. Coverage 14.0% → 34.4%
 
-## P1 datamart-routing — root cause (deeper than expected)
+`sp_investigation_event` (run by the service per investigation) builds the event payload's
+datamart routing from the investigation's **`nbs_case_answer`** rows joined
+`nbs_question_uid → nbs_ui_metadata (nuim) → nbs_rdb_metadata (nrdbm)` to yield `rdb_table_nm`
+per answer (routine 056, lines ~467-567). The service routes to those page-builder tables
+(PostProcessingService.java:345-356, `pbCache` from `rdb_table_name_list`).
 
-Traced the routing: `sp_investigation_event` (run by the service per investigation) builds
-the event payload's datamart routing from the investigation's **`nbs_case_answer`** rows
-joined `nbs_question_uid → nbs_ui_metadata (nuim) → nbs_rdb_metadata (nrdbm)` to yield
-`rdb_table_nm` per answer (routine 056, lines ~467-567). The service routes to those
-page-builder tables (PostProcessingService.java:345-356, `pbCache` from `rdb_table_name_list`).
+Empirically (TB PHC 22001000, full pipeline run): it has 186 ODSE `nbs_case_answer` rows; 215
+join to `nbs_ui_metadata`, but most map to `nbs_rdb_metadata_uid = NULL` → only **2** distinct
+tables resolve. Baked metadata is rich and present (nbs_ui_metadata 386 rows for INV_FORM_RVCT;
+nbs_rdb_metadata 8092 rows) — so the gap is NOT missing metadata, it's that the synthetic answers
+didn't use the `nbs_question_uid`s that map through that metadata to datamart columns. The shortcut
+had hidden this by hand-authoring resolved `nrt_page_case_answer` rows and force-running datamart SPs.
 
-Empirical (TB PHC 22001000, full pipeline run):
-- It HAS 186 ODSE `nbs_case_answer` rows; 215 join to `nbs_ui_metadata`.
-- BUT most map to `nbs_rdb_metadata_uid = NULL` → `rdb_table_nm = NULL`. Only **2** distinct
-  tables resolve (`D_INV_CLINICAL`, `D_INV_LAB_FINDING`).
-- The **TB case datamart is never reached** — `nrt_investigation.rdb_table_name_list` is NULL,
-  and the service ran only the routing-agnostic / HEP/STD datamarts (whose forms are in
-  `v_nrt_nbs_page`), not TB/COVID/VAR/BMIRD.
-- Baked metadata is rich and present (nbs_ui_metadata 386 rows for INV_FORM_RVCT;
-  nbs_rdb_metadata 8092 rows) — so the gap is NOT missing metadata, it's that the synthetic
-  answers don't use the `nbs_question_uid`s that map through that metadata to datamart columns.
-
-**Conclusion:** faithful datamart coverage requires the synthetic page answers to be authored
-against the real page-builder metadata graph (question_uid → ui_metadata → rdb_metadata →
-datamart column), not arbitrary/partial question_uids. The shortcut hid this by hand-authoring
-resolved `nrt_page_case_answer` rows and force-running datamart SPs.
-
-Tight-loop aid added: `docker-compose.override.yaml` (untracked) sets FIXED_DELAY_ID=2000 /
-FIXED_DELAY_DM=3000 on the service so the CDC→nrt→SP drain completes in seconds for iteration.
-
-## P1 — RESOLVED. Coverage 14.0% → 34.4% (faithful, no shortcut)
-
-The routing mechanism is fully faithful; the gap was purely the synthetic answers. The exact
-end-to-end chain:
+The exact end-to-end chain:
 
 1. **`sp_investigation_event`** (routine 056) gathers every `nbs_case_answer` for the PHC with
    its resolved `rdb_table_nm`, but the join is **gated by the investigation's condition**:
@@ -117,37 +95,34 @@ end-to-end chain:
    `nuim.investigation_form_cd = cc.investigation_form_cd` (lines ~516-521). Answers on any
    other form fall into the UNION's second arm and get `rdb_table_nm = NULL` (line 540).
 2. **`ProcessInvestigationDataUtil.java:459-468`** (the service) streams that answer array, takes
-   `distinct` `non-null` `rdb_table_nm`, comma-joins, and sets `rdb_table_name_list`. *(So the
-   list is computed in Java from the answers — no SP emits it; it is only ever hand-authored in
-   unit-test setup.sql, which is why it looked unpopulated.)*
+   `distinct` non-null `rdb_table_nm`, comma-joins, and sets `rdb_table_name_list`. *(So the list
+   is computed in Java from the answers — no SP emits it.)*
 3. **`PostProcessingService.java:351-356`** splits `rdb_table_name_list` into `pbCache` →
    `executeStoredProcForPageBuilder(tbl, uids)` populates each `D_INV_*` page-builder dimension.
 4. **Condition datamarts** (COVID_CASE_DATAMART, STD_HIV_DATAMART, …) are a *separate* path:
    `sp_nrt_investigation_postprocessing` returns a DatamartData signal per PHC **iff the
-   condition is mapped in `nrt_datamart_metadata`** (it is: 11065→Covid_Case_Datamart,
+   condition is mapped in `nrt_datamart_metadata`** (11065→Covid_Case_Datamart,
    10311→Std_Hiv_Datamart, etc. — 161 rows). The service then runs the mapped datamart SP.
 
-**Two mistakes in the first attempt**, both now fixed:
-- Authored answers against `PG_TB_LTBI_Investigation` while the TB PHC's condition (10220)
-  maps to **legacy `INV_FORM_RVCT`, which has ZERO page-builder rdb metadata** in this seed —
-  an unroutable dead end. `condition_code` for our fixtures routes only: **11065 →
-  PG_COVID-19_v1.1 (350 mapped q)** and **10311 → PG_STD_Investigation (364 q)**.
-- Targeted an arbitrary rich form instead of the condition's form, so the SP's condition-gated
-  join never matched.
+Two mistakes in the first attempt, both fixed: (a) authored answers against
+`PG_TB_LTBI_Investigation` while the TB PHC's condition (10220) maps to legacy `INV_FORM_RVCT`,
+which has ZERO page-builder rdb metadata in this seed — an unroutable dead end; in this seed
+`condition_code` routes only **11065 → PG_COVID-19_v1.1** and **10311 → PG_STD_Investigation**.
+(b) targeted an arbitrary rich form instead of the condition's form, so the condition-gated join
+never matched.
 
-**Fix (fixtures only, no product change):** `scripts/gen_page_answers.sql` now derives the form
-from the act's condition via `condition_code` and emits one type-correct `nbs_case_answer` per
-remaining datamart-mapped question. Applied to the COVID + STD PHCs (`zz_page_answers_datamart_
-routing.sql`): resolvable `rdb_table_nm` went **0 → 26/27** each; `rdb_table_name_list` populated
-(was NULL); the `D_INV_*` dimensions populated; `sp_covid_case_datamart_postprocessing` /
-`sp_std_hiv_datamart_postprocessing` fire and populate. Overall column coverage **14.0% → 34.4%**
-(empty tables 60→33, fully-covered 33→58) from just these two investigations.
+**Fix (fixtures only, no product change):** `scripts/gen_page_answers.sql` derives the form from
+the act's condition via `condition_code` and emits one type-correct `nbs_case_answer` per
+datamart-mapped question. Applied to the COVID + STD PHCs: resolvable `rdb_table_nm` went 0 → 26/27
+each; `rdb_table_name_list` populated; the `D_INV_*` dimensions populated;
+`sp_covid_case_datamart_postprocessing` / `sp_std_hiv_datamart_postprocessing` fired. Overall column
+coverage **14.0% → 34.4%** from just these two investigations.
 
-Remaining headroom (next, not blocking): apply the generator to every routable investigation;
-COVID condition datamart column *values* are generic (coverage, not fidelity); TB/VAR need a
-condition that maps to a metadata-bearing form (or accept they don't route in this seed).
+**Takeaway for ODSE-only authoring:** faithful datamart coverage requires synthetic page answers
+authored against the real page-builder metadata graph (question_uid → ui_metadata → rdb_metadata →
+datamart column) for the condition's own form — not arbitrary/partial question_uids.
 
-## P3 / condition datamarts — RESOLVED via patient link. 37.7% → 42.1%
+## Root cause #2 — condition datamarts need the patient link. 37.7% → 42.1%
 
 The empty condition datamarts were NOT a routing problem — `ProcessDatamartData.java:113-115`
 **drops any DatamartData whose `patientUid` is NULL**, and the `*_investigation_full_chain.sql`
@@ -156,8 +131,8 @@ fixtures created the PHC but never a patient *subject* link. So `sp_investigatio
 
 Fix (`zz_investigation_patient_links.sql`): add a `SubjOfPHC` participation (act=PHC,
 subject=foundation patient 20000000, class PSN/CASE) for all 8 investigation subjects. Result:
-`patient_id` resolves → DatamartData `patient_uid` non-null → the service fires the
-condition datamart SP that `nrt_datamart_metadata` maps for each condition. Newly populating:
+`patient_id` resolves → DatamartData `patient_uid` non-null → the service fires the condition
+datamart SP that `nrt_datamart_metadata` maps for each condition. Newly populating:
 **COVID_CASE_DATAMART, STD_HIV_DATAMART, D_TB_PAM, HEPATITIS_DATAMART**. This is the same link
 fidelity the morb-comment `PATIENT_KEY` gap needed — the Tier-2 investigation↔patient link.
 
