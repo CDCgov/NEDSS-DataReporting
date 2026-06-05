@@ -10,13 +10,30 @@ reporting-pipeline-service runs `sp_*_event` + postprocessing + datamart SPs):
 - Repaired 20 strip-damaged Tier-3 fixtures (empty `IF`/`TRY` wrappers) — all parse-clean.
 - The clean pipeline run completes end-to-end with **no apply errors**.
 
-## STATUS UPDATE (recovery in progress): 14.0% → **42.1%** faithfully, no shortcut
+## Current status: 14.0% → **~80%** faithfully, no shortcut
 
-Faithful coverage has been recovered from the 14.0% no-shortcut floor to **42.1%** via two
-fixture-only fixes (see the two "RESOLVED" sections at the bottom). Progression:
-`14.0% → 34.4%` (datamart routing) `→ 37.7%` (all routable subjects) `→ 42.1%` (patient link
-unlocks condition datamarts). No product/liquibase-routine changes. Remaining gaps documented
-inline (VAR_DATAMART / F_TB_PAM still empty; pure-`nrt` enrich fixtures = P2).
+Faithful coverage was recovered from the 14.0% no-shortcut floor to the **~80%** range
+(≈78–81%; regenerate with `scripts/coverage_summary.sh`). Arc: `14% → 34%` (datamart-routing
+metadata) `→ 42%` (investigation↔patient links unlock condition datamarts) `→ ~72%` (dedicated
+entities + std/hiv case-mgmt + d_investigation_repeat forms) `→ ~78%` (summary_report_case/SR100 +
+hepatitis + tb) `→ ~80%` (LDF, covid_vaccination, contact, interview; obs-heavy lab/bmird). All
+fixture-fidelity work — fixtures stay ODSE-only; no shortcut reintroduced.
+
+Two classes of remaining gap, both documented:
+- **Real pipeline bugs** the shortcut had masked — fixed here via TDD: lab key-gen race (#17),
+  `LAB_TEST` record-status CHECK (#19), notification key-gen race (#26), followup-obs NPE (#18).
+- **Structurally out of reach** for ODSE-only fixtures: seed-gated (#16 covid_lab LOINC, #22 LDF
+  metadata), routine defects (#24 bmird multi-value cap, #25 dyn-datamart date/float), and
+  out-of-bounds datamarts (var_datamart, covid_lab*, aggregate_report, f_var_pam, MasterETL-only).
+  These bound the realistic fixtures-only ceiling at ~85–89%. See `../../bugs/`.
+
+> The coverage figure varies slightly run-to-run: the service's batch processing is an *intentional*
+> fail-fast defer-and-retry (bug #20 — investigated, "fixed", then reverted as not-a-bug), so a batch
+> that hits a residual poison (#25 dyn-datamart, #21 summary-case race) defers its co-batched
+> entities. That is the real source of the historical "flakiness" — not bad fixture data.
+
+The detailed root-cause analyses below (datamart routing; the condition-datamart patient link)
+document *how* the recovery began and remain accurate.
 
 ## Original headline result: coverage 90.5% → **14.0%**
 
