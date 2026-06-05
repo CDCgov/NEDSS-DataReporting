@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from tracing_constants import DEFAULT_STATE_FILE_DIR, EXCLUDED_ARTIFACT_TABLE_PREFIXES, EXCLUDED_ARTIFACT_TABLES, EXCLUDED_TRACE_TABLES, LEGACY_STATE_FILE, REPLAY_METADATA_CACHE_PREFIX
+from tracing_constants import DEFAULT_STATE_FILE_DIR, EXCLUDED_ARTIFACT_TABLE_PREFIXES, EXCLUDED_ARTIFACT_TABLES, EXCLUDED_TRACE_TABLE_PREFIXES, EXCLUDED_TRACE_TABLES, LEGACY_STATE_FILE, REPLAY_METADATA_CACHE_PREFIX
 
 
 def output_name_component(value: str) -> str:
@@ -49,7 +49,13 @@ def resolve_state_files(state_file: str | None, database: str) -> tuple[Path, Pa
 def is_excluded_trace_table(schema_name: str, table_name: str) -> bool:
     """Keep known high-noise internal tables out of CDC enablement and capture output."""
 
-    return (schema_name.lower(), table_name.lower()) in EXCLUDED_TRACE_TABLES
+    key = (schema_name.lower(), table_name.lower())
+    if key in EXCLUDED_TRACE_TABLES:
+        return True
+    return any(
+        key[0] == schema and key[1].startswith(prefix)
+        for schema, prefix in EXCLUDED_TRACE_TABLE_PREFIXES
+    )
 
 
 def is_excluded_artifact_table(schema_name: str, table_name: str) -> bool:
