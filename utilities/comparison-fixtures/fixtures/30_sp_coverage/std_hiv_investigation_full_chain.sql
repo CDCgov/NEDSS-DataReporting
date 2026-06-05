@@ -1,11 +1,10 @@
 -- =====================================================================
--- Tier 3 — STD (Syphilis primary) Investigation full ODSE + Tier 2
---           + dimensional D_INV_* chain
+-- Tier 3 — STD (Syphilis primary) Investigation full ODSE chain
 -- =====================================================================
 -- Goal: unblock the STD/HIV cluster:
 --   - F_STD_PAGE_CASE (52 cols, currently 0 rows)
 --   - STD_HIV_DATAMART (248 cols, currently 0 rows)
---   - INV_HIV         (19 cols, currently 1 sentinel row only)
+--   - INV_HIV / per-topic D_INV_* dims (currently sentinel-only)
 --
 -- Authors ONE new full-chain STD Investigation alongside the existing
 -- Syphilis-primary stub at 22000080 (left untouched — it exercises the
@@ -14,94 +13,92 @@
 -- line 97 `nicm.CASE_MANAGEMENT_UID is not null` that filters that
 -- stub out of #PHC_CASE_UIDS_ALL).
 --
--- WHY SYPHILIS PRIMARY (10311, PG_STD_Investigation)
---   PG_STD_Investigation is one of two FORM_CDs in
---   `RDB_MODERN.dbo.v_nrt_nbs_page` that maps to the STD datamart
---   (the other is PG_HIV_Investigation for DATAMART_NM='HIV'). The
---   orchestrator's Step 9 dyn_dm chain (merge_and_verify.sh:543) iterates
---   DISTINCT DATAMART_NMs that have a matching form on nrt_investigation
---   — picking Syphilis primary therefore exercises BOTH the STD HIV
---   datamart SP path AND the dyn_dm STD chain (subject to bug-9 caveat).
+-- ODSE-ONLY CONVERSION (2026-06-05)
+--   PRINCIPLE: fixtures author ONLY NBS_ODSE rows; the RTR pipeline
+--   derives everything in RDB_MODERN. This fixture previously wrote 5
+--   D_INV_* dimension rows + 5 L_INV_* link rows DIRECTLY into
+--   RDB_MODERN — a violation, since per-topic D_INV_<category> /
+--   L_INV_<category> are RTR-derived. The page-builder chain
+--   (011-sp_page_builder_postprocessing -> 007-sp_s_pagebuilder ->
+--   008-sp_l_pagebuilder -> 009-sp_d_pagebuilder, invoked once per
+--   D_INV_<category> rdb_table_nm) reads dbo.nrt_page_case_answer,
+--   pivots answers whose rdb_table_nm = 'D_INV_<category>' into
+--   S_INV_<category>, then derives the L_INV_<category> link + the
+--   D_INV_<category> dim dynamically. nrt_page_case_answer is fed by
+--   CDC from NBS_ODSE.dbo.nbs_case_answer joined to the page metadata
+--   (NBS_rdb_metadata -> nbs_ui_metadata -> nbs_question).
+--
+--   We therefore now author the UPSTREAM nbs_case_answer rows for the
+--   STD/HIV-page questions that map to each of our 5 categories and let
+--   011->007/008/009 derive the dims + links. Modeled on
+--   tb_investigation_full_chain.sql / varicella_investigation_full_chain.sql
+--   (both author only nbs_case_answer rows and let the pagebuilder /
+--   PAM chain derive their dims; varicella validated live 2026-06-04).
+--
+-- STD/HIV-page question -> category mapping (queried live 2026-06-05 from
+-- NBS_ODSE.dbo.NBS_rdb_metadata JOIN nbs_ui_metadata JOIN nbs_question,
+-- nbs_page_uid=10006000 'PG_STD_Investigation'). Coded answer codes
+-- verified to resolve through
+-- RDB_MODERN.dbo.v_nrt_ref_formcode_translation for
+-- investigation_form_cd='PG_STD_Investigation'.
 --
 -- WHAT THIS FIXTURE AUTHORS
---   1. ODSE chain (NBS_ODSE):
+--   ODSE chain (NBS_ODSE) ONLY:
 --        - act               (act_uid=22004000, class='CASE', mood='EVN')
 --        - public_health_case (condition_cd 10311, prog_area STD,
---                              investigation_form_cd PG_STD_Investigation)
+--                              investigation_form_cd PG_STD_Investigation;
+--                              PHC-core scalar enrichment feeding 026)
 --        - act_id            (PHC_LOCAL_ID)
 --        - case_management   (IDENTITY-inserted — required by
 --                              sp_f_std_page_case_postprocessing's INNER
 --                              filter on nicm.CASE_MANAGEMENT_UID)
---   2. RDB_MODERN staging:
---        - nrt_investigation (full canonical Investigation shape — same
---                              ~30-col v2 mirror as Tier 1; PHC_UID
---                              22004000, patient_id=20000000 — inlined
---                              per bug-5b convention).
---        - nrt_investigation_case_management — the staging row
---                              sp_f_std_page_case_postprocessing reads
---                              at line 90 (LEFT JOIN to filter into
---                              #PHC_CASE_UIDS_ALL).
---        - D_INV_HIV         (1 row, KEY=22004100, NBS_CASE_ANSWER_UID
---                              identifier 22004001, populated HIV_* fields).
---        - D_INV_ADMINISTRATIVE (1 row, KEY=22004110, populated ADM_*
---                              fields read by std_hiv_datamart's UPDATE
---                              + INSERT blocks).
---        - D_INV_CLINICAL    (1 row, KEY=22004120, populated CLN_* fields).
---        - D_INV_EPIDEMIOLOGY (1 row, KEY=22004130, populated EPI_* fields).
---        - D_INV_COMPLICATION (1 row, KEY=22004140, populated CMP_* fields).
---        - L_INV_*           (5 link-table rows mapping PAGE_CASE_UID
---                              22004000 → each dimensional KEY; the
---                              25 reads in sp_f_std_page_case_postprocessing
---                              at lines 292-315 COALESCE to sentinel 1 if
---                              the L_INV_* lookup row is absent).
---   3. CONFIRMATION_METHOD_GROUP — 1 row keyed on INVESTIGATION_KEY of
---      22004000, supplies CONFIRMATION_DT to the datamart SP (line 519).
+--        - nbs_case_answer   rows for the STD/HIV-page questions feeding
+--                              the 5 categories below. The page-builder
+--                              chain derives D_INV_*/L_INV_* from these.
 --
--- DOES NOT AUTHOR
---   - nrt_page_case_answer rows. The STD/HIV path does not read them —
---     sp_f_std_page_case_postprocessing reads only nrt_investigation +
---     nrt_investigation_case_management + RDB_MODERN dimensions.
---     dyn_dm STD will pivot answer rows only if seeded; out of scope
---     here (separate Tier 3 LDF/answer fixture).
---   - Tier 2 participation/nbs_act_entity rows for cross-subject keys.
---     PHYSICIAN_KEY / INVESTIGATOR_KEY / HOSPITAL_KEY / etc. will
---     resolve via COALESCE→sentinel-1 at sp_f_std_page_case_postprocessing
---     lines 180-211, exactly as for the TB sibling fixture.
+-- CATEGORIES COVERED BY THIS FIXTURE (5):
+--   D_INV_HIV, D_INV_ADMINISTRATIVE, D_INV_CLINICAL,
+--   D_INV_EPIDEMIOLOGY, D_INV_COMPLICATION.
+-- The remaining STD-page categories (LAB_FINDING, MEDICAL_HISTORY,
+--   PATIENT_OBS, PREGNANCY_BIRTH, RISK_FACTOR, SOCIAL_HISTORY, SYMPTOM,
+--   TREATMENT, CONTACT) are covered by the sibling fixture
+--   zz_std_hiv_datamart_enrich.sql (same PHC 22004000).
 --
--- VERIFICATION CALL-CHAIN (tail-EXECs at bottom)
---   sp_nrt_investigation_postprocessing    — flow nrt_investigation → INVESTIGATION
---     (the row already lands in INVESTIGATION via the existing multi-
---      condition stub run, but we re-EXEC defensively in case this
---      fixture is run standalone before the Syphilis stub run lands).
---   NOTE: sp_std_hiv_datamart_postprocessing (026) and
---   sp_f_std_page_case_postprocessing (025) are owned by Step 9 of
---   merge_and_verify.sh and NOT tail-EXEC'd here — that would produce
---   double-INSERT rows on the second invocation.
+-- DOES NOT AUTHOR (derived by the RTR pipeline, NOT fixture writes)
+--   - D_INV_*/L_INV_* dims+links — derived by the pagebuilder chain
+--     (011/007/008/009) from the nbs_case_answer rows above.
+--   - nrt_investigation / nrt_investigation_case_management /
+--     nrt_investigation_confirmation — flow via CDC from the ODSE
+--     act/public_health_case/case_management rows
+--     (sp_investigation_event 056 -> nrt_investigation ->
+--      sp_nrt_investigation_postprocessing 005 -> INVESTIGATION).
+--   - nrt_page_case_answer — flows via CDC from nbs_case_answer + the
+--     page metadata.
+--   - STD_HIV_DATAMART — Step-9 SP output (026-sp_std_hiv_datamart),
+--     NOT a fixture write.
+--   - Tier 2 participation/nbs_act_entity cross-subject keys.
+--     PHYSICIAN_KEY / INVESTIGATOR_KEY / HOSPITAL_KEY / etc. resolve
+--     via COALESCE->sentinel-1 at sp_f_std_page_case_postprocessing
+--     lines 180-211, as for the TB sibling fixture.
 --
 -- UID block (Tier 3 STD Syphilis full-chain): 22004000-22004999
---   22004000  public_health_case.public_health_case_uid (act.act_uid;
---             nrt_investigation.public_health_case_uid)
---   22004001  case_management.case_management_uid (IDENTITY-inserted)
---   22004100  D_INV_HIV.D_INV_HIV_KEY
---   22004110  D_INV_ADMINISTRATIVE.D_INV_ADMINISTRATIVE_KEY
---   22004120  D_INV_CLINICAL.D_INV_CLINICAL_KEY
---   22004130  D_INV_EPIDEMIOLOGY.D_INV_EPIDEMIOLOGY_KEY
---   22004140  D_INV_COMPLICATION.D_INV_COMPLICATION_KEY
---   (no surrogate UID for CONFIRMATION_METHOD_GROUP — composite PK
---    (INVESTIGATION_KEY, CONFIRMATION_METHOD_KEY); written by
---    sp_nrt_investigation_postprocessing from our authored
---    nrt_investigation_confirmation staging row.)
+--   22004000          public_health_case.public_health_case_uid
+--                     (act.act_uid; nbs_case_answer.act_uid for every
+--                      answer row)
+--   22004001          case_management.case_management_uid (IDENTITY-inserted)
+--   22004200-22004299 nbs_case_answer.nbs_case_answer_uid for each
+--                     authored STD/HIV-page answer row (IDENTITY-inserted).
+--                     DISTINCT from the sibling zz_std_hiv_datamart_enrich.sql
+--                     block (22012xxx) to avoid collision.
 --
 -- Foundation dependencies (read-only):
 --   @superuser_id              10009282
 --   @foundation_patient_uid    20000000   (D_PATIENT must exist; the STD
 --                                          F_STD_PAGE_CASE keystore
---                                          INNER JOINs D_PATIENT only
---                                          via LEFT JOIN, but the
---                                          stage-7 DELETE at line 583
---                                          `PATIENT_KEY=1` purge would
---                                          drop the row if patient_id
---                                          weren't a real Patient.)
+--                                          LEFT JOINs D_PATIENT, and the
+--                                          stage-7 DELETE `PATIENT_KEY=1`
+--                                          purge would drop the row if
+--                                          patient_id weren't a real Patient.)
 -- =====================================================================
 
 USE [NBS_ODSE];
@@ -231,202 +228,118 @@ SET IDENTITY_INSERT [dbo].[case_management] OFF;
 GO
 
 -- =====================================================================
--- RDB_MODERN: nrt_investigation row + nrt_investigation_case_management
--- staging row + 5 dim rows (D_INV_*) + L_INV_* link rows +
--- CONFIRMATION_METHOD_GROUP.
+-- ODSE: nbs_case_answer — one row per STD/HIV-page question we author.
+-- These are the UPSTREAM ODSE rows from which CDC builds
+-- dbo.nrt_page_case_answer (rdb_table_nm/rdb_column_nm resolved from the
+-- page metadata), which the page-builder chain (011 -> 007/008/009)
+-- then pivots into S_INV_<category> and derives L_INV_<category> +
+-- D_INV_<category>. We author the questions that map to our 5 covered
+-- categories; one valid answer per category is sufficient for the chain
+-- to derive that dim+link, and we author several per category for a
+-- realistic Syphilis-primary scenario.
+--
+-- (question_identifier | nbs_question_uid | rdb_column_nm | data_type |
+--  code_set | answer) — mapping + code validity queried live 2026-06-05
+-- (NBS_rdb_metadata / nbs_ui_metadata / nbs_question for page 10006000;
+--  codes confirmed in v_nrt_ref_formcode_translation for
+--  PG_STD_Investigation).
+--
+-- nbs_case_answer.nbs_case_answer_uid is an IDENTITY column; we pin our
+-- allocated UIDs (22004200+) via IDENTITY_INSERT for stable references
+-- and to match the varicella-fixture convention. answer_group_seq_nbr
+-- is left NULL (non-repeating answers) so the pagebuilder
+-- ANSWER_GROUP_SEQ_NBR IS NULL / QUESTION_GROUP_SEQ_NBR IS NULL
+-- predicates admit every row.
 -- =====================================================================
 
-USE [RDB_MODERN];
-GO
+DECLARE @superuser_id_2 bigint = 10009282;
+DECLARE @std_full_phc_uid_2 bigint = 22004000;
 
--- ---------------------------------------------------------------------
--- nrt_investigation row — full canonical v2-Investigation shape,
--- STD-specific codes. Mirrors fixtures/10_subjects/investigation.sql v2
--- but for Syphilis primary instead of Hep A acute.
---   patient_id = 20000000 (foundation Patient) — inline literal per
---     bug-5b convention. NOT a DECLARE — cross-batch DECLARE scope
---     would surface NULL here (the Tier 1 fixture inlines for the same
---     reason; see fixtures/10_subjects/investigation.sql line 360).
---   case_management_uid = 22004001 — required so the
---     sp_f_std_page_case_postprocessing INNER filter at line 97
---     (`nicm.CASE_MANAGEMENT_UID is not null`) admits this PHC row
---     into #PHC_CASE_UIDS_ALL.
---   investigation_form_cd = 'PG_STD_Investigation' — required for the
---     same SP's #PHC_UIDS filter at line 152-154 (NOT-IN list of
---     PG_HEP*/INV_FORM_*/etc.).
--- ---------------------------------------------------------------------
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
 
--- ---------------------------------------------------------------------
--- nrt_investigation_case_management — the staging row that the
--- F_STD_PAGE_CASE SP LEFT JOINs at line 90 to filter into
--- #PHC_CASE_UIDS_ALL. All NOT-NULL columns are refresh_datetime +
--- max_datetime; everything else is nullable.
--- ---------------------------------------------------------------------
--- refresh_datetime + max_datetime are GENERATED ALWAYS (system-period) cols
--- on nrt_investigation_case_management — exclude from INSERT column list.
-
--- ---------------------------------------------------------------------
--- D_INV_HIV — one row. The std_hiv_datamart SP reads HIV_* columns
--- from this dimension via PC.D_INV_HIV_KEY join (see 026 lines 64-79).
--- Also populates INV_HIV's UPDATE / INSERT blocks (lines 62-159).
--- ---------------------------------------------------------------------
-INSERT INTO [dbo].[D_INV_HIV]
-    ([D_INV_HIV_KEY], [nbs_case_answer_uid],
-     [HIV_900_TEST_REFERRAL_DT], [HIV_LAST_900_TEST_DT],
-     [HIV_900_RESULT], [HIV_900_TEST_IND],
-     [HIV_AV_THERAPY_EVER_IND], [HIV_AV_THERAPY_LAST_12MO_IND],
-     [HIV_ENROLL_PRTNR_SRVCS_IND], [HIV_KEEP_900_CARE_APPT_IND],
-     [HIV_POST_TEST_900_COUNSELING], [HIV_PREVIOUS_900_TEST_IND],
-     [HIV_REFER_FOR_900_CARE_IND], [HIV_REFER_FOR_900_TEST],
-     [HIV_RST_PROVIDED_900_RSLT_IND], [HIV_SELF_REPORTED_RSLT_900],
-     [HIV_STATE_CASE_ID])
+INSERT INTO [dbo].[nbs_case_answer]
+    ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+     [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+     [last_chg_time], [last_chg_user_id],
+     [record_status_cd], [record_status_time], [seq_nbr])
 VALUES
-    (22004100, 22004001,
-     '2026-03-15', '2026-03-15',
-     N'Negative', N'Yes',
-     N'No', N'No',
-     N'Yes', N'Yes',
-     N'Yes', N'No',
-     N'Yes', N'Yes',
-     N'Yes', N'Negative',
-     N'HIV-STATE-STD-22004000');
+    -- ===== D_INV_HIV =====
+    -- NBS261 HIV_900_TEST_REFERRAL_DT (DATE)
+    (22004200, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-03-15', 10001326, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- NBS259 HIV_LAST_900_TEST_DT (DATE)
+    (22004201, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-03-15', 10001324, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- NBS264 HIV_POST_TEST_900_COUNSELING (CODED YNU 4150) -> 'N'
+    (22004202, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001330, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
 
--- ---------------------------------------------------------------------
--- D_INV_ADMINISTRATIVE — populates ADI_* / ADM_* fields the SP reads
--- via PC.D_INV_ADMINISTRATIVE_KEY join (see 026 lines 178-181, etc.).
--- ---------------------------------------------------------------------
-INSERT INTO [dbo].[D_INV_ADMINISTRATIVE]
-    ([D_INV_ADMINISTRATIVE_KEY], [nbs_case_answer_uid],
-     [ADM_REFERRAL_BASIS_OOJ], [ADM_RPTNG_CNTY],
-     [ADM_DISSEMINATED_IND],
-     [ADM_NK1_RELATIONSHIP])
-VALUES
-    (22004110, 22004001,
-     N'PRESUMP', N'13121',
-     N'No',
-     N'Mother');
+    -- ===== D_INV_ADMINISTRATIVE =====
+    -- INV177 ADM_FIRST_RPT_TO_PHD_DT (DATE)
+    (22004210, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-04-03', 10001004, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- INV886 ADM_NOTIF_COMMENT (TEXT)
+    (22004211, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Syphilis primary - partner services initiated.', 10001016, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- NBS137 ADM_DISSEMINATED_IND (CODED YNU 4150) -> 'N'
+    (22004212, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001198, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
 
--- ---------------------------------------------------------------------
--- D_INV_CLINICAL — populates CLN_* fields the SP reads via
--- PC.D_INV_CLINICAL_KEY join.
--- ---------------------------------------------------------------------
-INSERT INTO [dbo].[D_INV_CLINICAL]
-    ([D_INV_CLINICAL_KEY], [nbs_case_answer_uid],
-     [CLN_CARE_STATUS_CLOSE_DT], [CLN_CONDITION_RESISTANT_TO],
-     [CLN_DT_INIT_HLTH_EXM], [CLN_NEUROSYPHILLIS_IND],
-     [CLN_PRE_EXP_PROPHY_IND], [CLN_PRE_EXP_PROPHY_REFER],
-     [CLN_CASE_DIAGNOSIS])
-VALUES
-    (22004120, 22004001,
-     '2026-04-15', N'None',
-     '2026-04-05', N'No',
-     N'Yes', N'PHC',
-     N'097.1 Syphilis primary');
+    -- ===== D_INV_CLINICAL =====
+    -- STD099 CLN_DT_INIT_HLTH_EXM (DATE)
+    (22004220, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-04-05', 10001193, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- NBS443 CLN_PRE_EXP_PROPHY_IND (CODED YNU 4150) -> 'Y'
+    (22004221, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10003230, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- STD102 CLN_NEUROSYPHILLIS_IND (CODED 105750) -> 'N' (N/C/P)
+    (22004222, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001197, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
 
--- ---------------------------------------------------------------------
--- D_INV_EPIDEMIOLOGY — populates EPI_* fields the SP reads via
--- PC.D_INV_EPIDEMIOLOGY_KEY join (see 026 line 282).
--- ---------------------------------------------------------------------
-INSERT INTO [dbo].[D_INV_EPIDEMIOLOGY]
-    ([D_INV_EPIDEMIOLOGY_KEY], [nbs_case_answer_uid],
-     [EPI_CNTRY_USUAL_RESID])
-VALUES
-    (22004130, 22004001,
-     N'840');  -- USA
+    -- ===== D_INV_EPIDEMIOLOGY =====
+    -- NBS135 SOURCE_SPREAD (CODED 105050) -> 'SP' (Spread)
+    (22004230, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'SP', 10001194, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
 
--- ---------------------------------------------------------------------
--- D_INV_COMPLICATION — populates CMP_CONJUNCTIVITIS_IND / CMP_PID_IND
--- the SP reads via PC.D_INV_COMPLICATION_KEY (lines 268-269).
--- ---------------------------------------------------------------------
-INSERT INTO [dbo].[D_INV_COMPLICATION]
-    ([D_INV_COMPLICATION_KEY], [nbs_case_answer_uid],
-     [CMP_CONJUNCTIVITIS_IND], [CMP_PID_IND])
-VALUES
-    (22004140, 22004001,
-     N'No', N'No');
+    -- ===== D_INV_COMPLICATION =====
+    -- INV361 CMP_CONJUNCTIVITIS_IND (CODED YNU 4150) -> 'N'
+    (22004240, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001199, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0),
+    -- INV179 CMP_PID_IND (CODED YNU 4150) -> 'N'
+    (22004241, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001196, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'ACTIVE', '2026-04-01T00:00:00', 0);
 
--- ---------------------------------------------------------------------
--- L_INV_* link rows — sp_f_std_page_case_postprocessing at lines
--- 292-315 LEFT JOINs 25 L_INV_* tables on PAGE_CASE_UID to gather
--- dimensional KEYs. Each L_* table is a (PAGE_CASE_UID, D_INV_*_KEY)
--- mapping. We populate the 5 corresponding to our authored dim rows;
--- the remaining 20 will COALESCE→sentinel-1 via the SP's COALESCE
--- (no error, just NULL on those columns of F_STD_PAGE_CASE).
---
--- Per the catalog (`odse_unknown_tables.md` row group at line 76),
--- L_INV_* persistent tables are MasterETL output and only read by RTR
--- (never written). For RTR-side fixture coverage, we hand-write our
--- own rows. Verified by `grep -lE "INSERT INTO.*L_INV_ADMINISTRATIVE"`
--- → zero matches in `liquibase-service/.../routines`.
--- ---------------------------------------------------------------------
-INSERT INTO [dbo].[L_INV_ADMINISTRATIVE]
-    ([PAGE_CASE_UID], [D_INV_ADMINISTRATIVE_KEY])
-VALUES (22004000, 22004110);
-
-INSERT INTO [dbo].[L_INV_CLINICAL]
-    ([PAGE_CASE_UID], [D_INV_CLINICAL_KEY])
-VALUES (22004000, 22004120);
-
-INSERT INTO [dbo].[L_INV_EPIDEMIOLOGY]
-    ([PAGE_CASE_UID], [D_INV_EPIDEMIOLOGY_KEY])
-VALUES (22004000, 22004130);
-
-INSERT INTO [dbo].[L_INV_COMPLICATION]
-    ([PAGE_CASE_UID], [D_INV_COMPLICATION_KEY])
-VALUES (22004000, 22004140);
-
-INSERT INTO [dbo].[L_INV_HIV]
-    ([PAGE_CASE_UID], [D_INV_HIV_KEY])
-VALUES (22004000, 22004100);
-
--- ---------------------------------------------------------------------
--- nrt_investigation_confirmation — staging row that
--- sp_nrt_investigation_postprocessing (lines 714-732) reads to drive
--- the CONFIRMATION_METHOD_GROUP DELETE + re-INSERT cycle (lines
--- 849-858). Without this row, the post-Tier-3 re-run of the
--- investigation postprocessing SP wipes any hand-authored
--- CONFIRMATION_METHOD_GROUP row AND inserts a (sentinel KEY=1,
--- NULL date) row — which then causes the std_hiv_datamart SP's
--- non-DISTINCT join at line 1179-1180 to produce duplicate rows
--- (see report deliverable RTR Bug #N).
---
--- By authoring the upstream nrt_investigation_confirmation row, the
--- DELETE-then-INSERT round-trip emits exactly ONE CMG row with the
--- correct CONFIRMATION_METHOD_KEY (resolved from
--- confirmation_method_cd='LD') and a non-NULL CONFIRMATION_DT.
--- ---------------------------------------------------------------------
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
 
 GO
 
 -- =====================================================================
--- Tail-EXEC the SP chain.
+-- RDB_MODERN: NOTHING is authored directly here anymore.
 --
--- Step A: flow the new nrt_investigation row into INVESTIGATION (and
---   process nrt_investigation_confirmation → CONFIRMATION_METHOD_GROUP).
---   sp_nrt_investigation_postprocessing reads nrt_investigation,
---   writes INVESTIGATION row keyed on case_uid=22004000, then DELETE-
---   then-INSERTs CONFIRMATION_METHOD_GROUP from
---   nrt_investigation_confirmation. The F_STD_PAGE_CASE SP then
---   LEFT JOINs INVESTIGATION at line 226 via
---   fsshc.PAGE_CASE_UID=INVESTIGATION.CASE_UID to resolve
---   INVESTIGATION_KEY. STD_HIV_DATAMART (026) INSERTs and UPDATEs use
---   that same INVESTIGATION_KEY.
--- =====================================================================
-
-
--- =====================================================================
--- Step B / C / D — NOT run from this fixture.
---   sp_f_std_page_case_postprocessing (025) and
---   sp_std_hiv_datamart_postprocessing (026) are owned by Step 9 of
---   merge_and_verify.sh against the global PHC_UIDS list (which
---   currently does NOT include 22004000 — see report deliverable for
---   the orchestrator-update task). Running them here in addition would
---   produce double rows on the second invocation because the SPs use
---   INSERT-then-DELETE-on-dup or unguarded INSERT (sp_std_hiv_datamart
---   line 1248: `DELETE FROM dbo.STD_HIV_DATAMART …` — but only the
---   subset matching the @phc_id list passed; subsequent calls with
---   different @phc_id won't see this row).
+-- The investigation + its per-topic dims/links flow entirely via the
+-- RTR pipeline from the ODSE rows above:
+--   - act / public_health_case / case_management  --(CDC + 056/005)-->
+--       nrt_investigation -> INVESTIGATION (+ nrt_investigation_case_management).
+--   - nbs_case_answer  --(CDC + page metadata)-->  nrt_page_case_answer
+--       --(011 -> 007 sp_s_pagebuilder -> 008 sp_l_pagebuilder ->
+--          009 sp_d_pagebuilder, once per D_INV_<category>)-->
+--       S_INV_<category> -> L_INV_<category> -> D_INV_<category>.
 --
---   For the STANDALONE-fixture verification path the parent agent
---   invokes the SPs manually with @phc_id_list=22004000.
+-- The page-builder chain (011) and the F_STD_PAGE_CASE / STD_HIV_DATAMART
+-- datamart SPs are owned by Step 9 of merge_and_verify.sh and must be
+-- invoked there scoped to PHC 22004000 (see ORCHESTRATOR note in the
+-- coverage report). They are NOT tail-EXEC'd here — doing so would
+-- double-process on the Step-9 re-run.
 -- =====================================================================

@@ -54,7 +54,27 @@ HEPATITIS_CASE=1).
 | `zz_lab101_unblock.sql` | `zz_lab100_101_fill.sql` Part B | LAB101 datamart fullness is separately gated by bug #16 against the ODSE path |
 | `zz_hepatitis_zz_hep100_unblock.sql` | pipeline (live HEPATITIS_CASE=1 derived from PHC 22043000) | Header's "no SP writes it" claim is false — 039-sp_hepatitis_case_datamart writes it via dynamic SQL |
 
-## Group C — real ODSE authoring required (needs a full pipeline re-run to validate)
+## STATUS: COMPLETE — all 24 converted, ODSE-only invariant holds (0 violators)
+
+Validated end-to-end via a clean `merge_and_verify` run (full CDC pipeline, no
+direct RDB_MODERN writes). Every formerly-direct-written output now populates from
+the pipeline: D_CASE_MANAGEMENT=22, D_TB_PAM=2, VAR_DATAMART=2/F_VAR_PAM=1,
+CONFIRMATION_METHOD_GROUP=34, LAB_TEST=85/LAB100=5, INVESTIGATION=33,
+MORBIDITY_REPORT=3/_EVENT=2/_DATAMART=2, D_INV_HIV=2/L_INV_HIV=2,
+D_INV_RISK_FACTOR=6/L_INV_RISK_FACTOR=8, D_INV_LAB_FINDING=4, STD_HIV_DATAMART=1.
+
+Two earlier risk flags resolved: (1) the std_hiv per-topic D_INV_*/L_INV_* derive
+from nbs_case_answer via the page-builder during the CDC drain — NO explicit
+orchestrator pagebuilder loop was needed; (2) STD_HIV_DATAMART and
+MORBIDITY_REPORT_DATAMART both populate (not bug-blocked). Stack ran on the 15GB
+host with no OOM (~5.7GB peak).
+
+Orchestrator (`scripts/merge_and_verify.sh`) Step-9 UID lists were extended
+centrally: PHC_UIDS += 22006000 (phase2), 22015200 (morb); PAT/PRV/ORG_UIDS +
+morb cluster; LAB_OBS_UIDS += lab-pair Result UIDs + morb labs; MORB_OBS_UIDS +=
+22015010. (var PHC 22002000 was already present.)
+
+## Group C — real ODSE authoring required (DONE — see STATUS above)
 
 | Fixture | Effort | Conversion |
 |---|---|---|

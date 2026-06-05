@@ -214,27 +214,17 @@ END
 GO
 
 -- =====================================================================
--- RDB_MODERN: mirror to nrt_page_case_answer
+-- RDB_MODERN mirror (nrt_page_case_answer) is DERIVED, not authored.
+-- The page-builder pipeline projects every ODSE nbs_case_answer row
+-- authored above into dbo.nrt_page_case_answer (datamart_column_nm,
+-- question_identifier, answer_group_seq_nbr, etc.), so no direct
+-- RDB_MODERN writes belong here.
+--   Block A: single-row VAR* answers (UIDs 22009100..22009199).
+--   Block B: multi-value VAR105 / VAR176 rows (UIDs 22009200..22009203)
+--     whose distinct seq_nbr values become distinct D_RASH_LOC_GEN /
+--     D_PCR_SOURCE topic-dim rows that var_datamart STRING_AGGs into
+--     RASH_LOCATION_GENERAL_2/3 and PCR_TEST_SOURCE_2/3.
 -- =====================================================================
-
-USE [RDB_MODERN];
-GO
-
--- Block A: 100 single-row VAR* answers (UIDs 22009100..22009199)
-
-GO
-
--- Block B: multi-value VAR105 / VAR176 mirror (UIDs 22009200..22009203)
--- Distinct answer_group_seq_nbr values keep these as separate rows in
--- the D_RASH_LOC_GEN / D_PCR_SOURCE topic dim outputs, which the
--- var_datamart STRING_AGG then fans out into RASH_LOCATION_GENERAL_2/3
--- and PCR_TEST_SOURCE_2/3.
--- NOTE: the existing fixture's datamart_column_nm for VAR105 was set
--- as 'RASH_LOCATION_GENERAL' (uppercase). Re-using the same value here.
--- For VAR176 the existing fixture set 'PCR_TEST_SOURCE' so we use the
--- same datamart_column_nm.
-
-GO
 
 -- =====================================================================
 -- Block C: VAR100 LESIONS_TOTAL — Coded 2760. The parent fixture did
@@ -260,25 +250,9 @@ BEGIN
 END
 GO
 
-USE [RDB_MODERN];
-GO
-
-GO
-
--- Bug-fix self-heal: if a prior run inserted PHC1247 (invalid code) for
--- VAR100, replace with PHC222. Always-safe UPDATE.
-UPDATE [dbo].[nrt_page_case_answer]
-SET answer_txt = N'PHC222'
-WHERE nbs_case_answer_uid = 22009210 AND question_identifier = N'VAR100' AND answer_txt <> N'PHC222';
-GO
-USE [NBS_ODSE];
-GO
-UPDATE dbo.nbs_case_answer
-SET answer_txt = N'PHC222'
-WHERE nbs_case_answer_uid = 22009210 AND answer_txt <> N'PHC222';
-GO
-USE [RDB_MODERN];
-GO
+-- VAR100 LESIONS_TOTAL is authored correct (PHC222) directly in the
+-- ODSE nbs_case_answer INSERT above (uid 22009210); the page-builder
+-- carries it into nrt_page_case_answer. No RDB_MODERN self-heal needed.
 
 -- =====================================================================
 -- Block D: fix RASH_LOCATION translation. Parent fixture stored 'OTH'
@@ -294,82 +268,68 @@ GO
 UPDATE dbo.nbs_case_answer SET answer_txt = N'60132005'
 WHERE nbs_case_answer_uid = 22002101 AND answer_txt = N'OTH';
 GO
-
-USE [RDB_MODERN];
-GO
-UPDATE dbo.nrt_page_case_answer SET answer_txt = N'60132005'
-WHERE nbs_case_answer_uid = 22002101 AND question_identifier = N'VAR103' AND answer_txt = N'OTH';
-GO
+-- The corrected ODSE answer_txt is carried into nrt_page_case_answer by
+-- the page-builder; no direct RDB_MODERN write needed.
 
 -- =====================================================================
--- Block E: enrich nrt_investigation row 22002000 with INV_COMMENTS,
--- ILLNESS_DURATION/UNIT, and a valid OUTBREAK_NAME code. These flow
--- through sp_nrt_investigation_postprocessing into INVESTIGATION dim,
--- whence the var_datamart SP picks them up as GENERAL_COMMENTS,
--- ILLNESS_DURATION, ILLNESS_DURATION_UNIT, OUTBREAK_NAME.
+-- Block E: enrich the ODSE public_health_case (22002000) with comments,
+-- illness duration, and an outbreak name. These are the RAW ODSE source
+-- columns that 056-sp_investigation_event reads and derives into
+-- nrt_investigation, whence sp_nrt_investigation_postprocessing flows
+-- them into the INVESTIGATION dim and the var_datamart SP surfaces them
+-- as GENERAL_COMMENTS, ILLNESS_DURATION, ILLNESS_DURATION_UNIT,
+-- OUTBREAK_NAME.
 --
--- OUTBREAK_NM valid code (live 2026-05-24): 'MDK' = "Ketchup - McDonalds"
--- ILLNESS_DURATION_UNIT codeset = AGE_UNIT (e.g. 'D' = Day).
+-- DERIVATION (056-sp_investigation_event, verified live 2026-06-05):
+--   public_health_case.txt                    -> nrt_investigation.txt -> INV_COMMENTS
+--   public_health_case.effective_duration_amt -> effective_duration_amt -> ILLNESS_DURATION
+--   public_health_case.effective_duration_unit_cd ('D') -> illness_duration_unit
+--       is DERIVED via fn_get_value_by_cd_codeset(..., 'INV144') (codeset
+--       AGE_UNIT); 'D' resolves to short-desc "Days". We set the RAW cd,
+--       NOT illness_duration_unit directly.
+--   public_health_case.outbreak_name ('MDK')  -> OUTBREAK_NAME.
+-- The sibling fixture (varicella_investigation_full_chain.sql) authors
+-- this PHC with outbreak_name=NULL etc.; we enrich it here and bump
+-- last_chg_time so 056 reprocesses it.
 -- =====================================================================
-USE [RDB_MODERN];
+USE [NBS_ODSE];
 GO
--- Column name notes (verified live 2026-05-24):
---   nrt_investigation.txt                    -> INV_COMMENTS (NULLIF empty)
---   nrt_investigation.effective_duration_amt -> ILLNESS_DURATION (isnumeric)
---   nrt_investigation.illness_duration_unit  -> ILLNESS_DURATION_UNIT
---   nrt_investigation.outbreak_name          -> OUTBREAK_NAME (PHC->INVESTIGATION)
---                                               then var_datamart joins via
---                                               NRT_SRTE_CODE_VALUE_GENERAL
---                                               CODE_SET_NM='OUTBREAK_NM' to
---                                               surface CODE_SHORT_DESC_TXT
-UPDATE dbo.nrt_investigation
-SET txt                       = N'Varicella outbreak: index case linked epi-cluster',
-    effective_duration_amt    = N'14',
-    illness_duration_unit     = N'D',
-    outbreak_name             = N'MDK'
+UPDATE dbo.public_health_case
+SET txt                        = N'Varicella outbreak: index case linked epi-cluster',
+    effective_duration_amt     = N'14',
+    effective_duration_unit_cd = N'D',
+    outbreak_name              = N'MDK',
+    last_chg_time              = '2026-04-15T00:00:00'
 WHERE public_health_case_uid = 22002000;
 GO
 
--- The investigation event SP reads from NBS_ODSE.dbo.public_health_case +
--- friends; nrt_investigation is the RDB-side staging that the
--- investigation postprocessing SP reads. Re-run that SP to flow our
--- updates into the INVESTIGATION dim.
-
-GO
-
 -- =====================================================================
--- Block F: confirmation_method_group enrichment.
---   var_datamart.CONFIRMATION_METHOD_1 / _ALL / _DATE come from joining
---   confirmation_method_group (CMG) to confirmation_method (CM) via
---   CONFIRMATION_METHOD_KEY, filtered by INVESTIGATION_KEY = our
---   investigation. Baseline has 3 CM rows; CM key=4 is LD "Laboratory
---   confirmed". Insert a CMG row binding INV_KEY (looked up dynamically
---   from case_uid=22002000) to CM key=4. Idempotent: skip if exists.
+-- Block F: confirmation method enrichment (ODSE source).
+--   var_datamart.CONFIRMATION_METHOD_1 / _ALL / _DATE derive from
+--   CONFIRMATION_METHOD_GROUP, which 005-sp_nrt_investigation_postprocessing
+--   builds from the investigation_confirmation_method JSON that
+--   056-sp_investigation_event assembles by reading
+--   NBS_ODSE.dbo.Confirmation_method (056 lines ~425-435), joining
+--   code_value_general on code_set_nm='PHC_CONF_M' for the description.
+--   So we author ONE ODSE Confirmation_method row for this PHC.
 --
---   INVESTIGATION_KEY is volatile across SP reseeds, so resolve at
---   apply time.
+--   confirmation_method_cd='LD' = "Laboratory confirmed" (codeset
+--   PHC_CONF_M, verified live 2026-06-05). confirmation_method_desc_txt
+--   is left NULL — 056 re-derives it via the PHC_CONF_M join. The PHC
+--   last_chg_time bump in Block E forces 056 to reprocess and pick this
+--   up. Idempotent: skip if a row already exists.
+--   Confirmation_method PK is (public_health_case_uid, confirmation_method_cd);
+--   no IDENTITY column.
 -- =====================================================================
-DECLARE @inv_key BIGINT;
-SELECT @inv_key = INVESTIGATION_KEY FROM dbo.INVESTIGATION WHERE CASE_UID = 22002000;
-
-IF @inv_key IS NOT NULL
-BEGIN
-    -- Re-point our investigation's CMG row to confirmation_method_key=4
-    -- (LD, "Laboratory confirmed", with non-NULL CONFIRMATION_METHOD_DESC).
-    -- The baseline insertion (probably from a previous SP run) used key=1
-    -- which is NULL-described and produces empty CONFIRMATION_METHOD_*.
-    UPDATE dbo.confirmation_method_group
-        SET CONFIRMATION_METHOD_KEY = 4,
-            CONFIRMATION_DT         = '2026-04-15T00:00:00'
-    WHERE INVESTIGATION_KEY = @inv_key;
-
-    -- If no row at all, insert a new one.
-    IF @@ROWCOUNT = 0
-        INSERT INTO dbo.confirmation_method_group
-            (INVESTIGATION_KEY, CONFIRMATION_METHOD_KEY, CONFIRMATION_DT)
-        VALUES
-            (@inv_key, 4, '2026-04-15T00:00:00');
-END
+USE [NBS_ODSE];
+GO
+IF NOT EXISTS (SELECT 1 FROM dbo.Confirmation_method
+               WHERE public_health_case_uid = 22002000 AND confirmation_method_cd = N'LD')
+    INSERT INTO dbo.Confirmation_method
+        (public_health_case_uid, confirmation_method_cd,
+         confirmation_method_desc_txt, confirmation_method_time)
+    VALUES
+        (22002000, N'LD', NULL, '2026-04-15T00:00:00');
 GO
 
 -- =====================================================================

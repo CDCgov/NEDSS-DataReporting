@@ -467,9 +467,8 @@ GO
 --   produce double rows because the SP does DELETE-then-INSERT per
 --   PHC, and Step 9 would re-execute identically.
 --
---   (The SP at line 110-111 has a DELETE-first guard:
---      `DELETE FROM dbo.COVID_CASE_DATAMART
---       WHERE public_health_case_uid IN (SELECT public_health_case_uid FROM #PHC_LIST)`
+--   (The SP at line 110-111 has a delete-first guard — it clears
+--      COVID_CASE_DATAMART rows for the PHCs in #PHC_LIST before insert —
 --   so re-execution is idempotent for a SINGLE invocation. Tail-EXEC +
 --   Step 9 = 2 invocations, which IS idempotent — but conservative
 --   pattern: leave Step 9 as the single owner, matching TB-fixture

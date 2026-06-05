@@ -266,51 +266,61 @@ END
 GO
 
 -- =====================================================================
--- Corrective UPDATEs: fix answer_txt values that silently collapse to
--- NULL in the 147 SP pivot because the answer code is not present in
--- the relevant nrt_srte_code_value_general codeset.
+-- Corrective ODSE rows: fix answer_txt values that silently collapse to
+-- NULL in the 147 SP pivot because the seeded answer code is not present
+-- in the relevant nrt_srte_code_value_general codeset.
 --
--- 1. PHVS_TB_BIRTH_CNTRY (4260): the seeded "840" is not a valid code.
---    Use "USA" (verified). Affects PATIENT_BIRTH_COUNTRY,
---    PRIMARY_GUARD_1_BIRTH_COUNTRY, PRIMARY_GUARD_2_BIRTH_COUNTRY,
---    OUT_OF_CNTRY (TUB114), STATUS_AT_DIAGNOSIS (the anchor fixture
---    miswrote TUB109 codeset).
--- 2. PHVS_TB_SUSCEPT (4170): "1" is not a valid code. "385660001"
---    (Not Done) is. Affects all FINAL_SUSCEPT_* + INIT_SUSCEPT_* rows.
--- 3. PHVS_PNUND (2410): some rows already use 260385009; safe.
--- 4. PHVS_TB_LAB_TEST_INT (4190): same.
--- These UPDATEs are idempotent (they're WHERE-targeted by act_uid +
--- nbs_question_uid + answer_txt) and only run if the bad value is
--- still present.
+-- ODSE-ONLY PRINCIPLE: this fixture authors ONLY NBS_ODSE.nbs_case_answer
+-- rows; the RTR pipeline (CDC -> page-builder -> nrt_page_case_answer)
+-- derives the RDB_MODERN staging. Direct UPDATEs to RDB_MODERN's
+-- nrt_page_case_answer (the prior approach) are erased on the next CDC
+-- drain — the page-builder rebuilds nrt from nbs_case_answer — so the
+-- only durable fix is to correct the ODSE source.
+--
+-- 147 SP mechanics (verified, lines 159-219 + 303-304): each answer is
+-- LEFT JOINed to code_value_general (code_set_nm, code=answer_txt) then
+-- translated to CODE_SHORT_DESC_TXT before the `MAX(ANSWER_TXT)` PIVOT.
+-- An invalid code (e.g. '840') resolves to NULL; a valid code ('USA')
+-- resolves to 'UNITED STATES'. With BOTH rows present for one question,
+-- MAX(NULL,'UNITED STATES') = 'UNITED STATES'. So authoring an ADDITIONAL
+-- 'USA' row (higher seq_nbr) alongside the anchor's seq_nbr=0 '840' row
+-- lights the column up WITHOUT editing the read-only anchor.
+--
+-- WHAT NEEDED FIXING (verified against live D_TB_PAM 2026-06-05):
+--   * PHVS_TB_BIRTH_CNTRY (codeset 4260): anchor seeded '840' (invalid;
+--     only 'USA'='UNITED STATES' is valid). Three D_TB_PAM columns were
+--     left NULL because no corrective ODSE row existed for them:
+--       PATIENT_BIRTH_COUNTRY         q1327 (TUB276)
+--       PRIMARY_GUARD_1_BIRTH_COUNTRY q1042 (TUB115)
+--       PRIMARY_GUARD_2_BIRTH_COUNTRY q1320 (TUB116)
+--     (COUNTRY_OF_VERIFIED_CASE q1199/TUB109 is already 'USA' via the
+--      corrective block above; MOVE_CNTRY q1243/TUB230 and OUT_OF_CNTRY
+--      q1080/TUB114 are d_topic dimensions already carrying 'USA' via the
+--      multi-row block below — none need an additional row here.)
+--   * PHVS_TB_SUSCEPT (codeset 4170): the FINAL_/INIT_SUSCEPT_* questions
+--     are already authored as '385660001' (Not Done) in the main block
+--     above (lines ~146-204), so there is NO stray '1' to correct — the
+--     former UPDATE was a no-op. Nothing to author here.
+--
+-- UID block: nbs_case_answer.nbs_case_answer_uid is IDENTITY; AUTO-assign
+-- (LESSON 10) and guard on the NBS_ODSE natural key.
 -- =====================================================================
-UPDATE [dbo].[nrt_page_case_answer]
-SET answer_txt = N'USA'
-WHERE act_uid = 22001000
-  AND answer_txt = N'840'
-  AND code_set_group_id = 4260;
-
--- The anchor fixture wrote STATUS_AT_DIAGNOSIS code "A" with
--- code_set_group_id=4260 but TUB117 STATUS_AT_DIAGNOSIS uses
--- codeset 2450 (PHVS_STATUS_AT_DIAG; valid code 397709008).
--- The row itself stays put (wrong mapping by anchor); we can't fix
--- without authoring a new row. Skip.
-
--- Per anchor fixture, TUB245 FINAL_SUSCEPT_RIFAMPIN answer="1" with
--- code_set_group_id=4170. Fix by replacing with "385660001" so the
--- codeset join resolves to "Not Done".
-UPDATE [dbo].[nrt_page_case_answer]
-SET answer_txt = N'385660001'
-WHERE act_uid = 22001000
-  AND answer_txt = N'1'
-  AND code_set_group_id = 4170;
-
--- Anchor fixture wrote TUB114 OUT_OF_CNTRY answer "PHC2" which is not
--- a valid PHVS_TB_BIRTH_CNTRY code. Replace with "USA".
-UPDATE [dbo].[nrt_page_case_answer]
-SET answer_txt = N'USA'
-WHERE act_uid = 22001000
-  AND question_identifier = N'TUB114'
-  AND answer_txt = N'PHC2';
+IF NOT EXISTS (SELECT 1 FROM [NBS_ODSE].[dbo].[nbs_case_answer]
+               WHERE act_uid = 22001000 AND nbs_question_uid = 1327 AND seq_nbr = 1 AND answer_group_seq_nbr IS NULL)
+BEGIN
+    INSERT INTO [NBS_ODSE].[dbo].[nbs_case_answer]
+        ([act_uid], [add_time], [add_user_id],
+         [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+         [last_chg_time], [last_chg_user_id],
+         [record_status_cd], [record_status_time], [seq_nbr])
+    VALUES
+        -- TUB276 PATIENT_BIRTH_COUNTRY -> 'USA' (PHVS_TB_BIRTH_CNTRY 4260)
+        (22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1327, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        -- TUB115 PRIMARY_GUARD_1_BIRTH_COUNTRY -> 'USA'
+        (22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1042, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1),
+        -- TUB116 PRIMARY_GUARD_2_BIRTH_COUNTRY -> 'USA'
+        (22001000, '2026-04-01T00:00:00', 10009282, N'USA', 1320, 1, '2026-04-01T00:00:00', 10009282, N'ACTIVE', '2026-04-01T00:00:00', 1);
+END
 GO
 
 -- =====================================================================
