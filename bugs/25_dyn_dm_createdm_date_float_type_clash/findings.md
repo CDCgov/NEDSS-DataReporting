@@ -44,3 +44,25 @@ incoming -> no 206 + column re-typed to date), but it's a legacy-routine change 
 worth a conscious decision before landing. Confidence in the diagnosis: very high (full evidence chain
 in the investigation: located the failing step in job_flow_log, enumerated the date<->float column
 pairs via INFORMATION_SCHEMA, confirmed 2023-seeded 0-row shells, reproduced with a standalone UPDATE).
+
+## Update (2026-06-05) — attempted fix; deeper than a targeted patch (deferred)
+Attempted a type-reconciliation step in createdm (re-type the target column to the incoming,
+metadata-authoritative type before the UPDATE). It works mechanically but is NOT a clean targeted
+fix — the legacy DM_INV_* shells are mistyped in BOTH directions and the routine's structure resists
+a surgical patch:
+1. BIDIRECTIONAL clash: not only `date incoming -> float target` (the original symptom) but also
+   `float incoming -> date target` ("Operand type clash: float is incompatible with date" surfaces
+   once the first direction is fixed). The shell's column types are arbitrarily wrong vs the metadata
+   throughout.
+2. ROW-SIZE: re-typing all type mismatches (the general fix) widens DM_INV_STD past the 8060-byte
+   limit ("max row size exceeds 8060") and breaks the table; the shell is already near the limit.
+3. NESTED TRANSACTION: createdm's COMMITs are nested inside sp_dyn_dm_main's transaction, so the
+   re-type rolls back together with the UPDATE's failure — the column-type change does not persist
+   across the failure path, defeating an in-transaction re-type.
+
+CONCLUSION: a robust fix is a broader rework of the dynamic-datamart createdm (full type
+reconciliation that respects the 8060 limit and the transaction structure), or correcting the legacy
+DM_INV_* baseline DDL so the shells carry the metadata-authoritative types. That is out of scope for a
+targeted bug fix. DM_INV_* are OUT OF BOUNDS (not in the coverage target set); the only cost of leaving
+#25 open is the fail-fast collateral the 206 causes under the intentional batch fail-fast (bug #20).
+Deferred with this fuller root cause.
