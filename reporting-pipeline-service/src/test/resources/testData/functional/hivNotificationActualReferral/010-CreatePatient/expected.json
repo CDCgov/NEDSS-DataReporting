@@ -1,0 +1,24 @@
+{
+  "0": [
+    {
+      "PATIENT_ADDED_BY": "Kent, Ariella",
+      "PATIENT_ADD_TIME": "2026-06-05T16:09:55.113",
+      "PATIENT_CITY": "Atlanta",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_DOB": "1978-08-16T00:00:00.000",
+      "PATIENT_ENTRY_METHOD": "N",
+      "PATIENT_FIRST_NAME": "Nil",
+      "PATIENT_LAST_CHANGE_TIME": "2026-06-05T16:09:55.113",
+      "PATIENT_LAST_NAME": "Prevost",
+      "PATIENT_LAST_UPDATED_BY": "Kent, Ariella",
+      "PATIENT_LOCAL_ID": "PSN1000010000GA01",
+      "PATIENT_MPR_UID": 1000010000,
+      "PATIENT_RECORD_STATUS": "ACTIVE",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STATE_CODE": "13",
+      "PATIENT_STREET_ADDRESS_1": "91181 Steensland",
+      "PATIENT_UID": 1000010000,
+      "PATIENT_ZIP": "30368"
+    }
+  ]
+}
