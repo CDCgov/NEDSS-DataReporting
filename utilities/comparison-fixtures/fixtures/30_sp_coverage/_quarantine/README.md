@@ -43,6 +43,55 @@ Fixtures here are excluded from `scripts/merge_and_verify.sh` (it globs
   22043000 under cond **10481** → form `INV_FORM_HEPGEN`, which both maps
   to Hepatitis_Case AND matches the `INV_FORM_HEP%` gate).
 
+## ODSE-only conversion (2026-06-05)
+
+Quarantined as part of the **ODSE-only invariant** remediation: fixtures must
+author only NBS_ODSE rows and let the RTR pipeline derive everything in
+RDB_MODERN. These 10 carried direct RDB_MODERN writes whose coverage is either
+already produced by the pipeline or by an existing ODSE-only sibling, so they are
+retired from the active set rather than rewritten. Full triage +
+per-fixture recipes in `../../../ODSE_ONLY_CONVERSION.md`.
+
+- **`f_page_case_unblock.sql.odse-only-form_cd-derived-from-condition_code`** —
+  only content was `UPDATE nrt_investigation SET INVESTIGATION_FORM_CD=...`.
+  That value is derived by 056-sp_investigation_event from ODSE PHC `cd='10110'`
+  + SRTE `condition_code` (form_cd is not a PHC column). Redundant once the
+  legacy hand-authored nrt shortcut is gone.
+- **`zz_inv_summ_datamart_unblock.sql.odse-only-inv_summ_datamart-sp-derived`** —
+  injected one synthetic INV_SUMM_DATAMART row "even if the SP no-ops". 045 already
+  produces real rows for the 30 investigations; the seed was cosmetic. (No bug #21
+  exists in `bugs/`.)
+- **`zz_hepatitis_zz_hep100_unblock.sql.odse-only-hepatitis_case-pipeline-derived`** —
+  direct INSERT into HEPATITIS_CASE under a false "no SP writes it" premise.
+  039-sp_hepatitis_case_datamart writes it via dynamic SQL; live DB already has a
+  pipeline-derived HEPATITIS_CASE row (PHC 22043000). Not the TMP_F_PAGE_CASE bug
+  (that gates 013/HEPATITIS_DATAMART only).
+- **`zz_covid_case_datamart_round2.sql.odse-only-superseded-by-zz_covid_dedicated_entities`** —
+  hand-wrote D_PROVIDER/D_ORGANIZATION + nrt_investigation FK repoint; superseded by
+  the ODSE-only `zz_covid_dedicated_entities.sql` (5/7 sections were empty stubs; its
+  nrt_investigation UPDATE regressed correct ODSE values).
+- **`zz_covid_contact_datamart_enrich.sql.odse-only-superseded-by-covid-contact-fill+side`** —
+  patched D_PATIENT/nrt_patient/nrt_contact for a patient (20000000) no longer linked
+  to the COVID PHC; coverage carried by `zz_covid_contact_fill.sql` +
+  `zz_covid_dedicated_entities.sql` + `zz_covid_contact_side.sql`.
+- **`zz_covid_vaccination_datamart_enrich.sql.odse-only-superseded-by-zz_covid_vaccination_gap`** —
+  hand-wrote D_PATIENT/D_PROVIDER/D_ORGANIZATION/D_VACCINATION; self-defeating (no
+  NRT_VACCINATION row, so the dims were never joined). Covered by the ODSE-only
+  `zz_covid_vaccination_gap.sql`.
+- **`zz_enrich_vaccination.sql.odse-only-superseded-by-zz_covid_vaccination_gap`** —
+  `UPDATE nrt_vaccination` overwriting a Hep-A row's material_cd to COVID '208' (not
+  ODSE-backed). Covered by `zz_covid_vaccination_gap.sql`.
+- **`zz_d_contact_record_enrich.sql.odse-only-superseded-by-zz_contact_record_gap`** —
+  wrote nrt_contact_answer + seeded NRT_METADATA_COLUMNS (a second, deeper violation).
+  Covered ODSE-only by `zz_contact_record_gap.sql`.
+- **`zz_d_inv_place_repeat_enrich.sql.odse-only-superseded-by-zz_d_inv_place_repeat`** —
+  self-declared "now-inert", but still carried a `DELETE FROM nrt_page_case_answer`.
+  Superseded by the ODSE-only `zz_d_inv_place_repeat.sql`.
+- **`zz_lab101_unblock.sql.odse-only-superseded-by-zz_lab100_101_fill-partB`** —
+  hand-built the LAB101 LAB_* hierarchy in RDB_MODERN; `zz_lab100_101_fill.sql` Part B
+  authors the same chain ODSE-only and the pipeline derives the LAB_* rows. (LAB101
+  datamart fullness is separately gated by bug #16, tracked against the ODSE path.)
+
 ## Restored
 
 - **`zz_lab100_101_fill.sql`** (bug #19, fixed 2026-06-04). Was quarantined

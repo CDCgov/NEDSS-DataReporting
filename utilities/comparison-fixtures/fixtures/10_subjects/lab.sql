@@ -455,11 +455,9 @@ GO
 -- concern. Documented in coverage_lab.md as
 -- BASELINE_QUIRK / merged-fixture sequence note.
 -- =====================================================================
-SET IDENTITY_INSERT dbo.nrt_lab_test_result_group_key ON;
-SET IDENTITY_INSERT dbo.nrt_lab_test_result_group_key OFF;
-DELETE FROM dbo.nrt_lab_test_result_group_key WHERE TEST_RESULT_GRP_KEY = 100;
-
-SET IDENTITY_INSERT dbo.nrt_lab_test_key ON;
-SET IDENTITY_INSERT dbo.nrt_lab_test_key OFF;
-DELETE FROM dbo.nrt_lab_test_key WHERE LAB_TEST_KEY = 100;
-GO
+-- [ODSE-only conversion] Removed the IDENTITY-advance workaround that wrote
+-- nrt_lab_test_key / nrt_lab_test_result_group_key directly. Those surrogate
+-- keys are allocated by 017/018-sp_d_labtest*_postprocessing under the bug #17
+-- fix (explicit sp_getapplock + IDENTITY RESEED, robust to empty/NULL-seed
+-- state), so the fixture-side RDB_MODERN write is redundant. The driving ODSE
+-- observation chain is already authored above.

@@ -155,17 +155,12 @@ GO
 -- INVESTIGATION_KEY join resolves for both Order and Result LAB_TEST_RESULT
 -- variants.
 -- =====================================================================
-USE [RDB_MODERN];
-GO
-
-UPDATE dbo.nrt_observation
-   SET associated_phc_uids = N'20000100'
- WHERE observation_uid = 20000120;   -- foundation Lab Order
-
-UPDATE dbo.nrt_observation
-   SET associated_phc_uids = N'20050010'
- WHERE observation_uid IN (20070010, 20070011);  -- v2 Lab Order + Result child
-GO
+-- [ODSE-only conversion] Removed the direct nrt_observation UPDATEs.
+-- nrt_observation.associated_phc_uids is derived by 055-sp_observation_event
+-- (STRING_AGG over act_relationship type_cd IN ('LabReport','MorbReport'),
+-- target CASE) → CDC/sink → nrt_observation. The LabReport act_relationship
+-- edges authored above are the only input needed; the pipeline produces the
+-- staging value. No fixture write to RDB_MODERN.
 
 -- =====================================================================
 -- Post-edge SP re-runs.

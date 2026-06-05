@@ -236,17 +236,11 @@ GO
 -- (Hep A acute, cd='10110' -> 42) for the foundation and v3 Treatment
 -- rows. v2 is unchanged (Tier 1 already had it correct).
 -- =====================================================================
-USE [RDB_MODERN];
-GO
-
-UPDATE dbo.nrt_treatment
-   SET associated_phc_uids = N'20000100'
- WHERE treatment_uid = 20000150;     -- foundation Treatment
-
-UPDATE dbo.nrt_treatment
-   SET associated_phc_uids = N'20000100'
- WHERE treatment_uid = 20100020;     -- v3 Treatment
-GO
+-- [ODSE-only conversion] Removed the direct nrt_treatment UPDATEs.
+-- nrt_treatment.associated_phc_uids is derived by 070-sp_treatment_event
+-- (STRING_AGG over act_relationship type_cd='TreatmentToPHC', target CASE)
+-- → CDC/sink → nrt_treatment. The TreatmentToPHC act_relationship edges
+-- authored above are the only input needed. No fixture write to RDB_MODERN.
 
 -- =====================================================================
 -- Post-edge SP re-run.

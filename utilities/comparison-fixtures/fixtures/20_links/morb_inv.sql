@@ -173,17 +173,10 @@ GO
 --  observations, there can only be one associated investigation."
 -- So we set a single UID (no commas) on each Order row.
 -- =====================================================================
-USE [RDB_MODERN];
-GO
-
-UPDATE dbo.nrt_observation
-   SET associated_phc_uids = N'20000100'
- WHERE observation_uid = 20000130;   -- foundation Morb Order
-
-UPDATE dbo.nrt_observation
-   SET associated_phc_uids = N'20050010'
- WHERE observation_uid = 20080010;   -- v2 Morb Order
-GO
+-- [ODSE-only conversion] Removed the direct nrt_observation UPDATEs.
+-- nrt_observation.associated_phc_uids is derived by 055-sp_observation_event
+-- from the MorbReport act_relationship edges authored above (CDC → sink).
+-- No fixture write to RDB_MODERN.
 
 -- =====================================================================
 -- Post-edge SP re-run.

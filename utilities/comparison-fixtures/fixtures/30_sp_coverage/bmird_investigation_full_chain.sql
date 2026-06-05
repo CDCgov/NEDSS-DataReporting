@@ -193,25 +193,11 @@ GO
 -- "Convention: postprocessing SPs read NRT staging only — never ODSE").
 -- =====================================================================
 
-USE [RDB_MODERN];
-GO
-
--- ---------------------------------------------------------------------
--- Seed an LDF_GROUP sentinel row at KEY=1 if missing. BMIRD_CASE has a
--- FK constraint on LDF_GROUP_KEY (see 040 SP line 814 + table DDL);
--- V_NRT_INV_KEYS_ATTRS_MAPPING's COALESCE(lg.ldf_group_key, 1) fallback
--- yields 1, which the FK then enforces against LDF_GROUP. Baseline
--- 6.0.18.1 leaves LDF_GROUP empty; sp_nrt_ldf_postprocessing populates
--- it only when LDF rows exist for the Investigation (out of scope for
--- this fixture). One-row sentinel seed is the conventional fix used by
--- other fact tables (RDB_DATE, ANTIMICROBIAL_GROUP, etc.).
--- ---------------------------------------------------------------------
-IF NOT EXISTS (SELECT 1 FROM dbo.LDF_GROUP WHERE LDF_GROUP_KEY = 1)
-BEGIN
-    INSERT INTO dbo.LDF_GROUP (LDF_GROUP_KEY, BUSINESS_OBJECT_UID)
-    VALUES (1, NULL);
-END;
-GO
+-- [ODSE-only conversion] Removed the direct LDF_GROUP KEY=1 sentinel INSERT.
+-- 015-sp_nrt_ldf_postprocessing self-seeds that exact sentinel unconditionally
+-- (lines 31-35), so BMIRD_CASE's FK on LDF_GROUP_KEY is satisfied by the
+-- pipeline. Orchestration must run sp_nrt_ldf_postprocessing before the BMIRD
+-- datamart SPs (the LDF fixtures already wire this).
 
 -- ---------------------------------------------------------------------
 -- nrt_investigation row for the full-chain BMIRD Strep pneumo Investigation.
