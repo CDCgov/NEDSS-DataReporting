@@ -60,16 +60,12 @@
   "4": [
     {
       "ADM_IMM_NTNL_NTFBL_CNDTN": "No",
-      "ADM_REFERRAL_BASIS_OOJ": "C1- Cohort",
-      "D_INV_ADMINISTRATIVE_KEY": 4.0,
-      "nbs_case_answer_uid": 3245
+      "ADM_REFERRAL_BASIS_OOJ": "C1- Cohort"
     }
   ],
   "5": [
     {
-      "CTT_RPT_RELATIONSHIP_TO_OP": "Emergency contact",
-      "D_INV_CONTACT_KEY": 4.0,
-      "nbs_case_answer_uid": 3244
+      "CTT_RPT_RELATIONSHIP_TO_OP": "Emergency contact"
     }
   ],
   "6": [
@@ -118,56 +114,7 @@
   ],
   "7": [
     {
-      "ADD_DATE_KEY": 13306,
-      "CLOSED_BY_KEY": 1,
-      "CONDITION_KEY": 221,
-      "DELIVERING_HOSP_KEY": 1,
-      "DELIVERING_MD_KEY": 1,
-      "DISPOSITIONED_BY_KEY": 1,
-      "D_INVESTIGATION_REPEAT_KEY": 1.0,
-      "D_INV_ADMINISTRATIVE_KEY": 4,
-      "D_INV_CLINICAL_KEY": 1,
-      "D_INV_COMPLICATION_KEY": 1,
-      "D_INV_CONTACT_KEY": 4,
-      "D_INV_DEATH_KEY": 1,
-      "D_INV_EPIDEMIOLOGY_KEY": 1,
-      "D_INV_HIV_KEY": 1,
-      "D_INV_ISOLATE_TRACKING_KEY": 1,
-      "D_INV_LAB_FINDING_KEY": 1,
-      "D_INV_MEDICAL_HISTORY_KEY": 1,
-      "D_INV_MOTHER_KEY": 1,
-      "D_INV_OTHER_KEY": 1,
-      "D_INV_PATIENT_OBS_KEY": 1,
-      "D_INV_PLACE_REPEAT_KEY": 1.0,
-      "D_INV_PREGNANCY_BIRTH_KEY": 1,
-      "D_INV_RESIDENCY_KEY": 1,
-      "D_INV_RISK_FACTOR_KEY": 1,
-      "D_INV_SOCIAL_HISTORY_KEY": 1,
-      "D_INV_SYMPTOM_KEY": 1,
-      "D_INV_TRAVEL_KEY": 1,
-      "D_INV_TREATMENT_KEY": 1,
-      "D_INV_UNDER_CONDITION_KEY": 1,
-      "D_INV_VACCINATION_KEY": 1,
-      "FACILITY_FLD_FOLLOW_UP_KEY": 1,
-      "GEOCODING_LOCATION_KEY": 1,
-      "HOSPITAL_KEY": 1,
-      "INIT_ASGNED_FLD_FOLLOW_UP_KEY": 2,
-      "INIT_ASGNED_INTERVIEWER_KEY": 1,
-      "INIT_FOLLOW_UP_INVSTGTR_KEY": 1,
-      "INTERVIEWER_ASSIGNED_KEY": 1,
-      "INVESTIGATOR_KEY": 2,
-      "INVSTGTR_FLD_FOLLOW_UP_KEY": 2,
-      "LAST_CHG_DATE_KEY": 13306,
-      "MOTHER_OB_GYN_KEY": 1,
-      "ORDERING_FACILITY_KEY": 1,
-      "ORG_AS_REPORTER_KEY": 1,
-      "PEDIATRICIAN_KEY": 1,
-      "PERSON_AS_REPORTER_KEY": 1,
-      "PHYSICIAN_KEY": 1,
-      "PROVIDER_FLD_FOLLOW_UP_KEY": 1,
-      "SUPRVSR_OF_CASE_ASSGNMENT_KEY": 1,
-      "SUPRVSR_OF_FLD_FOLLOW_UP_KEY": 1,
-      "SURVEILLANCE_INVESTIGATOR_KEY": 1
+      "skip_this": 1
     }
   ],
   "8": [
