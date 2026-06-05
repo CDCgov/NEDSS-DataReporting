@@ -284,71 +284,194 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
 
             COMMIT TRANSACTION;
 
-        END;
+            BEGIN TRANSACTION
 
-        BEGIN TRANSACTION
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = 'MODIFY MISMATCHED COLUMN TYPES IN ' + @tgt_table_nm;
 
-            SET @Proc_Step_no = @Proc_Step_no + 1;
-            SET @Proc_Step_Name = 'MODIFY MISMATCHED COLUMN TYPES IN ' + @tgt_table_nm;
+                -- For columns that exist in both target and source but with different types,
+                -- SQL Server does not allow ALTER COLUMN between incompatible types (e.g. float -> date).
+                -- Instead, drop the column from the target and re-add it with the correct type.
+                -- The UPDATE step that follows will repopulate the values from the incoming data.
+                set @temp_sql = '
+                WITH type_mismatch_cte AS (
+                    SELECT
+                        src.COLUMN_NAME,
+                        src.DATA_TYPE                  AS src_data_type,
+                        src.CHARACTER_MAXIMUM_LENGTH   AS src_char_max_len,
+                        src.NUMERIC_PRECISION          AS src_num_prec,
+                        src.NUMERIC_SCALE              AS src_num_scale
+                    FROM INFORMATION_SCHEMA.COLUMNS src
+                    INNER JOIN INFORMATION_SCHEMA.COLUMNS tgt
+                        ON  src.COLUMN_NAME   = tgt.COLUMN_NAME
+                        AND src.TABLE_SCHEMA  = tgt.TABLE_SCHEMA
+                    WHERE src.TABLE_NAME  = ''' + @tmp_DynDm_INCOMING_DATA + '''
+                        AND tgt.TABLE_NAME  = ''' + @tgt_table_nm + '''
+                        AND src.TABLE_SCHEMA = ''dbo''
+                        AND tgt.TABLE_SCHEMA = ''dbo''
+                        AND src.DATA_TYPE   <> tgt.DATA_TYPE
+                )
+                SELECT @altercolsOUT = STRING_AGG(
+                    CAST(
+                        ''ALTER TABLE dbo.' + @tgt_table_nm + ' DROP COLUMN '' + QUOTENAME(COLUMN_NAME) + '';'' +
+                        ''ALTER TABLE dbo.' + @tgt_table_nm + ' ADD ''   + QUOTENAME(COLUMN_NAME) + '' '' + src_data_type +
+                        CASE
+                            WHEN src_data_type IN (''decimal'', ''numeric'')
+                                THEN ''('' + CAST(src_num_prec AS NVARCHAR) + '','' + CAST(src_num_scale AS NVARCHAR) + '')''
+                            WHEN src_data_type = ''varchar''
+                                THEN ''('' + CASE WHEN src_char_max_len = -1 THEN ''MAX'' ELSE CAST(src_char_max_len AS NVARCHAR) END + '')''
+                            ELSE ''''
+                        END + '' NULL''
+                        AS NVARCHAR(MAX)
+                    ),
+                    '';'')
+                FROM type_mismatch_cte';
 
-            -- For columns that exist in both target and source but with different types,
-            -- SQL Server does not allow ALTER COLUMN between incompatible types (e.g. float -> date).
-            -- Instead, drop the column from the target and re-add it with the correct type.
-            -- The UPDATE step that follows will repopulate the values from the incoming data.
-            set @temp_sql = '
-            WITH type_mismatch_cte AS (
-                SELECT
-                    src.COLUMN_NAME,
-                    src.DATA_TYPE                  AS src_data_type,
-                    src.CHARACTER_MAXIMUM_LENGTH   AS src_char_max_len,
-                    src.NUMERIC_PRECISION          AS src_num_prec,
-                    src.NUMERIC_SCALE              AS src_num_scale
-                FROM INFORMATION_SCHEMA.COLUMNS src
-                INNER JOIN INFORMATION_SCHEMA.COLUMNS tgt
-                    ON  src.COLUMN_NAME   = tgt.COLUMN_NAME
-                    AND src.TABLE_SCHEMA  = tgt.TABLE_SCHEMA
-                WHERE src.TABLE_NAME  = ''' + @tmp_DynDm_INCOMING_DATA + '''
-                    AND tgt.TABLE_NAME  = ''' + @tgt_table_nm + '''
-                    AND src.TABLE_SCHEMA = ''dbo''
-                    AND tgt.TABLE_SCHEMA = ''dbo''
-                    AND src.DATA_TYPE   <> tgt.DATA_TYPE
-            )
-            SELECT @altercolsOUT = STRING_AGG(
-                CAST(
-                    ''ALTER TABLE dbo.' + @tgt_table_nm + ' DROP COLUMN '' + QUOTENAME(COLUMN_NAME) + '';'' +
-                    ''ALTER TABLE dbo.' + @tgt_table_nm + ' ADD ''   + QUOTENAME(COLUMN_NAME) + '' '' + src_data_type +
-                    CASE
-                        WHEN src_data_type IN (''decimal'', ''numeric'')
-                            THEN ''('' + CAST(src_num_prec AS NVARCHAR) + '','' + CAST(src_num_scale AS NVARCHAR) + '')''
-                        WHEN src_data_type = ''varchar''
-                            THEN ''('' + CASE WHEN src_char_max_len = -1 THEN ''MAX'' ELSE CAST(src_char_max_len AS NVARCHAR) END + '')''
-                        ELSE ''''
-                    END + '' NULL''
-                    AS NVARCHAR(MAX)
-                ),
-                '';'')
-            FROM type_mismatch_cte';
+                DECLARE @altercols_type NVARCHAR(MAX);
 
-            DECLARE @altercols_type NVARCHAR(MAX);
+                if @debug = 'true'
+                select @Proc_Step_Name, @temp_sql;
+
+                exec sp_executesql @temp_sql, N'@altercolsOUT NVARCHAR(MAX) OUTPUT', @altercolsOUT = @altercols_type OUTPUT;
+
+                IF (@altercols_type IS NOT NULL)
+                BEGIN
+                    if @debug = 'true'
+                    select @Proc_Step_Name, @altercols_type;
+
+                    exec sp_executesql @altercols_type;
+                END;
+
+                SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+                INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+                VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+
+            COMMIT TRANSACTION;
+
+            IF OBJECT_ID('dbo.tmp_DynDm_Inactive_Investigations_'+@datamart_suffix, 'U') IS NOT NULL
+            BEGIN
+
+            BEGIN TRANSACTION
+
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = 'DELETING INACTIVE RECORDS FROM ' + @tgt_table_nm;
+
+                set @temp_sql = '
+                DELETE inv 
+                FROM dbo.' + @tgt_table_nm + ' inv 
+                INNER JOIN ' + @tmp_DynDm_INACTIVE_INVESTIGATIONS + ' del_inv 
+                    ON inv.INVESTIGATION_KEY = del_inv.INVESTIGATION_KEY ';
+
+
 
             if @debug = 'true'
             select @Proc_Step_Name, @temp_sql;
 
-            exec sp_executesql @temp_sql, N'@altercolsOUT NVARCHAR(MAX) OUTPUT', @altercolsOUT = @altercols_type OUTPUT;
+            exec sp_executesql @temp_sql;
 
-            IF (@altercols_type IS NOT NULL)
-            BEGIN
+            COMMIT TRANSACTION;
+                
+            END
+            
+
+            BEGIN TRANSACTION
+
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = 'UPDATING ' + @tgt_table_nm;
+
+                set @temp_sql = '
+            select @update_listOUT =  STRING_AGG(''tgt.'' + 
+                                                                    CAST(QUOTENAME(column_name) AS NVARCHAR(MAX)) + 
+                                                                    '' = src.'' + 
+                                                                    CAST(QUOTENAME(column_name) AS NVARCHAR(MAX)), 
+                                                                    '','') from INFORMATION_SCHEMA.columns 
+            where table_name = ''' + @tmp_DynDm_INCOMING_DATA + ''' and TABLE_SCHEMA = ''dbo'' 
+            AND column_name IN (SELECT COLUMN_NAME  
+            FROM INFORMATION_SCHEMA.columns 
+            where table_name = ''' + @tgt_table_nm + ''' and TABLE_SCHEMA = ''dbo'')';
+
+            DECLARE @update_list NVARCHAR(MAX);
+
+            if @debug = 'true'
+            select @Proc_Step_Name, @temp_sql;
+
+            exec sp_executesql @temp_sql, N'@update_listOUT NVARCHAR(MAX) OUTPUT',@update_listOUT = @update_list OUTPUT;
+
+
+
+            DECLARE @update_sql NVARCHAR(MAX) = 
+            '
+            UPDATE tgt 
+            SET 
+            ' + @update_list + ' 
+            FROM dbo.' + @tmp_DynDm_INCOMING_DATA + ' src 
+            LEFT JOIN dbo.' + @tgt_table_nm + ' tgt 
+            ON src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY 
+            WHERE tgt.INVESTIGATION_KEY IS NOT NULL 
+            ';
+
+            if @debug = 'true'
+            select @Proc_Step_Name, @update_sql;
+
+            exec sp_executesql @update_sql;
+
+
+            COMMIT TRANSACTION;
+
+            BEGIN TRANSACTION
+
+                SET @Proc_Step_no = @Proc_Step_no + 1;
+                SET @Proc_Step_Name = 'INSERTING INTO ' + @tgt_table_nm;
+
+                set @temp_sql = '
+                select @col_listOUT = COALESCE(STRING_AGG(CAST(QUOTENAME(column_name) AS NVARCHAR(MAX)), '','') WITHIN GROUP (ORDER BY column_name), 
+                                            '''') from INFORMATION_SCHEMA.columns 
+                where table_name = ''' + @tmp_DynDm_INCOMING_DATA + ''' and TABLE_SCHEMA = ''dbo'' 
+                AND column_name IN (SELECT COLUMN_NAME  
+                FROM INFORMATION_SCHEMA.columns 
+                where table_name = ''' + @tgt_table_nm + ''' and TABLE_SCHEMA = ''dbo'')';
+
+                DECLARE @col_list NVARCHAR(MAX);
+
+                exec sp_executesql @temp_sql, N'@col_listOUT NVARCHAR(MAX) OUTPUT',@col_listOUT = @col_list OUTPUT;
+
+
+                set @temp_sql = '
+                select @insert_listOUT = COALESCE(STRING_AGG(''src.'' + CAST(QUOTENAME(column_name) AS NVARCHAR(MAX)), '','') WITHIN GROUP (ORDER BY column_name), 
+                                            '''') from INFORMATION_SCHEMA.columns 
+                where table_name = ''' + @tmp_DynDm_INCOMING_DATA + ''' and TABLE_SCHEMA = ''dbo'' 
+                AND column_name IN (SELECT COLUMN_NAME  
+                FROM INFORMATION_SCHEMA.columns  
+                where table_name = ''' + @tgt_table_nm + ''' and TABLE_SCHEMA = ''dbo'')';
+
+                DECLARE @insert_list NVARCHAR(MAX);
+
+                exec sp_executesql @temp_sql, N'@insert_listOUT NVARCHAR(MAX) OUTPUT',@insert_listOUT = @insert_list OUTPUT;
+
+
+                DECLARE @insert_query NVARCHAR(MAX) = '
+                INSERT INTO dbo.' + @tgt_table_nm + ' 
+                ('
+                + @col_list +
+                ') 
+                SELECT 
+                '
+                + @insert_list +
+                ' 
+                FROM ' + @tmp_DynDm_INCOMING_DATA + ' src  
+                LEFT JOIN ' + @tgt_table_nm + ' tgt 
+                ON src.INVESTIGATION_KEY = tgt.INVESTIGATION_KEY 
+                WHERE tgt.INVESTIGATION_KEY IS NULL 
+                ';
+
                 if @debug = 'true'
-                select @Proc_Step_Name, @altercols_type;
+                select @Proc_Step_Name, @insert_query;
 
-                exec sp_executesql @altercols_type;
-            END;
+                exec sp_executesql @insert_query;
 
-            SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-            INSERT INTO [dbo].[job_flow_log] (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @dataflow_name, @package_name, 'START', @Proc_Step_no, @Proc_Step_Name, @ROWCOUNT_NO);
+            COMMIT TRANSACTION;
 
-        COMMIT TRANSACTION;
+        END;
 
         /*
             DROP unnecessary tables
