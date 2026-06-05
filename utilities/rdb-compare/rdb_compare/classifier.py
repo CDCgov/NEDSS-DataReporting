@@ -42,6 +42,11 @@ def summarize(report: RunReport) -> dict:
     counts = {v.value: 0 for v in Verdict}
     actionable_tables = 0
     for t in report.tables:
+        if t.skipped:
+            # Skipped tables carry only a table-level IGNORED classification;
+            # their (typically absent) columns must not roll up as NEW.
+            counts[Verdict.IGNORED.value] += 1
+            continue
         has_new = False
         for c in t.columns:
             cls = c.classification or Classification(Verdict.NEW)
