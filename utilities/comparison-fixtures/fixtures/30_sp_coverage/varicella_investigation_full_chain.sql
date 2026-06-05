@@ -43,9 +43,12 @@
 --          resolve correctly. The VAR question UIDs and their
 --          code_set_group_ids were verified live against
 --          NBS_ODSE.dbo.nbs_question on 2026-05-21.
---   3. Does NOT author nrt_investigation_confirmation, additional
---      cross-subject participation/act_relationship, or D_VAR_PAM /
---      F_VAR_PAM directly — those are downstream of the SP chain.
+--   3. nbs_act_entity reporter participations (PerAsReporterOfPHC,
+--      OrgAsReporterOfPHC) so the service derives nac_page_case_uid for
+--      this PHC — required for F_VAR_PAM / VAR_DATAMART (see that block).
+--   4. Does NOT author nrt_investigation_confirmation, other cross-subject
+--      participation/act_relationship, or D_VAR_PAM / F_VAR_PAM directly —
+--      those are downstream of the SP chain.
 --
 -- VERIFICATION CALL-CHAIN (tail-EXECs at bottom)
 --   The chain composes:
@@ -164,6 +167,58 @@ VALUES
      N'FRN-VAR-FULL-01', '2026-04-02T00:00:00',
      '2026-04-30T00:00:00', '2026-04-30T00:00:00');
 SET IDENTITY_INSERT [dbo].[case_management] OFF;
+
+GO
+
+-- =====================================================================
+-- ODSE: nbs_act_entity — reporter participations for the Varicella PHC.
+--
+-- WHY THIS EXISTS (the bug this fixes):
+--   sp_investigation_event (056) derives nrt_investigation.nac_page_case_uid
+--   from nbs_act_entity (056 lines ~910-935: `act_uid AS nac_page_case_uid`,
+--   GROUP BY act_uid). With NO nbs_act_entity row for this PHC the service
+--   leaves nac_page_case_uid = NULL. F_VAR_PAM (240 line 65) keys its grain on
+--   CAST(nac_page_case_uid AS BIGINT) and INNER JOINs D_VAR_PAM on it, so a
+--   NULL silently drops the row → F_VAR_PAM = 0 → VAR_DATAMART = 0 (even though
+--   D_VAR_PAM itself, keyed on public_health_case_uid, populates fine). The TB
+--   twin gets these participations from zz_tb_dedicated_entities.sql; the
+--   Varicella case had none — that omission, NOT the TMP_F_PAGE_CASE datamart
+--   isolation issue, is why the Varicella PAM datamart stayed empty.
+--
+-- Reuses the foundation Person (20000010) and Organization (20000020) as the
+-- reporter so no new entity rows are needed. IDENTITY note: nbs_act_entity_uid
+-- is IDENTITY — let it auto-assign and guard on the natural key
+-- (act_uid, entity_uid, type_cd), per the TB fixture.
+-- =====================================================================
+
+DECLARE @superuser_id_nae bigint = 10009282;
+DECLARE @var_full_phc_uid_nae bigint = 22002000;
+DECLARE @foundation_person_uid bigint = 20000010;  -- foundation Person (PSN)
+DECLARE @foundation_org_uid    bigint = 20000020;  -- foundation Organization (ORG)
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_act_entity]
+               WHERE act_uid = @var_full_phc_uid_nae AND entity_uid = @foundation_person_uid
+                 AND type_cd = 'PerAsReporterOfPHC')
+INSERT INTO [dbo].[nbs_act_entity]
+    ([act_uid], [entity_uid], [type_cd], [entity_version_ctrl_nbr],
+     [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
+     [record_status_cd], [record_status_time])
+VALUES
+    (@var_full_phc_uid_nae, @foundation_person_uid, N'PerAsReporterOfPHC', 1,
+     '2026-04-01T00:00:00', @superuser_id_nae, '2026-04-01T00:00:00', @superuser_id_nae,
+     N'ACTIVE', '2026-04-01T00:00:00');
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_act_entity]
+               WHERE act_uid = @var_full_phc_uid_nae AND entity_uid = @foundation_org_uid
+                 AND type_cd = 'OrgAsReporterOfPHC')
+INSERT INTO [dbo].[nbs_act_entity]
+    ([act_uid], [entity_uid], [type_cd], [entity_version_ctrl_nbr],
+     [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
+     [record_status_cd], [record_status_time])
+VALUES
+    (@var_full_phc_uid_nae, @foundation_org_uid, N'OrgAsReporterOfPHC', 1,
+     '2026-04-01T00:00:00', @superuser_id_nae, '2026-04-01T00:00:00', @superuser_id_nae,
+     N'ACTIVE', '2026-04-01T00:00:00');
 
 GO
 
