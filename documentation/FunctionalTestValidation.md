@@ -15,7 +15,7 @@ These instructions should be performed in the order displayed here.
 ### 2) Prepare for tracing and execute SQL in sequence
 4. Run `trace_db_logical_changes.py` pointing to RDB.
 ```shell
-python utilities/local-db-tracing/trace_db_logical_changes.py --database RDB --user sa --password PizzaIsGood33\!
+python testing-tools/local-db-tracing/trace_db_logical_changes.py --database RDB --user sa --password PizzaIsGood33\!
 ```
 5. Using `sqlcmd`, execute the SQL files in the most logical order (e.g., first patient, then morbidity report).
 ```shell
@@ -104,7 +104,7 @@ DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN20100000GA02'
 ```
 4. `trace_db_logical_changes.py` was executed pointing to the RDB.
 ```shell
-python utilities/local-db-tracing/trace_db_logical_changes.py --database RDB --user sa --password PizzaIsGood33\!
+python testing-tools/local-db-tracing/trace_db_logical_changes.py --database RDB --user sa --password PizzaIsGood33\!
 ```
 5. The following commands were executed to first create the patient, then create their morbidity report:
 ```shell
@@ -114,7 +114,7 @@ sqlcmd -S localhost,3433 -U sa -P "PizzaIsGood33\!" -b -C -i 010-addPatient/setu
 sqlcmd -S localhost,3433 -U sa -P "PizzaIsGood33\!" -b -C -i 020-addMorbidityReport/setup.sql
 ```
 6. Press **ENTER** in the python tracing program...
-7. Review the results in `utilities/local-db-tracing/output/20260423-183127-RDB/logical-changes.md`. Sample below:
+7. Review the results in `testing-tools/local-db-tracing/output/20260423-183127-RDB/logical-changes.md`. Sample below:
 ## 113. INSERT dbo.MORBIDITY_REPORT
 
 | Metric | Value |

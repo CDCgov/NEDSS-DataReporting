@@ -61,7 +61,7 @@ below — do not re-derive from the SP source alone.**
 
 ## Source artifacts (your raw material)
 
-All paths relative to `utilities/comparison-fixtures/`.
+All paths relative to `testing-tools/synthetic-odse-fixtures/`.
 
 | Artifact | What it gives you |
 | --- | --- |
@@ -164,7 +164,7 @@ counts, anything that surprised you.
 
 ## Orchestration steps (you, the entrypoint session)
 
-1. `mkdir -p utilities/comparison-fixtures/lineage/{sections,columns}`.
+1. `mkdir -p testing-tools/synthetic-odse-fixtures/lineage/{sections,columns}`.
 2. Spawn L1–L6 in parallel (one message, multiple Agent calls,
    `run_in_background: true`, worktree isolation).
 3. As each completes: cherry-pick / copy its `sections/` + `columns/`

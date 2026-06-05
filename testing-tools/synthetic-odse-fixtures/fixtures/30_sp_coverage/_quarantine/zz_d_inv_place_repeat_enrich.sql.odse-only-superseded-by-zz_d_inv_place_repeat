@@ -7,7 +7,7 @@
 --   D_INV_PLACE_REPEAT was 1 row / 1 populated col (sentinel only)
 --   because two things were both true pre-this-fixture:
 --     (a) sp_repeated_place_postprocessing is NOT invoked anywhere
---         in utilities/comparison-fixtures/scripts/merge_and_verify.sh
+--         in testing-tools/synthetic-odse-fixtures/scripts/merge_and_verify.sh
 --         (Steps 5/7/8.5/9 all skip it).  See ORCH_TODO in the
 --         agent-D2 final report — orchestrator wire-up is required
 --         BEFORE this fixture moves the needle in the merge run.

@@ -24,7 +24,7 @@ How to run (sqlcmd on localhost:3433):
 Required state:
     - dbo.nrt_provider must contain rows for UID 20000010 (foundation Provider)
       and 20010010 (v2 Provider). These are seeded by
-      utilities/comparison-fixtures/fixtures/10_subjects/provider.sql
+      testing-tools/synthetic-odse-fixtures/fixtures/10_subjects/provider.sql
       (foundation UID 20000010, v2 UID 20010010 per coverage_provider.md).
     - dbo.D_PROVIDER must already contain rows for those UIDs (i.e.
       sp_nrt_provider_postprocessing has been run against them at least once,

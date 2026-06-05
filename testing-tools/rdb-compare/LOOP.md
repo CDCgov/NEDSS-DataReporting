@@ -11,10 +11,10 @@ pipeline cooperates, a *real* RDB-vs-RDB_MODERN comparison report on disk.
    live run.
 
 ## Live-run workflow (the stretch path)
-1. `utilities/comparison-fixtures/scripts/merge_and_verify.sh` — `down -v`, bring
+1. `testing-tools/synthetic-odse-fixtures/scripts/merge_and_verify.sh` — `down -v`, bring
    up the stack (mssql/kafka/connect/debezium/reporting-pipeline-service),
    liquibase, apply fixtures through real CDC → populates **RDB_MODERN**.
-2. `utilities/comparison-fixtures/scripts/run_masteretl_local.sh` (lives on branch
+2. `testing-tools/synthetic-odse-fixtures/scripts/run_masteretl_local.sh` (lives on branch
    `aw/masteretl-local-fixtures`) — brings up SAS, fixes the autoexec password
    bug, runs MasterETL → populates **RDB** from the same NBS_ODSE.
 3. `uv run rdb-compare --host localhost --port 3433 --user sa --rdb RDB --modern RDB_MODERN --out ./out`

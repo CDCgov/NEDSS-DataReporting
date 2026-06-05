@@ -13,11 +13,11 @@ Verified locally: post-fix, `HEPATITIS_DATAMART` has > 0 rows, and `job_flow_log
 [APP-471](https://cdc-nbs.atlassian.net/browse/APP-471)
 
 ## Additional Notes
-The 5b commit modifies `utilities/comparison-fixtures/scripts/merge_and_verify.sh`, which only exists on the `aw/odse-test-seed` branch (the test-seed work). Because of this, the fix branch was based on `aw/odse-test-seed` rather than `main` and the branch contains the full comparison-fixtures content. If reviewing only the RTR-side fix (5a) is preferred, cherry-pick the 5a commit onto a fresh branch off `main`.
+The 5b commit modifies `testing-tools/synthetic-odse-fixtures/scripts/merge_and_verify.sh`, which only exists on the `aw/odse-test-seed` branch (the test-seed work). Because of this, the fix branch was based on `aw/odse-test-seed` rather than `main` and the branch contains the full comparison-fixtures content. If reviewing only the RTR-side fix (5a) is preferred, cherry-pick the 5a commit onto a fresh branch off `main`.
 
 The original brief listed 10 condition-datamart SPs as sharing this bug, and hypothesized transaction-isolation as the root cause. Investigation ruled both out: only `sp_hepatitis_datamart_postprocessing` references `#TMP_F_PAGE_CASE` (the other 9 SPs use different temp-table structures and have unrelated 0-row symptoms that need separate investigation), and 5 isolation hypotheses (RCSI, BEGIN TRANSACTION scoping, NOLOCK, STRING_SPLIT type conv, parameter sniffing) were ruled out empirically.
 
-No `testData/unit` fixture was added: the SP wraps each step in `BEGIN TRANSACTION/COMMIT`, so `job_flow_log` rows the test would assert on get rolled back at test-harness teardown. The 5a fix is verified via the repro path in `utilities/comparison-fixtures/bugs/05_tmp_f_page_case_family/repro.sql`.
+No `testData/unit` fixture was added: the SP wraps each step in `BEGIN TRANSACTION/COMMIT`, so `job_flow_log` rows the test would assert on get rolled back at test-harness teardown. The 5a fix is verified via the repro path in `testing-tools/synthetic-odse-fixtures/bugs/05_tmp_f_page_case_family/repro.sql`.
 
 ## Checklist
 - [ ] I have ensured that the pull request is of a manageable size, allowing it to be reviewed within a single session.

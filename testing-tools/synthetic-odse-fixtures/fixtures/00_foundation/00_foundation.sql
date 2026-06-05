@@ -7,7 +7,7 @@ GO
 -- Single canonical instance of each parent entity. No SP execution.
 -- No cross-subject act_relationship / participation / nbs_act_entity rows.
 -- All UIDs are allocated within Tier 0 block 20000000 - 20009999.
--- See utilities/comparison-fixtures/catalog/uid_ranges.md for the registry.
+-- See testing-tools/synthetic-odse-fixtures/catalog/uid_ranges.md for the registry.
 -- =====================================================================
 
 -- ----- Sentinel reference (do not allocate — assumed by all fixtures) -----

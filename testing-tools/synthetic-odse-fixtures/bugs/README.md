@@ -167,7 +167,7 @@ cd <repo-root>/NEDSS-DataReporting
 docker compose down -v && docker compose up -d nbs-mssql liquibase
 # Wait for liquibase exit 0 (~3-5 min)
 
-cd utilities/comparison-fixtures
+cd testing-tools/synthetic-odse-fixtures
 ./scripts/merge_and_verify.sh    # Run end-to-end merge
 
 # Run the specific bug's repro

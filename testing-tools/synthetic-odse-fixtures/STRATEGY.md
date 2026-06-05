@@ -359,7 +359,7 @@ Reservation rules:
 ## Output layout
 
 ```
-NEDSS-DataReporting/utilities/comparison-fixtures/
+NEDSS-DataReporting/testing-tools/synthetic-odse-fixtures/
 ├── STRATEGY.md                          # this file
 ├── catalog/
 │   ├── rtr_target_columns.md            # Phase 0 output

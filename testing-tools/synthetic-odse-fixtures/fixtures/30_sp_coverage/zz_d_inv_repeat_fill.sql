@@ -94,7 +94,7 @@
 --
 -- ORCH_TODO (REQUIRED for these to populate):
 --   Add 22047000 and 22047500 to PHC_UIDS in
---   utilities/comparison-fixtures/scripts/merge_and_verify.sh so the
+--   testing-tools/synthetic-odse-fixtures/scripts/merge_and_verify.sh so the
 --   Step-8.5 sp_sld_investigation_repeat_postprocessing @phc_id_list
 --   includes them. Without this the SP never sees the new PHCs.
 --

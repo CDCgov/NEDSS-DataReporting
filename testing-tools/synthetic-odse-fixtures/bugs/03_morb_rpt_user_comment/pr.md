@@ -11,7 +11,7 @@ Verified locally: truncated `MORB_RPT_USER_COMMENT`, ran the SP for the seeded m
 [APP-471](https://cdc-nbs.atlassian.net/browse/APP-471)
 
 ## Additional Notes
-No `testData/unit` fixture — exercising the SP needs ~10 seeded tables across both DBs. End-to-end repro is in `utilities/comparison-fixtures/bugs/03_morb_rpt_user_comment/repro.sql`.
+No `testData/unit` fixture — exercising the SP needs ~10 seeded tables across both DBs. End-to-end repro is in `testing-tools/synthetic-odse-fixtures/bugs/03_morb_rpt_user_comment/repro.sql`.
 
 ## Checklist
 - [ ] I have ensured that the pull request is of a manageable size, allowing it to be reviewed within a single session.

@@ -30,7 +30,7 @@ set -euo pipefail
 # --------------------------------------------------------------------
 
 # Base directories (script lives in scripts/, project lives 2 levels up
-# under NEDSS-DataReporting/utilities/comparison-fixtures/).
+# under NEDSS-DataReporting/testing-tools/synthetic-odse-fixtures/).
 readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 readonly FIXTURES_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 readonly NEDSS_DR_ROOT="$( cd "$FIXTURES_ROOT/../.." && pwd )"

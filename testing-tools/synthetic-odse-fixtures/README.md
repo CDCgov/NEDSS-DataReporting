@@ -54,7 +54,7 @@ routine #24/#25) and out-of-bounds tables (`var_datamart`, `covid_lab*`, `aggreg
 
 ## Running it
 ```sh
-cd utilities/comparison-fixtures
+cd testing-tools/synthetic-odse-fixtures
 ./scripts/merge_and_verify.sh    # down -v; build; up; apply ODSE fixtures tier-by-tier; drain (~15-20 min)
 ./scripts/coverage_summary.sh    # regenerate coverage/coverage_merged.md
 ```
@@ -62,7 +62,7 @@ Requires only the baseline NBS images (no external dependencies).
 
 ## Layout
 ```
-utilities/comparison-fixtures/
+testing-tools/synthetic-odse-fixtures/
 ├── README.md  STRATEGY.md  METHODOLOGY.md  NO_SHORTCUT_FINDINGS.md  LINEAGE.md
 ├── catalog/        Reference: target columns, edge types, UID ranges, table classification
 ├── coverage/       coverage_merged.md (regenerated headline report)

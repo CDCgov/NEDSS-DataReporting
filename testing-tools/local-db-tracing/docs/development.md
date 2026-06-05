@@ -50,7 +50,7 @@ local-db-tracing/
 
 1. **Clone repository**:
    ```bash
-   cd utilities/local-db-tracing
+   cd testing-tools/local-db-tracing
    ```
 
 2. **Create virtual environment**:

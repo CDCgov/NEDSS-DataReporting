@@ -34,7 +34,7 @@ in one place. Values:
                   Also the catch-all for INFERRED rows whose exact op the
                   fan-out could not isolate ("composed in guarded SELECT").
 
-Run from utilities/comparison-fixtures/:  python3 scripts/build_lineage_columns.py
+Run from testing-tools/synthetic-odse-fixtures/:  python3 scripts/build_lineage_columns.py
 """
 import json
 import sys
