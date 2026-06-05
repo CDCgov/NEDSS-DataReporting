@@ -3,7 +3,6 @@
 -- dbo.CASE_COUNT | operations: insert
 -- Query: 0
 -- Step: 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADT_HSPTL_KEY],
     [CASE_COUNT],
@@ -13,7 +12,7 @@ SELECT
     [INV_RPT_DT_KEY],
     [INV_START_DT_KEY]
 FROM [RDB_MODERN].[dbo].[CASE_COUNT]
-WHERE [INVESTIGATION_KEY] = (select INVESTIGATION_KEY from INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
+WHERE [INVESTIGATION_KEY] = (select INVESTIGATION_KEY from [RDB_MODERN].[dbo].INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
 ;
 
 -- dbo.CASE_LAB_DATAMART | operations: insert
@@ -62,18 +61,15 @@ WHERE [INVESTIGATION_LOCAL_ID] = N'CAS1000010004GA01'
 -- dbo.CONFIRMATION_METHOD_GROUP | operations: insert
 -- Query: 2
 -- Step: 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [CONFIRMATION_DT]
 FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD_GROUP]
-WHERE [CONFIRMATION_METHOD_KEY] = 1
-  AND [INVESTIGATION_KEY] = 4
+WHERE [INVESTIGATION_KEY] = (select INVESTIGATION_KEY from [RDB_MODERN].[dbo].INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
 ;
 
 -- dbo.D_CASE_MANAGEMENT | operations: insert
 -- Query: 3
 -- Step: 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ACT_REF_TYPE_CD],
     [ADD_USER_ID],
@@ -141,13 +137,12 @@ SELECT
     [SURV_PROVIDER_EXAM_REASON],
     [SURV_PROV_EXM_REASON]
 FROM [RDB_MODERN].[dbo].[D_CASE_MANAGEMENT]
-WHERE [INVESTIGATION_KEY]=(select INVESTIGATION_KEY from INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
+WHERE [INVESTIGATION_KEY]=(select INVESTIGATION_KEY from [RDB_MODERN].[dbo].INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
 ;
 
 -- dbo.D_INV_ADMINISTRATIVE | operations: insert
 -- Query: 4
 -- Step: 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [ADM_ABSTRACTION_DT],
     [ADM_ABSTRACTOR_NM],
@@ -391,7 +386,6 @@ WHERE [D_INV_ADMINISTRATIVE_KEY] = 4
 -- dbo.INV_HIV | operations: insert
 -- Query: 8
 -- Step: 2
--- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [D_INV_HIV_KEY],
     [HIV_900_RESULT],
@@ -412,7 +406,7 @@ SELECT
     [HIV_SELF_REPORTED_RSLT_900],
     [HIV_STATE_CASE_ID]
 FROM [RDB_MODERN].[dbo].[INV_HIV]
-WHERE [INVESTIGATION_KEY]=(select INVESTIGATION_KEY from INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
+WHERE [INVESTIGATION_KEY]=(select INVESTIGATION_KEY from [RDB_MODERN].[dbo].INVESTIGATION where INV_LOCAL_ID='CAS1000010004GA01')
 ;
 
 -- dbo.INV_SUMM_DATAMART | operations: insert
