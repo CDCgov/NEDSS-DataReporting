@@ -49,7 +49,13 @@ log() { printf '\033[1;36m[masteretl]\033[0m %s\n' "$*"; }
 cd "$NEDSS_DR_ROOT"
 
 log "Bringing up the sas container (profile-gated)..."
-docker compose up sas -d >/dev/null 2>&1
+# --force-recreate: a prior `down -v` (e.g. from merge_and_verify.sh) drops and
+# recreates the compose network, but the profile-gated sas container is NOT
+# recreated by that up, so it lingers bound to the now-deleted network and a
+# plain `up sas` fails with "network <id> not found". Recreating it fresh binds
+# it to the current network. stderr is left visible so a real failure surfaces
+# instead of aborting silently after this line.
+docker compose up sas -d --force-recreate >/dev/null
 
 log "Waiting for SAS Connect Spawner to initialize..."
 for _ in $(seq 1 30); do
