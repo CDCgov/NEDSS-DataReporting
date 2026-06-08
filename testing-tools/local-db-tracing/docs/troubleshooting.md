@@ -12,8 +12,8 @@ pyodbc.OperationalError: ('08001', '[08001] [Microsoft][ODBC Driver 17 for SQL S
 **Diagnosis**:
 - Run network connectivity test:
   ```bash
-  ping <DB_HOST>
-  telnet <DB_HOST> 1433
+  ping <DATABASE_SERVER>
+  telnet <DATABASE_SERVER> 1433
   ```
 
 **Solutions**:
@@ -26,7 +26,7 @@ pyodbc.OperationalError: ('08001', '[08001] [Microsoft][ODBC Driver 17 for SQL S
 2. **Check firewall settings**:
    - Allow outbound TCP 1433 (SQL Server default)
    - Verify firewall on database server allows inbound connections
-   - Test with: `telnet <DB_HOST> 1433`
+   - Test with: `telnet <DATABASE_SERVER> 1433`
 
 3. **Verify database is running**:
    ```sql
@@ -45,10 +45,10 @@ pyodbc.OperationalError: ('08001', '[08001] [Microsoft][ODBC Driver 17 for SQL S
 
 5. **Test with explicit host and port**:
    ```bash
-   python trace_db_cdc.py \
-     --host sqlserver.example.com \
+   python testing-tools/local-db-tracing/trace_db_cdc.py \
+     --server sqlserver.example.com \
      --port 1433 \
-     --username sa \
+     --user sa \
      --password "password"
    ```
 
@@ -200,7 +200,7 @@ EXEC sys.sp_cdc_help_change_capture @source_schema = 'dbo', @source_name = 'pers
    - When prompted, select a larger time range
    - Or specify explicitly:
      ```bash
-     python trace_db_cdc.py \
+     python testing-tools/local-db-tracing/trace_db_cdc.py \
        --start-lsn "0x00000000:00000000:0000" \
        --end-lsn "0x00000500:00000000:0000"
      ```
@@ -211,7 +211,7 @@ EXEC sys.sp_cdc_help_change_capture @source_schema = 'dbo', @source_name = 'pers
    UPDATE dbo.person SET first_name = UPPER(first_name) WHERE person_uid = 1
    
    # Then re-run trace
-   python trace_db_cdc.py
+   python testing-tools/local-db-tracing/trace_db_cdc.py
    ```
 
 3. **Check CDC cleanup jobs**:
@@ -267,7 +267,7 @@ tail -50 logs/tracing.log | grep -i "post.process"
 
 1. **Increase timeout**:
    ```bash
-   python trace_db_cdc.py --timeout 900  # 15 minutes
+   python testing-tools/local-db-tracing/trace_db_cdc.py --timeout 900  # 15 minutes
    ```
 
 2. **Check for stuck processes**:
@@ -281,7 +281,7 @@ tail -50 logs/tracing.log | grep -i "post.process"
 
 3. **Reduce batch size** (reduces per-batch processing time):
    ```bash
-   python trace_db_cdc.py --batch-size 500
+   python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 500
    ```
 
 4. **Check disk space** (post-processing may fail with full disk):
@@ -301,7 +301,7 @@ MemoryError: Unable to allocate memory for batch processing
 
 1. **Reduce batch size**:
    ```bash
-   python trace_db_cdc.py --batch-size 250
+   python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 250
    ```
 
 2. **Enable compression**:
@@ -313,15 +313,15 @@ MemoryError: Unable to allocate memory for batch processing
 3. **Stream output instead of buffering**:
    ```bash
    # Depends on implementation
-   python trace_db_cdc.py | tee output.log
+   python testing-tools/local-db-tracing/trace_db_cdc.py | tee output.log
    ```
 
 4. **Split large captures**:
    ```bash
    # Run multiple smaller captures with disjoint LSN ranges
-   python trace_db_cdc.py --batch-size 100  # First batch
+   python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 100  # First batch
    # After completion, resume:
-   python trace_db_cdc.py  # Auto-resumes from checkpoint
+   python testing-tools/local-db-tracing/trace_db_cdc.py  # Auto-resumes from checkpoint
    ```
 
 ### Output Files Corrupted or Incomplete
@@ -351,7 +351,7 @@ tail logs/tracing.log | grep -i "error\|exception"
 
 2. **Re-run capture** (with checkpoints):
    ```bash
-   python trace_db_cdc.py  # Resumes from last checkpoint
+   python testing-tools/local-db-tracing/trace_db_cdc.py  # Resumes from last checkpoint
    ```
 
 3. **Manual cleanup if needed**:
@@ -360,7 +360,7 @@ tail logs/tracing.log | grep -i "error\|exception"
    mv output/YYYYMMDD/ output/YYYYMMDD_.backup
    
    # Re-run capture
-   python trace_db_cdc.py
+   python testing-tools/local-db-tracing/trace_db_cdc.py
    ```
 
 ---
@@ -392,12 +392,12 @@ WHERE ModifiedDate BETWEEN @start_time AND @end_time
    - Database server vs. client system time
    ```bash
    # Use ISO 8601 format (includes timezone)
-   python trace_db_logical_changes.py --start-time "2024-01-15T14:30:00Z"
+   python testing-tools/local-db-tracing/trace_db_logical_changes.py --start-time "2024-01-15T14:30:00Z"
    ```
 
 3. **Expand time window**:
    ```bash
-   python trace_db_logical_changes.py \
+   python testing-tools/local-db-tracing/trace_db_logical_changes.py \
      --start-time "2024-01-15T00:00:00Z" \
      --end-time "2024-01-16T00:00:00Z"
    ```
@@ -412,7 +412,7 @@ WHERE ModifiedDate BETWEEN @start_time AND @end_time
 
 1. **Reduce scope to specific tables**:
    ```bash
-   python trace_db_logical_changes.py \
+   python testing-tools/local-db-tracing/trace_db_logical_changes.py \
      --deep-compare \
      --tables "dbo.person,dbo.investigation"
    ```
@@ -420,7 +420,7 @@ WHERE ModifiedDate BETWEEN @start_time AND @end_time
 2. **Use shallow compare for large result sets**:
    ```bash
    # First run without deep compare
-   python trace_db_logical_changes.py \
+   python testing-tools/local-db-tracing/trace_db_logical_changes.py \
      --start-time "2024-01-15T14:30:00Z" \
      --end-time "2024-01-15T15:00:00Z"
    
@@ -429,7 +429,7 @@ WHERE ModifiedDate BETWEEN @start_time AND @end_time
 
 3. **Increase timeout and reduce batch size**:
    ```bash
-   python trace_db_logical_changes.py \
+   python testing-tools/local-db-tracing/trace_db_logical_changes.py \
      --deep-compare \
      --batch-size 100 \
      --timeout 1200
@@ -451,7 +451,7 @@ WHERE ModifiedDate BETWEEN @start_time AND @end_time
 **Debug**:
 ```bash
 # Enable debug logging
-LOG_LEVEL=DEBUG python trace_db_logical_changes.py --deep-compare
+LOG_LEVEL=DEBUG python testing-tools/local-db-tracing/trace_db_logical_changes.py --deep-compare
 ```
 
 **Solutions**:
@@ -492,7 +492,7 @@ DBCC INPUTBUFFER(<spid>)  -- Check query being executed
 
 1. **Increase batch size** (fewer round-trips):
    ```bash
-   python trace_db_cdc.py --batch-size 5000
+   python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 5000
    ```
 
 2. **Reduce concurrent connections**:
@@ -508,7 +508,7 @@ DBCC INPUTBUFFER(<spid>)  -- Check query being executed
 4. **Verify network performance**:
    ```bash
    # Test latency to database server
-   ping <DB_HOST>
+   ping <DATABASE_SERVER>
    
    # Test bandwidth
    # Transfer test file to/from database server
@@ -520,18 +520,18 @@ DBCC INPUTBUFFER(<spid>)  -- Check query being executed
 
 1. **Reduce batch size** (less buffering):
    ```bash
-   python trace_db_cdc.py --batch-size 250
+   python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 250
    ```
 
 2. **Limit concurrent threads**:
    ```bash
-   MAX_CONNECTIONS=2 python trace_db_cdc.py
+   MAX_CONNECTIONS=2 python testing-tools/local-db-tracing/trace_db_cdc.py
    ```
 
 3. **Use process priority control**:
    ```bash
    # Linux/Mac
-   nice -n 10 python trace_db_cdc.py
+   nice -n 10 python testing-tools/local-db-tracing/trace_db_cdc.py
    
    # Windows PowerShell
    $pythonProcess = Get-Process -Name python
@@ -544,12 +544,12 @@ DBCC INPUTBUFFER(<spid>)  -- Check query being executed
 
 1. **Enable compression**:
    ```bash
-   COMPRESSION=gzip python trace_db_cdc.py
+   COMPRESSION=gzip python testing-tools/local-db-tracing/trace_db_cdc.py
    ```
 
 2. **Reduce batch size**:
    ```bash
-   python trace_db_cdc.py --batch-size 100
+   python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 100
    ```
 
 3. **Increase `OUTPUT_DIR` scan frequency** (flush to disk more often):
@@ -624,12 +624,12 @@ IOError: [Errno 28] No space left on device
 
 3. **Enable compression to reduce size**:
    ```bash
-   COMPRESSION=gzip python trace_db_cdc.py
+   COMPRESSION=gzip python testing-tools/local-db-tracing/trace_db_cdc.py
    ```
 
 4. **Use external disk for output**:
    ```bash
-   python trace_db_cdc.py --output-dir /mnt/external-disk/traces
+   python testing-tools/local-db-tracing/trace_db_cdc.py --output-dir /mnt/external-disk/traces
    ```
 
 ---
@@ -640,13 +640,13 @@ IOError: [Errno 28] No space left on device
 
 ```bash
 # Via environment variable
-LOG_LEVEL=DEBUG python trace_db_cdc.py
+LOG_LEVEL=DEBUG python testing-tools/local-db-tracing/trace_db_cdc.py
 
 # Via .env file
 echo "LOG_LEVEL=DEBUG" >> .env
 
 # Capture to file for analysis
-LOG_LEVEL=DEBUG python trace_db_cdc.py > debug_output.txt 2>&1
+LOG_LEVEL=DEBUG python testing-tools/local-db-tracing/trace_db_cdc.py > debug_output.txt 2>&1
 tail -f debug_output.txt  # Watch in real-time
 ```
 
