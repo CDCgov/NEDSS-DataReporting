@@ -17,21 +17,22 @@ python testing-tools/local-db-tracing/trace_db_dual_capture.py
 ```
 
 2. Replay your NBS flow, then finish capture in the tracer prompts.
-3. Replay the captured inserts into ODSE via `replay_setup.py`:
+3. Repeat steps 4 & 5 for each step in your paired run:
+4. Replay the captured inserts into ODSE via `replay_setup.py`:
 
 ```powershell
-python testing-tools/local-db-tracing/replay_setup.py --setup-sql testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql --auto-datetime-mode preserve --server localhost,3433 --user sa --password "<password>"
+python testing-tools/local-db-tracing/replay_setup.py --setup-sql testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/step-x/inserts.sql
 ```
 
 When prompted for UID renumbering, press Enter to keep existing IDs.
 
-4. Validate generated RDB queries:
+5. Validate generated RDB queries:
 
 ```powershell
-python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/<paired-run>/logical-RDB_MODERN/step-x/rdb-selects.sql
 ```
 
-5. Promote artifacts (`setup.sql`, `query.sql`, `expected.json`) into the functional test step folder.
+6. Finally, promote artifacts (`setup.sql`, `query.sql`, `expected.json`) into the functional test step folder.
 
 ## End-To-End: Create A Functional Test From A Recorded User Flow
 
@@ -49,8 +50,8 @@ This workflow is the repeatable process for turning a real UI flow into function
 ### Required Inputs Before You Start
 
 1. A target scenario (for example, one step in a functional path)
-2. A Chrome Recorder export for that scenario (`.json`)
-3. A destination test step folder under `reporting-pipeline-service/src/test/resources/testData/functional/<suite>/<step>/`
+2. A Chrome Recorder export for that scenario (`.json`, optional)
+3. A destination test step folder under `reporting-pipeline-service/src/test/resources/testData/functional/<scenario>/`
 
 ### ID Range Registry
 
@@ -74,7 +75,7 @@ python testing-tools/local-db-tracing/trace_db_dual_capture.py --server localhos
 7. Replay `inserts.sql` in the paired run's `cdc-<database>/` folder against ODSE via `replay_setup.py`.
 
 ```powershell
-python testing-tools/local-db-tracing/replay_setup.py --setup-sql testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql --auto-datetime-mode preserve --server localhost,3433 --user sa --password "<password>"
+python testing-tools/local-db-tracing/replay_setup.py --setup-sql testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql
 ```
 
 When prompted for UID renumbering, press Enter to keep existing IDs.
@@ -82,13 +83,14 @@ When prompted for UID renumbering, press Enter to keep existing IDs.
 8. Run `validate_rdb_selects.py`:
 
 ```powershell
-python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql --server localhost,3433 --user sa --password "<password>"
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
 9. Review results in `rdb-selects-results.md`:
 
 - `testing-tools/local-db-tracing/output/<paired-run>/rdb-selects-results.md`
 - confirm each case is passing, or note mismatches to fix before promoting artifacts
+- this is when you'd update WHERE conditions, remove _KEY fields, etc.
 
 10. Create the functional test artifacts:
 
@@ -111,7 +113,7 @@ cd reporting-pipeline-service
 
 ### Validation Checklist Before Opening A PR
 
-- `setup.sql` replays cleanly with `sqlcmd -b`
+- `setup.sql` replays cleanly with `replay_setup.py`
 - `query.sql` statements are ordered and map to `expected.json` keys (`"0"`, `"1"`, ...)
 - `expected.json` is valid JSON and contains only stable assertions
 - `rdb-selects-results.md` is all pass, or you intentionally updated assertions to match expected behavior
@@ -122,8 +124,10 @@ cd reporting-pipeline-service
 - No data returned in validator results:
 	- Confirm `inserts.sql` ran successfully against ODSE.
 	- Re-run validation after post-processing is idle.
+    - Check the where clause; use the defined parameter values in inserts.sql versus _KEYs
 - Unexpected timestamp mismatches:
 	- For date-only fields (captured with `T00:00:00.000`), prefer `CURRENT_DATE` when replaying setup values.
+    - Known mismatch: `T00:00:00.000` vs `T00:00:00`
 - Validator parse or case errors:
 	- Ensure `query.sql` has valid `SELECT`/`WITH` statements and `expected.json` keys match statement order.
 - Functional test flakiness:
