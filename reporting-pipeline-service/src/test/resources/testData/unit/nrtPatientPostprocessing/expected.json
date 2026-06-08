@@ -14,5 +14,29 @@
       "RACE_CALCULATED": "White",
       "RACE_CALC_DETAILS": "White"
     }
+  ],
+  "2": [
+    {
+      "INVESTIGATION_KEY": 90300002,
+      "PATIENT_FIRST_NAME": "Jane",
+      "PATIENT_BIRTH_COUNTRY": "USA",
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White",
+      "CALC_REPORTED_AGE": 46,
+      "CALC_5_YEAR_AGE_GROUP": 10,
+      "CALC_10_YEAR_AGE_GROUP": 5
+    }
+  ],
+  "3": [
+    {
+      "INVESTIGATION_KEY": 90300002,
+      "PATIENT_FIRST_NAME": "Jane",
+      "PATIENT_BIRTH_COUNTRY": "USA",
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White",
+      "CALC_REPORTED_AGE": 46,
+      "CALC_5_YEAR_AGE_GROUP": 10,
+      "CALC_10_YEAR_AGE_GROUP": 5
+    }
   ]
 }
