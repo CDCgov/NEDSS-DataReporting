@@ -32,9 +32,6 @@ COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
 # master
 COPY liquibase-service/src/main/resources/db/001-master /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/001-master/functions /liquibase/changelog
-# srte
-COPY liquibase-service/src/main/resources/db/002-srte /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/002-srte/tables /liquibase/changelog
 # odse
 COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
