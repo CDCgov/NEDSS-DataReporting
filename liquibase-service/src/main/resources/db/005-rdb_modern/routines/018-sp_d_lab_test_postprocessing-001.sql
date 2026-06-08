@@ -1004,6 +1004,7 @@ BEGIN
                 ,[CONDITION_CD]
                 ,[PROCESSING_DECISION_CD]
                 ,[PROCESSING_DECISION_DESC] 
+                ,[DOCUMENT_LINK]
             )
             SELECT 
                 RTRIM(CAST(ltf.LAB_TEST_STATUS AS VARCHAR(50))),
@@ -1071,7 +1072,8 @@ BEGIN
                 @rdb_last_refresh_time,
                 RTRIM(CAST(ltf.CONDITION_CD AS VARCHAR(20))),
                 RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS VARCHAR(50))),
-                RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS VARCHAR(50)))
+                RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS VARCHAR(50))),
+                RTRIM(CAST(ltf.DOCUMENT_LINK as varchar(500)))
             FROM #lab_test_final ltf 
             INNER JOIN #lab_test_N ltn 
                 ON ltn.LAB_TEST_UID = ltf.LAB_TEST_UID
@@ -1162,7 +1164,8 @@ BEGIN
                 lt.[RDB_LAST_REFRESH_TIME]          = @rdb_last_refresh_time,
                 lt.[CONDITION_CD]                   = RTRIM(CAST(ltf.CONDITION_CD AS varchar(20))),
                 lt.[PROCESSING_DECISION_CD]         = RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS varchar(50))),
-                lt.[PROCESSING_DECISION_DESC]       = RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS varchar(50)))
+                lt.[PROCESSING_DECISION_DESC]       = RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS varchar(50))),
+                lt.[DOCUMENT_LINK]                  = RTRIM(CAST(ltf.DOCUMENT_LINK as varchar(500)))
             FROM [dbo].LAB_TEST lt 
             INNER JOIN #lab_test_final ltf 
                 ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID

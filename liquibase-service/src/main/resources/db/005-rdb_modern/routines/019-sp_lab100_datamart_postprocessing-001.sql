@@ -115,7 +115,8 @@ BEGIN
             case when LDF_GROUP_KEY=1 then null else LDF_GROUP_KEY end as LDF_GROUP_KEY,
             case when MORB_RPT_KEY=1 then null else MORB_RPT_KEY end as MORB_RPT_KEY,
             PATIENT_KEY,
-            '' as DOCUMENT_LINK, ALT_LAB_TEST_CD_SYS_CD, ALT_LAB_TEST_CD_SYS_NM
+            DOCUMENT_LINK,
+            ALT_LAB_TEST_CD_SYS_CD, ALT_LAB_TEST_CD_SYS_NM
                 lab_test_type
         into #TMP_LABTEST_ORDER
         from #TMP_LABTEST_LABTESTRESULT
@@ -474,7 +475,7 @@ BEGIN
             drop table #TMP_LAB_RESULTS_ORDER_CONTACT1;
 
         select
-            * , substring(left( oid+ space(11), 11),7,5) as PROGRAM_AREA_ID  --VS =SUBSTR(PUT(OID,11.),7,5)
+            * , SUBSTRING(RIGHT(SPACE(11) + RTRIM(oid), 11), 7, 5) as PROGRAM_AREA_ID  --VS =SUBSTR(PUT(OID,11.),7,5)
         into #TMP_LAB_RESULTS_ORDER_CONTACT1
         from #TMP_LABTEST_UPDATED
         ;
@@ -1535,6 +1536,7 @@ BEGIN
           ,[ALT_LAB_TEST_CD_SYS_CD] = substring(src.ALT_LAB_TEST_CD_SYS_CD ,1,50)
           ,[ALT_LAB_TEST_CD_SYS_NM] = substring(src.ALT_LAB_TEST_CD_SYS_NM ,1,100)
           ,[PATIENT_KEY] = src.[PATIENT_KEY]
+          ,[DOCUMENT_LINK] = src.[DOCUMENT_LINK]
           ,[ACCESSION_NBR] = substring(src.ACCESSION_NBR ,1,199)
           ,[JURISDICTION_CD] = substring(src.JURISDICTION_CD ,1,20)
           ,[JURISDICTION_NM] = substring(src.JURISDICTION_NM ,1,32)
@@ -1616,6 +1618,7 @@ BEGIN
                                 ,[ALT_LAB_TEST_CD_SYS_CD]
                                 ,[ALT_LAB_TEST_CD_SYS_NM]
                                 ,[PATIENT_KEY]
+                                ,[DOCUMENT_LINK]
                                 ,[ACCESSION_NBR]
                                 ,[JURISDICTION_CD]
                                 ,[JURISDICTION_NM]
@@ -1688,6 +1691,7 @@ BEGIN
                    , substring(src.ALT_LAB_TEST_CD_SYS_CD ,1,50)
                    , substring(src.ALT_LAB_TEST_CD_SYS_NM ,1,100)
                    , src.PATIENT_KEY
+                   , src.DOCUMENT_LINK
                    , substring(src.ACCESSION_NBR ,1,199)
                    , substring(src.JURISDICTION_CD ,1,20)
                    , substring(src.JURISDICTION_NM ,1,32)

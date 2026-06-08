@@ -66,10 +66,16 @@ public class ProviderReporting implements PersonExtendedProps {
   private String countryCode;
   private String addressComments;
 
-  // Phone
+  // Telephone - Primary Workplace Office type
   private String phoneWork;
   private String phoneExtWork;
   private String phoneComments;
+
+  // Telephone - Primary Workplace Phone type
+  private String phoneWorkPhone;
+  private String phoneExtWorkPhone;
+
+  // Telephone - Cellular phone type
   private String phoneCell;
 
   // Email

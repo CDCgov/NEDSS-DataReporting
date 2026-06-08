@@ -1,33 +1,30 @@
-# Fetcher stage to download and extract sqlcmd
-FROM alpine:3.23 AS fetcher
+# Builder stage to compile sqlcmd from source with the latest Go compiler.
+FROM golang:alpine AS builder
 
-# Install dependencies for downloading and extracting
-RUN apk add --no-cache curl tar bzip2
+# Install build dependencies
+RUN apk add --no-cache git
 
-# Define the build-time variable provided by Docker
-ARG TARGETARCH
-ARG SQLCMD_VERSION=1.9.0
+ARG SQLCMD_VERSION=1.10.0
 
-# Map Docker's architecture names to the naming convention used in go-sqlcmd releases
-# Docker uses 'amd64' and 'arm64', but we need to ensure they match the URL
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        export ARCH="arm64"; \
-    else \
-        export ARCH="amd64"; \
-    fi && \
-    curl -L "https://github.com/microsoft/go-sqlcmd/releases/download/v${SQLCMD_VERSION}/sqlcmd-linux-${ARCH}.tar.bz2" -o sqlcmd.tar.bz2 \
-    && tar -xjf sqlcmd.tar.bz2 \
-    && chmod +x sqlcmd
+# Clone and build sqlcmd statically
+# Instead of fetching outdated pre-compiled binaries from Go releases that are compiled
+# with vulnerable older Go standard libraries, we use a multi-stage build using a
+# Go compiler builder to ensure everything is built with the latest secure Go release.
+RUN git clone --depth 1 --branch v${SQLCMD_VERSION} https://github.com/microsoft/go-sqlcmd.git /go-sqlcmd && \
+    cd /go-sqlcmd && \
+    CGO_ENABLED=0 go build -ldflags="-w -s" -o /sqlcmd ./cmd/modern
 
-FROM liquibase/liquibase:5.0.2-alpine
+FROM liquibase/liquibase:5.0.3-alpine
 
 USER root
 
 # Dependencies for Microsoft ODBC Driver
-RUN apk add --no-cache ca-certificates libc6-compat && \
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates libc6-compat && \
     lpm add mssql --global
 
-COPY --from=fetcher /sqlcmd /usr/local/bin/sqlcmd
+COPY --from=builder /sqlcmd /usr/local/bin/sqlcmd
+RUN chmod +x /usr/local/bin/sqlcmd
 
 #Copy sources
 #changelog

@@ -453,7 +453,8 @@ BEGIN
                                 (COALESCE(EARLIEST_RPT_TO_CNTY_DT, '9999-12-31')), 
                                 (COALESCE(EARLIEST_RPT_TO_STATE_DT, '9999-12-31')), 
                                 (COALESCE(INV_RPT_DT, '9999-12-31')), 
-                                (COALESCE(INV_START_DT, '9999-12-31')), 
+                                (COALESCE(INV_START_DT, '9999-12-31')),
+                                (COALESCE(INV_ADD_TIME, '9999-12-31')), 
                                 (COALESCE(CONFIRMATION_DT, '9999-12-31')),
                                 (COALESCE(HSPTL_ADMISSION_DT, '9999-12-31')), 
                                 (COALESCE(HSPTL_DISCHARGE_DT, '9999-12-31'))
@@ -500,6 +501,7 @@ BEGIN
                                     EARLIEST_RPT_TO_STATE_DT,
                                     INV_RPT_DT,
                                     INV_START_DT,
+                                    INV_ADD_TIME,
                                     CONFIRMATION_DT,
                                     HSPTL_ADMISSION_DT,
                                     HSPTL_DISCHARGE_DT
@@ -514,6 +516,7 @@ BEGIN
                                     EARLIEST_RPT_TO_STATE_DT,
                                     INV_RPT_DT,
                                     INV_START_DT,
+                                    INV_ADD_TIME,
                                     HSPTL_ADMISSION_DT,
                                     HSPTL_DISCHARGE_DT
                                  ) IS NOT NULL THEN (
@@ -522,6 +525,7 @@ BEGIN
                                         WHEN EARLIEST_RPT_TO_STATE_DT = cmd.min_date	THEN 'EarliEarliest date received by the state health department'
                                         WHEN INV_RPT_DT = cmd.min_date			THEN 'Date of Report'
                                         WHEN INV_START_DT = cmd.min_date		THEN 'Investigation Start Date'
+                                        WHEN INV_ADD_TIME = cmd.min_date		THEN 'Investigation Add Date'
                                         WHEN CONFIRMATION_DT = cmd.min_date		THEN 'Confirmation Date'
                                         WHEN HSPTL_ADMISSION_DT = cmd.min_date		THEN 'Hospitalization Admit Date'
                                         WHEN HSPTL_DISCHARGE_DT = cmd.min_date		THEN 'Hospitalization Discharge Date'

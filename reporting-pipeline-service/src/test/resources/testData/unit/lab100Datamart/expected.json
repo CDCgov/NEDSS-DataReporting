@@ -1,0 +1,40 @@
+{
+  "0": [
+    {
+      "LAB_RPT_LOCAL_ID": "OBS2348GA01",
+      "RESULTED_LAB_TEST_CD": "5401-5",
+      "PROGRAM_JURISDICTION_OID": 800007,
+      "RECORD_STATUS_CD": "ACTIVE",
+      "RESULTED_LAB_TEST_CD_DESC": "Varicella zoster virus",
+      "RESULTEDTEST_CD_SYS_NM": "LOINC",
+      "RESULTEDTEST_VAL_CD": "260415000",
+      "RESULTEDTEST_VAL_CD_DESC": "Not Detected",
+      "ACCESSION_NBR": "0496712074",
+      "JURISDICTION_CD": "130001",
+      "JURISDICTION_NM": "Fulton County",
+      "ORDERING_FACILITY": "Diagon Alley Diagnostics",
+      "REPORTING_FACILITY": "Diagon Alley Diagnostics",
+      "LAB_TEST_STATUS": "Final",
+      "ELR_IND": "Y",
+      "ORDERED_LAB_TEST_CD": "5401-5",
+      "ORDERED_LAB_TEST_CD_DESC": "Varicella zoster virus",
+      "ORDERED_LABTEST_CD_SYS_NM": "LOINC",
+      "CONDITION_CD": "10030",
+      "CONDITION_SHORT_NM": "Varicella (Chickenpox)",
+      "PROGRAM_AREA_CD": "GCD_TEST",
+      "PROGRAM_AREA_DESC": "General Communicable Disease Test",
+      "SPECIMEN_COLLECTION_DT": "2026-05-24 20:31:53",
+      "SPECIMEN_SRC_DESC": "Bronchial",
+      "SPECIMEN_SRC_CD": "BRO",
+      "LAB_TEST_DT": "2026-05-26 08:31:53",
+      "LAB_RPT_CREATED_DT": "2026-05-26 22:00:57",
+      "LAB_RPT_LAST_UPDATE_DT": "2026-05-26 22:00:57",
+      "LAB_RPT_RECEIVED_BY_PH_DT": "2026-05-26 22:00:56",
+      "LAB_RPT_STATUS": "D",
+      "ORDERING_PROVIDER_NM": "Norton_FAKE, Stephanie",
+      "EVENT_DATE": "2026-05-24 20:31:53",
+      "REPORTING_FACILITY_UID": 2345,
+      "DOCUMENT_LINK": "<a href=\"#\" onClick=\"window.open('/nbs/viewELRDocument.do?method=viewELRDocument&documentUid=239&dateReceivedHidden=05/28/2026','DocumentViewer','width=900,height=800,left=0,top=0,menubar=no,titlebar=no,toolbar=no,scrollbars=yes,location=no');\">ViewLabDocument</a>"
+    }
+  ]
+}

@@ -6,7 +6,7 @@
       "IX_INTERVIEWEE_ROLE_CD": "SUBJECT",
       "IX_TYPE_CD": "PRESMPTV",
       "IX_LOCATION_CD": "I",
-      "LOCAL_ID": "INT10014318GA01",
+      "LOCAL_ID": "INT1000004005GA01",
       "RECORD_STATUS_CD": "ACTIVE",
       "IX_STATUS": "Closed/Completed",
       "IX_INTERVIEWEE_ROLE": "Subject of Investigation",
@@ -17,21 +17,21 @@
   ],
   "1": [
     {
-      "interview_uid": 10014318,
+      "interview_uid": 1000004005,
       "interview_status_cd": "COMPLETE",
       "interview_date": "2026-04-18T00:00:00.000",
       "interviewee_role_cd": "SUBJECT",
       "interview_type_cd": "PRESMPTV",
       "interview_loc_cd": "I",
-      "local_id": "INT10014318GA01",
+      "local_id": "INT1000004005GA01",
       "record_status_cd": "ACTIVE",
       "ix_status": "Closed/Completed",
       "ix_interviewee_role": "Subject of Investigation",
       "ix_type": "Presumptive",
       "ix_location": "Internet",
-      "investigation_uid": 10014317,
+      "investigation_uid": 1000004004,
       "provider_uid": 10003013,
-      "patient_uid": 10014315
+      "patient_uid": 1000004002
     }
   ],
   "2": [
@@ -56,7 +56,7 @@
   ],
   "3": [
     {
-      "interview_uid": 10014318,
+      "interview_uid": 1000004005,
       "user_first_name": "Ariella",
       "user_last_name": "Kent",
       "user_comment": "This is a note",
@@ -64,7 +64,7 @@
       "record_status_cd": "ACTIVE"
     },
     {
-      "interview_uid": 10014318,
+      "interview_uid": 1000004005,
       "user_first_name": "Ariella",
       "user_last_name": "Kent",
       "user_comment": "This is another note! ",
@@ -72,7 +72,7 @@
       "record_status_cd": "ACTIVE"
     },
     {
-      "interview_uid": 10014318,
+      "interview_uid": 1000004005,
       "user_first_name": "Ariella",
       "user_last_name": "Kent",
       "user_comment": "Lorem ipsum dolor sit emet",
@@ -87,9 +87,28 @@
   ],
   "5": [
     {
-      "interview_uid": 10014318,
+      "interview_uid": 1000004005,
       "rdb_column_nm": "IX_CONTACTS_NAMED_IND",
       "answer_val": "No"
+    }
+  ],
+  "6": [
+    {
+      "DISEASE": "Gonorrhea",
+      "DISEASE_CD": "10280",
+      "EVENT_DATE": "2026-04-01T00:00:00.000",
+      "EVENT_DATE_TYPE": "Investigation Start Date",
+      "INVESTIGATION_LOCAL_ID": "CAS1000004004GA01",
+      "INVESTIGATION_START_DATE": "2026-04-01T00:00:00.000",
+      "JURISDICTION_NAME": "Clayton County",
+      "PATIENT_FIRST_NM": "Jeff",
+      "PATIENT_LAST_NM": "Doe",
+      "PATIENT_LOCAL_ID": "PSN1000004000GA01",
+      "PATIENT_STATE": "Georgia",
+      "PHC_ADD_TIME": "2026-04-20T04:21:34.507",
+      "PHC_LAST_CHG_TIME": "2026-04-20T04:21:34.507",
+      "PROGRAM_AREA_DESCRIPTION": "STD",
+      "PROGRAM_JURISDICTION_OID": 1300600015
     }
   ]
 }
