@@ -8,76 +8,30 @@ Local cache and state files are written under `.local/`. Per-run artifacts are w
 
 Run from the repository root.
 
-1. (Optional) Set database connection values in `.env`: `DATABASE_SERVER`, `DATABASE_PORT`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`.
-2. Start a dual capture run:
+Use this section as a fast path. For the full canonical workflow, use the 10-step process below.
+
+1. Start dual capture:
 
 ```powershell
 python testing-tools/local-db-tracing/trace_db_dual_capture.py
 ```
 
-3. Perform the action in NBS that you want to turn into a test.
-4. Return to the script, press Enter when prompted, and provide a short action description.
-5. In the new paired output folder, run `cdc-NBS_ODSE/inserts.sql` against the source database to replay the captured writes.
-6. (optional) narrow down local ID lookups from where in to = via
+2. Replay your NBS flow, then finish capture in the tracer prompts.
+3. Replay the captured inserts into ODSE via `replay_setup.py`:
 
 ```powershell
-python testing-tools/local-db-tracing/narrow_rdb_selects_where_in.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
+python testing-tools/local-db-tracing/replay_setup.py --setup-sql testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql --auto-datetime-mode preserve --server localhost,3433 --user sa --password "<password>"
 ```
 
-7. Validate expected target rows:
+When prompted for UID renumbering, press Enter to keep existing IDs.
+
+4. Validate generated RDB queries:
 
 ```powershell
-python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
-8. Review pass/fail details in `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
-
-### Step-By-Step Checks
-
-Dual capture runs also generate per-step artifacts so you can replay and validate one step at a time.
-
-For a paired run such as `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/`:
-
-- replay SQL for each source step is written under `cdc-<database>/step-<N>/setup.sql`
-- target verification SQL for each target step is written under `logical-<database>/step-<N>/query.sql`
-- each `query.sql` is cumulative through that step, so step 2 reflects the expected target state after both step 1 and step 2 have been applied
-
-Manual step-by-step workflow:
-
-1. Run `cdc-<database>/step-1/setup.sql` against the source database.
-2. Wait for `nedss-datareporting-reporting-pipeline-service-1` to have "No ids to process from the topics."
-3. Run:
-
-```powershell
-python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-1/query.sql
-```
-
-4. Review the generated Markdown report for step 1, `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-1/rdb-selects-results.md`.
-5. Run `cdc-<database>/step-2/setup.sql`.
-6. Run:
-
-```powershell
-python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-2/query.sql
-```
-
-7. Review the generated Markdown report for step 2, `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-2/rdb-selects-results.md`.
-8. Repeat for later steps.
-
-Example validator command for a step query file:
-
-```powershell
-python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-RDB_MODERN/step-2/query.sql
-```
-
-When only `--input-file` is provided, the validator writes results next to that step query file using default names:
-
-- `rdb-selects-results.json`
-- `rdb-selects-results.md`
-
-For example, validating `logical-RDB_MODERN/step-2/query.sql` writes:
-
-- `logical-RDB_MODERN/step-2/rdb-selects-results.json`
-- `logical-RDB_MODERN/step-2/rdb-selects-results.md`
+5. Promote artifacts (`setup.sql`, `query.sql`, `expected.json`) into the functional test step folder.
 
 ## End-To-End: Create A Functional Test From A Recorded User Flow
 
@@ -98,6 +52,12 @@ This workflow is the repeatable process for turning a real UI flow into function
 2. A Chrome Recorder export for that scenario (`.json`)
 3. A destination test step folder under `reporting-pipeline-service/src/test/resources/testData/functional/<suite>/<step>/`
 
+### ID Range Registry
+
+Before creating or shifting test IDs, check the functional test ID registry to avoid range collisions:
+
+- `reporting-pipeline-service/src/test/resources/testData/functional/README.md`
+
 ### 10-Step Process
 
 1. Identify the target flow.
@@ -111,11 +71,13 @@ python testing-tools/local-db-tracing/trace_db_dual_capture.py --server localhos
 4. Replay the recorded flow (manually in NBS or from Chrome Recorder export).
 5. Wait for the post-processing service to complete.
 6. Stop `trace_db_dual_capture.py` (press Enter when prompted and finish the capture).
-7. Execute SQL from `inserts.sql` in the paired run's `cdc-<database>/` folder against ODSE.
+7. Replay `inserts.sql` in the paired run's `cdc-<database>/` folder against ODSE via `replay_setup.py`.
 
 ```powershell
-sqlcmd -S localhost,3433 -U sa -P "<password>" -b -C -i testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql
+python testing-tools/local-db-tracing/replay_setup.py --setup-sql testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql --auto-datetime-mode preserve --server localhost,3433 --user sa --password "<password>"
 ```
+
+When prompted for UID renumbering, press Enter to keep existing IDs.
 
 8. Run `validate_rdb_selects.py`:
 
