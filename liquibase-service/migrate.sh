@@ -5,29 +5,11 @@ set -o pipefail
 if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
     # Run migrations
     echo "Starting migrations"
-    # ODSE Admin tasks
-    liquibase \
-        --changelog-file="db.odse.admin.tasks.changelog-16.1.yaml" \
-        --searchPath="./" \
-        --url="jdbc:sqlserver://${DB_HOST};databaseName=NBS_ODSE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
-        --username="${DB_USERNAME}" \
-        --password="${DB_PASSWORD}" \
-        update
-
     # ODSE
     liquibase \
         --changelog-file="db.odse.changelog-16.1.yaml" \
         --searchPath="./" \
         --url="jdbc:sqlserver://${DB_HOST};databaseName=nbs_odse;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
-        --username="${DB_USERNAME}" \
-        --password="${DB_PASSWORD}" \
-        update
-
-    # SRTE Admin tasks
-    liquibase \
-        --changelog-file="db.srte.admin.tasks.changelog-16.1.yaml" \
-        --searchPath="./" \
-        --url="jdbc:sqlserver://${DB_HOST};databaseName=NBS_SRTE;integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
         --username="${DB_USERNAME}" \
         --password="${DB_PASSWORD}" \
         update
