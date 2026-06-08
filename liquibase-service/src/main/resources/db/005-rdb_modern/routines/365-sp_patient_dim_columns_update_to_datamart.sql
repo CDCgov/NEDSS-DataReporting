@@ -623,7 +623,7 @@ BEGIN
                 WHEN 70 <= FLOOR(AGE_IN_DEC) AND FLOOR(AGE_IN_DEC) < 80 THEN 8
                 ELSE 9
             END AS CALC_10_YEAR_AGE_GROUP
-            from src
+            FROM src
         ) 
         update dbo.TB_DATAMART
         set
