@@ -23,26 +23,26 @@ Unlike the older per-service model (v7.12.0 and prior), **account names in v7.13
 
 The bootstrap scripts in this directory (CDC enablement, SQL Agent job creation) require the admin account. Specifically:
 
-- Scripts 1001 and 1002 call `sys.sp_cdc_enable_db` / `msdb.dbo.rds_cdc_enable_db` — requires `sysadmin` locally or `setupadmin` + CDC stored procedure execute rights on RDS.
-- Script 1003 creates and attaches a SQL Server Agent job — requires `SQLAgentOperatorRole` on `msdb`.
+- Scripts 101 and 102 call `sys.sp_cdc_enable_db` / `msdb.dbo.rds_cdc_enable_db` — requires `sysadmin` locally or `setupadmin` + CDC stored procedure execute rights on RDS.
+- Script 103 creates and attaches a SQL Server Agent job — requires `SQLAgentOperatorRole` on `msdb`.
 
 ---
 
 ## Bootstrap Scripts
 
-### 1001 — Enable CDC on NBS_ODSE
+### 101 — Enable CDC on NBS_ODSE
 
 Enables Change Data Capture at the database level on `NBS_ODSE` and then enables CDC tracking on each RTR-relevant table. Handles both AWS RDS (`rds_cdc_enable_db`) and standard SQL Server (`sp_cdc_enable_db`) automatically.
 
 **Run against:** `NBS_ODSE`
 
-### 1002 — Enable CDC on NBS_SRTE
+### 102 — Enable CDC on NBS_SRTE
 
-Same as 1001 but targets `NBS_SRTE` and its reference-data tables.
+Same as 101 but targets `NBS_SRTE` and its reference-data tables.
 
 **Run against:** `NBS_SRTE`
 
-### 1003 — Create Event Metric Cleanup Job
+### 103 — Create Event Metric Cleanup Job
 
 Creates a SQL Server Agent job (`EventMetricCleanup`) that runs `sp_event_metric_cleanup_postprocessing` daily at midnight. Targets `rdb_modern` in UAT environments and `rdb` everywhere else. The script is safe to re-run — it drops and recreates the job and schedule if they already exist.
 
@@ -50,10 +50,6 @@ Creates a SQL Server Agent job (`EventMetricCleanup`) that runs `sp_event_metric
 
 ## Prerequisites
 
-- SQL Server Agent must be running (for script 1003)
+- SQL Server Agent must be running (for script 103)
 - The executing login must be the admin account described above
-- Scripts 1001 and 1002 should be run before starting the Debezium connectors
-
-## Order of Execution
-
-Run in numeric order: **1001 → 1002 → 1003**
+- Scripts 101 and 102 should be run before starting the Debezium connectors or the reporting-pipeline-service
