@@ -5,5 +5,14 @@
       "RACE_CALCULATED": "Multi-Race",
       "RACE_CALCULATED_DETAILS": "Asian | White"
     }
+  ],
+  "1": [
+    {
+      "INVESTIGATION_KEY": 90200002,
+      "PATIENT_PHONE_NUMBER_HOME": "4045550100",
+      "AGE_REPORTED": 45,
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White"
+    }
   ]
 }
