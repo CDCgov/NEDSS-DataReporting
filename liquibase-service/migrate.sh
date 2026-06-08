@@ -51,15 +51,6 @@ if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
         --password="${DB_PASSWORD}" \
         update
 
-    # Apply onboarding scripts
-    echo "Applying onboarding scripts"
-    for sql in $(find "./02-onboarding" -iname "*.sql" | sort -V); do
-        echo "Executing: $sql"
-        sqlcmd -b -C -S "${DB_HOST}" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -i "$sql"
-
-        echo "Completed: $sql"
-    done
-
     echo "Migrations complete"
 else
     echo "Skipping migrations as RUN_MIGRATIONS is not set to true"
