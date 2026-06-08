@@ -12,7 +12,7 @@ Run from the repository root.
 2. Start a dual capture run:
 
 ```powershell
-python local-db-tracing/trace_db_dual_capture.py
+python testing-tools/local-db-tracing/trace_db_dual_capture.py
 ```
 
 3. Perform the action in NBS that you want to turn into a test.
@@ -21,22 +21,22 @@ python local-db-tracing/trace_db_dual_capture.py
 6. (optional) narrow down local ID lookups from where in to = via
 
 ```powershell
-python local-db-tracing/narrow_rdb_selects_where_in.py --input-file local-db-tracing/output/<paired-run>/rdb-selects.sql
+python testing-tools/local-db-tracing/narrow_rdb_selects_where_in.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
 7. Validate expected target rows:
 
 ```powershell
-python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/rdb-selects.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql
 ```
 
-8. Review pass/fail details in `local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
+8. Review pass/fail details in `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/rdb-selects-results.md`.
 
 ### Step-By-Step Checks
 
 Dual capture runs also generate per-step artifacts so you can replay and validate one step at a time.
 
-For a paired run such as `local-db-tracing/output/<paired-run>/`:
+For a paired run such as `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/`:
 
 - replay SQL for each source step is written under `cdc-<database>/step-<N>/setup.sql`
 - target verification SQL for each target step is written under `logical-<database>/step-<N>/query.sql`
@@ -49,24 +49,24 @@ Manual step-by-step workflow:
 3. Run:
 
 ```powershell
-python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/logical-<database>/step-1/query.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-1/query.sql
 ```
 
-4. Review the generated Markdown report for step 1, `local-db-tracing/output/<paired-run>/logical-<database>/step-1/rdb-selects-results.md`.
+4. Review the generated Markdown report for step 1, `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-1/rdb-selects-results.md`.
 5. Run `cdc-<database>/step-2/setup.sql`.
 6. Run:
 
 ```powershell
-python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/logical-<database>/step-2/query.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-2/query.sql
 ```
 
-7. Review the generated Markdown report for step 2, `local-db-tracing/output/<paired-run>/logical-<database>/step-2/rdb-selects-results.md`.
+7. Review the generated Markdown report for step 2, `testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-<database>/step-2/rdb-selects-results.md`.
 8. Repeat for later steps.
 
 Example validator command for a step query file:
 
 ```powershell
-python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/<paired-run>/logical-RDB_MODERN/step-2/query.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/testing-tools/local-db-tracing/output/<paired-run>/logical-RDB_MODERN/step-2/query.sql
 ```
 
 When only `--input-file` is provided, the validator writes results next to that step query file using default names:
@@ -78,6 +78,106 @@ For example, validating `logical-RDB_MODERN/step-2/query.sql` writes:
 
 - `logical-RDB_MODERN/step-2/rdb-selects-results.json`
 - `logical-RDB_MODERN/step-2/rdb-selects-results.md`
+
+## End-To-End: Create A Functional Test From A Recorded User Flow
+
+This workflow is the repeatable process for turning a real UI flow into functional test artifacts that validate RDB outputs.
+
+### Prerequisites For This Workflow
+
+- Run from repository root: `NEDSS-DataReporting/`
+- Services are up with SQL Server reachable (for example through `docker-compose.yaml`)
+- Python environment is active and can run `testing-tools/local-db-tracing/*.py`
+- `sqlcmd` is installed and available in `PATH`
+- You can log into NBS and run the target user flow
+- `trace_db_dual_capture.py` has credentials via `.env` or flags (`--server`, `--user`, `--password`)
+
+### Required Inputs Before You Start
+
+1. A target scenario (for example, one step in a functional path)
+2. A Chrome Recorder export for that scenario (`.json`)
+3. A destination test step folder under `reporting-pipeline-service/src/test/resources/testData/functional/<suite>/<step>/`
+
+### 10-Step Process
+
+1. Identify the target flow.
+2. Record the flow using Google Chrome Recorder.
+3. Start `trace_db_dual_capture.py`:
+
+```powershell
+python testing-tools/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
+```
+
+4. Replay the recorded flow (manually in NBS or from Chrome Recorder export).
+5. Wait for the post-processing service to complete.
+6. Stop `trace_db_dual_capture.py` (press Enter when prompted and finish the capture).
+7. Execute SQL from `inserts.sql` in the paired run's `cdc-<database>/` folder against ODSE.
+
+```powershell
+sqlcmd -S localhost,3433 -U sa -P "<password>" -b -C -i testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/inserts.sql
+```
+
+8. Run `validate_rdb_selects.py`:
+
+```powershell
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/<paired-run>/rdb-selects.sql --server localhost,3433 --user sa --password "<password>"
+```
+
+9. Review results in `rdb-selects-results.md`:
+
+- `testing-tools/local-db-tracing/output/<paired-run>/rdb-selects-results.md`
+- confirm each case is passing, or note mismatches to fix before promoting artifacts
+
+10. Create the functional test artifacts:
+
+- `setup.sql`
+- `query.sql`
+- `expected.json`
+
+Use the helper to copy and normalize a single step into a functional test directory:
+
+```powershell
+python testing-tools/local-db-tracing/build_step_test_artifacts.py --setup-step testing-tools/local-db-tracing/output/<paired-run>/cdc-NBS_ODSE/step-<N> --logical-step testing-tools/local-db-tracing/output/<paired-run>/logical-RDB_MODERN/step-<N> --test-step reporting-pipeline-service/src/test/resources/testData/functional/<suite>/<step>
+```
+
+After generating artifacts, run functional tests to verify the new step:
+
+```powershell
+cd reporting-pipeline-service
+./gradlew test --tests "gov.cdc.nbs.report.pipeline.integration.functional.DataDrivenFunctionalTests"
+```
+
+### Validation Checklist Before Opening A PR
+
+- `setup.sql` replays cleanly with `sqlcmd -b`
+- `query.sql` statements are ordered and map to `expected.json` keys (`"0"`, `"1"`, ...)
+- `expected.json` is valid JSON and contains only stable assertions
+- `rdb-selects-results.md` is all pass, or you intentionally updated assertions to match expected behavior
+- artifacts live in the correct test step folder under `reporting-pipeline-service/src/test/resources/testData/functional/`
+
+### Troubleshooting
+
+- No data returned in validator results:
+	- Confirm `inserts.sql` ran successfully against ODSE.
+	- Re-run validation after post-processing is idle.
+- Unexpected timestamp mismatches:
+	- For date-only fields (captured with `T00:00:00.000`), prefer `CURRENT_DATE` when replaying setup values.
+- Validator parse or case errors:
+	- Ensure `query.sql` has valid `SELECT`/`WITH` statements and `expected.json` keys match statement order.
+- Functional test flakiness:
+	- Verify the step uses unique IDs for its assigned range and does not overlap another suite.
+- CDC setup failures:
+	- Confirm database-level CDC is enabled and ownership/permissions are correct.
+
+### Example Artifacts
+
+A complete example artifact set is provided here:
+
+- `testing-tools/local-db-tracing/docs/functional-test-artifact-example/010-createPatient/setup.sql`
+- `testing-tools/local-db-tracing/docs/functional-test-artifact-example/010-createPatient/query.sql`
+- `testing-tools/local-db-tracing/docs/functional-test-artifact-example/010-createPatient/expected.json`
+
+This example mirrors a real functional step and can be used as a template for structure and formatting.
 
 ## Overview
 
@@ -91,7 +191,7 @@ At a high level, the tracers:
 - verify database-level CDC is enabled
 - enable CDC on eligible user tables (excluding noisy tables such as `dbo.job_flow_log`)
 - capture a start LSN, wait for your action, and capture an end LSN
-- write structured artifacts under `local-db-tracing/output`
+- write structured artifacts under `testing-tools/local-db-tracing/output`
 - optionally clean up tracer-managed CDC table configuration
 
 ## Prerequisites
@@ -123,13 +223,13 @@ GO
 Captures `NBS_ODSE` CDC and `RDB_MODERN` logical changes for one action window.
 
 ```powershell
-python local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
+python testing-tools/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --user sa --password "<password>"
 ```
 
 Use alternate databases when needed:
 
 ```powershell
-python local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --cdc-database NBS_ODSE --logical-database RDB_MODERN --user sa --password "<password>"
+python testing-tools/local-db-tracing/trace_db_dual_capture.py --server localhost,3433 --cdc-database NBS_ODSE --logical-database RDB_MODERN --user sa --password "<password>"
 ```
 
 During the run you will:
@@ -148,7 +248,7 @@ By default, the tracer uses a two-stage wait before ending capture and generatin
 Use when you only need raw CDC details and reconstructed replay SQL.
 
 ```powershell
-python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
+python testing-tools/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>"
 ```
 
 ### Logical Capture Only
@@ -156,7 +256,7 @@ python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_O
 Use when you only need target row-level logical deltas.
 
 ```powershell
-python local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
+python testing-tools/local-db-tracing/trace_db_logical_changes.py --server localhost,3433 --database RDB_MODERN --user sa --password "<password>"
 ```
 
 ### RDB vs RDB_MODERN Compare (Two-Window Capture)
@@ -168,7 +268,7 @@ action (target).
 Run from repo root:
 
 ```powershell
-python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --user sa --password "<password>"
+python testing-tools/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --user sa --password "<password>"
 ```
 
 What the script does:
@@ -194,7 +294,7 @@ Useful options:
 Example with explicit cleanup:
 
 ```powershell
-python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --rdb-modern-database RDB_MODERN --rdb-database RDB --user sa --password "<password>" --cleanup yes
+python testing-tools/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,3433 --rdb-modern-database RDB_MODERN --rdb-database RDB --user sa --password "<password>" --cleanup yes
 ```
 
 ## Common Commands
@@ -202,67 +302,67 @@ python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --server localhost,34
 Show tracer help:
 
 ```powershell
-python local-db-tracing/trace_db_cdc.py --help
+python testing-tools/local-db-tracing/trace_db_cdc.py --help
 ```
 
 Always clean up tracer-managed tables after a run:
 
 ```powershell
-python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
+python testing-tools/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup yes
 ```
 
 Leave tracer-managed tables enabled for later cleanup:
 
 ```powershell
-python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
+python testing-tools/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --cleanup no
 ```
 
 Disable previously tracked tracer-managed tables and exit:
 
 ```powershell
-python local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
+python testing-tools/local-db-tracing/trace_db_cdc.py --server localhost,3433 --database NBS_ODSE --user sa --password "<password>" --disable-only
 ```
 
 Generate `rdb-selects.sql` from an existing paired run:
 
 ```powershell
-python local-db-tracing/generate_query_expected.py --paired-run-dir local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
+python testing-tools/local-db-tracing/generate_query_expected.py --paired-run-dir testing-tools/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN
 ```
 
 Or generate from a manifest directly:
 
 ```powershell
-python local-db-tracing/generate_query_expected.py --combined-manifest local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
+python testing-tools/local-db-tracing/generate_query_expected.py --combined-manifest testing-tools/local-db-tracing/output/20260408-143320-NBS_ODSE-to-RDB_MODERN/combined-manifest.json
 ```
 
 Build step-level functional test artifacts (`setup.sql`, `query.sql`, `expected.json`) from paired run output:
 
 ```powershell
-python local-db-tracing/build_step_test_artifacts.py --setup-step local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/step-3 --logical-step local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/step-3 --test-step reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/030-Investigate-AddTreatmentStartSalmonella
+python testing-tools/local-db-tracing/build_step_test_artifacts.py --setup-step testing-tools/local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/cdc-NBS_ODSE/step-3 --logical-step testing-tools/local-db-tracing/output/20260423-103745-NBS_ODSE-to-RDB_MODERN/logical-RDB_MODERN/step-3 --test-step reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/030-Investigate-AddTreatmentStartSalmonella
 ```
 
 Replay an existing functional `setup.sql` against ODSE, optionally rewriting only auto-populated datetime/date columns to current-time expressions:
 
 ```powershell
-python local-db-tracing/replay-setup.py --setup-sql reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/010-CreatePatient-AddLabReportManualSalmonella/setup.sql --auto-datetime-mode current
+python testing-tools/local-db-tracing/replay-setup.py --setup-sql reporting-pipeline-service/src/test/resources/testData/functional/skipSupervisorReview/010-CreatePatient-AddLabReportManualSalmonella/setup.sql --auto-datetime-mode current
 ```
 
 Or run it without arguments and enter paths when prompted:
 
 ```powershell
-python local-db-tracing/build_step_test_artifacts.py
+python testing-tools/local-db-tracing/build_step_test_artifacts.py
 ```
 
 Narrow ambiguous `WHERE ... IN (@var1, @var2, ...)` predicates before validation:
 
 ```powershell
-python local-db-tracing/narrow_rdb_selects_where_in.py --input-file local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+python testing-tools/local-db-tracing/narrow_rdb_selects_where_in.py --input-file testing-tools/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
 ```
 
 Then validate `rdb-selects.sql` against expected JSON row sets:
 
 ```powershell
-python local-db-tracing/validate_rdb_selects.py --input-file local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
+python testing-tools/local-db-tracing/validate_rdb_selects.py --input-file testing-tools/local-db-tracing/output/20260410-091404-NBS_ODSE-to-RDB_MODERN/rdb-selects.sql
 ```
 
 Or skip narrowing to validate directly with broad IN predicates.
@@ -270,37 +370,37 @@ Or skip narrowing to validate directly with broad IN predicates.
 Compare logical changes between baseline and target runs:
 
 ```powershell
-python local-db-tracing/compare_logical_changes.py --baseline-file local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
+python testing-tools/local-db-tracing/compare_logical_changes.py --baseline-file testing-tools/local-db-tracing/output/20260407-101153-NBS_ODSE/logical-changes.json --target-file testing-tools/local-db-tracing/output/20260406-112759-RDB_MODERN/logical-changes.json
 ```
 
 Regenerate `summary.txt` from `changes.jsonl`:
 
 ```powershell
-python local-db-tracing/generate_setup.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
+python testing-tools/local-db-tracing/generate_setup.py --input-file testing-tools/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl
 ```
 
 Regenerate `summary.txt` and include action text:
 
 ```powershell
-python local-db-tracing/generate_setup.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
+python testing-tools/local-db-tracing/generate_setup.py --input-file testing-tools/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --action "Added Bart Simpson"
 ```
 
 Include helper-table writes in regenerated SQL when needed:
 
 ```powershell
-python local-db-tracing/generate_setup.py --input-file local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
+python testing-tools/local-db-tracing/generate_setup.py --input-file testing-tools/local-db-tracing/output/20260407-101153-NBS_ODSE/changes.jsonl --replay-mode full
 ```
 
 Show RDB-vs-RDB_MODERN compare tracer help:
 
 ```powershell
-python local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --help
+python testing-tools/local-db-tracing/trace_rdb_vs_rdb_modern_compare.py --help
 ```
 
 Shift IDs in an existing functional test. For example, this moves all the IDs 10000 higher:
 
 ```powershell
-python local-db-tracing/shift_test_ids.py --test-dir NEDSS-DataReporting/reporting-pipeline-service/src/test/resources/testData/functional/covidMarkReviewed --offset 10000
+python testing-tools/local-db-tracing/shift_test_ids.py --test-dir NEDSS-DataReporting/reporting-pipeline-service/src/test/resources/testData/functional/covidMarkReviewed --offset 10000
 ```
 
 
@@ -336,7 +436,7 @@ For `generate_query_expected.py`:
 
 ## Output Structure
 
-Each run writes a timestamped directory under `local-db-tracing/output`.
+Each run writes a timestamped directory under `testing-tools/local-db-tracing/output`.
 
 Single CDC run (example):
 
