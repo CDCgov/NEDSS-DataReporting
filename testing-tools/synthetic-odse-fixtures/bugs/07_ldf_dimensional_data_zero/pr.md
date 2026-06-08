@@ -1,4 +1,4 @@
-**Title:** Fix sp_nrt_ldf_dimensional_data_postprocessing: stop early-RETURN guard from misclassifying filtered ldf_uids, harmonize INNER→LEFT JOIN
+**Title:** Fix sp_nrt_ldf_dimensional_data_postprocessing: stop early-RETURN guard from misclassifying filtered ldf_uids, harmonize INNER to LEFT JOIN
 
 ## Description
 `sp_nrt_ldf_dimensional_data_postprocessing` never populated `LDF_DIMENSIONAL_DATA` for fixtures with valid LDF answers. Two independent defects, both fixed here:
@@ -13,7 +13,7 @@ Verified locally: pre-fix the SP exited at step 2 logging "Missing NRT Record" w
 [APP-471](https://cdc-nbs.atlassian.net/browse/APP-471)
 
 ## Additional Notes
-A `testData/unit` fixture is included (isolated `97xxxxxx` UID namespace) that seeds three ldf_uids — a SUB, a CV, and an ST — and asserts the two non-SUB rows land in `LDF_DIMENSIONAL_DATA` while SUB is filtered cleanly through the no-longer-overzealous guard.
+A `testData/unit` fixture is included (isolated `97xxxxxx` UID namespace) that seeds three ldf_uids (a SUB, a CV, and an ST) and asserts the two non-SUB rows land in `LDF_DIMENSIONAL_DATA` while SUB is filtered cleanly through the corrected guard.
 
 Unblocks the per-condition LDF tables (LDF_TETANUS, LDF_HEPATITIS, etc.) for downstream datamart SPs. The unguarded SUBSTRING that fires when those tables are still empty is handled separately in bug #8.
 

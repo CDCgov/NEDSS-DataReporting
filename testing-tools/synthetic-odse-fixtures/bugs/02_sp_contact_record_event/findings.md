@@ -15,7 +15,7 @@ case
     end as CTT_STATUS,
 ```
 
-The function `fn_get_value_by_cd_codeset` is defined in `RDB_MODERN.dbo`, **not** `nbs_odse.dbo`. SQL Server resolves 3-part names at compile time when both database and schema exist, so Msg 208 fires before any row is evaluated. The `CASE` gate on `cc.CONTACT_STATUS` does **not** short-circuit it; setting `CONTACT_STATUS=NULL` on every `ct_contact` row does not help. The SP is unrunnable against any input.
+The function `fn_get_value_by_cd_codeset` is defined in `RDB_MODERN.dbo`, not `nbs_odse.dbo`. SQL Server resolves 3-part names at compile time when both database and schema exist, so Msg 208 fires before any row is evaluated. The `CASE` gate on `cc.CONTACT_STATUS` does not short-circuit it; setting `CONTACT_STATUS=NULL` on every `ct_contact` row does not help. The SP is unrunnable against any input.
 
 ## Exact error message
 
@@ -44,7 +44,7 @@ Created by `liquibase-service/src/main/resources/db/005-rdb_modern/functions/006
 
 ## Other routines with the same cross-DB function-resolution bug?
 
-**None.** Grep across the entire DB tree:
+None. Grep across the entire DB tree:
 
 ```
 $ grep -rn "nbs_odse\.dbo\.fn_" liquibase-service/src/main/resources/db/
@@ -54,7 +54,7 @@ liquibase-service/src/main/resources/db/005-rdb_modern/routines/069-sp_contact_r
 
 The only other RTR routine that calls `fn_get_value_by_cd_codeset` is `005-rdb_modern/routines/056-sp_investigation_event-001.sql`, which does so correctly via 2-part `dbo.fn_get_value_by_cd_codeset` at 15 call sites (lines 181, 191, 212, 225, 234, 240, 251, 255, 260, 269, 277, 282, 287, 295, 307). That SP is invoked under `RDB_MODERN` context so `dbo.` resolves correctly.
 
-The bug is isolated to a single line in a single SP — almost certainly a copy-paste artefact from the SP's many correct `nbs_odse.dbo.<table>` references (`nbs_odse.dbo.CT_CONTACT` at line 137; `nbs_odse.dbo.NBS_ACT_ENTITY` at lines 155-157).
+The bug is isolated to a single line in a single SP, almost certainly a copy-paste artefact from the SP's many correct `nbs_odse.dbo.<table>` references (`nbs_odse.dbo.CT_CONTACT` at line 137; `nbs_odse.dbo.NBS_ACT_ENTITY` at lines 155-157).
 
 ## Suggested fix
 
@@ -72,14 +72,14 @@ The bug is isolated to a single line in a single SP — almost certainly a copy-
 
 `sp_contact_record_event` is itself defined in `RDB_MODERN.dbo` (CREATE statement is `CREATE PROCEDURE [dbo].[sp_contact_record_event]`; file is under `db/005-rdb_modern/routines/`), so unqualified `dbo.` binds correctly. This matches the convention used by `sp_investigation_event` (the only other RTR caller). Verified by `repro.sql` step 4.
 
-**Alternative (more invasive):** explicit `RDB_MODERN.dbo.fn_get_value_by_cd_codeset` qualifier — works but brittle in renamed-DB environments and inconsistent with the established pattern.
+**Alternative (more invasive):** explicit `RDB_MODERN.dbo.fn_get_value_by_cd_codeset` qualifier. Works, but brittle in renamed-DB environments and inconsistent with the established pattern.
 
-**Not recommended:** moving the function into `nbs_odse.dbo` — would introduce an RTR-specific function in the OLTP database. Layering violation. Fix the caller, not the function.
+**Not recommended:** moving the function into `nbs_odse.dbo`. This would introduce an RTR-specific function in the OLTP database, a layering violation. Fix the caller, not the function.
 
 ## Comparison-fixtures workaround
 
 The comparison-fixtures project's `merge_and_verify.sh` orchestrator
-**skips** invoking `sp_contact_record_event` entirely, since the SP
+skips invoking `sp_contact_record_event` entirely, since the SP
 is unrunnable. The Contact postprocessing SPs
 (`sp_d_contact_record_postprocessing`, `sp_f_contact_record_case_postprocessing`)
 read from `nrt_contact` staging directly and do not require the event SP

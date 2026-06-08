@@ -12,13 +12,13 @@ Bug #8 downstream).
 
 The SP fails for **two independent reasons**, both visible in the same EXEC:
 
-1. **Primary (always fires)** — the early-RETURN guard at SP lines 136-158
-   (`@backfill_list IS NOT NULL` → RETURN) treats *intentionally
+1. **Primary (always fires).** The early-RETURN guard at SP lines 136-158
+   (`@backfill_list IS NOT NULL` then RETURN) treats *intentionally
    data-type-filtered* ldf_uids as "missing NRT records" and aborts the whole
    batch. Any single ldf_uid with `data_type NOT IN ('ST','CV','LIST_ST')`
    poisons every other ldf_uid in the same call.
 
-2. **Secondary (latent; would fire if guard removed)** — the `#LDF_DATA` step
+2. **Secondary (latent; would fire if guard removed).** The `#LDF_DATA` step
    (line 622, the "TMP_LDF_DATA" step in the bug report) uses
    `INNER JOIN nrt_srte_LDF_PAGE_SET ON page_set.ldf_page_id = a.ldf_page_id`
    on `nrt_ldf_data`. When `nrt_ldf_data.ldf_page_id` is NULL (as it is for
@@ -30,8 +30,8 @@ The SP fails for **two independent reasons**, both visible in the same EXEC:
 ## Comparison to Bug #5
 
 The README's index hypothesized this was the same root cause as Bug #5
-(`TMP_F_PAGE_CASE` family — WITH(NOLOCK)/transaction-isolation visibility
-from inside the SP scope). **It is not.**
+(`TMP_F_PAGE_CASE` family, WITH(NOLOCK)/transaction-isolation visibility
+from inside the SP scope). It is not.
 
 | Aspect | Bug #5 (TMP_F_PAGE_CASE) | Bug #7 (TMP_LDF_DATA) |
 | --- | --- | --- |
@@ -47,12 +47,12 @@ Bug #5 still warrants its own root-cause investigation.
 
 `265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql` lines 49-160:
 
-### Step 1 — `#LDF_UID_LIST` (line 49-72)
+### Step 1: `#LDF_UID_LIST` (line 49-72)
 
 Splits `@ldf_id_list` on `,`. Returns N rows for N unique ldf_uids. **OK.**
 Repro shows row_count=5 (matches our fixture).
 
-### Step 2 — `#LDF_META_DATA` (line 76-132)
+### Step 2: `#LDF_META_DATA` (line 76-132)
 
 ```sql
 SELECT a.ldf_uid, ...                        -- 14 columns from metadata
@@ -74,7 +74,7 @@ which is not in the whitelist).
 **correct** pattern. The author understood that page_set is optional. The
 inconsistency at the later #LDF_DATA step is the bug.
 
-### Lines 136-158 — `@backfill_list` early-RETURN guard (THE PRIMARY BUG)
+### Lines 136-158: `@backfill_list` early-RETURN guard (THE PRIMARY BUG)
 
 ```sql
 declare @backfill_list nvarchar(max);
@@ -106,7 +106,7 @@ But "didn't make it into `#LDF_META_DATA`" includes:
   (`condition_cd not in LDF_DATAMART_TABLE_REF`, `business_object_nm` not
   in the 4-tuple, or `data_type not in ('ST','CV','LIST_ST')`).
 
-Case (b) is **not** a missing-NRT-record condition — it's a known, intentional
+Case (b) is not a missing-NRT-record condition; it's a known, intentional
 filter. But the guard cannot distinguish (a) from (b), so it treats both as
 "abort and signal backfill," which is wrong for (b).
 
@@ -123,7 +123,7 @@ intentionally not aggregated into LDF_DIMENSIONAL_DATA) flips
 | 1 | GENERATING #LDF_UID_LIST TABLE | 5 |
 | 2 | GENERATING #LDF_META_DATA | 4 |
 
-Notice step 3 onwards are **absent** — the SP never logged them because it
+Notice step 3 onwards are absent: the SP never logged them because it
 RETURNed at line 157.
 
 The result-set the SP returns is the "Missing NRT Record" payload from
@@ -134,7 +134,7 @@ public_health_case_uid | datamart | stored_procedure
 0                      | Error    | Missing NRT Record: sp_nrt_ldf_dimensional_data_postprocessing
 ```
 
-### Step "GENERATING #LDF_DATA" (line 619-671) — what would happen if guard removed (THE SECONDARY BUG)
+### Step "GENERATING #LDF_DATA" (line 619-671): what would happen if guard removed (THE SECONDARY BUG)
 
 ```sql
 SELECT
@@ -174,17 +174,17 @@ rows (proven by `repro.sql` Step 4).
 | --- | --- | --- |
 | Step 1 #LDF_UID_LIST                 | 5 rows | 5 rows |
 | Step 2 #LDF_META_DATA                | 4 rows | 4 rows |
-| Step 3 #LDF_DATA (SP version: INNER JOIN page_set) | (never runs) | **0 rows** — same join behavior outside SP. **NOT a NOLOCK/isolation issue.** |
+| Step 3 #LDF_DATA (SP version: INNER JOIN page_set) | (never runs) | **0 rows**; same join behavior outside SP. NOT a NOLOCK/isolation issue. |
 | Step 3 #LDF_DATA (FIX version: LEFT JOIN page_set) | n/a | 5 rows |
 
-This rules out the NOLOCK/transaction-isolation hypothesis — the same query
+This rules out the NOLOCK/transaction-isolation hypothesis: the same query
 returns 0 outside the SP too. The bug is in the join semantics.
 
 ## Suggested fix
 
 Two-part fix in `265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql`:
 
-### Fix 1 (primary; tightens the early-RETURN guard) — lines 136-158
+### Fix 1 (primary; tightens the early-RETURN guard): lines 136-158
 
 Change `@backfill_list` to look at `nrt_odse_state_defined_field_metadata`
 existence *directly*, not at `#LDF_META_DATA` membership. That way data_type
@@ -210,7 +210,7 @@ This means the guard fires only when an ldf_uid genuinely has no metadata row
 in the source (true "needs backfill"), not when the metadata row exists but is
 filtered out by the SP's own whitelist.
 
-### Fix 2 (secondary; harmonizes the join) — line 648
+### Fix 2 (secondary; harmonizes the join): line 648
 
 Change the INNER JOIN to LEFT JOIN for consistency with line 108:
 

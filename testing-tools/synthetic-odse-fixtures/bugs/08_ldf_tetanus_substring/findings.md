@@ -1,7 +1,7 @@
-# Bug #8: sp_ldf_tetanus_datamart_postprocessing line 824 (actual: 833) — Invalid length parameter passed to LEFT or SUBSTRING
+# Bug #8: sp_ldf_tetanus_datamart_postprocessing line 824 (actual: 833): Invalid length parameter passed to LEFT or SUBSTRING
 
 **Status**: Confirmed via live repro. **One instance of a 6-instance bug family across the per-condition LDF datamart SPs.**
-**Severity**: Medium (derivative in current fixture state; stand-alone in nature — fires on clean liquibase-applied DB before dynamic columns are ever added).
+**Severity**: Medium (derivative in current fixture state; stand-alone in nature, fires on clean liquibase-applied DB before dynamic columns are ever added).
 **Surfaced by**: comparison-fixtures Tier 3 LDF Tetanus answers fixture.
 
 ## Bug
@@ -9,7 +9,7 @@
 `sp_ldf_tetanus_datamart_postprocessing` fails at the unguarded
 `SUBSTRING(@dynamiccolumnUpdate, 1, LEN(@dynamiccolumnUpdate) - 1)`
 call on line 833 (SQL Server reports "Error Line: 824", which is the
-`BEGIN TRANSACTION` opening that block — the source spans 824/833
+`BEGIN TRANSACTION` opening that block; the source spans 824/833
 interchangeably).
 
 When `LDF_TETANUS` has only the 7 baseline-key columns (no dynamic LDF
@@ -46,7 +46,7 @@ SUBSTRING blows up.
 Derivative in the current fixture state; **stand-alone in nature**.
 The unguarded SUBSTRING also fires on a clean liquibase-applied DB the
 first time any per-condition LDF SP is invoked before its dynamic
-columns have ever been added — even if Bug #7 is fixed, the very first
+columns have ever been added. Even if Bug #7 is fixed, the very first
 invocation against an empty per-condition LDF table will trip this
 defect. Fixing #7 only masks the happy-path occurrence; the latent
 bug remains.
@@ -62,22 +62,22 @@ idiom appears at **9 sites across the 6 per-condition LDF datamart SPs**.
 - `295-sp_ldf_mumps_datamart_postprocessing-001.sql:527`
 - `320-sp_ldf_hepatitis_datamart_postprocessing-001.sql:523`
 
-**Six are unguarded and vulnerable** — bug #8 is one of these six:
+**Six are unguarded and vulnerable** (bug #8 is one of these six):
 - `285-sp_ldf_bmird_datamart_postprocessing-001.sql:603`
 - `290-sp_ldf_foodborne_datamart_postprocessing-001.sql:893`
 - `295-sp_ldf_mumps_datamart_postprocessing-001.sql:627`
-- `300-sp_ldf_tetanus_datamart_postprocessing-001.sql:833` ← **this bug**
+- `300-sp_ldf_tetanus_datamart_postprocessing-001.sql:833` (this bug)
 - `305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql:1105`
 - `320-sp_ldf_hepatitis_datamart_postprocessing-001.sql:594`
 
 (`280-sp_ldf_generic_datamart_postprocessing-001.sql` does not contain
-the idiom — no per-condition table to NULL-out.)
+the idiom; no per-condition table to NULL-out.)
 
 ## Suggested fix
 
 Either of two paths, applied to all 6 unguarded sites:
 
-### Option A — add the existing guard pattern
+### Option A: add the existing guard pattern
 
 Wrap the SUBSTRING+EXEC in:
 ```sql
@@ -89,7 +89,7 @@ END
 ```
 Matches the existing pattern in the 3 already-guarded sites.
 
-### Option B — use STRING_AGG
+### Option B: use STRING_AGG
 
 Replace the whole `COALESCE(..., '...,')` accumulator + trailing-comma
 strip idiom with `STRING_AGG(col, ', ')` which returns NULL on empty

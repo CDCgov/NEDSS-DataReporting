@@ -5,8 +5,8 @@ Baseline: 6.0.18.1 (post-liquibase)
 
 ## How to use
 
-When a Tier 2 (link) agent needs to author a row in one of these tables, it
-**must** pick a `type_cd` (or analogous discriminator) listed in the
+When a Tier 2 (link) fixture authors a row in one of these tables, it
+must pick a `type_cd` (or analogous discriminator) listed in the
 load-bearing section. The legal endpoint shapes (`source_class_cd` /
 `target_class_cd` / `act_class_cd` / `subject_class_cd` / `class_cd`) are
 stated alongside, with citations:
@@ -18,8 +18,8 @@ stated alongside, with citations:
   to `NEDSS-DataReporting/liquibase-service/src/main/resources/db/005-rdb_modern/routines/`.
 
 Codes not listed here either don't appear in baseline SRTE, or no RTR SP
-filters on them — using one is a bug. Codes listed under
-"Codes seen in SRTE but not used by RTR" are reference-only; Tier 2 agents
+filters on them, so using one is a bug. Codes listed under
+"Codes seen in SRTE but not used by RTR" are reference-only; Tier 2 fixtures
 should not pick from that appendix without explicit authorization.
 
 `MISSING_FROM_SRTE` findings (codes RTR filters on but absent from baseline
@@ -40,7 +40,7 @@ from `code_set_nm = 'ACT_CLS'` in SRTE: `CASE` (Public health case), `NOTF`
 | `LabReport` | `OBS` | `CASE` | `sp_observation_event` (lab → PHC association lookup); consumed downstream by `sp_d_lab_test_postprocessing`, `sp_d_labtest_result_postprocessing`, `sp_hepatitis_datamart_postprocessing`, `sp_lab100_datamart_postprocessing`, `sp_covid_lab_datamart_postprocessing` | SRTE `AR_TYPE`; SP filter at `055-sp_observation_event-001.sql:116-117` and `:430-431` |
 | `MorbReport` | `OBS` | `CASE` | `sp_observation_event` (morb → PHC association lookup); consumed downstream by `sp_d_morbidity_report_postprocessing`, `sp_morbidity_report_datamart_postprocessing`, `sp_hepatitis_datamart_postprocessing` | SRTE `AR_TYPE`; SP filter at `055-sp_observation_event-001.sql:116-117` |
 | `TreatmentToPHC` | `TRMT` | `CASE` | `sp_treatment_event` (treatment → PHC association lookup); consumed by `sp_nrt_treatment_postprocessing`, `sp_morbidity_report_datamart_postprocessing` | SRTE `AR_TYPE`; SP filter at `070-sp_treatment_event-001.sql:127-129` |
-| `Notification` | `NOTF` | `CASE` | `sp_notification_event` (notification → PHC join); consumed by `sp_nrt_notification_postprocessing`, `sp_hepatitis_datamart_postprocessing`, `sp_event_metric_datamart_postprocessing` | SRTE `AR_TYPE`; endpoint constraint `source_class_cd='NOTF' AND target_class_cd='CASE'` at `064-sp_notification_event-001.sql:208-209`. (Note: SP joins on `act.source_act_uid = notif.notification_uid` without filtering `type_cd` — `Notification` is the conventional type_cd value used by upstream NBS, not a hard SP filter, so any AR_TYPE code linking `NOTF`→`CASE` would join. Authoring fixtures with `Notification` keeps shape consistent with NBS data.) |
+| `Notification` | `NOTF` | `CASE` | `sp_notification_event` (notification → PHC join); consumed by `sp_nrt_notification_postprocessing`, `sp_hepatitis_datamart_postprocessing`, `sp_event_metric_datamart_postprocessing` | SRTE `AR_TYPE`; endpoint constraint `source_class_cd='NOTF' AND target_class_cd='CASE'` at `064-sp_notification_event-001.sql:208-209`. (Note: SP joins on `act.source_act_uid = notif.notification_uid` without filtering `type_cd`. `Notification` is the conventional type_cd value used by upstream NBS rather than a hard SP filter, so any AR_TYPE code linking `NOTF`→`CASE` would join. Authoring fixtures with `Notification` keeps shape consistent with NBS data.) |
 | `PHCInvForm` | `CASE` | `OBS` | `sp_public_health_case_fact_datamart_event` (PHC → InvForm observation lookup for INV128/INV132/INV133) | SRTE `AR_TYPE`; SP filter at `072-sp_public_health_case_fact_datamart_event-001.sql:404` and `:440` |
 | `InvFrmQ` | `OBS` | `OBS` | `sp_nrt_investigation_postprocessing` (branch_type filter on observation tree); `sp_observation_event` (root/branch chain rooted by `ItemToRow`) | SRTE `AR_TYPE`; SP filter at `005-sp_nrt_investigation_postprocessing-001.sql:213` (`branch_type_cd = 'InvFrmQ'`) |
 | `ItemToRow` | `OBS` | `OBS` | `sp_investigation_event` (observation root marker for repeating-block tree); `sp_observation_event` | SRTE `AR_TYPE`; SP filter at `056-sp_investigation_event-001.sql:405` (`root.type_cd = 'ItemToRow'`) |
@@ -57,7 +57,7 @@ Endpoint notes for ambiguous rows:
   disambiguates lab vs. morbidity by joining the source observation's
   `cd` and `obs_domain_cd_st_1`, not by AR type.
 - `Notification` source/target classes are not enforced via a `type_cd`
-  literal in any RTR SP — RTR only enforces `source_class_cd='NOTF' AND
+  literal in any RTR SP. RTR only enforces `source_class_cd='NOTF' AND
   target_class_cd='CASE'`. The catalog row encodes the conventional
   upstream NBS type_cd value so Tier 2 fixtures match production shape.
 - `InvFrmQ` and `ItemToRow` form a two-level tree on observations
@@ -77,12 +77,12 @@ values from SRTE `ACT_CLS`; `subject_class_cd` legal values from SRTE
 | --- | --- | --- | --- | --- |
 | `SubjOfPHC` | `CASE` | `PSN` | `sp_investigation_event`, `sp_notification_event`, `sp_public_health_case_fact_datamart_event`, `sp_public_health_case_fact_datamart_update` | SRTE `PAR_TYPE`; SP filter at `056-sp_investigation_event-001.sql:741`, `064-sp_notification_event-001.sql:102`, `072-sp_public_health_case_fact_datamart_event-001.sql:147` (`SUBJOFPHC`), `073-sp_public_health_case_fact_datamart_update-001.sql:54` |
 | `SubjOfTrmt` | `TRMT` | `PSN` | `sp_treatment_event` (subject patient on a treatment) | SRTE `PAR_TYPE`; SP filter at `070-sp_treatment_event-001.sql:79-81` |
-| `ProviderOfTrmt` | `TRMT` | `PSN` | `sp_treatment_event` (provider on a treatment). Note: SRTE has only `ProviderOfTrtmt` and `ReporterOfTreatment` — RTR uses an abbreviated form not in baseline SRTE. See MISSING_FROM_SRTE. | SP filter at `070-sp_treatment_event-001.sql:74-76` |
+| `ProviderOfTrmt` | `TRMT` | `PSN` | `sp_treatment_event` (provider on a treatment). Note: SRTE has only `ProviderOfTrtmt` and `ReporterOfTreatment`; RTR uses an abbreviated form not in baseline SRTE. See MISSING_FROM_SRTE. | SP filter at `070-sp_treatment_event-001.sql:74-76` |
 | `ReporterOfTrmt` | `TRMT` | `ORG` | `sp_treatment_event` (reporting organization on a treatment). MISSING_FROM_SRTE. | SP filter at `070-sp_treatment_event-001.sql:69-71` |
 | `InvestgrOfPHC` | `CASE` | `PSN` | `sp_investigation_event` (PHC investigator name pivot); `sp_public_health_case_fact_datamart_event`/`_update` | SRTE `PAR_TYPE`; SP at `056-sp_investigation_event-001.sql:872, 919`, `072-sp_public_health_case_fact_datamart_event-001.sql:1899, 1952-1960`, `073-sp_public_health_case_fact_datamart_update-001.sql:106, 157-159` |
 | `PerAsReporterOfPHC` | `CASE` | `PSN` | `sp_investigation_event` (person-as-reporter pivot); `sp_public_health_case_fact_datamart_event`/`_update` | SRTE `PAR_TYPE`; SP at `056-sp_investigation_event-001.sql:913`, `072-...:1900, 1944-1948`, `073-...:106, 155-156` |
 | `OrgAsReporterOfPHC` | `CASE` | `ORG` | `sp_investigation_event`; `sp_public_health_case_fact_datamart_event`/`_update` (organization-as-reporter pivot) | SRTE `PAR_TYPE`; SP at `056-sp_investigation_event-001.sql:932`, `072-...:1898, 1917, 1964`, `073-...:106, 160, 213` |
-| `PhysicianOfPHC` | `CASE` | `PSN` | `sp_public_health_case_fact_datamart_event`/`_update` (physician name/phone pivot). NOT referenced in `056-sp_investigation_event` (which uses `HospOfADT` etc.) — appears in DM SPs as the canonical "Provider Name" source. | SRTE `PAR_TYPE`; SP at `072-...:1901, 1936-1940`, `073-...:106, 153-154` |
+| `PhysicianOfPHC` | `CASE` | `PSN` | `sp_public_health_case_fact_datamart_event`/`_update` (physician name/phone pivot). NOT referenced in `056-sp_investigation_event` (which uses `HospOfADT` etc.); appears in DM SPs as the canonical "Provider Name" source. | SRTE `PAR_TYPE`; SP at `072-...:1901, 1936-1940`, `073-...:106, 153-154` |
 | `HospOfADT` | `CASE` | `ORG` | `sp_investigation_event` (hospital pivot for Investigation form) | SRTE `PAR_TYPE`; SP at `056-sp_investigation_event-001.sql:914` |
 | `OrgAsClinicOfPHC` | `CASE` | `ORG` | `sp_investigation_event` (ordering facility pivot). MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:915` |
 | `CASupervisorOfPHC` | `CASE` | `PSN` | `sp_investigation_event` (CA supervisor pivot). MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:916` |
@@ -100,7 +100,7 @@ values from SRTE `ACT_CLS`; `subject_class_cd` legal values from SRTE
 | `OrgAsHospitalOfDelivery` | `CASE` | `ORG` | `sp_investigation_event`. MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:928` |
 | `PerAsProviderOfDelivery` | `CASE` | `PSN` | `sp_investigation_event`. MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:929` |
 | `PerAsProviderOfOBGYN` | `CASE` | `PSN` | `sp_investigation_event`. MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:930` |
-| `PerAsProvideroOfPediatrics` | `CASE` | `PSN` | `sp_investigation_event` (note the typo `Provideroo` — matches SP literal exactly). MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:931` |
+| `PerAsProvideroOfPediatrics` | `CASE` | `PSN` | `sp_investigation_event` (note the typo `Provideroo`, matching the SP literal exactly). MISSING_FROM_SRTE. | SP filter at `056-sp_investigation_event-001.sql:931` |
 
 Notes:
 
@@ -120,7 +120,7 @@ Notes:
 
 Discriminators: `type_cd`, plus the implicit endpoint shapes (`act_uid` is
 always an Act, `entity_uid` is always an Entity). The table has no
-`source_class_cd` / `target_class_cd` columns — endpoint shapes are derived
+`source_class_cd` / `target_class_cd` columns; endpoint shapes are derived
 from how the SP joins `act_uid` against `intervention` / `ct_contact` and
 `entity_uid` against `person` / `organization`.
 
@@ -128,7 +128,7 @@ from how the SP joins `act_uid` against `intervention` / `ct_contact` and
 | --- | --- | --- | --- | --- |
 | `SubOfVacc` | `Intervention` (vaccination) | `Person` (patient) | `sp_vaccination_event` | SRTE `PAR_TYPE`; SP filter at `071-sp_vaccination_event-001.sql:108`, `:1156` |
 | `PerformerOfVacc` | `Intervention` (vaccination) | `Person` (provider) or `Organization` | `sp_vaccination_event` | SRTE `PAR_TYPE`; SP filter at `071-sp_vaccination_event-001.sql:1135`, `:1146` |
-| `SiteOfExposure` | `CT_contact` (contact record) | `Place` (exposure site) | `sp_contact_record_event` | SP filter at `069-sp_contact_record_event-001.sql:155`. MISSING_FROM_SRTE — not in any reference set in baseline SRTE. |
+| `SiteOfExposure` | `CT_contact` (contact record) | `Place` (exposure site) | `sp_contact_record_event` | SP filter at `069-sp_contact_record_event-001.sql:155`. MISSING_FROM_SRTE (not in any reference set in baseline SRTE). |
 | `InvestgrOfContact` | `CT_contact` | `Person` (investigator) | `sp_contact_record_event` | SP filter at `069-sp_contact_record_event-001.sql:156`. MISSING_FROM_SRTE. |
 | `DispoInvestgrOfConRec` | `CT_contact` | `Person` (disposition investigator) | `sp_contact_record_event` | SP filter at `069-sp_contact_record_event-001.sql:157`. MISSING_FROM_SRTE. |
 | `IntrvwerOfInterview` | `Interview` | `Person` (interviewer) | `sp_interview_event` | SP filter at `065-sp_interview_event-001.sql:89`. MISSING_FROM_SRTE. |
@@ -138,13 +138,13 @@ from how the SP joins `act_uid` against `intervention` / `ct_contact` and
 Notes:
 
 - Vaccination's `nbs_act_entity` rows attach to `intervention.intervention_uid`,
-  not directly to a vaccination Act in `act` — the SP joins
+  not directly to a vaccination Act in `act`. The SP joins
   `nbs_act_entity.act_uid = src.VACCINATION_UID` where
   `src.VACCINATION_UID` came from `intervention`.
 - Interview rows attach to `interview.interview_uid`. The interview SP joins
   three `nbs_act_entity` rows per interview (interviewer, interviewee, site).
-- All five `*Interview*` / `*Contact*` codes are MISSING_FROM_SRTE — see
-  MISSING_FROM_SRTE section. RTR's joins on these are `LEFT JOIN`s, so the
+- All five `*Interview*` / `*Contact*` codes are MISSING_FROM_SRTE (see
+  MISSING_FROM_SRTE section). RTR's joins on these are `LEFT JOIN`s, so the
   absence does not crash the SP, but downstream columns
   (`PROVIDER_CONTACT_INVESTIGATOR_UID` etc.) will be NULL whenever the
   fixture lacks the matching `nbs_act_entity` row.
@@ -155,7 +155,7 @@ Discriminators: `class_cd` (locator class), `use_cd` (locator use), `type_cd`
 (locator role). RTR filters primarily on `class_cd` × `use_cd` to pivot
 postal/tele/email/fax locators per entity.
 
-`class_cd` legal values — confirmed exactly three from SRTE `EL_CLS`:
+`class_cd` legal values, confirmed exactly three from SRTE `EL_CLS`:
 
 | class_cd | Description |
 | --- | --- |
@@ -173,12 +173,12 @@ postal/tele/email/fax locators per entity.
 | (`TELE`, `WP`, `FAX`) | `sp_organization_event` (work fax) | `051-sp_organization_event-001.sql:131-133` |
 | (`PST`, `H` \| `BIR`, *) | `sp_patient_event` (home / birth address) | `054-sp_patient_event-001.sql:251-252` |
 | (`TELE`, *, *) | `sp_patient_event` (any tele locator) | `054-sp_patient_event-001.sql:265` |
-| (`TELE`, *, `NET`) | `sp_patient_event` (email — `cd='NET'`) | `054-sp_patient_event-001.sql:278-279` |
+| (`TELE`, *, `NET`) | `sp_patient_event` (email, `cd='NET'`) | `054-sp_patient_event-001.sql:278-279` |
 | (`TELE`, *, *) | `sp_provider_event` (any tele locator) | `052-sp_provider_event-001.sql:144` |
 | (`TELE`, *, *) | `sp_place_event` | `068-sp_place_event-001.sql:121` |
 
 `type_cd` (locator role on the entity, e.g., `BIR`/`H`/`WP` analogue) is not
-filtered on by any RTR SP — RTR uses `use_cd` for the same conceptual
+filtered on by any RTR SP; RTR uses `use_cd` for the same conceptual
 purpose. SRTE `EL_TYPE` has 8 values; treat as reference-only.
 
 Sanity check: `class_cd` = exactly `{PST, TELE, PHYS}` ← confirmed against
@@ -186,7 +186,7 @@ Sanity check: `class_cd` = exactly `{PST, TELE, PHYS}` ← confirmed against
 
 ## dbo.role
 
-Discriminators: `cd` (role code — RTR aliases this as `role_cd` in SP
+Discriminators: `cd` (role code; RTR aliases this as `role_cd` in SP
 selects; the actual column name in `nbs_odse.dbo.role` is `cd`),
 `subject_class_cd`, `scoping_class_cd`.
 
@@ -212,8 +212,8 @@ Therefore:
 | --- | --- | --- | --- | --- |
 | any from `RL_TYPE` / `RL_TYPE_PRV` / `RL_TYPE_ORG` | `PSN` | `ORG` or NULL | `sp_observation_event` (read-through, no filter) | SRTE `RL_TYPE`, `RL_TYPE_PRV`, `RL_TYPE_ORG` |
 
-For Tier 2 fixture authoring, prefer codes that match the fixture's intent
-— e.g., `OP` (Ordering Provider) for a lab observation's reporting
+For Tier 2 fixture authoring, prefer codes that match the fixture's intent:
+`OP` (Ordering Provider) for a lab observation's reporting
 provider, `RPT` (Reporter) for a reporting provider, `LABP` (Laboratory
 Provider) for a lab. These are stable, widely-used codes in baseline SRTE.
 
@@ -234,7 +234,7 @@ No RTR SP filters on a specific `act_id.type_cd` or
 
 Legal `type_cd` values come from SRTE `AI_TYPE` (11 codes): `CHART`, `EII`,
 `FILENO`, `FN`, `LID`, `MC`, `OTH`, `PN`, `SID`, `STATE`, `U`. Legal
-`assigning_authority_cd` values from SRTE `AI_AUTH` (multiple codes —
+`assigning_authority_cd` values from SRTE `AI_AUTH` (multiple codes;
 verify per fixture if a specific authority is needed).
 
 | type_cd | assigning_authority_cd | Used by SP(s) | SRTE source |
@@ -264,7 +264,7 @@ RTR consumers:
 - `052-sp_provider_event-001.sql:177-182`: same for provider.
 - `051-sp_organization_event-001.sql:138-148`: same for organization, with a
   case branch `WHEN ei.type_cd = 'FI' AND ei.assigning_authority_cd IS NOT
-  NULL THEN <lookup against code_set_nm='EI_AUTH_ORG'>` — meaning facility
+  NULL THEN <lookup against code_set_nm='EI_AUTH_ORG'>`. Facility
   identifiers (`type_cd='FI'`) are the only `entity_id` rows with a
   data-driven branch in RTR.
 
@@ -299,14 +299,14 @@ Tier 2 defaults:
 
 ## Codes seen in SRTE but not used by RTR SPs
 
-Reference-only — Tier 2 agents should not pick from this appendix without
+Reference-only. Tier 2 fixtures should not pick from this appendix without
 explicit authorization. Listed counts come from `SELECT COUNT(DISTINCT code)
 FROM code_value_general WHERE code_set_nm = '<set>'` against baseline SRTE.
 
 | Table | code_set_nm | Total codes in SRTE | Total used by RTR | Reason for inclusion |
 | --- | --- | --- | --- | --- |
 | `act_relationship.type_cd` | `AR_TYPE` | 81 | 11 | Most AR types (e.g., `APND`, `AUTH`, `CHRG`, `COMP`, `INST`, `Intervention`, `InvFrmHosp`, `MORBInvFrm`, `TrmtItemToRow`, `1180` "Vaccination to PHC", `BIR`) are legacy MasterETL or non-RTR concepts. Sample unused: `APND`, `AUTH`, `BIR`, `CHRG`, `CIND`, `COMP`, `COVBY`, `CREDIT`, `CST`, `DerivedObs`, `DISP`, `DOC`, `EXPL`, `FLFS`, `GEN`, `GenericObs`, `GEVL`, `GOAL`, `INST`, `Intervention`, `InterventionVacc`, `InvFrmHosp`, `ITGT`, `LAB105`, `LabGenObs`, `LabMicroObs`, `LIMIT`, `MORBInvFrm`, `PrimQ`, `RISK`, `SummaryRowItem`, `TRIG`, `TrmtItemToRow`, `1180`. |
-| `participation.type_cd` | `PAR_TYPE` | 70 | ~9 (8 in SRTE + 1 alt) | Most PAR types are HL7 / NBS upstream codes RTR doesn't pivot on. Sample unused (in SRTE but not filtered by any RTR routine): `ASS`, `AUT`, `BBY`, `BEN`, `CBC`, `ChronicCareFac`, `CNS`, `CollegeUniversity`, `CON`, `CSM`, `CST`, `DaycareFac`, `DEV`, `DIR`, `DON`, `DST`, `ENT`, `ESC`, `HospOfBirth`, `HospOfCulture`, `HospOfMorbObs`, `INF`, `LOC`, `MotherOfInvSubj`, `MTH`, `NOK`, `NRD`, `ODV`, `ORD`, `ORG`, `OTH`, `PAT`, `PATSBJ`, `PhysicianOfMorb`, `PRD`, `PRF`, `ProviderOfTrtmt` (note the spelling — RTR uses `ProviderOfTrmt` instead, see MISSING_FROM_SRTE), `PYL`, `RDV`, `ReAdmHosp`, `REF`, `ReporterOfMorbReport`, `ReporterOfPHC`, `ReporterOfTreatment` (RTR uses `ReporterOfTrmt`), `ReportingSourceOfPHC`, `REV`, `RML`, `SBJ`, `SPC`, `SPV`, `SubjOfGenObs`, `SubjOfMorbReport`, `TPA`, `TransferHosp`, `TRC`, `VaccGiven`, `VIA`, `VRF`, `WIT`. |
+| `participation.type_cd` | `PAR_TYPE` | 70 | ~9 (8 in SRTE + 1 alt) | Most PAR types are HL7 / NBS upstream codes RTR doesn't pivot on. Sample unused (in SRTE but not filtered by any RTR routine): `ASS`, `AUT`, `BBY`, `BEN`, `CBC`, `ChronicCareFac`, `CNS`, `CollegeUniversity`, `CON`, `CSM`, `CST`, `DaycareFac`, `DEV`, `DIR`, `DON`, `DST`, `ENT`, `ESC`, `HospOfBirth`, `HospOfCulture`, `HospOfMorbObs`, `INF`, `LOC`, `MotherOfInvSubj`, `MTH`, `NOK`, `NRD`, `ODV`, `ORD`, `ORG`, `OTH`, `PAT`, `PATSBJ`, `PhysicianOfMorb`, `PRD`, `PRF`, `ProviderOfTrtmt` (note the spelling; RTR uses `ProviderOfTrmt` instead, see MISSING_FROM_SRTE), `PYL`, `RDV`, `ReAdmHosp`, `REF`, `ReporterOfMorbReport`, `ReporterOfPHC`, `ReporterOfTreatment` (RTR uses `ReporterOfTrmt`), `ReportingSourceOfPHC`, `REV`, `RML`, `SBJ`, `SPC`, `SPV`, `SubjOfGenObs`, `SubjOfMorbReport`, `TPA`, `TransferHosp`, `TRC`, `VaccGiven`, `VIA`, `VRF`, `WIT`. |
 | `entity_locator_participation.use_cd` | `EL_USE` | 11 | 4 (`H`, `BIR`, `WP`, plus `cd='NET'`/`'FAX'` overlaid on TELE) | Unused: `AN`, `DTH`, `EC`, `MC`, `OC`, `PB`, `SB`, `TMP`. None referenced by any RTR routine. |
 | `role.cd` | `RL_TYPE` (171), `RL_TYPE_PRV` (24), `RL_TYPE_ORG` (114) | 309 total | 0 hard-filtered | RTR reads role rows through; no specific code is required for any SP branch. |
 | `act_id.type_cd` | `AI_TYPE` | 11 | 0 hard-filtered | RTR reads act_id rows through (`056-sp_investigation_event:410`, `055-sp_observation_event:288`); no specific code is required. |
@@ -326,9 +326,9 @@ SELECT code_set_nm, code FROM nbs_srte.dbo.code_value_general
 Run against baseline 6.0.18.1 post-liquibase. Each finding is a real
 fixture-authoring concern: if Tier 2 inserts an ODSE row using one of these
 type_cds, the row is internally referentially-broken (no SRTE parent), but
-RTR's joins are mostly LEFT JOINs that won't crash — they will silently
+RTR's joins are mostly LEFT JOINs that won't crash; they silently
 NULL-out the affected dimension columns. For comparison testing this is
-fine as long as both RDB and RDB_MODERN are populated equivalently — but
+fine as long as both RDB and RDB_MODERN are populated equivalently, but
 the underlying SRTE gap should be flagged to the reference-data owner.
 
 ### MISSING_FROM_SRTE: act_relationship.type_cd

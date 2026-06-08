@@ -1,6 +1,6 @@
-# Bug #12 — sp_bmird_case_datamart_postprocessing: ROW_NUMBER PARTITION BY branch_id collapses multi-value rows
+# Bug #12: sp_bmird_case_datamart_postprocessing ROW_NUMBER PARTITION BY branch_id collapses multi-value rows
 
-**Status**: Surfaced 2026-05-24 by Agent G. Not fixed. Open. Real RTR bug.
+**Status**: Surfaced 2026-05-24. Not fixed. Open. Real RTR bug.
 
 ## Symptom
 
@@ -28,7 +28,7 @@ ROW_NUMBER() OVER (PARTITION BY public_health_case_uid, branch_id
 The intent appears to be: number the distinct branch observations per
 PHC so the downstream PIVOT can assign each to slot `_1`, `_2`, `_3`...
 But PARTITION BY *includes* `branch_id`, so every row is alone in its
-partition → row_num is always 1.
+partition and row_num is always 1.
 
 The downstream `DISTINCT (phc_uid, row_num)` then collapses to a single
 BMIRD_MULTI_VALUE_FIELD row per Investigation, no matter how many
@@ -39,8 +39,8 @@ The same PARTITION BY pattern appears inside the PIVOT subquery at line
 
 ## Suggested fix
 
-Change PARTITION BY to exclude `branch_id` — partition by the
-Investigation only, order by branch_id:
+Change PARTITION BY to exclude `branch_id`, partitioning by the
+Investigation only and ordering by branch_id:
 
 ```sql
 ROW_NUMBER() OVER (PARTITION BY public_health_case_uid
@@ -51,7 +51,7 @@ Apply the same fix at line 1213-1218 (inside the PIVOT subquery).
 
 ## Tables blocked
 
-- `BMIRD_STREP_PNEUMO_DATAMART` — 13 columns stuck unpopulated:
+- `BMIRD_STREP_PNEUMO_DATAMART`: 13 columns stuck unpopulated:
   `UNDERLYING_CONDITION_2..8`, `NON_STERILE_SITE_2..3`,
   `ADD_CULTURE_1_SITE_2..3`, `ADD_CULTURE_2_SITE_2..3`.
 
@@ -62,13 +62,12 @@ BMIRD_HAEM_INFLU). Audit on fix.
 
 ## Discovery
 
-Found while authoring `zz_bmird_strep_pneumo_datamart_enrich.sql`
-during the round-2 multi-agent loop. The fixture authored 10 distinct
-UNDERLYING_CONDITION_BMD batch-entry observations; without this bug,
-they'd fill `_1` through `_8` on the datamart. With the bug, only `_1`
-populates.
+Found while authoring `zz_bmird_strep_pneumo_datamart_enrich.sql`. The
+fixture authored 10 distinct UNDERLYING_CONDITION_BMD batch-entry
+observations; without this bug, they'd fill `_1` through `_8` on the
+datamart. With the bug, only `_1` populates.
 
 The fixture documents the expected behavior in its header (the
-"Round-2 CODED/NUMERIC/DATE additions" block) — if the bug is fixed
+"Round-2 CODED/NUMERIC/DATE additions" block). If the bug is fixed
 upstream, the existing fixture data should fill those 13 columns
 automatically (no fixture change needed).

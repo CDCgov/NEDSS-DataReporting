@@ -1,4 +1,4 @@
-**Title:** (merged on main — PR #826)
+**Title:** (merged on main, PR #826)
 
 ## Status
 **Merged.** The fix landed on `main` as [PR #826](https://github.com/CDCgov/NEDSS-DataReporting/pull/826) (commit `92a56d42`). The accompanying unit test landed at `reporting-pipeline-service/src/test/resources/testData/unit/bug4_provider_update_typo/`.

@@ -1,4 +1,4 @@
-**Title:** (not applicable — bug already fixed on main via PR #769)
+**Title:** (not applicable; bug already fixed on main via PR #769)
 
 ## Description
 `sp_contact_record_event` previously referenced `nbs_odse.dbo.fn_get_value_by_cd_codeset`, but the function actually lives in `RDB_MODERN.dbo`, so the SP failed on every invocation with "function not found".

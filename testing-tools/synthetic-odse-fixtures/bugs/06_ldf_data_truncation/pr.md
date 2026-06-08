@@ -1,4 +1,4 @@
-**Title:** (merged on main — PR #827)
+**Title:** (merged on main, PR #827)
 
 ## Status
 **Merged.** The fix landed on `main` as [PR #827](https://github.com/CDCgov/NEDSS-DataReporting/pull/827) (commit `bb882115`). The accompanying unit test landed at `reporting-pipeline-service/src/test/resources/testData/unit/bug6_ldf_data_truncation/`.
@@ -8,7 +8,7 @@
 
 This was a mapping bug, not a width oversight: the destination column was sized for the lifecycle status (`ACTIVE`/`INACTIVE`), not for the ETL processing flag. The peer column `nrt_ldf_data.record_status_cd` is the LDF-answer's own active/inactive status and is the semantically correct source. The SP already filters on this column at line 873 (`where ld.RECORD_STATUS_CD is not null`) but never selected it.
 
-This PR changes the source column from `metadata_record_status_cd` to `record_status_cd` at all three sites in the SP (SELECT INTO at line 874, UPDATE at line 1017, INSERT at line 1143 — including the SELECT INTO that propagates the column name into a temp table).
+This PR changes the source column from `metadata_record_status_cd` to `record_status_cd` at all three sites in the SP (SELECT INTO at line 874, UPDATE at line 1017, INSERT at line 1143, including the SELECT INTO that propagates the column name into a temp table).
 
 Verified locally: post-fix, `LDF_DATA` accepts the inserted row with `RECORD_STATUS_CD='ACTIVE'` (passes CHECK constraint); no Msg 2628 in `job_flow_log`.
 

@@ -1,6 +1,6 @@
-# Bug #13 — sp_sld_investigation_repeat_postprocessing: TEXT pivot column-list builder NULL-propagates
+# Bug #13: sp_sld_investigation_repeat_postprocessing TEXT pivot column-list builder NULL-propagates
 
-**Status**: Surfaced 2026-05-24 by Agent H. Not fixed. Open. Real RTR bug.
+**Status**: Surfaced 2026-05-24. Not fixed. Open. Real RTR bug.
 
 ## Symptom
 
@@ -11,10 +11,10 @@ the TEXT columns of `D_INVESTIGATION_REPEAT`. The SP's tail-EXEC
 returns 0 rows affected on its dynamic SQL, but no error is raised.
 
 Repro:
-1. Apply `zz_d_inv_place_repeat_enrich.sql` (agent-D2 fixture).
+1. Apply the `zz_d_inv_place_repeat_enrich.sql` fixture.
 2. Apply any fixture adding answer rows with `data_type='TEXT'` on PHC 22006000.
 3. Run `EXEC dbo.sp_sld_investigation_repeat_postprocessing @batch_id=<n>, @phc_id_list=N'22006000', @debug=0;`
-4. Query `D_INVESTIGATION_REPEAT` — TEXT columns are NULL even where the source answer rows have non-NULL `answer_txt`.
+4. Query `D_INVESTIGATION_REPEAT`. TEXT columns are NULL even where the source answer rows have non-NULL `answer_txt`.
 
 ## Root cause
 
@@ -33,9 +33,9 @@ row in `#text_data_REPT` has `RDB_COLUMN_NM = NULL`, the assignment
 point on `@cols` stays NULL, the constructed `@sql` is NULL, and the
 final `EXEC sp_executesql @sql` silently no-ops.
 
-The `zz_d_inv_place_repeat_enrich.sql` fixture (agent-D2, UIDs
+The `zz_d_inv_place_repeat_enrich.sql` fixture (UIDs
 22010001-22010006) authors 6 nrt_page_case_answer rows with
-`rdb_column_nm = NULL` (intentionally — they target a different SP via
+`rdb_column_nm = NULL` (intentionally: they target a different SP via
 `part_type_cd`, not the repeat-block SP). Those rows end up in
 `#text_data_REPT` for PHC 22006000 because the temp-table population
 filter doesn't exclude NULL rdb_column_nm rows.
@@ -50,14 +50,14 @@ Two options:
    - The pivot inner SELECT(s) at line ~212 and the equivalent
      date/numeric/coded pivot builders elsewhere in the file.
 
-2. **Defensive coalesce**: `@cols += COALESCE(N', p.' + QUOTENAME(RDB_COLUMN_NM) + ..., N'')` — guards against the NULL row contaminating the entire assignment.
+2. **Defensive coalesce**: `@cols += COALESCE(N', p.' + QUOTENAME(RDB_COLUMN_NM) + ..., N'')`, which guards against the NULL row contaminating the entire assignment.
 
-Option 1 is preferred — the temp-table-level filter is more efficient
+Option 1 is preferred: the temp-table-level filter is more efficient
 than building rows you'll skip in the pivot.
 
 ## Tables blocked
 
-- `D_INVESTIGATION_REPEAT` — TEXT columns stay NULL when any
+- `D_INVESTIGATION_REPEAT`: TEXT columns stay NULL when any
   same-PHC fixture authors NULL-rdb_column_nm answer rows. This means
   the d_investigation_repeat enrich fixture's TEXT columns can't
   populate without either:
@@ -66,7 +66,7 @@ than building rows you'll skip in the pivot.
 
 ## Workaround
 
-Agent H's `zz_d_investigation_repeat_more_blocks.sql` (UIDs
+The `zz_d_investigation_repeat_more_blocks.sql` fixture (UIDs
 22014000-22014999) emphasized DATE / NUMERIC / CODED answer types
 (which use separate pivot builders that don't hit this bug) and
 avoided TEXT to sidestep the issue.

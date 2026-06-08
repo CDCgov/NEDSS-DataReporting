@@ -1,8 +1,8 @@
 # Bug #1: sp_get_date_dim references nonexistent dbo.rdb_date_temp
 
-**Status**: **Resolved — non-issue in normal environments** (2026-05-19). In all normal working environments `RDB_DATE` is correctly populated by the database seeds, so `sp_get_date_dim` is never invoked on the path observed here. A separate PR is in-flight to correct the seed path. The defects below are real, but the SP itself is dead code on the live path. See `pr.md` for the no-PR resolution.
+**Status**: **Resolved, non-issue in normal environments** (2026-05-19). In all normal working environments `RDB_DATE` is correctly populated by the database seeds, so `sp_get_date_dim` is never invoked on the path observed here. A separate PR is in-flight to correct the seed path. The defects below are real, but the SP itself is dead code on the live path. See `pr.md` for the no-PR resolution.
 **Severity (historical)**: High (RDB_DATE calendar dim cannot be populated via documented path).
-**Surfaced by**: comparison-fixtures Tier 2 inv_notification agent.
+**Surfaced by**: comparison-fixtures Tier 2 inv_notification fixture.
 
 ## Source
 
@@ -19,7 +19,7 @@ creates that table.**
 
 ## What's broken
 
-### Bug 1A — `dbo.rdb_date_temp` does not exist
+### Bug 1A: `dbo.rdb_date_temp` does not exist
 
 Source-file lines 26, 27, 36, 55 reference it. SP fails on first
 reference with deferred-name-resolution error 208. Exhaustive grep
@@ -28,15 +28,15 @@ including all `src/migrations/6.0.*/RDB`, `Mo DB Scripts`, `NBS_DB`)
 confirms no DDL anywhere creates `dbo.rdb_date_temp`;
 `OBJECT_ID(N'dbo.rdb_date_temp')` returns NULL on a fresh baseline.
 
-### Bug 1B — Inverted IF predicate + loop-local SELECT INTO at lines 49-60
+### Bug 1B: inverted IF predicate plus loop-local SELECT INTO at lines 49-60
 
 The original prompt called this a "scope bug"; it isn't (T-SQL temp
-tables are NOT scoped to IF blocks — verified empirically:
+tables are NOT scoped to IF blocks, verified empirically:
 `SELECT INTO #t` inside an IF body remains visible after the IF). The
 actual defects:
 
-1. **Line 52: `IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='RDB_DATE' AND xtype='U')`** — guard fires only when `RDB_DATE` does NOT exist, but it always exists in RDB_MODERN. So `#temp_date` is never created and line 60's `from #temp_date` would fail with `Invalid object name '#temp_date'`.
-2. **Even if the IF were inverted to `IF EXISTS`, `SELECT … INTO #temp_date` is inside the WHILE loop**. Iteration 2 would fail with `There is already an object named '#temp_date' in the database` — `SELECT INTO` creates, doesn't append.
+1. **Line 52: `IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name='RDB_DATE' AND xtype='U')`.** The guard fires only when `RDB_DATE` does NOT exist, but it always exists in RDB_MODERN. So `#temp_date` is never created and line 60's `from #temp_date` would fail with `Invalid object name '#temp_date'`.
+2. **Even if the IF were inverted to `IF EXISTS`, `SELECT … INTO #temp_date` is inside the WHILE loop**. Iteration 2 would fail with `There is already an object named '#temp_date' in the database`; `SELECT INTO` creates, doesn't append.
 3. **The `#temp_date` indirection is structurally redundant**; the loop could insert directly into `RDB_DATE` once after building staging.
 
 Bug 1B is dormant today because Bug 1A short-circuits the SP at
@@ -55,7 +55,7 @@ error_message   Invalid object name 'dbo.rdb_date_temp'.
 
 ## Suggested fix (source-code level)
 
-### Option A — minimal diff
+### Option A: minimal diff
 
 Rename `dbo.rdb_date_temp` to a session-temp `#rdb_date_temp` and
 CREATE it once at the top of the SP body; delete the inverted-IF block
@@ -64,7 +64,7 @@ dbo.RDB_DATE … SELECT FROM #rdb_date_temp` after the WHILE loop.
 Preserves the original public contract `(@start INT, @end INT)` and the
 original output (sentinel + one row per day).
 
-### Option B — recommended, recursive CTE
+### Option B (recommended): recursive CTE
 
 Collapse the entire body to a single `INSERT … SELECT` from a recursive
 date CTE (`OPTION (MAXRECURSION 0)`). Drops the loop and the temp
@@ -101,12 +101,12 @@ Either option fixes both 1A and 1B in one changeset.
 
 ## Workarounds
 
-Yes — the comparison-fixtures orchestrator (`STRATEGY.md` "Pre-Tier-2
+The comparison-fixtures orchestrator (`STRATEGY.md` "Pre-Tier-2
 infrastructure step"; `coverage_inv_notification.md` Inputs/INFRA_GAP)
 bypasses `sp_get_date_dim` entirely and populates `RDB_DATE` via a
 recursive CTE in `scripts/merge_and_verify.sh`. The SP is never EXEC'd
-in our pipeline. **Anyone following RTR's documented setup path that
-says "EXEC `sp_get_date_dim`" is broken on first run.**
+in this pipeline. Anyone following RTR's documented setup path that
+says "EXEC `sp_get_date_dim`" is broken on first run.
 
 ## Related issues found during investigation
 
@@ -138,7 +138,7 @@ export SQLCMDPASSWORD=PizzaIsGood33!
 sqlcmd -S localhost,3433 -U sa -C -i repro.sql
 ```
 
-Single .sql file, runnable read-only — wraps `EXEC dbo.sp_get_date_dim
-2026, 2026` in TRY/CATCH and prints captured `ERROR_NUMBER` /
-`ERROR_MESSAGE` / etc.; verified working against the live DB; touches
+Single .sql file, runnable read-only. It wraps `EXEC dbo.sp_get_date_dim
+2026, 2026` in TRY/CATCH and prints captured `ERROR_NUMBER`,
+`ERROR_MESSAGE`, and so on; verified working against the live DB; touches
 no state.

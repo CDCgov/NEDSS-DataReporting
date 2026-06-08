@@ -135,7 +135,7 @@ uv run rdb-compare --host localhost --port 3433 --user sa \
 
 echo
 log "DONE. Report: $RDB_COMPARE_DIR/out/comparison.md (+ comparison.json)"
-log "Interpret per testing-tools/synthetic-odse-fixtures/ docs + rdb-compare/LOOP.md FINAL:"
+log "Interpret per testing-tools/synthetic-odse-fixtures/ docs:"
 log "  expect NEW diffs to cluster (encoding mojibake from SAS latin1, NULL-vs-''),"
 log "  and RDB-only/MODERN-only presence gaps that are legitimate RTR-vs-MasterETL"
 log "  coverage differences (catalog/odse_unknown_tables.md lists MasterETL-only tables)."

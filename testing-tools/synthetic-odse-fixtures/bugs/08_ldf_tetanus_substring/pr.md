@@ -18,7 +18,7 @@ Verified locally: none of the six SPs emit a Msg 537 ERROR row in `job_flow_log`
 [APP-471](https://cdc-nbs.atlassian.net/browse/APP-471)
 
 ## Additional Notes
-Independent of bug #7 — fires on a clean liquibase-applied DB the first time any per-condition LDF SP runs, before its dynamic columns are ever added.
+Independent of bug #7: fires on a clean liquibase-applied DB the first time any per-condition LDF SP runs, before its dynamic columns are ever added.
 
 Site `290` (foodborne) was already guarded with a different form (`IF LEN(@dynamiccolumnUpdate) > 0`); rewritten to match the `IS NOT NULL AND != ''` form used at the five peer sites.
 

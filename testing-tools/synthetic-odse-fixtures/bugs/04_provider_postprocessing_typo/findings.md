@@ -17,7 +17,7 @@ The typo is a copy-paste from a Patient-style postprocessing template.
 | --- | --- | --- | --- |
 | `liquibase-service/src/main/resources/db/005-rdb_modern/routines/003-sp_nrt_provider_postprocessing-001.sql` | 273 | `into #PROVIDER_UPDATE_LIST` | correct (declaration) |
 | same file | 545 | `select 1 from #PROVIDER_UPDATE_LIST` | correct (read inside `IF EXISTS`) |
-| same file | **564** | `FROM #PATIENT_UPDATE_LIST` | **TYPO — temp table never created** |
+| same file | **564** | `FROM #PATIENT_UPDATE_LIST` | **TYPO; temp table never created** |
 
 Static count via `sys.sql_modules`: bad_ref_count=1, good_ref_count=2.
 
@@ -56,7 +56,7 @@ Whenever `sp_nrt_provider_postprocessing` runs against UIDs already in
 | `hep100_datamart_update` | `PROVIDER_MIDDLE_NAME, PROVIDER_COUNTY` |
 
 Any change to any of those 11 distinct attributes between two consecutive
-runs of the SP for the same UID will fire `Msg 208 — Invalid object name
+runs of the SP for the same UID will fire `Msg 208, Invalid object name
 '#PATIENT_UPDATE_LIST'`. The SP aborts with the `BEGIN TRANSACTION` (line
 193) still open; the entire postprocessing batch fails and the Datamart
 fan-out call to `sp_provider_dim_columns_update_to_datamart` (line 568) is
@@ -89,7 +89,7 @@ One-line edit. In `003-sp_nrt_provider_postprocessing-001.sql`, line 564:
 ```
 
 No other change required. The `SELECT` at lines 557-566 reads only
-`provider_uid` and the five `*_update` flag columns — all already present in
+`provider_uid` and the five `*_update` flag columns, all already present in
 `#PROVIDER_UPDATE_LIST` (declared at line 273 with the same column shape).
 
 ## Reproduction

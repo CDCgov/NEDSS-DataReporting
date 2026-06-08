@@ -42,15 +42,15 @@ file line 1097.)
 All **2754 baseline `nrt_odse_state_defined_field_metadata` rows hold
 the literal `'LDF_PROCESSED'` (13 chars)**. Zero rows hold `'ACTIVE'`.
 The varchar(8) column was sized for the CHECK-constrained values
-`'ACTIVE'` / `'INACTIVE'`, not for the upstream ETL processing flag —
-this is a **mapping bug, not a width oversight**.
+`'ACTIVE'` / `'INACTIVE'`, not for the upstream ETL processing flag.
+This is a mapping bug, not a width oversight.
 
 The SP's intent is clearly to record an `ACTIVE/INACTIVE` lifecycle
 status on each `LDF_DATA` row (matching the CHECK constraint). It
 mistakenly reads `metadata_record_status_cd` (the metadata's
 ETL-processed flag) instead of the answer's own status.
 
-## Suggested fix (Option B — recommended)
+## Suggested fix (Option B, recommended)
 
 Change the SP to map from the LDF answer's own `record_status_cd`
 column instead of the metadata's processing flag.
@@ -58,10 +58,10 @@ column instead of the metadata's processing flag.
 In `liquibase-service/src/main/resources/db/005-rdb_modern/routines/015-sp_nrt_ldf_postprocessing-001.sql`:
 
 - **Line 863** (and corresponding **line 1006** UPDATE): change
-  `ld.metadata_record_status_cd` → `ld.record_status_cd`.
+  `ld.metadata_record_status_cd` to `ld.record_status_cd`.
 - The peer column `nrt_ldf_data.record_status_cd` is the LDF-answer's
   own active/inactive status (varchar(20) but populated with
-  `'ACTIVE'`/`'INACTIVE'` semantics) — semantically aligned with the
+  `'ACTIVE'`/`'INACTIVE'` semantics), semantically aligned with the
   destination's CHECK constraint.
 - The SP already filters on this column at line 873
   (`where ld.RECORD_STATUS_CD is not null`) but never selects it.

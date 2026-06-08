@@ -1,7 +1,7 @@
 # Methodology: Comparison-Fixtures (APP-471)
 
-For a technical reader fluent in NBS, NBS7, and RTR. Full agent
-contract in [`STRATEGY.md`](./STRATEGY.md); this document focuses on
+For a technical reader fluent in NBS, NBS7, and RTR. The full build
+specification is in [`STRATEGY.md`](./STRATEGY.md); this document focuses on
 how we arrived at a working fixture set rather than what the final
 artifact looks like.
 
@@ -86,16 +86,16 @@ and there is no Phase A.
    that RTR does not are out of scope by construction; they surface as
    legitimate diff findings in the comparison tool rather than as
    fixture gaps. `catalog/odse_unknown_tables.md` bucket (a), which
-   lists 22 MasterETL-only tables, makes this category explicit.
+   lists 26 MasterETL-only tables, makes this category explicit.
 2. **Phase B: Edge-type catalog.** Enumerate from live baseline SRTE
    every legal `type_cd` (or analogous discriminator) for the seven
    connective tables (`act_relationship`, `participation`,
    `nbs_act_entity`, `entity_locator_participation`, `role`, `act_id`,
    `entity_id`), together with the source/target `class_cd` constraints
    each implies, plus a per-row citation back to the RTR routine that
-   filters on it. Output: `catalog/edge_types.md`. The catalog holds 48
+   filters on it. Output: `catalog/edge_types.md`. The catalog holds 50
    distinct discriminator values across the seven tables, each tied to
-   one or more routine line numbers. Fixture agents pick edge codes
+   one or more routine line numbers. Fixtures pick edge codes
    from this catalog rather than inventing them; codes RTR filters on
    but missing from baseline SRTE are flagged in a `MISSING_FROM_SRTE`
    appendix instead of silently dropped.
@@ -105,7 +105,7 @@ folklore to a queryable artifact.
 
 ## Per-SP authoring loop
 
-Each fixture agent runs the same six-step pattern, driven by reading
+Each fixture follows the same six-step pattern, driven by reading
 the postprocessing SP body line-by-line:
 
 1. **Read the postprocessing SP.** Extract every column written and
@@ -124,10 +124,10 @@ the postprocessing SP body line-by-line:
 4. **Verify SRTE codes live.** Every `*_cd` value gets a `sqlcmd`
    against `code_value_general` (or the relevant sub-table) before
    appearing in a fixture. No invented codes.
-5. **Author the fixture.** ODSE INSERTs only — one hanging off the
+5. **Author the fixture.** ODSE INSERTs only: one hanging off the
    foundation parent UID plus a fully-populated v2 variant in a fresh
    UID block (no hand-authored `nrt_*` rows; CDC produces staging). The
-   two variants together exercise the SP's populated path *and* its
+   two variants together exercise the SP's populated path and its
    null/blank/CASE branches.
 6. **Verify and report.** Run the full pipeline
    (`scripts/merge_and_verify.sh`) against a fresh baseline, then
@@ -137,31 +137,31 @@ the postprocessing SP body line-by-line:
    `OUT_OF_SCOPE`. Missing data the SP needs is logged as `SRTE_GAP` /
    `FOUNDATION_GAP` / `LINK_REQUIRED`. Silent skips are forbidden.
 
-The agent produces a coverage report keyed to `rtr_target_columns.md`:
-which columns populated, which deliberately skipped (with reason and
-SP-body citation), which gap findings, which `LINK_REQUIRED` edges for
+Each pass produces a coverage report keyed to `rtr_target_columns.md`:
+which columns populated, which were deliberately skipped (with reason and
+SP-body citation), which gap findings, and which `LINK_REQUIRED` edges for
 a later tier to provide.
 
 ## ODSE-only fixtures
 
 In production, `nrt_*` rows are written by SQL Server CDC → Debezium → Kafka → kafka-connect JDBC
-sink. The fixtures author only `NBS_ODSE` rows — no `nrt_*` INSERTs, no manual `EXEC sp_*` — and the
+sink. The fixtures author only `NBS_ODSE` rows (no `nrt_*` INSERTs, no manual `EXEC sp_*`), and the
 full pipeline runs on every `merge_and_verify.sh`, so RDB_MODERN coverage is exactly what RTR produces
 from the ODSE fixtures. A from-scratch cycle is ~15–20 min (image rebuild + CDC drain).
 
 ## Tier composition
 
 Subjects don't exist in isolation; Investigation joins to Patient, Lab
-joins to Investigation, etc. We decomposed into tiers so each agent's
+joins to Investigation, etc. We decomposed into tiers so each tier's
 outputs become the next tier's read-only inputs:
 
 - **Tier 0.** Foundation. One canonical instance of each of the 12
   subjects (Patient, Provider, Organization, Place, Investigation,
   Notification, Lab Report, Morbidity Report, Interview, Treatment,
   Vaccination, Contact Record) at UIDs `20000000-20009999`.
-- **Tier 1.** Subjects (one agent per subject). Owns internal edges
+- **Tier 1.** Subjects (one fixture per subject). Owns internal edges
   only. 10k-wide per-subject blocks.
-- **Tier 2.** Links (one agent per edge type). Cross-subject
+- **Tier 2.** Links (one fixture per edge type). Cross-subject
   `act_relationship` / `participation` / `nbs_act_entity` rows. UIDs
   `21000000-21099999`.
 - **Tier 3.** Gap-driven targeted additions on SPs whose Tier 1/2
@@ -172,17 +172,15 @@ A single UID range registry (`catalog/uid_ranges.md`) is the source of
 truth. Collisions fail the merge loudly; auto-deduplication is
 forbidden.
 
-## Scaling: parallel agents
+## Scaling the work in parallel
 
-The per-SP loop is the unit of work; coverage scales by running many
-of them concurrently. Each agent claims one datamart or dimension plus
-a reserved UID block, works in its own git worktree, and commits
-incrementally. A parent loop reconciles the worktrees via cherry-pick
-under a `mkdir`-based DB lock (`scripts/db_lock.sh`) and a single
-foreground re-apply. Because UID-range discipline keeps agents from
-colliding, per-table gains are additive. Multi-agent loops drove the
-bulk of the climb to the current ~80% coverage, with SP-level defects
-logged as `bugs/<N>_*/findings.md` rather than fixed mid-loop.
+The per-SP loop is the unit of work, and coverage scales by running many
+passes concurrently, each owning one datamart or dimension plus a reserved
+UID block. The UID-range registry (`catalog/uid_ranges.md`) keeps parallel
+passes from colliding, so per-table gains are additive and reconcile cleanly.
+This parallelism drove the bulk of the climb to the current ~80% coverage.
+SP-level defects found along the way were logged as `bugs/<N>_*/findings.md`
+rather than fixed mid-build.
 
 ## Reproducibility
 
@@ -231,14 +229,20 @@ harness.
 ## Bug discovery as a byproduct
 
 Authoring fixtures that exercise every column path inevitably surfaces
-SPs that don't behave the way their column comments suggest. Fourteen
-RTR bugs surfaced to date: 3 fixes merged upstream, 6 fixed on this
-branch, 5 documented with repros for follow-up. Each is documented in
-`bugs/<N>_<slug>/findings.md` with a minimal repro. They range from
-trivial (`IF @debug` resetting `@@ROWCOUNT` and zeroing job_flow_log
-row counts; column-name typos; SUBSTRING-with-empty-string crashes) to
-architectural (postprocessing SPs that try to traverse ODSE through
-the NRT staging boundary; dynamic UNPIVOTs that assume uniform column
-types; surrogate-key allocations that default to a filtered-out
-sentinel). See [`bugs/README.md`](./bugs/README.md) for the rolling
-status table.
+SPs that don't behave the way their column comments suggest. The
+merged-fixture build surfaced fourteen RTR bugs: 3 fixes merged
+upstream, 6 fixed on this branch, 5 documented with repros for
+follow-up. Each is documented in `bugs/<N>_<slug>/findings.md` with a
+minimal repro. They range from trivial (`IF @debug` resetting
+`@@ROWCOUNT` and zeroing job_flow_log row counts; column-name typos;
+SUBSTRING-with-empty-string crashes) to architectural (postprocessing
+SPs that try to traverse ODSE through the NRT staging boundary; dynamic
+UNPIVOTs that assume uniform column types; surrogate-key allocations
+that default to a filtered-out sentinel). See
+[`bugs/README.md`](./bugs/README.md) for the status table.
+
+A second, separately-numbered set of RTR bugs (#16 onward) was surfaced
+later by the ODSE-only conversion, when removing the NRT shortcut exposed
+defects the shortcut had masked. Those live in the repo-root
+[`bugs/`](../../bugs) directory and are summarized in
+[`NO_SHORTCUT_FINDINGS.md`](./NO_SHORTCUT_FINDINGS.md).

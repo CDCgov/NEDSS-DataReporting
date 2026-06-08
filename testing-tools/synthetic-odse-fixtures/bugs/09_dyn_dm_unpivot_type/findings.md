@@ -1,7 +1,7 @@
-# Bug #9 — sp_dyn_dm_repeatvarch_postprocessing: UNPIVOT type conflict
+# Bug #9: sp_dyn_dm_repeatvarch_postprocessing UNPIVOT type conflict
 
-**Status**: Surfaced 2026-05-21 during work to extend orchestrator
-Step 9 with the `sp_dyn_dm_*` chain. **FIXED 2026-05-21** on
+**Status**: Surfaced 2026-05-21 while extending orchestrator Step 9
+with the `sp_dyn_dm_*` chain. **Fixed 2026-05-21** on
 `aw/odse-test-seed` (commit `a88e40e5`).
 
 ## Symptom
@@ -30,7 +30,7 @@ number of BEGIN and COMMIT statements. Previous count = 1, current
 count = 0.
 ```
 
-The 266 is a downstream symptom of the 8167 — the inner `EXEC
+The 266 is a downstream symptom of the 8167: the inner `EXEC
 sp_executesql @sql` raised and rolled back, leaving the outer
 TRY/CATCH txn-counter unbalanced.
 
@@ -44,26 +44,25 @@ metadata. The columns in the source table
 **types they were created with**, which depend on the
 `nrt_metadata_columns` / `v_nrt_d_inv_repeat_blockdata` rows for the
 target datamart. SQL Server's `UNPIVOT` requires every column in the
-IN list to share a single type — one mismatch (e.g.,
+IN list to share a single type. One mismatch (e.g.,
 `EPI_CNTRY_OF_EXP varchar(N)` next to a column declared `varchar(M)` for
 M≠N, or `varchar` next to `nvarchar`) raises 8167.
 
-The SP only does `UNPIVOT` — no `CAST` / `CONVERT` to harmonize types
+The SP only does `UNPIVOT`, with no `CAST` / `CONVERT` to harmonize types
 first.
 
-## Why our team likely hasn't seen this in normal UI / comparison
-testing
+## Why this likely hasn't appeared in normal UI / comparison testing
 
 The dyn_dm chain is invoked at production scale across many
 investigations whose metadata definitions have been hand-curated by
-form authors. Pruduction's `nrt_metadata_columns` rows probably define
-the repeat-block columns with **uniform types** (all `varchar(2000)`,
-for instance), so the UNPIVOT happens to work. Our baseline ships
+form authors. Production's `nrt_metadata_columns` rows probably define
+the repeat-block columns with uniform types (all `varchar(2000)`,
+for instance), so the UNPIVOT happens to work. This baseline ships
 NEDSS's standard metadata seed, which appears to declare
 heterogeneous types for the repeat-block columns of
 `HEPATITIS_A_ACUTE`. Worth confirming whether this is:
 
-- (a) A baseline-data defect — our test image's metadata is wrong and
+- (a) A baseline-data defect: the test image's metadata is wrong and
   prod would not exhibit this; OR
 - (b) A latent SP defect that prod happens to dodge via uniform
   metadata, but which would break on any genuine heterogeneous
@@ -82,15 +81,15 @@ fix is in place.
 
 ## Implications for the comparison test
 
-`DM_INV_*` tables are **expected output** of RTR's dyn_dm pipeline —
-they're the modern equivalent of MasterETL's `DM_INV_*` family. Until
+`DM_INV_*` tables are expected output of RTR's dyn_dm pipeline; they're
+the modern equivalent of MasterETL's `DM_INV_*` family. Until
 this bug is resolved, every `DM_INV_*` table will appear as "RDB has
-rows, RDB_MODERN doesn't" in the diff — a false-positive coverage gap
+rows, RDB_MODERN doesn't" in the diff, a false-positive coverage gap
 that hides any real RTR/MasterETL divergence in these tables.
 
 ## Fix landed (commit a88e40e5)
 
-Same pattern existed in **three** SPs, all fixed:
+The same pattern existed in three SPs, all fixed:
 - `205-sp_dyn_dm_repeatvarch_postprocessing`: build
   `@RDB_COLUMN_CAST_LIST` with `CAST(<col> AS nvarchar(max))`, use in
   inner SELECT before UNPIVOT.
@@ -98,7 +97,7 @@ Same pattern existed in **three** SPs, all fixed:
   column COL1 is `varchar(max)` so nvarchar(max) flows through
   unchanged.
 - `210-sp_dyn_dm_repeatdate_postprocessing`: TRY_CAST (not CAST) to
-  DATE — output column is `dateColumn DATE`, TRY_CAST handles
+  DATE; output column is `dateColumn DATE`, and TRY_CAST handles
   non-date strings gracefully.
 
 Also added `SET QUOTED_IDENTIFIER ON; GO` at the top of each file.

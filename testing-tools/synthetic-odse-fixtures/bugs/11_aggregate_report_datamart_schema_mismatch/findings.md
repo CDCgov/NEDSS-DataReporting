@@ -1,7 +1,6 @@
-# Bug #11 — sp_aggregate_report_datamart_postprocessing references a column AGGREGATE_REPORT_DATAMART does not have
+# Bug #11: sp_aggregate_report_datamart_postprocessing references a column AGGREGATE_REPORT_DATAMART does not have
 
-**Status**: Surfaced 2026-05-21 (overnight loop iter 5). Not fixed.
-Open. Real RTR bug.
+**Status**: Surfaced 2026-05-21. Not fixed. Open. Real RTR bug.
 
 ## Symptom
 
@@ -36,9 +35,9 @@ referencing both `tgt.NOTIFICATION_UPD_DT_KEY` (target table column)
 and `src.NOTIFICATION_UPD_DT_KEY` (sourced from `#AGG_EVENT`,
 populated at line 118 from `NOTIFICATION_EVENT.NOTIFICATION_UPD_DT_KEY`).
 
-The source-side reference is fine — `NOTIFICATION_EVENT` does have
+The source-side reference is fine; `NOTIFICATION_EVENT` does have
 that column. But the target table `AGGREGATE_REPORT_DATAMART` has
-only `NOTIFICATION_STATUS` and `NOTIFICATION_LOCAL_ID` — no
+only `NOTIFICATION_STATUS` and `NOTIFICATION_LOCAL_ID`, no
 `NOTIFICATION_UPD_DT_KEY` column. Verified live 2026-05-21:
 
 ```sql
@@ -69,14 +68,14 @@ fail again on `NOTIFICATION_LAST_CHANGE_TIME` (next msg-207). Any fix
 must remove (or add) **both** columns. Both are sourced fine from
 `NOTIFICATION_EVENT.NOTIFICATION_UPD_DT_KEY` /
 `NOTIFICATION.NOTIFICATION_LAST_CHANGE_TIME` in `#AGG_EVENT` (lines
-118, 121) — the defect is purely the target-side reference.
+118, 121); the defect is purely the target-side reference.
 
 ## Why production likely hasn't seen this
 
-`AGGREGATE_REPORT_DATAMART` is a Tier 3 / niche path — only fires
+`AGGREGATE_REPORT_DATAMART` is a Tier 3 / niche path that only fires
 when an Investigation has `case_type_cd='A'` (Aggregate). Most
 Investigations in production are `case_type_cd='I'` (Individual)
-or `'S'` (Summary). Aggregate reports are weekly count summaries —
+or `'S'` (Summary). Aggregate reports are weekly count summaries:
 relatively few are submitted, and the population path may not be
 fully exercised in normal operation.
 
@@ -94,13 +93,13 @@ Three options for the RTR team:
    (`NOTIFICATION_UPD_DT_KEY = NULL` is still column-named, would
    still fail). Not viable.
 
-Option 1 is the cleaner fix — aggregate reports have notifications
+Option 1 is the cleaner fix: aggregate reports have notifications
 just like other Investigation types, and there's no reason their
 update date wouldn't be useful in the datamart.
 
 ## Tables blocked
 
-- `aggregate_report_datamart` — stays at 0 rows even with a correctly
+- `aggregate_report_datamart`: stays at 0 rows even with a correctly
   authored Aggregate-type Investigation + nrt_investigation_aggregate
   count rows (see `fixtures/30_sp_coverage/aggregate_report.sql`).
 

@@ -2,7 +2,7 @@
 
 A local tool that compares the legacy **RDB** (produced by MasterETL/SAS) against
 **RDB_MODERN** (produced by the RTR reporting pipeline), documenting which tables
-and which columns differ — and classifying every difference as **NEW**
+and which columns differ. It classifies every difference as **NEW**
 (unexplained, needs attention), **EXPECTED** (documented by-design),
 **KNOWN_BUG** (documented probable bug), or **IGNORED** (skip table, surrogate-key
 offset, ETL timestamp, audit column).
@@ -10,15 +10,15 @@ offset, ETL timestamp, audit column).
 It is the local-development counterpart to
 [CDCgov/NEDSS-DataCompare](https://github.com/CDCgov/NEDSS-DataCompare): it reuses
 that project's per-table key columns and comparison SQL approach, but drops the
-S3/Kafka/Spring machinery in favour of a single tool that reads two databases in
+S3/Kafka/Spring machinery for a single tool that reads two databases in
 the same SQL Server instance and emits JSON + Markdown.
 
 ## How it works
 
 The comparison is **UID-keyed and column-by-column** (matching the SQL templates
 in the RTR reporting-differences Confluence page): rows are matched on a table's
-business/UID key(s) — never the surrogate `*_KEY` columns, which carry documented
-offsets — and every non-key column is compared NULL-aware via a cross-database
+business/UID key(s), never the surrogate `*_KEY` columns, which carry documented
+offsets. Every non-key column is compared NULL-aware via a cross-database
 join (`RDB.dbo.X JOIN RDB_MODERN.dbo.X ON key`).
 
 The known/expected differences live in a **declarative rule registry**

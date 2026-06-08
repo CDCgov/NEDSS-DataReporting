@@ -1,4 +1,4 @@
-# Bug #16 — COVID lab datamarts blocked by missing `condition_cd='11065'` rows in `nrt_srte_Loinc_condition` (SEED-gated, not an RTR code defect)
+# Bug #16: COVID lab datamarts blocked by missing `condition_cd='11065'` rows in `nrt_srte_Loinc_condition` (SEED-gated, not an RTR code defect)
 
 **Affected:** `COVID_LAB_DATAMART` (0/120), `COVID_LAB_CELR_DATAMART` (0/101, transitive).
 
@@ -26,7 +26,7 @@ associated_phc_uids=22003000) + 22022001 (Result). Both datamarts remain 0 purel
 patient participation on the lab Order).
 
 **Disposition:** OUT OF BOUNDS for the comparison fixtures (requires an SRTE/seed edit), same
-class as VAR_DATAMART. Loop Round 4 marks COVID labs as do-not-spawn.
+class as VAR_DATAMART. COVID labs are not pursued from ODSE-only fixtures.
 
 **Suggested seed-owner fix (if the team later allows reference-data seeding):** add COVID-19
 LOINCs (94309-2, 94500-6, 94531-1, 94533-7, 94306-8, 94558-4, 95209-3) to

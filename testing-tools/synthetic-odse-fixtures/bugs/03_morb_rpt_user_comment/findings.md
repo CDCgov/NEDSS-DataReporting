@@ -1,6 +1,6 @@
-# Bug #3 — `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816
+# Bug #3: `sp_d_morbidity_report_postprocessing` self-defeating join+filter at lines 802-816
 
-**Status**: **Resolved — fix on branch `aw/app-471/bug-3` (commit `a32456a8`), PR pending.** Rewritten to walk Order → C_Result via the staging CSV `nrt_morbidity_observation.followup_observation_uid` (no cross-DB read of `nbs_odse.dbo.act_relationship`, consistent with the postprocessing-SP-reads-NRT-only convention now documented in `STRATEGY.md`).
+**Status**: **Resolved. Fix on branch `aw/app-471/bug-3` (commit `a32456a8`), PR pending.** Rewritten to walk from Order to C_Result via the staging CSV `nrt_morbidity_observation.followup_observation_uid` (no cross-DB read of `nbs_odse.dbo.act_relationship`, consistent with the postprocessing-SP-reads-NRT-only convention now documented in `STRATEGY.md`).
 
 ## TL;DR
 
@@ -9,18 +9,18 @@
 observation on `root.morb_rpt_uid = obs.observation_uid` (which only ever
 matches the **Order** row, since `morb_rpt_uid` IS the Order's UID), then
 filters `obs.obs_domain_cd_st_1 IN ('C_Order','C_Result')`. The Order row
-cannot satisfy that filter — its `obs_domain_cd_st_1` is `'Order'`. The
+cannot satisfy that filter: its `obs_domain_cd_st_1` is `'Order'`. The
 query returns 0 rows by construction, the temp table is empty, and the
 downstream INSERT into `MORB_RPT_USER_COMMENT` is a no-op.
 
 The bug is independent of the Tier 1 isolation `PATIENT_KEY` blocker
 (`coverage_morbidity.md` LINK_REQUIRED #166). Even when the
 `MORBIDITY_REPORT_EVENT` INSERT succeeds end-to-end (Tier 2 `morb_inv`
-edge wired + Patient chain + RDB_DATE seeded — see
+edge wired, Patient chain, and RDB_DATE seeded; see
 `coverage_morb_inv.md` § OUT_OF_SCOPE), the user-comment INSERT still
 runs but inserts 0 rows.
 
-Also worth noting upstream: **filename / SP-name mismatch** —
+One upstream note, a filename / SP-name mismatch:
 `016-sp_nrt_morbidity_report_postprocessing-001.sql` defines a SP whose
 body is `dbo.sp_d_morbidity_report_postprocessing`. The "nrt" prefix in
 the filename and the "d" prefix in the SP name don't match. Not the
@@ -30,10 +30,10 @@ subject of this bug, but flagged for upstream cleanup.
 
 - File: `liquibase-service/src/main/resources/db/005-rdb_modern/routines/016-sp_nrt_morbidity_report_postprocessing-001.sql`
 - SP: `dbo.sp_d_morbidity_report_postprocessing`
-- Step: 19 — "Generating `##SAS_morb_Rpt_User_Comment`"
+- Step: 19, "Generating `##SAS_morb_Rpt_User_Comment`"
 - Lines: 802-816
 
-## Annotated walkthrough — lines 802-816
+## Annotated walkthrough of lines 802-816
 
 ```sql
 802         SET @sql = N'
@@ -56,16 +56,16 @@ subject of this bug, but flagged for upstream cleanup.
 
 Why each line forces the result set to be empty:
 
-1. **Line 812 — `root.morb_rpt_uid = obs.observation_uid`.** `root` is
+1. **Line 812, `root.morb_rpt_uid = obs.observation_uid`.** `root` is
    `tmp_Morbidity_Report`, which the SP populates upstream from the
    filtered `nrt_observation` set where `obs_domain_cd_st_1 = 'Order'`
    AND `ctrl_cd_display_form = 'MorbReport'` (SP lines 281-282), with
    `morb_rpt_uid = obs.observation_uid` (SP line 267). So
    `root.morb_rpt_uid` IS the Order observation's UID. The join therefore
-   binds `obs` to **the Order row itself** — never to the C_Order or
+   binds `obs` to **the Order row itself**, never to the C_Order or
    C_Result child rows.
 
-2. **Line 813 — `ls.observation_uid = obs.observation_uid`.** `obs` is
+2. **Line 813, `ls.observation_uid = obs.observation_uid`.** `obs` is
    already the Order row (per (1)); the Order's UID is in
    `#updated_morb_observation_list` because that list is the union of
    `nrt_morbidity_observation` (the input list) plus all UIDs reachable
@@ -73,14 +73,14 @@ Why each line forces the result set to be empty:
    traversal (SP lines 89-106). So this join is trivially satisfied.
    Even if it were a tighter constraint, the bug is upstream at (1).
 
-3. **Line 814 — `ovt.observation_uid = obs.observation_uid`.** Joins the
+3. **Line 814, `ovt.observation_uid = obs.observation_uid`.** Joins the
    text staging row to `obs` (= the Order). The Order observation
    ordinarily has no `nrt_observation_txt` row of its own (the
    user-comment text lives on the C_Result child observation, UID
    20080021 in the Tier 1 fixture). So even the inner join can fail
    at this step. But again, the deeper problem is (1)+(4).
 
-4. **Line 817 — `obs.obs_domain_cd_st_1 IN ('C_Order','C_Result')`.**
+4. **Line 817, `obs.obs_domain_cd_st_1 IN ('C_Order','C_Result')`.**
    Given `obs` is bound to the Order row by (1), and an observation row
    has exactly one `obs_domain_cd_st_1` value (`'Order'` for the Order
    row), this predicate is **always false**. Each `observation_uid` is a
@@ -120,7 +120,7 @@ semantics, not missing fixture data.
 
 Two reasonable approaches, in rough order of preference:
 
-### Option A — traverse `act_relationship` directly (recommended)
+### Option A (recommended): traverse `act_relationship` directly
 
 Replace lines 810-817 with a query that joins from `root` (the Order)
 through `act_relationship` to the C_Order child, then through a second
@@ -158,7 +158,7 @@ WHERE ovt.ovt_value_txt IS NOT NULL;';
 Notes / nuances:
 
 - `activity_to_time` and `add_user_id` should come from the C_Result
-  (or the C_Order — RTR's intent isn't entirely clear; the original
+  (or the C_Order; RTR's intent isn't entirely clear; the original
   code aliased `obs.*` from a single child, so picking the C_Result is
   the most faithful reading of "user comment").
 - The `INNER JOIN #updated_morb_observation_list` was redundant in the
@@ -168,16 +168,16 @@ Notes / nuances:
   fixture. RTR may want to confirm that's the only valid type_cd, or
   expand the predicate.
 
-### Option B — bind through the existing CSV traversal
+### Option B: bind through the existing CSV traversal
 
 The SP already builds `#updated_morb_observation_list` by traversing
 `nrt_observation.followup_observation_uid` / `result_observation_uid`
 CSVs (lines 89-106). Walk the C_Order/C_Result subset of that list
 directly, and re-join up to the Order via a self-join on the followup
-chain — but that's awkward because the SP doesn't preserve the
+chain. That is awkward because the SP doesn't preserve the
 `Order -> child` mapping, just the union. Option A is cleaner.
 
-### Option C (not recommended) — minimal patch on the existing query
+### Option C (not recommended): minimal patch on the existing query
 
 Remove the broken join and pull the user comment from
 `#tmp_nrt_observation_txt` correlated to the Order via a subquery that
