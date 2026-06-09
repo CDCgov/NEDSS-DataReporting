@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: liquibase
+      changes:
+        - sqlFile:
+            path: db/changelog/releases/v1.0/sample.sql
+            relativeToChangelogFile: false
+            splitStatements: true
+            stripComments: true

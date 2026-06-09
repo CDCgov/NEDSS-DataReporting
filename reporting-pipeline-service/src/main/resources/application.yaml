@@ -82,6 +82,12 @@ spring:
     username: ${DB_USERNAME}
     url: ${DB_CONNECTION_URL}
 
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-sample.yaml
+    user: rtr_admin
+    password: rtr_admin
+
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-enable: ${FF_PHC_DM_ENABLE:false}

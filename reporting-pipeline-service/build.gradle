@@ -95,6 +95,9 @@ dependencies {
     // Persistence & Database
     implementation 'com.microsoft.sqlserver:mssql-jdbc:13.4.0.jre11'
 
+    // Liquibase
+    implementation 'org.liquibase:liquibase-core:5.0.3'
+
     // Logging
     compileOnly 'org.slf4j:slf4j-api'
 
