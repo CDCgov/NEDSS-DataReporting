@@ -562,9 +562,12 @@ BEGIN
                             NOTI.NOTIFICATION_LOCAL_ID,
                             NOTI.NOTIFICATION_SUBMITTED_BY,
                             NOTI.NOTIFICATION_LAST_CHANGE_TIME,
-                            CASE
-                                WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN RDB_DATE.DATE_MM_DD_YYYY
-                                ELSE NULL END                                                                           AS 'NOTIFICATION_CREATE_DATE',
+                            WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN COALESCE(
+                                RDB_DATE.DATE_MM_DD_YYYY,
+                                CAST(
+                                    CAST(NOTI.NOTIFICATION_LAST_CHANGE_TIME AS DATE) AS DATETIME
+                                )
+                            ) ELSE NULL END AS 'NOTIFICATION_CREATE_DATE',
                             CASE
                                 WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN RDB_DATE_SENT.DATE_MM_DD_YYYY
                                 ELSE NULL END                                                                 AS 'NOTIFICATION_SENT_DATE',
