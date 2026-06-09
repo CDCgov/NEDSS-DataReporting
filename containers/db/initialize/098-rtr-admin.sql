@@ -16,7 +16,20 @@ BEGIN
 END
 
 -- ------------------------------------------
--- 2. Database-Level Permissions: NBS_ODSE
+-- 2. Database-Level Permissions: NBS_SRTE (read-only, for cross-db queries during migrations)
+-- ------------------------------------------
+IF DB_ID('NBS_SRTE') IS NOT NULL
+BEGIN
+    EXEC('
+        USE [NBS_SRTE];
+        IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = ''$(RTR_ADMIN_NAME)'')
+            CREATE USER [$(RTR_ADMIN_NAME)] FOR LOGIN [$(RTR_ADMIN_NAME)];
+        ALTER ROLE [db_owner] ADD MEMBER [$(RTR_ADMIN_NAME)];
+    ');
+END
+
+-- ------------------------------------------
+-- 3. Database-Level Permissions: NBS_ODSE
 -- ------------------------------------------
 IF DB_ID('NBS_ODSE') IS NOT NULL
 BEGIN
@@ -29,7 +42,7 @@ BEGIN
 END
 
 -- ------------------------------------------
--- 3. Database-Level Permissions: RDB
+-- 4. Database-Level Permissions: RDB
 -- ------------------------------------------
 IF DB_ID('RDB') IS NOT NULL
 BEGIN
@@ -42,7 +55,7 @@ BEGIN
 END
 
 -- ------------------------------------------
--- 4. Database-Level Permissions: RDB_MODERN
+-- 5. Database-Level Permissions: RDB_MODERN
 -- ------------------------------------------
 IF DB_ID('rdb_modern') IS NOT NULL
 BEGIN
