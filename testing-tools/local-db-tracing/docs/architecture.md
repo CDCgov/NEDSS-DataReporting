@@ -122,10 +122,10 @@ output/
 - Configuration validation
 
 **Supported Environment Variables**:
-- `DB_HOST`: Database server hostname
-- `DB_USERNAME`: Connection username
-- `DB_PASSWORD`: Connection password
-- `DB_PORT`: Connection port (default: 1433)
+- `DATABASE_SERVER`: Database server hostname
+- `DATABASE_USERNAME`: Connection username
+- `DATABASE_PASSWORD`: Connection password
+- `DATABASE_PORT`: Connection port (default: 1433)
 
 #### tracing_constants.py
 **Responsibilities**:
@@ -270,10 +270,10 @@ Output Folder
 
 ### .env File Format
 ```
-DB_HOST=localhost
-DB_PORT=1433
-DB_USERNAME=sa
-DB_PASSWORD=password123
+DATABASE_SERVER=localhost
+DATABASE_PORT=1433
+DATABASE_USERNAME=sa
+DATABASE_PASSWORD=password123
 BATCH_SIZE=1000
 OUTPUT_DIR=./output
 ```

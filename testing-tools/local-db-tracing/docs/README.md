@@ -124,20 +124,20 @@ Welcome to the local-db-tracing documentation! This comprehensive guide covers a
 ### Task: Run CDC trace to capture database changes
 
 1. Read: [Usage Guide - Quick Start](./usage-guide.md#quick-start)
-2. Run: `python trace_db_cdc.py`
+2. Run: `python testing-tools/local-db-tracing/trace_db_cdc.py`
 3. Review: `output/YYYYMMDD-HHMMSS-NBS_ODSE-CDC/manifest.json`
 
 ### Task: Run dual database comparison
 
 1. Read: [Usage Guide - Dual Database Tracing](./usage-guide.md#dual-database-tracing)
-2. Open terminal 1: `python trace_db_cdc.py`
-3. Open terminal 2: `python trace_db_logical_changes.py`
+2. Open terminal 1: `python testing-tools/local-db-tracing/trace_db_cdc.py`
+3. Open terminal 2: `python testing-tools/local-db-tracing/trace_db_logical_changes.py`
 4. Compare outputs in `output/` directory
 
 ### Task: Generate RDB verification SQL
 
 1. Read: [Usage Guide - Generate RDB Verification SQL](./usage-guide.md#generate-rdb-verification-sql)
-2. Run: `python generate_query_expected.py --combined-manifest output/<paired-run>/combined-manifest.json`
+2. Run: `python testing-tools/local-db-tracing/generate_query_expected.py --combined-manifest output/<paired-run>/combined-manifest.json`
 3. Review: `output/<paired-run>/rdb-selects.sql` and `output/<paired-run>/expected.json`
 
 ### Task: Troubleshoot connection issues
@@ -209,7 +209,7 @@ Cleanup and finalization phase after change capture, including artifact writing 
 **Goal**: Track what changed in the database today
 
 **Steps**:
-1. Run CDC trace: `python trace_db_cdc.py`
+1. Run CDC trace: `python testing-tools/local-db-tracing/trace_db_cdc.py`
 2. Review manifest: `cat output/*/manifest.json | jq`
 3. Export to CSV: See [Configuration Reference - Output Formats](./configuration-reference.md)
 4. Archive output: `tar -czf traces-$(date +%Y%m%d).tar.gz output/*/`
@@ -221,8 +221,8 @@ Cleanup and finalization phase after change capture, including artifact writing 
 **Goal**: Verify data replication from source to reporting database
 
 **Steps**:
-1. Run CDC on NBS_ODSE: Terminal 1 → `python trace_db_cdc.py`
-2. Run logical changes on RDB_MODERN: Terminal 2 → `python trace_db_logical_changes.py`
+1. Run CDC on NBS_ODSE: Terminal 1 → `python testing-tools/local-db-tracing/trace_db_cdc.py`
+2. Run logical changes on RDB_MODERN: Terminal 2 → `python testing-tools/local-db-tracing/trace_db_logical_changes.py`
 3. Compare record counts in manifests
 4. Analyze transformation fidelity
 
@@ -233,7 +233,7 @@ Cleanup and finalization phase after change capture, including artifact writing 
 **Goal**: Capture large volumes with checkpoint recovery
 
 **Steps**:
-1. Start capture with smaller batch: `python trace_db_cdc.py --batch-size 500`
+1. Start capture with smaller batch: `python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 500`
 2. If interrupted, resume: Run command again, answer "Resume? Y"
 3. Captures merge automatically upon completion
 
@@ -276,8 +276,8 @@ LSN (Log Sequence Number) format: `0x00000000:00000000:0000`
 
 Run multiple traces simultaneously using PowerShell jobs:
 ```powershell
-Start-Job { python trace_db_cdc.py }
-Start-Job { python trace_db_logical_changes.py }
+Start-Job { python testing-tools/local-db-tracing/trace_db_cdc.py }
+Start-Job { python testing-tools/local-db-tracing/trace_db_logical_changes.py }
 Wait-Job
 ```
 
@@ -297,7 +297,7 @@ Quick optimizations:
 
 Save disk space with output compression:
 ```bash
-COMPRESSION=gzip python trace_db_cdc.py
+COMPRESSION=gzip python testing-tools/local-db-tracing/trace_db_cdc.py
 ```
 
 → Learn more: [Configuration Reference - Compression](./configuration-reference.md)

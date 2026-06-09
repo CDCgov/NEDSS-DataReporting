@@ -29,12 +29,6 @@ RUN chmod +x /usr/local/bin/sqlcmd
 #Copy sources
 #changelog
 COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
-# master
-COPY liquibase-service/src/main/resources/db/001-master /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/001-master/functions /liquibase/changelog
-# srte
-COPY liquibase-service/src/main/resources/db/002-srte /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/002-srte/tables /liquibase/changelog
 # odse
 COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
@@ -45,9 +39,6 @@ COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
 COPY liquibase-service/src/main/resources/db/005-rdb_modern/onboarding /liquibase/changelog
-
-# Onboarding
-COPY liquibase-service/src/main/resources/db/001-master/02_onboarding_script_data_load/ /liquibase/changelog/02-onboarding/
 
 #Set the Working Directory
 WORKDIR /liquibase/changelog

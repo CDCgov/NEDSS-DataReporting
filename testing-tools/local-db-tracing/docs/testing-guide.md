@@ -499,14 +499,14 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install -r requirements-dev.txt
+                    pip install pytest pytest-cov
       
       - name: Run tests
         run: pytest --cov=. --cov-report=xml
         env:
-          DB_HOST: localhost
-          DB_USERNAME: sa
-          DB_PASSWORD: TestPassword123!
+          DATABASE_SERVER: localhost
+          DATABASE_USERNAME: sa
+          DATABASE_PASSWORD: TestPassword123!
       
       - name: Upload coverage
         uses: codecov/codecov-action@v2
