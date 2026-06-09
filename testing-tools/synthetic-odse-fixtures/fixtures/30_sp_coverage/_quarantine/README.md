@@ -122,8 +122,10 @@ commit a7757dbc). The COVID INSERT failed mid-apply with
 `Cannot insert explicit value for identity column in table
 'NBS_case_answer' when IDENTITY_INSERT is set to OFF`. Because
 `scripts/merge_and_verify.sh` runs `set -euo pipefail`, the COVID
-fixture failure aborted Step 8 before TB's tail-EXECs ran, leaving
-D_TB_PAM / F_TB_PAM / TB_DATAMART at 0 rows. There was no
+fixture failure aborted the merge run (historically, before TB's
+postprocessing completed), leaving D_TB_PAM / F_TB_PAM / TB_DATAMART at
+0 rows. (`set -euo pipefail` still aborts the run on any fixture apply
+error.) There was no
 cross-fixture interference: the two fixtures compose cleanly with
 TB once the IDENTITY_INSERT toggle is added.
 

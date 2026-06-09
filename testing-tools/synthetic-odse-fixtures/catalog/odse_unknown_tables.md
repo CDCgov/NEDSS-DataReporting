@@ -31,7 +31,7 @@ target tables from `coverage_merged.md`):
 ## Summary counts
 
 - (a) MasterETL-only (no RTR writer): **26 tables**
-- (b) Datamart-SP-driven (Merge step 9 / dyn_dm chain): **45 tables**
+- (b) Datamart-SP-driven (datamart SPs / dyn_dm chain the service fires during the CDC drain): **45 tables**
 - (c) Tier-1-or-Tier-2 reachable (fixture gap): **35 tables**
 - (d) Uninvestigated (insufficient time / unclear): **0 tables**
 - Missing from live schema (per `coverage_merged.md`): **118 tables**
@@ -86,9 +86,10 @@ the Writer column means no RTR routine writes the table.
 | `nbs_case_answer_rept` | (none) | Used only as `#NBS_CASE_ANSWER_REPT` temp table inside `010-sp_sld_investigation_repeat_postprocessing`. Persistent table is MasterETL. |
 | `summ_datamart` | (none) | The persistent table referenced by MasterETL. RTR has `INV_SUMM_DATAMART` (different table) populated by `045-sp_inv_summary_datamart_postprocessing`. Note also `tmp_DynDm_INV_SUMM_DATAMART_*` temp-table family. |
 
-### (b) Datamart-SP-driven (RTR writes via Merge step 9)
+### (b) Datamart-SP-driven (RTR writes via the datamart SPs the service fires during the CDC drain)
 
-These populate when the orchestrator runs Step 9 (datamart SPs). Several
+These populate when the reporting-pipeline-service fires the datamart
+SPs off CDC events during the drain. Several
 condition-specific datamarts were blocked by SP-level defects rather than
 missing fixtures; HEPATITIS_DATAMART in particular by the `#TMP_F_PAGE_CASE`
 chain in bug #5. See [`bugs/README.md`](../bugs/README.md).
@@ -231,16 +232,18 @@ No (d) entries.
    + `nbs_case_answer` + form-id chain that TB-PAM postprocessing
    requires.
 
-4. **The dyn_dm chain (sp_dyn_dm_*) is never invoked by the
-   orchestrator yet.** `merge_and_verify.sh` Step 9 runs only the
-   condition-specific datamart SPs; no `sp_dyn_dm_createdm_postprocessing`,
-   `sp_dyn_dm_invest_form_postprocessing`, or
-   `sp_dyn_dm_repeat*` SPs are EXEC'd. That means all RTR-side
-   `DM_INV_<DATAMART_NAME>` wide tables (the modern equivalent of
-   the legacy `DM_INV_*` topic tables) will be 0-rows in the diff
-   regardless of fixture content. **Phase 2 gating item**: extend
-   the orchestrator's Step 9 to invoke the dyn_dm family before
-   running the comparison.
+4. **The dyn_dm chain (sp_dyn_dm_*) fires via the service's
+   page-builder path, gated on fixture content.** In the CDC-only flow
+   the reporting-pipeline-service drives the `sp_dyn_dm_*` family
+   (`sp_dyn_dm_createdm_postprocessing`,
+   `sp_dyn_dm_invest_form_postprocessing`, `sp_dyn_dm_repeat*`) off CDC
+   events during the drain, via its page-builder path — not from any
+   script step. The RTR-side `DM_INV_<DATAMART_NAME>` wide tables (the
+   modern equivalent of the legacy `DM_INV_*` topic tables) stay 0-rows
+   only when fixtures don't drive the page-builder path for the relevant
+   form. **Phase 2 gating item**: ensure the synthetic fixtures author
+   the investigation/form content that makes the service fire the
+   dyn_dm family before running the comparison.
 
 5. **The `confirmation_method` / `confirmation_method_group` pair
    is not actually ODSE-unknown.** `005-sp_nrt_investigation_postprocessing`
@@ -283,9 +286,11 @@ extend coverage to more conditions.
    Without this, the affected condition-specific datamarts stay at
    0 rows regardless of fixture authoring. This is an RTR fix, not a
    fixture fix.
-3. **Third**: extend the orchestrator's Step 9 to invoke the dyn_dm
-   chain (`sp_dyn_dm_invest_form_postprocessing` →
-   `sp_dyn_dm_createdm_postprocessing` → `sp_dyn_dm_repeat*`). This
+3. **Third**: drive the dyn_dm chain
+   (`sp_dyn_dm_invest_form_postprocessing` →
+   `sp_dyn_dm_createdm_postprocessing` → `sp_dyn_dm_repeat*`), which the
+   service fires via its page-builder path during the CDC drain; author
+   the fixture investigation/form content needed to trigger it. This
    produces the modern `DM_INV_<DATAMART_NAME>` wide tables that
    replace the legacy `DM_INV_*` topic tables on the RDB_MODERN side.
 4. **Fourth**: small win. Fixture a DQ-fail branch (invalid numeric)

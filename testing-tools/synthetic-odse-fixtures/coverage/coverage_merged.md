@@ -264,8 +264,9 @@ candidates for Tier 3 gap-driven coverage work.
 ### Empty (15)
 
 Tables that exist in RDB_MODERN but have zero rows after the merged
-chain runs. Most are datamart-side fact tables that depend on Merge
-contract step 9 (Datamart SPs — out of scope for v1).
+chain runs. Most are datamart-side fact tables that depend on the
+datamart SPs the reporting-pipeline-service fires during the CDC drain
+(out of scope for v1).
 
 - dbo.aggregate_report_datamart
 - dbo.covid_lab_celr_datamart

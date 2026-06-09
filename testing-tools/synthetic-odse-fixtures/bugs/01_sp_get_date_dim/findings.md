@@ -101,12 +101,14 @@ Either option fixes both 1A and 1B in one changeset.
 
 ## Workarounds
 
-The comparison-fixtures orchestrator (`STRATEGY.md` "Pre-Tier-2
-infrastructure step"; `coverage_inv_notification.md` Inputs/INFRA_GAP)
-bypasses `sp_get_date_dim` entirely and populates `RDB_DATE` via a
-recursive CTE in `scripts/merge_and_verify.sh`. The SP is never EXEC'd
-in this pipeline. Anyone following RTR's documented setup path that
-says "EXEC `sp_get_date_dim`" is broken on first run.
+`RDB_DATE` is populated by the liquibase onboarding seed
+`onboarding-rdb-date-seed`
+(`liquibase-service/.../onboarding/002-rdb_date_seed-001.sql`), which
+EXECs `sp_get_date_dim @start=1990 @end=2030` on baseline `up` (the seed
+ships with the bugs above resolved). The SP is never EXEC'd on the live
+reporting-pipeline path itself — it is dead there — so anyone following
+RTR's documented runtime setup that says "EXEC `sp_get_date_dim`" is
+broken on first run; only the onboarding seed's fixed invocation works.
 
 ## Related issues found during investigation
 

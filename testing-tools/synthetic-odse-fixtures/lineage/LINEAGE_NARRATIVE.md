@@ -494,7 +494,8 @@ not propagate in this DB, so the dims are seeded directly), then
 tail-EXECs `sp_f_page_case_postprocessing` and
 `sp_hepatitis_datamart_postprocessing`. `INIT_NND_NOT_DT` is also
 populated via the notification chain (`sp_nrt_notification_postprocessing`
-UPDATE) at merge step 9.
+UPDATE) by the datamart SPs the reporting-pipeline-service fires during
+the CDC drain.
 
 The **65 BLOCKED:tempdb** columns are exactly the ones the Round 2
 fixture was meant to light up:
@@ -741,8 +742,8 @@ trace to `nbs_case_answer.answer_txt` via the D_VAR_PAM pivot.
 Key gating predicate: `VAR_DATAMART` is gated by
 `INNER JOIN EVENT_METRIC e ON e.EVENT_UID = d.VAR_PAM_UID` (SP line 692).
 `EVENT_METRIC` is empty in a Tier-1-isolation run, so VAR_DATAMART only
-populates after the orchestrator's Step 9 runs
-`sp_event_metric_datamart_postprocessing` first
+populates after `sp_event_metric_datamart_postprocessing` has run first
+(in the merged flow that runs in `run_summary_datamarts`)
 (`coverage_varicella_full_chain.md`). Unlike TB, VAR_DATAMART's INSERT
 has a `WHERE D.INVESTIGATION_KEY IS NULL` idempotency guard. Verified
 columns are the ~25 the full-chain + enrich fixtures authored
@@ -1300,8 +1301,9 @@ and the distinction is load-bearing for this cluster:
    own dimension joins in the merged sequence (after Patient/Provider/Org/
    Investigation/Interview chains run), and these NAE/participation edges
    are documented as *shape-consistency* (they keep the ODSE graph
-   honest and unlock the Datamart-layer F_PAGE_CASE INNER JOINs at Merge
-   step 9, which is L6/datamart territory). Several of the edge `type_cd`
+   honest and unlock the Datamart-layer F_PAGE_CASE INNER JOINs driven by
+   the datamart SPs the reporting-pipeline-service fires during the CDC
+   drain, which is L6/datamart territory). Several of the edge `type_cd`
    values (`IXS`, `SiteOfExposure`, `TreatmentToMorb`, etc.) are
    `MISSING_FROM_SRTE` but the RTR event SPs filter on the literal anyway,
    so the fixtures author them with the literal value per the Phase-B
@@ -1432,9 +1434,12 @@ the `PLACE_*` columns trace through the **L5 place dimension** to ODSE via
 
 Because those `PLACE_*` values originate in the L5 place dimension and
 this table is only **1/44** in the merged state (the
-`zz_d_inv_place_repeat_enrich.sql` fixture's needle-moving depends on an
-unshipped orchestrator wire-up of `sp_repeated_place_postprocessing`; the
-SP isn't called by `merge_and_verify.sh`), the `PLACE_*` rows are recorded
+`zz_d_inv_place_repeat_enrich.sql` fixture's needle-moving depends on
+`sp_repeated_place_postprocessing`, which the reporting-pipeline-service
+fires via `sp_page_builder_postprocessing` during the CDC drain, gated on
+the investigation's `rdb_table_name_list` containing `'D_INV_PLACE_REPEAT'`
+— so the fixture must carry that table name for the SP to run), the
+`PLACE_*` rows are recorded
 `INFERRED` (mechanism clear from the SP body, not yet fixture-confirmed
 end-to-end), while the pivot columns and surrogate key, which the fixture
 demonstrably exercises, are `VERIFIED`.
@@ -1560,7 +1565,8 @@ construction and are documented here as a mechanism rather than per-column.
   `sp_dyn_dm_repeatvarch_postprocessing` built a dynamic UNPIVOT over a
   column list whose member columns carried mismatched types (Msg 8167),
   rolling back the outer transaction (Msg 266). The fix unblocked the
-  orchestrator Step-9 `sp_dyn_dm_*` chain.
+  `sp_dyn_dm_*` chain the reporting-pipeline-service fires during the
+  CDC drain.
 
 ---
 
@@ -1770,10 +1776,13 @@ and is populated (the sentinel row), but `PAGE_CASE_UID`,
 sourced from `nrt_page_case_answer.act_uid` via the
 `PlaceAsHangoutOfPHC`/`PlaceAsSexOfPHC` part-type pivot (SP:46-67), is
 **NULL in the merged run (1/2)**. Two things keep it unpopulated:
-`sp_repeated_place_postprocessing` is not wired into
-`merge_and_verify.sh` (the ORCH_TODO in `zz_d_inv_place_repeat_enrich.sql`),
-and the place-repeat answer rows + a matching `D_PLACE.PLACE_LOCATOR_UID`
-must both exist for the SP's INNER JOIN to emit a non-sentinel row.
+`sp_repeated_place_postprocessing` only runs when the
+reporting-pipeline-service fires it via `sp_page_builder_postprocessing`
+during the CDC drain — gated on the investigation's `rdb_table_name_list`
+containing `'D_INV_PLACE_REPEAT'`, which the fixture must carry (the
+ORCH_TODO in `zz_d_inv_place_repeat_enrich.sql`) — and the place-repeat
+answer rows + a matching `D_PLACE.PLACE_LOCATOR_UID` must both exist for
+the SP's INNER JOIN to emit a non-sentinel row.
 `PAGE_CASE_UID` is therefore flagged **INFERRED**: the mapping is read
 from the SP body but no merged fixture proves it.
 
@@ -2232,8 +2241,10 @@ NULL/unknown date row; real dates start at `DATE_KEY = 2` for 1990-01-01.
 Columns are `VERIFIED` against the live 4019-row dimension but the
 appendix `odse_source_col(s)` honestly reads "(generated utility, no ODSE
 source)". (Note: the STRATEGY baseline records an RTR bug in this SP under
-6.0.18.1 that forces the merge orchestrator to populate `RDB_DATE` via a
-recursive CTE instead; the column logic above is the SP's intent.)
+6.0.18.1; `RDB_DATE` is populated by the liquibase onboarding seed
+`onboarding-rdb-date-seed`, which EXECs `sp_get_date_dim @start=1990
+@end=2030` on baseline `up` from a fixed copy. The column logic above is
+the SP's intent.)
 
 **USER_PROFILE** (8/8) is the one operational-adjacent table with
 **genuine staging-sourced lineage**. `sp_user_profile_postprocessing` (027)

@@ -10,7 +10,7 @@ violation being removed.
 Triaged one-per-fixture. **All 24 are convertible to ODSE-only; none is blocked
 by an RTR bug at the fixture-write level.** (Outputs that ARE bug-blocked,
 HEPATITIS_DATAMART / STD_HIV_DATAMART via the `#TMP_F_PAGE_CASE` chain in
-`013-sp_hepatitis_datamart` (bug #5), are Step-9 SP outputs, not fixture writes, so they
+`013-sp_hepatitis_datamart` (bug #5), are datamart-SP outputs the service fires during the CDC drain, not fixture writes, so they
 are not in scope here.)
 
 **Key finding:** per-topic `D_INV_<topic>` / `L_INV_<topic>` ARE RTR-derived, via
@@ -67,10 +67,14 @@ from nbs_case_answer via the page-builder during the CDC drain, with no explicit
 pagebuilder loop needed; (2) STD_HIV_DATAMART and MORBIDITY_REPORT_DATAMART both
 populate and are not bug-blocked.
 
-The Step-9 UID lists in `scripts/merge_and_verify.sh` were extended:
-PHC_UIDS += 22006000 (phase2), 22015200 (morb); PAT/PRV/ORG_UIDS +
-morb cluster; LAB_OBS_UIDS += lab-pair Result UIDs + morb labs; MORB_OBS_UIDS +=
-22015010. (var PHC 22002000 was already present.)
+In the current CDC-only flow the reporting-pipeline-service fires the
+per-subject event + postprocessing + datamart SPs off CDC events during
+the drain, so these clusters no longer need manual per-subject UID lists
+in `scripts/merge_and_verify.sh`. The one deterministic list that
+survives is `PHC_UIDS` (used by `run_summary_datamarts`), which includes
+22006000 (phase2), 22015200 (morb), and the var PHC 22002000. The morb
+patient/provider/org cluster and the lab-pair/morb-lab observations are
+picked up by the service during the drain.
 
 ## Group C: real ODSE authoring required (DONE; see STATUS above)
 
@@ -82,5 +86,5 @@ morb cluster; LAB_OBS_UIDS += lab-pair Result UIDs + morb labs; MORB_OBS_UIDS +=
 | `zz_lab100_enrich.sql` | med | Replace 6 LAB_* INSERTs with 2 ODSE observation hierarchies (Order+Result, obs_value_*, participations, act_relationship COMP). Model: `zz_lab100_101_fill.sql` Part A. Add Result UIDs to orchestrator lab @obs_ids |
 | `zz_enrich_phase2_investigations.sql` | high | Replace the 60-col nrt_investigation UPDATE (22 PHCs) with ODSE `public_health_case` column fills + `participation` InvestgrOfPHC + `nbs_case_answer` (for inv_state_case_id/legacy_case_id/city_county_case_nbr). 056 decodes the ~20 text columns, so author raw codes only |
 | `zz_morbidity_report_datamart_enrich.sql` | high | Full multi-subject ODSE rewrite (1 morb + 16 follow-ups, patient, 2 providers, 2 orgs, investigation, 3 labs, 3 treatments) + cross-subject `act_relationship`/`participation` links so morb/lab/treatment share an investigation. Models: 10_subjects/* + 20_links/* |
-| `std_hiv_investigation_full_chain.sql` | high | Delete 10 D_INV_*/L_INV_* dim/link INSERTs; author STD-form `nbs_case_answer` rows per category so 011→009→008 pagebuilder SPs derive the dims/links. Model: `tb_investigation_full_chain.sql`. (STD_HIV_DATAMART itself is a Step-9 output, possibly bug-gated, not a fixture write) |
+| `std_hiv_investigation_full_chain.sql` | high | Delete 10 D_INV_*/L_INV_* dim/link INSERTs; author STD-form `nbs_case_answer` rows per category so 011→009→008 pagebuilder SPs derive the dims/links. Model: `tb_investigation_full_chain.sql`. (STD_HIV_DATAMART itself is a datamart-SP output fired by the service during the CDC drain, possibly bug-gated, not a fixture write) |
 | `zz_std_hiv_datamart_enrich.sql` | high | Author repeating-block observations / `nbs_case_answer` for the 9 topic categories so the pagebuilder SPs (008/009) derive the per-topic D_INV_*/L_INV_*; the D_PATIENT/D_CASE_MANAGEMENT UPDATEs become ODSE person/case_management fills |

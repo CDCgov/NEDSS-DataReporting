@@ -9,14 +9,6 @@
 # Usage:
 #
 #   source /path/to/db_lock.sh
-#   with_db_lock "<who_am_i>" <<'BODY'
-#     # all DB-touching work goes here.
-#     sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -i /path/to/fixture.sql
-#     sqlcmd -S localhost,3433 -U sa -C -d RDB_MODERN -Q "EXEC dbo.sp_..."
-#   BODY
-#
-# Or use the lower-level acquire/release pair for fine-grained scopes:
-#
 #   acquire_db_lock "<who_am_i>"
 #   trap 'release_db_lock' EXIT
 #   # ...DB work...
@@ -85,16 +77,4 @@ release_db_lock() {
     rm -rf "$_LOCK_DIR"
     printf '[db_lock] released by %s\n' "${who:-$holder}" >&2
   fi
-}
-
-# Convenience wrapper: acquire, run a heredoc body, release (even on error).
-with_db_lock() {
-  local who="${1:-unknown}"
-  acquire_db_lock "$who" || return 1
-  trap 'release_db_lock "'"$who"'"' EXIT
-  bash -s
-  local rc=$?
-  release_db_lock "$who"
-  trap - EXIT
-  return $rc
 }

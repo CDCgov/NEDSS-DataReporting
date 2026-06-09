@@ -106,22 +106,23 @@ run the SP. Check job_flow_log for the
 `'INSERT INTO D_INVESTIGATION_REPEAT'` row_count: the former says N,
 the latter says 0.
 
-## Architectural follow-on (DONE in commit `99ef3517`)
+## How the dim is wired now (CDC drain)
 
-Step 8.5 added to `merge_and_verify.sh`:
+There is no script step that EXECs the SP. In the CDC-only flow,
+`D_INVESTIGATION_REPEAT` populates automatically during the drain: the
+reporting-pipeline-service's `processInvestigation` path calls
+`sp_page_builder_postprocessing` once per table name in the
+investigation's `rdb_table_name_list` field, and
+`sp_page_builder_postprocessing` internally EXECs
+`sp_sld_investigation_repeat_postprocessing` when that list contains
+`'D_INVESTIGATION_REPEAT'` (page-builder SP line 108).
 
-```sh
-run_sld_investigation_repeat() {
-  log "Step 8.5: populate D_INVESTIGATION_REPEAT via sp_sld_investigation_repeat_postprocessing"
-  local batch_id
-  batch_id=$(date +%y%m%d%H%M%S)
-  sql_q RDB_MODERN "EXEC dbo.sp_sld_investigation_repeat_postprocessing @batch_id = $batch_id, @phc_id_list = N'$PHC_UIDS', @debug = 0" >/dev/null 2>&1 || { ... }
-}
-```
-
-The dim now populates as part of the canonical merged run.  Future
-fixtures that author repeating-block answers will see their data flow
-through to D_INVESTIGATION_REPEAT automatically.
+The real dependency is therefore on the synthetic fixtures: a fixture's
+`nrt_investigation` row must carry `'D_INVESTIGATION_REPEAT'` in its
+`rdb_table_name_list` so the page-builder path fires the repeat SP for
+it. No manual EXEC needed. Future fixtures that author repeating-block
+answers will see their data flow through to D_INVESTIGATION_REPEAT
+automatically as long as the table name is present in that list.
 
 ## Fix details (the actual landed fix)
 
@@ -154,7 +155,7 @@ embedded dynamic SQL.
 
 ## Verification (post-fix)
 
-Full merge_and_verify with Step 8.5 active:
+Full merge_and_verify with the dim populating via the CDC drain:
 - `D_INVESTIGATION_REPEAT`: 2 sentinels to 8 rows (+6 dim rows).
 - Column coverage: 1/252 to 12/256 (width grew from 252 to 256 because the
   SP's dynamic ALTER TABLE step now reaches the column-add path).

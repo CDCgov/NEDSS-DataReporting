@@ -184,14 +184,17 @@ rather than fixed mid-build.
 
 ## Reproducibility
 
-`scripts/merge_and_verify.sh` runs the deterministic 9-step Merge
-contract end-to-end: `docker compose down -v` → liquibase image rebuild
-→ infrastructure SPs (RDB_DATE, CONDITION) → foundation → Tier 1 →
-Tier 1 chains → Tier 2 → re-run affected chains → Tier 3 → datamart
-SPs (incl. the dynamic-datamart chain, whose applicable datamarts are
-discovered at runtime by joining `nrt_investigation.investigation_form_cd`
-against `v_nrt_nbs_page`). Same fixtures + same baseline image →
-identical RDB_MODERN state every run. Wall-clock ~15–20 min (image
+`scripts/merge_and_verify.sh` runs the deterministic 8-step CDC-only
+Merge contract end-to-end: reset baseline (`docker compose down -v` →
+liquibase image rebuild → `up`; the liquibase onboarding seed populates
+RDB_DATE) → foundation + drain → Tier 1 + drain → Tier 2 + drain →
+Tier 3 + drain → `run_summary_datamarts` → `run_interview_chain` →
+`print_coverage_summary`. The per-subject `*_event` + `*_postprocessing`
++ datamart SPs (including the dynamic-datamart chain, whose applicable
+datamarts the reporting-pipeline-service discovers at runtime by joining
+`nrt_investigation.investigation_form_cd` against `v_nrt_nbs_page`) fire
+off the CDC events during each drain, not from the script. Same fixtures
++ same baseline image → identical RDB_MODERN state every run. Wall-clock ~15–20 min (image
 rebuild + CDC drain, since the pipeline now runs the real
 ODSE→CDC→Kafka→connect→nrt_* path end-to-end). The liquibase
 image is rebuilt on every reset so working-tree edits to routines

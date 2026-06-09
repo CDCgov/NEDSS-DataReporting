@@ -245,28 +245,27 @@ Tier 2 edges read the UID range registry to find subject UIDs. They
 pick edge `type_cd`s from `catalog/edge_types.md` (built in Phase B
 from live baseline SRTE), and never invent them.
 
-Pre-Tier-2 infrastructure step. Before any Tier 2 fixture runs, the
-verification recipe must invoke two RTR infrastructure SPs to populate
-project-wide dimension tables that are empty in the pristine baseline:
+Baseline infrastructure prerequisites. Two project-wide dimension
+tables that are empty in the pristine baseline are populated outside
+the fixtures so Tier 2 (and later) FKs resolve:
 
 - `dbo.RDB_DATE` calendar population. `sp_get_date_dim` in baseline 6.0.18.1
   has an RTR bug: it references the non-existent `dbo.rdb_date_temp` table and
   has a `#temp_date` scope bug at lines 49-55 of
-  `014-sp_get_date_dim-001.sql`. Until upstream RTR fixes the SP, populate
-  `RDB_DATE` via a recursive CTE in `merge_and_verify.sh`. Required because
+  `014-sp_get_date_dim-001.sql`. Rather than the broken SP, `RDB_DATE` is
+  populated by the liquibase onboarding seed `onboarding-rdb-date-seed`
+  (`liquibase-service/.../onboarding/002-rdb_date_seed-001.sql`), which EXECs
+  `sp_get_date_dim @start=1990 @end=2030` on baseline `up`. Required because
   `NOTIFICATION_EVENT`, `LAB_TEST_RESULT`, `TREATMENT_EVENT`, etc. have FKs to
   `RDB_DATE.DATE_KEY` that fail if the table is empty.
-- `EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = N'<csv>', @debug = 0`
-  populates `CONDITION` from SRTE for the listed condition codes.
-  Required because the Notification chain (and others) read
-  `CONDITION_KEY` without COALESCE. The SP signature requires
-  `@condition_cd_list` (varchar list). For v1 (single-condition-per-family
-  per STRATEGY.md), pass `N'10110'` for Hep A acute. The SP filters its
-  SRTE source to only those condition codes.
+- `CONDITION` from SRTE. The reporting-pipeline-service populates
+  `CONDITION` for processed condition codes off CDC events during the
+  drain, so the Notification chain (and others) that read `CONDITION_KEY`
+  without COALESCE resolve. For v1 (single-condition-per-family per
+  STRATEGY.md) the canonical condition is Hep A acute (`10110`).
 
-These run once per merged-fixture session, after foundation applies
-and before the first Tier 2 chain runs. They are not part of any
-individual Tier 2 fixture; `merge_and_verify.sh` runs them.
+These hold for every merged-fixture session; the liquibase seed runs on
+baseline `up` and the service runs during the CDC drain.
 (See "Merge contract" below.)
 
 Tier 2 fixtures do not modify foundation, Tier 1 fixtures, or other
@@ -280,7 +279,9 @@ Verification uses a focused merged sequence per edge type, on a fresh
 baseline:
 1. `docker compose down -v && up -d`
 2. Apply foundation.
-3. Run the two infrastructure SPs.
+3. Baseline infrastructure is already in place (`RDB_DATE` from the
+   liquibase onboarding seed; `CONDITION` populated by the
+   reporting-pipeline-service during the drain).
 4. Apply only the Tier 1 fixtures relevant to this edge type (e.g.
    for `act_relationship_inv_notification`: foundation plus Investigation
    Tier 1 plus Notification Tier 1, not all 12).
@@ -371,32 +372,30 @@ NEDSS-DataReporting/testing-tools/synthetic-odse-fixtures/
 
 ## Merge contract
 
-Final assembled fixture is applied in this deterministic sequence:
+Final assembled fixture is applied by `scripts/merge_and_verify.sh` in
+this deterministic CDC-only 8-step sequence (each fixture step is
+followed by a CDC drain in which the reporting-pipeline-service fires
+the per-subject `*_event` + `*_postprocessing` + datamart SPs off the
+CDC events):
 
-1. `docker compose down -v && up -d nbs-mssql liquibase` (fresh baseline).
-2. Pre-fixture infrastructure: populate project-wide dimension
-   tables that are empty in the pristine baseline:
-   - `RDB_DATE` calendar: populate via recursive CTE (not `sp_get_date_dim`,
-     which has an RTR bug; see the "Pre-Tier-2 infrastructure step" above).
-     The orchestrator (`scripts/merge_and_verify.sh`) handles this.
-   - `EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = N'10110', @debug = 0`
-     (populates `CONDITION` from SRTE for the listed condition codes;
-     v1 uses Hep A acute as the canonical condition).
-3. `fixtures/00_foundation/00_foundation.sql`.
-4. `fixtures/10_subjects/*.sql`: alphabetical; order should not matter
-   given UID-range discipline.
-5. Tier 1 chains: run the full event plus postprocessing SP chain in
-   dependency order (organization → provider → patient → place →
-   investigation → notification → lab → interview → treatment →
-   vaccination → contact). Some fact tables may still be partial here
-   if they depend on cross-subject edges; that is resolved by Tier 2.
-6. `fixtures/20_links/*.sql`: Tier 2 cross-subject edges.
-7. Re-run Tier 1 chains affected by Tier 2 edges (e.g. Notification
-   chain after `act_relationship_inv_notification`). Now-resolved keys
-   should populate to their canonical values, not sentinel 1.
-8. `fixtures/30_sp_coverage/*.sql`: Tier 3 gap-driven additions.
-9. Datamart SPs: invoke the datamart chain (Hepatitis_Datamart,
-   Std_Hiv_Datamart, dyn_dm_*, etc.) for end-to-end coverage.
+1. Reset baseline: `docker compose down -v && build && up` (fresh
+   baseline; the liquibase onboarding seed populates `RDB_DATE`).
+2. Apply foundation fixture (`fixtures/00_foundation/00_foundation.sql`),
+   then drain.
+3. Apply Tier 1 fixtures (`fixtures/10_subjects/*.sql`), then drain.
+4. Apply Tier 2 fixtures (`fixtures/20_links/*.sql`: cross-subject
+   edges), then drain. Keys that were partial in Tier 1 now resolve to
+   their canonical values, not sentinel 1.
+5. Apply Tier 3 fixtures (`fixtures/30_sp_coverage/*.sql`: gap-driven
+   additions), then drain.
+6. `run_summary_datamarts`: deterministic post-drain EXEC of
+   `sp_event_metric_datamart_postprocessing` →
+   `sp_summary_report_case_postprocessing` →
+   `sp_sr100_datamart_postprocessing` over `PHC_UIDS`.
+7. `run_interview_chain`: re-drive `sp_interview_event` +
+   `sp_d_interview_postprocessing` + `sp_f_interview_case_postprocessing`
+   post-Tier-3.
+8. `print_coverage_summary`.
 
 If two fixture files contain conflicting `INSERT INTO X (uid, ...)` statements
 on the same UID, that is a contract violation and the merge fails loudly.
@@ -462,9 +461,9 @@ Every coverage report is markdown with these sections, in order:
 7. Tier 2 edge types.
 8. Tier 3 gap-driven additions (only on reported gaps).
 9. Final merge plus full-chain verification. `scripts/merge_and_verify.sh`
-    runs the deterministic 9-step Merge contract end-to-end (reset →
-    infrastructure SPs → foundation → Tier 1 fixtures → Tier 1 chains →
-    Tier 2 fixtures → re-run affected Tier 1 chains → Tier 3 → datamart).
+    runs the deterministic 8-step CDC-only Merge contract end-to-end (reset →
+    foundation + drain → Tier 1 + drain → Tier 2 + drain → Tier 3 + drain →
+    run_summary_datamarts → run_interview_chain → print_coverage_summary).
     The first successful end-to-end run produces ~25 RDB_MODERN dim/fact
     rows across 19 target tables and ~22 cross-subject connective rows.
 
@@ -506,7 +505,8 @@ Captured here so they don't get lost as we focus on v1:
   overlaps. (2) for each ODSE-unknown table, document in the
   catalog whether it's MasterETL-only (RTR doesn't write it, so it is
   a comparison-test gap rather than a fixture gap), datamart-SP-driven
-  (would populate at Merge step 9, so out of scope for v1), or
+  (would populate via the datamart SPs the reporting-pipeline-service
+  fires during the CDC drain, so out of scope for v1), or
   genuinely uninvestigated (belongs in a Tier 3 spike). (3) Once
   the comparison test runs, columns in MasterETL-only tables
   will diff as "RDB has rows, RDB_MODERN doesn't". That is a

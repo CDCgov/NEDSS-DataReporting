@@ -1,8 +1,9 @@
 # Bug #9: sp_dyn_dm_repeatvarch_postprocessing UNPIVOT type conflict
 
-**Status**: Surfaced 2026-05-21 while extending orchestrator Step 9
-with the `sp_dyn_dm_*` chain. **Fixed 2026-05-21** on
-`aw/odse-test-seed` (commit `a88e40e5`).
+**Status**: Surfaced 2026-05-21 while bringing up the `sp_dyn_dm_*`
+datamart chain (now fired by the reporting-pipeline-service during the
+CDC drain). **Fixed 2026-05-21** on `aw/odse-test-seed`
+(commit `a88e40e5`).
 
 ## Symptom
 
