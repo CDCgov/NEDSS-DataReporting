@@ -3,9 +3,9 @@ package gov.cdc.nbs.report.pipeline.integration.unit;
 import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import javax.sql.DataSource;
+import liquibase.exception.LiquibaseException;
+import liquibase.integration.spring.SpringLiquibase;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -31,51 +31,45 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @Tag("Unit")
 @Import(DataSourceConfig.class)
 public abstract class UnitTest {
+  
+  @Autowired
+  @Qualifier("adminDataSource")
+  private DataSource liquibaseDatasource;
 
   private static final Logger log = LoggerFactory.getLogger(UnitTest.class);
   private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(log);
   private static final File base = new File("../docker-compose.yaml");
 
   private static boolean started = false;
-  private static ComposeContainer environment;
-
-  @Autowired
-  @Qualifier("customComposeFile")
-  private File customComposeFile;
 
   @SuppressWarnings("resource")
-  void initializeEnvironment() {
-    List<File> composeFiles = new ArrayList<>(Arrays.asList(base));
-    if (customComposeFile != null) {
-      log.warn(
-          "Using custom compose override. Base: {}, Custom: {}",
-          base.getPath(),
-          customComposeFile.getPath());
-      composeFiles.add(customComposeFile);
-    }
-    environment =
-        new ComposeContainer(composeFiles)
-            .withServices("nbs-mssql", "liquibase")
-            .waitingFor("nbs-mssql", Wait.forHealthcheck())
-            .waitingFor(
-                "liquibase",
-                Wait.forLogMessage(".*Migrations complete.*\\n", 1)
-                    .withStartupTimeout(Duration.ofMinutes(10)))
-            .withLogConsumer("nbs-mssql", consumer)
-            .withLogConsumer("liquibase", consumer)
-            // Set the maximum startup timeout all the waits set are bounded to
-            .withStartupTimeout(Duration.ofMinutes(10));
+  private static ComposeContainer environment =
+      new ComposeContainer(base)
+          .withServices("nbs-mssql")
+          .waitingFor("nbs-mssql", Wait.forHealthcheck())
+          .withLogConsumer("nbs-mssql", consumer)
+          // Set the maximum startup timeout all the waits set are bounded to
+          .withStartupTimeout(Duration.ofMinutes(10));
+
+
+  private void runLiquibase() {
+        SpringLiquibase liquibase = new SpringLiquibase();
+        liquibase.setDataSource(liquibaseDatasource);
+        liquibase.setChangeLog("classpath:db/changelog/db.changelog-sample.yaml");
+        try {
+          liquibase.afterPropertiesSet();
+        } catch (LiquibaseException e) {
+          throw new RuntimeException(e.getMessage());
+        } 
   }
 
   @BeforeAll
-  void setUp() {
+  void setUp()  {
     synchronized (UnitTest.class) {
       if (!started) {
-        if (environment == null) {
-          initializeEnvironment();
-        }
         environment.start();
         started = true;
+        runLiquibase();
       }
     }
   }
@@ -84,9 +78,6 @@ public abstract class UnitTest {
   void tearDown() {
     synchronized (UnitTest.class) {
       if (started) {
-        if (environment == null) {
-          initializeEnvironment();
-        }
         environment.stop();
         started = false;
       }
