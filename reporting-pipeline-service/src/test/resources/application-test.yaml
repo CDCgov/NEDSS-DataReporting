@@ -27,6 +27,6 @@ spring:
       metadata.max.age.ms: 6000
   liquibase:
     enabled: true
-    change-log: classpath:db/changelog/db.changelog-sample.yaml
+    change-log: classpath:db/changelog/db.changelog-master.yaml
     user: rtr_admin
     password: rtr_admin
