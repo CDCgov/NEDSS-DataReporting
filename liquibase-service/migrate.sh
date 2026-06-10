@@ -26,7 +26,7 @@ if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
 
     # RDB / RDB_Modern
     liquibase \
-        --changelog-file="changelog/db.rdb_modern.changelog-16.1.yaml" \
+        --changelog-file="changelog/db.rdb.changelog-16.1.yaml" \
         --searchPath="./" \
         --url="jdbc:sqlserver://${DB_HOST};databaseName=${TARGET_DB};integratedSecurity=false;encrypt=true;trustServerCertificate=true" \
         --username="${DB_USERNAME}" \
