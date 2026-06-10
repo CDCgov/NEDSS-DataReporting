@@ -1,0 +1,7 @@
+-- Provider 1: PROVIDER_QUICK_CODE propagates correctly to
+-- AGGREGATE_REPORT_DATAMART when only std_hiv_datamart_update fires
+SELECT
+    PROVIDER_UID,
+    PROVIDER_QUICK_CODE
+FROM dbo.AGGREGATE_REPORT_DATAMART
+WHERE PROVIDER_UID = 90100001;
