@@ -26,22 +26,11 @@ RUN apk update && apk upgrade --no-cache && \
 COPY --from=builder /sqlcmd /usr/local/bin/sqlcmd
 RUN chmod +x /usr/local/bin/sqlcmd
 
-#Copy sources
-#changelog
-COPY liquibase-service/src/main/resources/db/changelog /liquibase/changelog
-# odse
-COPY liquibase-service/src/main/resources/db/003-odse /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/003-odse/views /liquibase/changelog
-# rdb / rdb_modern
-COPY liquibase-service/src/main/resources/db/005-rdb_modern /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/005-rdb_modern/routines /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/005-rdb_modern/functions /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/005-rdb_modern/tables /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/005-rdb_modern/views /liquibase/changelog
-COPY liquibase-service/src/main/resources/db/005-rdb_modern/onboarding /liquibase/changelog
+#Copy liquibase source files
+COPY liquibase-service/src/main/resources/db /liquibase/
 
 #Set the Working Directory
-WORKDIR /liquibase/changelog
+WORKDIR /liquibase
 USER liquibase
 
 COPY --chown=liquibase liquibase-service/migrate.sh .
