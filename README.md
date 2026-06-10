@@ -8,19 +8,16 @@ Real Time Reporting (RTR) enables immediate data transformation by transitioning
 
 RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database.   This repository consists of two primary packages: 
 
-- `liquibase-service` - A job that handles database version control via Liquibase. Deploys stored procedures, tables, and views required for the RTR pipeline.
 - `reporting-pipeline-service` - Handles all change events (e.g. LDF, People, Observation) and executes post-processing logic to hydrate dimensions, fact tables, and datamarts.
 
 ## Documentation and Related Repositories
 
 - Please refer to the full setup documentation in the [System Admin Guide](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
 - Helm Charts:
-  - [Liquibase](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/liquibase)
   - [Debezium Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/debezium)
   - [Kafka Connect Sink Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/kafka-connect-sink)
   - [RTR Services](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/rtr)
 - [Database Upgrade Notes](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
-- [Database Upgrade without Liquibase](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
 
 ---
 
@@ -102,12 +99,12 @@ To run Spotless on a specific file or set of files, you can use the `-PspotlessF
 
 *   **Format a specific service (bypasses the incremental check):**
     ```sh
-    ./gradlew :liquibase-service:spotlessApply -PspotlessFiles='.*\.java'
+    ./gradlew :reporting-pipeline-service:spotlessApply -PspotlessFiles='.*\.java'
     ```
 
 *   **Format a specific file using its relative path:**
     ```sh
-    ./gradlew spotlessApply -PspotlessFiles='liquibase-service/src/main/java/MyFile.java'
+    ./gradlew spotlessApply -PspotlessFiles='reporting-pipeline-service/src/main/java/MyFile.java'
     ```
 
 *   **Format multiple specific files (comma-separated):**
