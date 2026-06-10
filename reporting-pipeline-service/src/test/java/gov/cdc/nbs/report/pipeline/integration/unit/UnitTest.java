@@ -12,17 +12,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-@TestInstance(Lifecycle.PER_CLASS)
-@ActiveProfiles("test")
 @Tag("Unit")
+@DataJpaTest
+@ActiveProfiles("test")
+@TestInstance(Lifecycle.PER_CLASS)
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+@ContextConfiguration(initializers = UnitTest.Initializer.class)
 @Import(DataSourceConfig.class)
 public abstract class UnitTest {
 
@@ -30,8 +34,10 @@ public abstract class UnitTest {
   private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(log);
   private static final File base = new File("../docker-compose.yaml");
 
+  private static boolean started = false;
+
   @SuppressWarnings("resource")
-  private static ComposeContainer environment =
+  private static final ComposeContainer environment =
       new ComposeContainer(base)
           .withServices("nbs-mssql", "liquibase")
           .waitingFor("nbs-mssql", Wait.forHealthcheck())
@@ -43,14 +49,25 @@ public abstract class UnitTest {
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(10));
 
-  static {
-    // Must be statically initialized to allow liquibase configuration
-    // to run without manual intervention
-    environment.start();
+  @AfterAll
+  void tearDown() {
+    synchronized (UnitTest.class) {
+      if (started) {
+        environment.stop();
+        started = false;
+      }
+    }
   }
 
-  @AfterAll
-  static void tearDown() {
-    environment.stop();
+  static class Initializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    @Override
+    public void initialize(ConfigurableApplicationContext context) {
+      // Force container startup BEFORE Spring sets up the data source or Liquibase
+      if (!started) {
+        environment.start();
+        started = true;
+      }
+    }
   }
 }
