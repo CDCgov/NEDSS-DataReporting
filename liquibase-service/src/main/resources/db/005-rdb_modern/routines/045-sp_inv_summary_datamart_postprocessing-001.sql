@@ -581,7 +581,7 @@ BEGIN
                               LEFT OUTER JOIN [dbo].[NOTIFICATION] NOTI with (nolock)
                                               ON NOTI.NOTIFICATION_KEY = NOT_EVENT.NOTIFICATION_KEY
                               LEFT OUTER JOIN [dbo].[NRT_INVESTIGATION_NOTIFICATION] NRT_NOTI with (nolock)
-                                              ON NRT_NOTI.NOTIFICATION_UID = NOTI.NOTIFICATION_UID
+                                              ON NRT_NOTI.notif_local_id = NOTI.NOTIFICATION_LOCAL_ID
                               LEFT OUTER JOIN [dbo].[RDB_DATE] RDB_DATE with (nolock)
                                               ON NOT_EVENT.NOTIFICATION_SUBMIT_DT_KEY = RDB_DATE.DATE_KEY
                               LEFT OUTER JOIN [dbo].[RDB_DATE] RDB_DATE_SENT with (nolock)
