@@ -799,21 +799,30 @@ BEGIN
 		END;')
 
 
+        -- Grab the morb Order's user-comment row from staging. #nrt_morbidity_observation
+        -- already carries followup_observation_uid as a CSV of the Order's children, so we
+        -- split it here rather than reading nbs_odse.dbo.act_relationship across DBs. The
+        -- comment is the C_Result child, so filter on that domain code to skip the
+        -- C_Order and lab-result siblings.
         SET @sql = N'
         SELECT 	root.morb_Rpt_Key,
                 root.morb_rpt_uid,
-                obs.activity_to_time	 AS user_comments_dt,
-                obs.add_user_id		 AS user_comments_by,
+                cr.activity_to_time	 AS user_comments_dt,
+                cr.add_user_id		 AS user_comments_by,
 				REPLACE(REPLACE(ovt.ovt_value_txt, CHAR(13) + CHAR(10),'' ''), CHAR(10), '' '') AS external_morb_rpt_comments,
                   root.record_status_cd
         INTO '+@SAS_morb_Rpt_User_Comment+'
         FROM '+@tmp_Morbidity_Report+'	as root
-           INNER JOIN #morb_obs_reference AS obs ON root.morb_rpt_uid = obs.observation_uid
-            INNER JOIN #updated_morb_observation_list AS ls ON ls.observation_uid = obs.observation_uid
-            INNER JOIN #tmp_nrt_observation_txt AS ovt ON ovt.observation_uid = obs.observation_uid
+            INNER JOIN #nrt_morbidity_observation AS nmo
+                 ON nmo.observation_uid = root.morb_rpt_uid
+            CROSS APPLY string_split(rtrim(ltrim(nmo.followup_observation_uid)), '','') AS followupObs
+            INNER JOIN #morb_obs_reference AS cr
+                 ON cr.observation_uid    = TRY_CAST(followupObs.value AS bigint)
+                AND cr.obs_domain_cd_st_1 = ''C_Result''
+            INNER JOIN #tmp_nrt_observation_txt AS ovt
+                 ON ovt.observation_uid = cr.observation_uid
         WHERE
-          ovt.ovt_value_txt IS NOT NULL
-          AND obs.obs_domain_cd_st_1 IN (''C_Order'', ''C_Result'');';
+          ovt.ovt_value_txt IS NOT NULL;';
 
         IF @debug = 'true' print @sql;
         EXEC sp_executesql @sql;

@@ -1,0 +1,11 @@
+{
+  "0": [
+    {
+      "MORB_RPT_UID": 92000001,
+      "EXTERNAL_MORB_RPT_COMMENTS": "comment from a user on an externally created morb report",
+      "USER_COMMENTS_BY": 10009282,
+      "USER_COMMENTS_DT": "2026-06-02 00:17:01",
+      "RECORD_STATUS_CD": "ACTIVE"
+    }
+  ]
+}

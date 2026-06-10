@@ -483,7 +483,7 @@ BEGIN
             from dbo.AGGREGATE_REPORT_DATAMART dm
                 INNER JOIN #PROVIDER_UPDATE_LIST map
         ON dm.PROVIDER_KEY = map.PROVIDER_KEY and map.PROVIDER_KEY <> 1
-        where tb_datamart_update = 1
+        where std_hiv_datamart_update = 1
         ;
     END
     
