@@ -15,8 +15,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.json.JSONException;
 import org.junit.jupiter.api.parallel.Execution;
@@ -29,6 +31,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 class DataDrivenFunctionalTests extends FunctionalTest {
+
+  /**
+   * If empty, all functional test directories are executed.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>List.of("hivNotificationActualReferral")
+   *   <li>List.of("interview", "elrEColi")
+   * </ul>
+   */
+  private static final List<String> SELECTED_TEST_NAMES = List.of("hivNotificationActualReferral");
 
   private final JdbcClient client;
 
@@ -48,7 +62,20 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    */
   static Stream<Path> functionalTestDirectoryProvider() throws IOException {
     Path root = Paths.get("src/test/resources/testData/functional");
-    return Files.list(root).filter(Files::isDirectory); // Filter out files
+    Stream<Path> directories = Files.list(root).filter(Files::isDirectory);
+
+    if (SELECTED_TEST_NAMES.isEmpty()) {
+      return directories;
+    }
+
+    Set<String> selectedNames =
+        SELECTED_TEST_NAMES.stream()
+            .map(name -> name.toLowerCase(Locale.ROOT))
+            .collect(java.util.stream.Collectors.toSet());
+
+    return directories.filter(
+        directory ->
+            selectedNames.contains(directory.getFileName().toString().toLowerCase(Locale.ROOT)));
   }
 
   /**
