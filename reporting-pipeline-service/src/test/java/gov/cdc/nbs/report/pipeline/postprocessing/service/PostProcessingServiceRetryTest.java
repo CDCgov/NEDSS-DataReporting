@@ -85,11 +85,26 @@ class PostProcessingServiceRetryTest {
     String invTopic = "dummy_investigation";
     String invKey = "{\"payload\":{\"public_health_case_uid\":234}}";
     String invMsg =
-        "{\"payload\":{\"public_health_case_uid\":234, \"rdb_table_name_list\":\"D_INV_CLINICAL,D_INV_ADMINISTRATIVE\"}}";
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 234,
+            "rdb_table_name_list": "D_INV_CLINICAL,D_INV_ADMINISTRATIVE"
+          }
+        }
+        """;
     String obsTopic = "dummy_observation";
     String obsKey = "{\"payload\":{\"observation_uid\":567}}";
     String obsMsg =
-        "{\"payload\":{\"observation_uid\":567, \"obs_domain_cd_st_1\": \"Order\",\"ctrl_cd_display_form\": \"LabReport\"}}";
+        """
+        {
+          "payload": {
+            "observation_uid": 567,
+            "obs_domain_cd_st_1": "Order",
+            "ctrl_cd_display_form": "LabReport"
+          }
+        }
+        """;
 
     String patientUid = "123";
 
@@ -181,8 +196,17 @@ class PostProcessingServiceRetryTest {
     verify(postProcRepositoryMock, never()).executeBackfillEvent(anyString());
 
     String genDmMsg =
-        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\","
-            + "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "12020",
+            "datamart": "Generic_Case",
+            "stored_procedure": "sp_generic_case_datamart_postprocessing"
+          }
+        }
+        """;
 
     datamartProcessor.setMaxRetries(-1);
     when(investigationRepositoryMock.executeStoredProcForGenericCaseDatamart(anyString()))
@@ -213,11 +237,29 @@ class PostProcessingServiceRetryTest {
 
     String topic = "dummy_datamart";
     String hepDmMsg =
-        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\","
-            + "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "10110",
+            "datamart": "Hepatitis_Datamart",
+            "stored_procedure": "sp_hepatitis_datamart_postprocessing"
+          }
+        }
+        """;
     String genDmMsg =
-        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\","
-            + "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "12020",
+            "datamart": "Generic_Case",
+            "stored_procedure": "sp_generic_case_datamart_postprocessing"
+          }
+        }
+        """;
 
     String phcUid = "123";
 
@@ -233,8 +275,13 @@ class PostProcessingServiceRetryTest {
 
     Long batchId = datamartProcessor.retryCache.entrySet().iterator().next().getKey();
     assertEquals(errorMsg, datamartProcessor.errorMap.get(batchId));
-    assertEquals(3, datamartProcessor.retryCache.get(batchId).size());
-    assertTrue(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+    assertEquals(1, datamartProcessor.retryCache.get(batchId).size());
+    assertFalse(datamartProcessor.retryCache.get(batchId).containsKey(MULTI_ID_DATAMART));
+    assertTrue(
+        datamartProcessor
+            .retryCache
+            .get(batchId)
+            .containsKey(Entity.HEPATITIS_DATAMART.getEntityName()));
 
     String dmEntity = "DM^" + Entity.HEPATITIS_DATAMART.getEntityName();
     datamartProcessor.processRetryCache();
@@ -275,6 +322,46 @@ class PostProcessingServiceRetryTest {
   }
 
   @Test
+  void testProcessIndependentProcessingOnFailure() {
+    String topic = "dummy_datamart";
+    String hepDmMsg =
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "10110",
+            "datamart": "Hepatitis_Datamart",
+            "stored_procedure": "sp_hepatitis_datamart_postprocessing"
+          }
+        }
+        """;
+    String genDmMsg =
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "12020",
+            "datamart": "Generic_Case",
+            "stored_procedure": "sp_generic_case_datamart_postprocessing"
+          }
+        }
+        """;
+
+    when(investigationRepositoryMock.executeStoredProcForHepDatamart(anyString()))
+        .thenThrow(new RuntimeException(errorMsg));
+
+    postProcessingServiceMock.processDmMessage(topic, hepDmMsg);
+    postProcessingServiceMock.processDmMessage(topic, genDmMsg);
+    postProcessingServiceMock.processDatamartIds();
+
+    // Verify Hepatitis failed but Generic_Case was processed anyway
+    verify(investigationRepositoryMock).executeStoredProcForHepDatamart(anyString());
+    verify(investigationRepositoryMock).executeStoredProcForGenericCaseDatamart(anyString());
+  }
+
+  @Test
   void testProcessRetryMultiId() {
     String investigationKey = "{\"payload\":{\"public_health_case_uid\":123}}";
     String notificationKey = "{\"payload\":{\"notification_uid\":124}}";
@@ -300,14 +387,60 @@ class PostProcessingServiceRetryTest {
   }
 
   @Test
+  void testProcessRetryDynamicDatamart() {
+    String investigationKey = "{\"payload\":{\"public_health_case_uid\":123}}";
+    String invTopic = "dummy_investigation";
+    postProcessingServiceMock.processNrtMessage(invTopic, investigationKey, investigationKey);
+    postProcessingServiceMock.processCachedIds();
+
+    // Setup: Simulate dynamic datamart failure
+    List<DatamartData> dmDataList = new ArrayList<>();
+    DatamartData dd = new DatamartData();
+    dd.setDatamart("DYN_DM");
+    dd.setPublicHealthCaseUid(123L);
+    dmDataList.add(dd);
+
+    when(postProcRepositoryMock.executeStoredProcForInvSummaryDatamart(any(), any(), any()))
+        .thenReturn(dmDataList);
+    doThrow(new RuntimeException(errorMsg))
+        .when(postProcRepositoryMock)
+        .executeStoredProcForDynDatamart("DYN_DM", "123");
+
+    postProcessingServiceMock.processDatamartIds();
+
+    // The failure should be caught and enqueued for retry
+    assertFalse(datamartProcessor.retryCache.isEmpty());
+    assertTrue(
+        datamartProcessor.retryCache.values().stream().anyMatch(dm -> dm.containsKey("DYN_DM")));
+  }
+
+  @Test
   void testProcessRetryDatamartSuccess() {
     String topic = "dummy_datamart";
     String hepDmMsg =
-        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\","
-            + "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "10110",
+            "datamart": "Hepatitis_Datamart",
+            "stored_procedure": "sp_hepatitis_datamart_postprocessing"
+          }
+        }
+        """;
     String genDmMsg =
-        "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"12020\","
-            + "\"datamart\":\"Generic_Case\",\"stored_procedure\":\"sp_generic_case_datamart_postprocessing\"}}";
+        """
+        {
+          "payload": {
+            "public_health_case_uid": 123,
+            "patient_uid": 456,
+            "condition_cd": "12020",
+            "datamart": "Generic_Case",
+            "stored_procedure": "sp_generic_case_datamart_postprocessing"
+          }
+        }
+        """;
 
     String phcUid = "123";
     when(investigationRepositoryMock.executeStoredProcForHepDatamart(phcUid))

@@ -3225,3 +3225,11 @@ databaseChangeLog:
             path: 260-create_labtest-001.sql
             splitStatements: true
             endDelimiter: GO
+  - changeSet:
+      id: app-619-std-hiv-widths
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: 261-alter_std_hiv_case_management_widths-001.sql
+            splitStatements: false
