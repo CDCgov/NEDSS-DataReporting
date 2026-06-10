@@ -42,7 +42,8 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    *   <li>List.of("interview", "elrEColi")
    * </ul>
    */
-  // private static final List<String> SELECTED_TEST_NAMES = List.of("hivNotificationActualReferral");
+  // private static final List<String> SELECTED_TEST_NAMES =
+  // List.of("hivNotificationActualReferral");
   private static final List<String> SELECTED_TEST_NAMES = List.of();
 
   private final JdbcClient client;
