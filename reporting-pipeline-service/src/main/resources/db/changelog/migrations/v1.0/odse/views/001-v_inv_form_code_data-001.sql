@@ -1,3 +1,6 @@
+USE [NBS_ODSE];
+GO
+
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_inv_form_code_data')
 BEGIN
     DROP VIEW [dbo].v_inv_form_code_data
@@ -26,3 +29,7 @@ WHERE  question_identifier in (
 	'INV145', 'INV150', 'INV151', 'NPP063', 'INV144', 'DEM142', 'INV108',  'DEM152', 
 	'DEM238', 'INV187', 'INV112', 'INV174', 'INV107', 'INV2002')
 AND CODESET.CODE_SET_GROUP_ID IS NOT NULL;
+GO
+
+USE [RDB_MODERN];
+GO

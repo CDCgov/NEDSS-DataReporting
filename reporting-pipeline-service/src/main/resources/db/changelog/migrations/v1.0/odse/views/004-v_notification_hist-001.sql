@@ -1,3 +1,6 @@
+USE [NBS_ODSE];
+GO
+
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_notification_hist')
 BEGIN
     DROP VIEW [dbo].v_notification_hist
@@ -166,3 +169,7 @@ SELECT DISTINCT
     ,notification_uid
 FROM orderedHist
 GROUP BY PUBLIC_HEALTH_CASE_UID, notification_uid;
+GO
+
+USE [RDB_MODERN];
+GO

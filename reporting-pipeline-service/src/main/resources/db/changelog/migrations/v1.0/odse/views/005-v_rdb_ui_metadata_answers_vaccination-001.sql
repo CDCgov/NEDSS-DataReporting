@@ -1,3 +1,6 @@
+USE [NBS_ODSE];
+GO
+
 IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers_vaccination')
 BEGIN
     DROP VIEW [dbo].v_rdb_ui_metadata_answers_vaccination
@@ -42,3 +45,7 @@ LEFT OUTER JOIN nbs_srte.[dbo].code_value_general cvg WITH (NOLOCK)
 WHERE
 	cvg.code_set_nm = 'NBS_DATA_TYPE'
 	AND nuim.data_location = 'NBS_ANSWER.ANSWER_TXT';
+GO
+
+USE [RDB_MODERN];
+GO
