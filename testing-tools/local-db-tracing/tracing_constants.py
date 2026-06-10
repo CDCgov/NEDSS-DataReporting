@@ -33,6 +33,15 @@ EXCLUDED_TRACE_TABLES: frozenset[tuple[str, str]] = frozenset({
     }
 })
 
+# CDC is not turned on for tables matching these prefixes.
+# Each entry is (schema_name, table_name_prefix) and is normalized to lowercase.
+EXCLUDED_TRACE_TABLE_PREFIXES: frozenset[tuple[str, str]] = frozenset({
+    (schema_name.lower(), table_name_prefix.lower())
+    for schema_name, table_name_prefix in {
+        ("dbo", "tmp_DynDM"),
+    }
+})
+
 # CDC is on for these tables, but they are excluded from setup.sql because
 # they are populated as side-effects of replaying other entities.
 # Keys are normalized to lowercase to support case-insensitive matching.

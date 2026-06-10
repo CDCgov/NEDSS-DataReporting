@@ -646,11 +646,19 @@ BEGIN
                                                          from fn_get_value_by_cvg(fld_foll_up_prov_exm_reason, 'PRVDR_EXAM_REASON'))   as fl_fup_prov_exm_reason,
                                                         fld_foll_up_prov_diagnosis,
                                                         LEFT(fld_foll_up_prov_diagnosis, 3)                                            as fl_fup_prov_diagnosis,
-                                                        fld_foll_up_notification_plan,
                                                         (select *
-                                                         from fn_get_value_by_cvg(fld_foll_up_notification_plan,
-                                                                                  'NOTIFICATION_PLAN'))                                as fl_fup_notification_plan_cd,
-                                                        fld_foll_up_expected_in,
+                                                        from fn_get_value_by_cvg(fld_foll_up_notification_plan,
+                                                            case
+                                                                when exists (select 1
+                                                                            from nbs_srte.dbo.condition_code cc
+                                                                            where cc.condition_cd = phc.cd
+                                                                                and cc.prog_area_cd = 'HIV')
+                                                                then 'NOTIFICATION_ACTUAL_METHOD_HIV'
+                                                                else 'NOTIFICATION_PLAN'
+                                                            end
+                                                        )) as fld_foll_up_notification_plan,
+                                                        fld_foll_up_notification_plan as fl_fup_notification_plan_cd,
+
                                                         (select * from fn_get_value_by_cvg(fld_foll_up_expected_in, 'YN'))             as fl_fup_expected_in_ind,
                                                         fld_foll_up_expected_date                                                      as fl_fup_expected_dt,
                                                         fld_foll_up_exam_date                                                          as fl_fup_exam_dt,
@@ -661,7 +669,16 @@ BEGIN
                                                         fld_foll_up_dispo_date                                                         as fl_fup_dispo_dt,
                                                         act_ref_type_cd,
                                                         (select *
-                                                         from fn_get_value_by_cvg(act_ref_type_cd, 'NOTIFICATION_ACTUAL_METHOD_STD'))  as fl_fup_actual_ref_type,
+                                                        from fn_get_value_by_cvg(act_ref_type_cd,
+                                                            case
+                                                                when exists (select 1
+                                                                            from nbs_srte.dbo.condition_code cc
+                                                                            where cc.condition_cd = phc.cd
+                                                                                and cc.prog_area_cd = 'HIV')
+                                                                then 'NOTIFICATION_ACTUAL_METHOD_HIV'
+                                                                else 'NOTIFICATION_ACTUAL_METHOD_STD'
+                                                            end
+                                                        )) as fl_fup_actual_ref_type, -- this returns something like "3 - Dual"
                                                         case_review_status,
                                                         case_review_status_date,
                                                         fld_foll_up_internet_outcome                                                   as fl_fup_internet_outcome_cd,
