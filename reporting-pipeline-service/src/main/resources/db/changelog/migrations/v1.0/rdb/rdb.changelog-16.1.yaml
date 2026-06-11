@@ -3166,6 +3166,42 @@ databaseChangeLog:
             path: db/changelog/migrations/v1.0/rdb/tables/259-alter_d_vaccination_add_vaccination_administered_cd-001.sql
             splitStatements: false
   - changeSet:
+      id: 958
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v1.0/rdb/views/025-v_inv_form_code_data-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 959
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v1.0/rdb/views/026-v_rdb_ui_metadata_answers-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 960
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v1.0/rdb/views/027-v_rdb_ui_metadata_answers_contact-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: 961
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v1.0/rdb/views/028-v_rdb_ui_metadata_answers_vaccination-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: onboarding-metadata-load
       author: liquibase
       runOnChange: true
