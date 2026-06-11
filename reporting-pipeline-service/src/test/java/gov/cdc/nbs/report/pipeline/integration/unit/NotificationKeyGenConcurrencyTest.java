@@ -281,6 +281,23 @@ class NotificationKeyGenConcurrencyTest extends UnitTest {
     try (Connection conn = connection();
         Statement st = conn.createStatement()) {
       StringBuilder sb = new StringBuilder("SET NOCOUNT ON; ");
+      // Bug #26 context: the SP's NOTIFICATION_EVENT insert requires a NOT-NULL INVESTIGATION_KEY
+      // (INVESTIGATION joined on CASE_UID = public_health_case_uid). In a clean DB that
+      // investigation does not exist, so the NOTIFICATION_EVENT insert rolls the whole proc back
+      // and
+      // zero notifications land -- masking the key-gen race entirely. Seed it once here (condition
+      // CTX_CONDITION already ships in the baseline reference data). Idempotent: this method also
+      // runs from LabTestKeyGenConcurrencyTest.
+      sb.append(
+          "IF NOT EXISTS (SELECT 1 FROM "
+              + DB
+              + "INVESTIGATION WHERE CASE_UID = "
+              + CTX_PHC
+              + ") INSERT INTO "
+              + DB
+              + "INVESTIGATION (INVESTIGATION_KEY, CASE_UID, RECORD_STATUS_CD) VALUES (99100, "
+              + CTX_PHC
+              + ", 'ACTIVE'); ");
       for (Long uid : uids) {
         // Fresh notification_uid (unseen by nrt_notification_key) so every call hits the first-time
         // key-gen + NOTIFICATION-insert path. refresh_datetime / max_datetime are GENERATED ALWAYS,
