@@ -112,7 +112,7 @@ while ! docker compose ps --format json | jq -r 'select(.Health == "healthy") | 
 done
 echo "Reporting pipeline is healthy!"
 
-sqlcmd -S "localhost,${DATABASE_PORT}" -U sa -P "$DATABASE_PASSWORD" -i testing-tools/smoke-testing/setup.sql
+sqlcmd -S "localhost,${DATABASE_PORT}" -U sa -P "$DATABASE_PASSWORD" -C -i testing-tools/smoke-testing/setup.sql
 
 while true; do
     echo "Validating job_flow_log... (${VAL_ELAPSED}s elapsed)"
