@@ -229,7 +229,7 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = 2;
         self.assertIn('dbo.good \\| operations: insert', report)
         self.assertIn('<a href="#case-2">dbo.bad \\| operations: insert</a>', report)
         self.assertIn('<a id="case-2"></a>', report)
-        self.assertIn('| Field | Expected | Returned |', report)
+        self.assertIn('| Field | Expected | Returned (RDB_Modern) |', report)
         self.assertIn('<span class="error">2</span>', report)
         self.assertIn('## Details', report)
         self.assertNotIn('## Failure Details', report)
@@ -251,6 +251,22 @@ SELECT [id] FROM [dbo].[TableB] WHERE [id] = 2;
 
         self.assertEqual(result["status"], "warning")
         self.assertIn("null vs empty string", str(result.get("error")))
+
+    def test_null_expected_and_missing_actual_are_treated_as_null(self) -> None:
+        case = validate_rdb_selects.SelectCase(
+            case_index=1,
+            label="null-vs-missing-case",
+            query_sql="SELECT [id], [name] FROM [dbo].[T] FOR JSON PATH;",
+            query_start_line=5,
+            expected_json=[{"id": 1, "name": None}],
+        )
+        client = FakeSqlClient([
+            'JSON_F52E2B61-18A1-11d1-B105-00805F49916B\n[{"id":1}]\n',
+        ])
+
+        result = validate_rdb_selects.compare_case(client, "USE [RDB_MODERN];", case)
+
+        self.assertEqual(result["status"], "pass")
 
     def test_mixed_null_vs_empty_and_real_failure(self) -> None:
         case = validate_rdb_selects.SelectCase(

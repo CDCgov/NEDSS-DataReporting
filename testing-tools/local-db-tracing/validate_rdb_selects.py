@@ -352,6 +352,25 @@ def is_null_vs_empty_mismatch(expected: object, actual: object) -> bool:
     return False
 
 
+def normalize_null_and_missing_field(
+    expected_has: bool,
+    actual_has: bool,
+    expected_value: object,
+    actual_value: object,
+) -> tuple[bool, bool, object, object]:
+    """Treat a missing field as null when the other side explicitly contains null.
+
+    SQL Server JSON output commonly omits null-valued properties. For field-level
+    comparison, an omitted property should compare the same as an explicit null so
+    it does not show up as a missing field in the report.
+    """
+    if expected_has and not actual_has and expected_value is None:
+        return True, True, None, None
+    if actual_has and not expected_has and actual_value is None:
+        return True, True, None, None
+    return expected_has, actual_has, expected_value, actual_value
+
+
 def field_name_ends_with_id_uid_or_key(field_name: str) -> bool:
     upper_name = field_name.upper()
     return upper_name.endswith("_ID") or upper_name.endswith("_UID") or upper_name.endswith("_KEY")
@@ -494,6 +513,13 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
         expected_value = expected_fields[field_name] if expected_has else MISSING
         actual_value = actual_fields[field_name] if actual_has else MISSING
 
+        expected_has, actual_has, expected_value, actual_value = normalize_null_and_missing_field(
+            expected_has,
+            actual_has,
+            expected_value,
+            actual_value,
+        )
+
         if expected_has and actual_has and expected_value == actual_value:
             continue
 
@@ -611,6 +637,14 @@ def render_field_comparison_table(
         actual_has = field_name in actual_fields
         expected_value = expected_fields[field_name] if expected_has else MISSING
         actual_value = actual_fields[field_name] if actual_has else MISSING
+
+        expected_has, actual_has, expected_value, actual_value = normalize_null_and_missing_field(
+            expected_has,
+            actual_has,
+            expected_value,
+            actual_value,
+        )
+
         differs = not (expected_has and actual_has and expected_value == actual_value)
         is_warning_diff = is_warning_mismatch(
             field_name,
@@ -839,16 +873,14 @@ def compare_case(
 
         expected_normalized = normalize_json_arrays(case.expected_json)
         actual_normalized = normalize_json_arrays(actual_json)
+        warning_count, failure_count = count_differences(case.expected_json, actual_json)
 
-        if actual_normalized == expected_normalized:
+        if actual_normalized == expected_normalized or (warning_count == 0 and failure_count == 0):
             status = "pass"
+        elif failure_count == 0 and warning_count > 0:
+            status = "warning"
         else:
-            # Check if only warnings (null vs empty string differences)
-            warning_count, failure_count = count_differences(case.expected_json, actual_json)
-            if failure_count == 0 and warning_count > 0:
-                status = "warning"
-            else:
-                status = "fail"
+            status = "fail"
 
         result: dict[str, object] = {
             "case_index": case.case_index,
