@@ -178,7 +178,10 @@
       "PATIENT_RECORD_STATUS": "ACTIVE",
       "PATIENT_STATE": "Georgia",
       "PATIENT_STATE_CODE": "13",
-      "PATIENT_UID": 1000001000
+      "PATIENT_UID": 1000001000,
+      "PATIENT_RACE_ALL": "Unknown",
+      "PATIENT_RACE_CALCULATED": "Unknown",
+      "PATIENT_RACE_CALC_DETAILS": "Unknown"
     },
     {
       "PATIENT_ADDED_BY": "Kent, Ariella",
