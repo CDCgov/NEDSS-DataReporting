@@ -1,19 +1,11 @@
 databaseChangeLog:
   - changeSet:
-      id: 0
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: 000-odse-db-general-001.sql
-            splitStatements: false
-  - changeSet:
       id: 9.1
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: 004-v_notification_hist-001.sql
+            path: odse/views/004-v_notification_hist-001.sql
             splitStatements: true
             endDelimiter: GO
 
@@ -23,7 +15,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 001-v_inv_form_code_data-001.sql
+            path: odse/views/001-v_inv_form_code_data-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -32,7 +24,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 002-v_rdb_ui_metadata_answers-001.sql
+            path: odse/views/002-v_rdb_ui_metadata_answers-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -41,7 +33,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 003-v_rdb_ui_metadata_answers_contact-001.sql
+            path: odse/views/003-v_rdb_ui_metadata_answers_contact-001.sql
             splitStatements: true
             endDelimiter: GO
 
@@ -51,6 +43,6 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 005-v_rdb_ui_metadata_answers_vaccination-001.sql
+            path: odse/views/005-v_rdb_ui_metadata_answers_vaccination-001.sql
             splitStatements: true
             endDelimiter: GO

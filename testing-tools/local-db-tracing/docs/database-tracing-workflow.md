@@ -59,7 +59,7 @@ output/
 - Supports custom database credentials via environment variables
 
 ### Output Deduplication
-- Encourages use of distinct databases (NBS_ODSE ≠ RDB_MODERN)
+- Encourages use of distinct databases (NBS_ODSE != RDB_MODERN)
 - Prevents duplicate artifact generation
 - Single combined summary tracks both operations
 
@@ -80,4 +80,4 @@ After capturing changes:
 ## References
 - README.md: User-facing command documentation
 - test_connection_defaults.py: Connection configuration tests
-- trace_db_dual.py: Combined tracer implementation (future)
+- trace_db_dual_capture.py: Current combined tracer implementation

@@ -1,0 +1,24 @@
+{
+  "0": [
+    {
+      "PATIENT_ADDED_BY": "Kent, Ariella",
+      "PATIENT_ADD_TIME": "2026-05-20T17:52:20.203",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
+      "PATIENT_ENTRY_METHOD": "N",
+      "PATIENT_FIRST_NAME": "Obi Wan",
+      "PATIENT_LAST_CHANGE_TIME": "2026-05-20T17:52:20.203",
+      "PATIENT_LAST_NAME": "Kenobi",
+      "PATIENT_LAST_UPDATED_BY": "Kent, Ariella",
+      "PATIENT_LOCAL_ID": "PSN1000001000GA01",
+      "PATIENT_MPR_UID": 1000001000,
+      "PATIENT_RECORD_STATUS": "ACTIVE",
+      "PATIENT_STATE": "Georgia",
+      "PATIENT_STATE_CODE": "13",
+      "PATIENT_RACE_CALC_DETAILS": "Unknown",
+      "PATIENT_RACE_CALCULATED": "Unknown",
+      "PATIENT_UID": 1000001000
+    }
+  ]
+}

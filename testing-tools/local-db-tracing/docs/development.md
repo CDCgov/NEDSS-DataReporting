@@ -50,7 +50,7 @@ local-db-tracing/
 
 1. **Clone repository**:
    ```bash
-   cd testing-tools/local-db-tracing
+   cd NEDSS-DataReporting
    ```
 
 2. **Create virtual environment**:
@@ -67,7 +67,7 @@ local-db-tracing/
 
 4. **Configure environment**:
    ```bash
-   cp .env.sample .env
+   cp env.sample .env
    # Edit .env with your database credentials
    ```
 
@@ -408,7 +408,7 @@ warn_unused_configs = True
 Enable debug logging during development:
 
 ```bash
-LOG_LEVEL=DEBUG python trace_db_cdc.py
+LOG_LEVEL=DEBUG python testing-tools/local-db-tracing/trace_db_cdc.py
 ```
 
 ### Print-Based Debugging

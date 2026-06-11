@@ -6,11 +6,11 @@
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `DB_HOST` | string | localhost | Database server hostname or IP address |
-| `DB_PORT` | int | 1433 | SQL Server port number |
-| `DB_USERNAME` | string | sa | Database login username |
-| `DB_PASSWORD` | string | - | Database login password |
-| `DB_NAME` | string | NBS_ODSE (CDC) / RDB_MODERN (Logical) | Target database name |
+| `DATABASE_SERVER` | string | localhost | Database server hostname or IP address |
+| `DATABASE_PORT` | int | 1433 | SQL Server port number |
+| `DATABASE_USERNAME` | string | sa | Database login username |
+| `DATABASE_PASSWORD` | string | - | Database login password |
+| `DATABASE_NAME` | string | NBS_ODSE (CDC) / RDB_MODERN (Logical) | Target database name |
 | `DB_CONNECT_TIMEOUT` | int | 30 | Connection timeout in seconds |
 
 ### Tracing Configuration
@@ -65,10 +65,10 @@ Example `.env` configuration:
 
 ```bash
 # Database Connection
-DB_HOST=sqlserver.example.com
-DB_PORT=1433
-DB_USERNAME=tracing_user
-DB_PASSWORD=SecurePassword123!
+DATABASE_SERVER=sqlserver.example.com
+DATABASE_PORT=1433
+DATABASE_USERNAME=tracing_user
+DATABASE_PASSWORD=SecurePassword123!
 
 # Tracing Configuration
 BATCH_SIZE=2000
@@ -162,10 +162,10 @@ Command-line arguments override all other configuration sources:
 ### trace_db_cdc.py
 
 ```bash
-python trace_db_cdc.py \
-  --host <hostname> \
+python testing-tools/local-db-tracing/trace_db_cdc.py \
+  --server <hostname> \
   --port <port> \
-  --username <user> \
+  --user <user> \
   --password <pass> \
   --database <db> \
   --output-dir <path> \
@@ -181,10 +181,10 @@ python trace_db_cdc.py \
 ### trace_db_logical_changes.py
 
 ```bash
-python trace_db_logical_changes.py \
-  --host <hostname> \
+python testing-tools/local-db-tracing/trace_db_logical_changes.py \
+  --server <hostname> \
   --port <port> \
-  --username <user> \
+  --user <user> \
   --password <pass> \
   --database <db> \
   --output-dir <path> \
@@ -220,13 +220,13 @@ Configurations are resolved in this order (highest to lowest priority):
 
 Example resolution:
 ```
-$ BATCH_SIZE=3000 python trace_db_cdc.py --batch-size 5000
+$ BATCH_SIZE=3000 python testing-tools/local-db-tracing/trace_db_cdc.py --batch-size 5000
 # Result: batch_size = 5000 (CLI wins)
 
-$ BATCH_SIZE=3000 python trace_db_cdc.py
+$ BATCH_SIZE=3000 python testing-tools/local-db-tracing/trace_db_cdc.py
 # Result: batch_size = 3000 (env var used)
 
-$ python trace_db_cdc.py
+$ python testing-tools/local-db-tracing/trace_db_cdc.py
 # Result: batch_size = 1000 (default used)
 ```
 
@@ -356,7 +356,7 @@ GRANT EXECUTE ON cdc.fn_cdc_get_net_changes_* TO tracing_user;
 
 ```bash
 # Via environment variable
-LOG_LEVEL=DEBUG python trace_db_cdc.py
+LOG_LEVEL=DEBUG python testing-tools/local-db-tracing/trace_db_cdc.py
 
 # Via .env file
 LOG_LEVEL=DEBUG
@@ -373,7 +373,7 @@ env | grep ^DB_
 cat .env | grep -v "^#"
 
 # Run with verbose flag
-python trace_db_cdc.py --verbose
+python testing-tools/local-db-tracing/trace_db_cdc.py --verbose
 ```
 
 ### Configuration Conflicts
@@ -384,7 +384,7 @@ python -c "
 import os
 from tracing_env import get_config
 config = get_config()
-print(f'DB_HOST: {config.db_host}')
+print(f'DATABASE_SERVER: {config.DATABASE_SERVER}')
 print(f'BATCH_SIZE: {config.batch_size}')
 "
 ```
