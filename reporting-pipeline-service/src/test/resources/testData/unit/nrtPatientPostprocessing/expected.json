@@ -1,0 +1,42 @@
+{
+  "0": [
+    {
+      "MORBIDITY_REPORT_KEY": 90100002,
+      "RACE_CALCULATED": "Multi-Race",
+      "RACE_CALCULATED_DETAILS": "Asian | White"
+    }
+  ],
+  "1": [
+    {
+      "INVESTIGATION_KEY": 90200002,
+      "PATIENT_PHONE_NUMBER_HOME": "4045550100",
+      "AGE_REPORTED": 45,
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White"
+    }
+  ],
+  "2": [
+    {
+      "INVESTIGATION_KEY": 90300002,
+      "PATIENT_FIRST_NAME": "Jane",
+      "PATIENT_BIRTH_COUNTRY": "USA",
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White",
+      "CALC_REPORTED_AGE": 46,
+      "CALC_5_YEAR_AGE_GROUP": 10,
+      "CALC_10_YEAR_AGE_GROUP": 5
+    }
+  ],
+  "3": [
+    {
+      "INVESTIGATION_KEY": 90300002,
+      "PATIENT_FIRST_NAME": "Jane",
+      "PATIENT_BIRTH_COUNTRY": "USA",
+      "RACE_CALCULATED": "White",
+      "RACE_CALC_DETAILS": "White",
+      "CALC_REPORTED_AGE": 46,
+      "CALC_5_YEAR_AGE_GROUP": 10,
+      "CALC_10_YEAR_AGE_GROUP": 5
+    }
+  ]
+}

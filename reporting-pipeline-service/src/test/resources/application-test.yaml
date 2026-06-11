@@ -26,6 +26,6 @@ spring:
       maxPollIntervalMs: 3000
       metadata.max.age.ms: 6000
   liquibase:
-    enabled: false
-  testcontainers:
-    customComposeFile: ${CUSTOM_COMPOSE_FILE:}
+    enabled: true
+    user: ${RTR_ADMIN_NAME:rtr_admin}
+    password: ${RTR_ADMIN_PASSWORD:rtr_admin}
