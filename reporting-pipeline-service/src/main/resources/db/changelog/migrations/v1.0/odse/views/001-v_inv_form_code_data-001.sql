@@ -1,12 +1,14 @@
-USE [NBS_ODSE];
-GO
-
-IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_inv_form_code_data')
+DECLARE @DropCommand NVARCHAR(MAX) = '
+IF EXISTS(SELECT * FROM sys.views WHERE name = ''v_inv_form_code_data'')
 BEGIN
     DROP VIEW [dbo].v_inv_form_code_data
 END
+'
+
+EXEC [NBS_ODSE].sys.sp_executesql @DropCommand;
 GO
 
+DECLARE @CreateViewCommand NVARCHAR(MAX) = '
 CREATE VIEW [dbo].v_inv_form_code_data 
 AS
 SELECT DISTINCT 
@@ -24,13 +26,12 @@ INNER JOIN NBS_SRTE.DBO.CONDITION_CODE WITH (NOLOCK)
 INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL WITH (NOLOCK) 
 	ON CODE_VALUE_GENERAL.CODE_SET_NM = CODESET.CODE_SET_NM
 WHERE  question_identifier in (
-	'DEM218', 'DEM114', 'INV163',  'INV161',  'DEM126',  'DEM113', 'DEM127', 'INV159', 
-	'INV152', 'DEM155', 'NOT112', 'INV109',  'INV107', 'DEM140',  'DEM116_B', 'DEM139', 
-	'INV145', 'INV150', 'INV151', 'NPP063', 'INV144', 'DEM142', 'INV108',  'DEM152', 
-	'DEM238', 'INV187', 'INV112', 'INV174', 'INV107', 'INV2002')
+	''DEM218'', ''DEM114'', ''INV163'',  ''INV161'',  ''DEM126'',  ''DEM113'', ''DEM127'', ''INV159'', 
+	''INV152'', ''DEM155'', ''NOT112'', ''INV109'',  ''INV107'', ''DEM140'',  ''DEM116_B'', ''DEM139'', 
+	''INV145'', ''INV150'', ''INV151'', ''NPP063'', ''INV144'', ''DEM142'', ''INV108'',  ''DEM152'', 
+	''DEM238'', ''INV187'', ''INV112'', ''INV174'', ''INV107'', ''INV2002'')
 AND CODESET.CODE_SET_GROUP_ID IS NOT NULL;
-GO
+'
 
-
-USE [${rdb_database_name}];
+EXEC [NBS_ODSE].sys.sp_executesql @CreateViewCommand;
 GO

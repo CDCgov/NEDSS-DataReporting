@@ -1,12 +1,14 @@
-USE [NBS_ODSE];
-GO
-
-IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_notification_hist')
+DECLARE @DropCommand NVARCHAR(MAX) = '
+IF EXISTS(SELECT * FROM sys.views WHERE name = ''v_notification_hist'')
 BEGIN
     DROP VIEW [dbo].v_notification_hist
-END
+END;
+'
+
+EXEC [NBS_ODSE].sys.sp_executesql @DropCommand;
 GO
 
+DECLARE @CreateViewCommand NVARCHAR(MAX) = '
 CREATE VIEW [dbo].v_notification_hist
 AS
 WITH NotifHist AS (
@@ -23,7 +25,7 @@ WITH NotifHist AS (
         ,NF.RECORD_STATUS_TIME
         ,NF.LAST_CHG_TIME
         ,NF.LAST_CHG_USER_ID
-        ,'Y' AS HIST_IND
+        ,''Y'' AS HIST_IND
         , NF.txt
         ,CAST(NULL AS INT) AS NOTIFSENTCOUNT
         ,CAST(NULL AS INT) AS NOTIFREJECTEDCOUNT
@@ -37,15 +39,15 @@ WITH NotifHist AS (
     INNER JOIN NBS_ODSE.DBO.NOTIFICATION_HIST NF WITH (NOLOCK) 
         ON AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID
     WHERE
-        SOURCE_CLASS_CD = 'NOTF'
-        AND TARGET_CLASS_CD = 'CASE'
-        AND NF.CD='NOTF'
+        SOURCE_CLASS_CD = ''NOTF''
+        AND TARGET_CLASS_CD = ''CASE''
+        AND NF.CD=''NOTF''
         AND (
-                NF.RECORD_STATUS_CD = 'COMPLETED'
-                OR NF.RECORD_STATUS_CD = 'MSG_FAIL'
-                OR NF.RECORD_STATUS_CD = 'REJECTED'
-                OR NF.RECORD_STATUS_CD = 'PEND_APPR'
-                OR NF.RECORD_STATUS_CD = 'APPROVED'
+                NF.RECORD_STATUS_CD = ''COMPLETED''
+                OR NF.RECORD_STATUS_CD = ''MSG_FAIL''
+                OR NF.RECORD_STATUS_CD = ''REJECTED''
+                OR NF.RECORD_STATUS_CD = ''PEND_APPR''
+                OR NF.RECORD_STATUS_CD = ''APPROVED''
             )
     UNION
     SELECT  
@@ -61,7 +63,7 @@ WITH NotifHist AS (
         ,NF.RECORD_STATUS_TIME
         ,NF.LAST_CHG_TIME
         ,NF.LAST_CHG_USER_ID
-        ,'N' AS HIST_IND
+        ,''N'' AS HIST_IND
         , NULL AS TXT
         ,CAST(NULL AS INT) AS NOTIFSENTCOUNT
         ,CAST(NULL AS INT) AS NOTIFREJECTEDCOUNT
@@ -75,15 +77,15 @@ WITH NotifHist AS (
        ,NBS_ODSE.DBO.NOTIFICATION NF WITH (NOLOCK)
     WHERE 
         AR.SOURCE_ACT_UID = NF.NOTIFICATION_UID
-        AND SOURCE_CLASS_CD = 'NOTF'
-        AND TARGET_CLASS_CD = 'CASE'
-        AND NF.CD='NOTF'
+        AND SOURCE_CLASS_CD = ''NOTF''
+        AND TARGET_CLASS_CD = ''CASE''
+        AND NF.CD=''NOTF''
         AND (
-                NF.RECORD_STATUS_CD = 'COMPLETED'
-                OR NF.RECORD_STATUS_CD = 'MSG_FAIL'
-                OR NF.RECORD_STATUS_CD = 'REJECTED'
-                OR NF.RECORD_STATUS_CD = 'PEND_APPR'
-                OR NF.RECORD_STATUS_CD = 'APPROVED'
+                NF.RECORD_STATUS_CD = ''COMPLETED''
+                OR NF.RECORD_STATUS_CD = ''MSG_FAIL''
+                OR NF.RECORD_STATUS_CD = ''REJECTED''
+                OR NF.RECORD_STATUS_CD = ''PEND_APPR''
+                OR NF.RECORD_STATUS_CD = ''APPROVED''
             )
 ),
 orderedHist AS(
@@ -119,37 +121,37 @@ SELECT DISTINCT
             THEN RECORD_STATUS_CD
     END) AS first_notification_status
     ,SUM(CASE
-            WHEN RECORD_STATUS_CD = 'REJECTED'
+            WHEN RECORD_STATUS_CD = ''REJECTED''
             THEN 1
             ELSE 0
     END) notif_rejected_count
     ,SUM(CASE
-            WHEN RECORD_STATUS_CD = 'APPROVED' OR RECORD_STATUS_CD = 'PEND_APPR'
+            WHEN RECORD_STATUS_CD = ''APPROVED'' OR RECORD_STATUS_CD = ''PEND_APPR''
             THEN 1
-            WHEN RECORD_STATUS_CD = 'REJECTED'
+            WHEN RECORD_STATUS_CD = ''REJECTED''
             THEN -1
             ELSE 0
     END) notif_created_count
     ,SUM(CASE
-            WHEN RECORD_STATUS_CD = 'COMPLETED'
+            WHEN RECORD_STATUS_CD = ''COMPLETED''
             THEN 1
             ELSE 0
     END) notif_sent_count
     ,MIN(CASE
-            WHEN RECORD_STATUS_CD = 'COMPLETED'
+            WHEN RECORD_STATUS_CD = ''COMPLETED''
             THEN RPT_SENT_TIME
     END) AS first_notification_send_date
     ,SUM(CASE
-            WHEN RECORD_STATUS_CD = 'PEND_APPR'
+            WHEN RECORD_STATUS_CD = ''PEND_APPR''
             THEN 1
             ELSE 0
     END) notif_created_pending_count
     ,MAX(CASE
-            WHEN RECORD_STATUS_CD = 'APPROVED' OR RECORD_STATUS_CD = 'PEND_APPR'
+            WHEN RECORD_STATUS_CD = ''APPROVED'' OR RECORD_STATUS_CD = ''PEND_APPR''
             THEN LAST_CHG_TIME
     END) AS last_notification_date
     ,MAX(CASE
-            WHEN RECORD_STATUS_CD = 'COMPLETED'
+            WHEN RECORD_STATUS_CD = ''COMPLETED''
             THEN RPT_SENT_TIME
     END) AS last_notification_send_date
     ,MIN(ADD_TIME) AS first_notification_date
@@ -162,15 +164,15 @@ SELECT DISTINCT
             ELSE last_chg_user_id
         END), -1) AS last_notification_submitted_by
     ,MIN(CASE
-            WHEN RECORD_STATUS_CD = 'COMPLETED' AND RPT_SENT_TIME IS NOT NULL
+            WHEN RECORD_STATUS_CD = ''COMPLETED'' AND RPT_SENT_TIME IS NOT NULL
             THEN RPT_SENT_TIME
     END) AS notification_date
     ,PUBLIC_HEALTH_CASE_UID
     ,notification_uid
 FROM orderedHist
 GROUP BY PUBLIC_HEALTH_CASE_UID, notification_uid;
-GO
+'
 
 
-USE [${rdb_database_name}];
+EXEC [NBS_ODSE].sys.sp_executesql @CreateViewCommand;
 GO
