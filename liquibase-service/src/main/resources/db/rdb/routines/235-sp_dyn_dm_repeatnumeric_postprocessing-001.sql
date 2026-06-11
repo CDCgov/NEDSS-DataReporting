@@ -1,8 +1,3 @@
--- bug #9 fix: ensure QUOTED_IDENTIFIER is ON when this SP is compiled.
--- See 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql for rationale.
-SET QUOTED_IDENTIFIER ON;
-GO
-
 IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatnumeric_postprocessing]')
                                       AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
@@ -456,17 +451,6 @@ BEGIN
         if @debug = 'true'
             select 'RDB_COLUMN_COMMA_LIST',@RDB_COLUMN_COMMA_LIST;
 
-        -- bug #9 fix: build a CAST list to harmonize UNPIVOT types.
-        -- Same pattern as sp_dyn_dm_repeatvarch_postprocessing — see
-        -- 205-... for the full rationale.  #tmp_DynDm_REPEAT_BLOCK_OUT.COL1
-        -- here is declared varchar(max), so nvarchar(max) cast flows
-        -- through unchanged.
-        DECLARE @RDB_COLUMN_CAST_LIST VARCHAR(MAX);
-        SET  @RDB_COLUMN_CAST_LIST = null;
-
-        SELECT @RDB_COLUMN_CAST_LIST = COALESCE(@RDB_COLUMN_CAST_LIST+',' ,'') + 'CAST('+RDB_COLUMN_NM+' AS nvarchar(max)) '+RDB_COLUMN_NM
-        FROM  #tmp_DynDm_D_INV_REPEAT_METADATA_distinct;
-
         DECLARE @RDB_COLUMN_COMMA_LIST_SELECT VARCHAR(MAX);
         SET @RDB_COLUMN_COMMA_LIST_SELECT =null;
 
@@ -561,16 +545,13 @@ BEGIN
          COL1 varchar(max)
         );
 
-        -- bug #9 fix: see sp_dyn_dm_repeatvarch_postprocessing 205-...
-        -- project via @RDB_COLUMN_CAST_LIST so the UNPIVOT IN list
-        -- sees uniformly-typed nvarchar(max) columns.
         SET @sql = ' insert into #tmp_DynDm_REPEAT_BLOCK_OUT ' +
                    ' select INVESTIGATION_KEY, BLOCK_NM as BLOCK_NM_REPEAT_BLOCK_OUT, ' +
                    'ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_REPEAT_BLOCK_OUT, '+
 
                    'variable as RDB_COLUMN_NM_REPEAT_BLOCK_OUT,value as COL1 '+
                    ' from ( '+
-                   ' select INVESTIGATION_KEY, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, '+ @RDB_COLUMN_CAST_LIST +
+                   ' select INVESTIGATION_KEY, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, '+ @RDB_COLUMN_COMMA_LIST +
                    ' from dbo.tmp_DynDm_REPEAT_BLOCK_' + @DATAMART_NAME + '_' + cast(@batch_id as varchar) +
             --' from ' + @tmp_DynDm_REPEAT_BLOCK +
                    ' ) as t '+

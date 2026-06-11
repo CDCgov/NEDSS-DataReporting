@@ -1,8 +1,3 @@
--- bug #9 fix: ensure QUOTED_IDENTIFIER is ON when this SP is compiled.
--- See 205-sp_dyn_dm_repeatvarch_postprocessing-001.sql for rationale.
-SET QUOTED_IDENTIFIER ON;
-GO
-
 IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_repeatdate_postprocessing]')
                                       AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
@@ -367,18 +362,6 @@ BEGIN
         WHERE DATAMART_NM IS NOT NULL
         ORDER BY RDB_COLUMN_NM;
 
-        -- bug #9 fix: build a parallel TRY_CAST select-list so the
-        -- UNPIVOT step further down sees uniformly-typed DATE columns.
-        -- TRY_CAST (not CAST) so non-date strings null out gracefully
-        -- instead of aborting the dynamic batch.  Mirrors the
-        -- nvarchar(max) fix in sp_dyn_dm_repeatvarch_postprocessing.
-        DECLARE @RDB_COLUMN_DATE_CAST_LIST NVARCHAR(4000) = '';
-        SELECT @RDB_COLUMN_DATE_CAST_LIST = @RDB_COLUMN_DATE_CAST_LIST +
-                                            'TRY_CAST(' + QUOTENAME(RDB_COLUMN_NM) + ' AS DATE) ' + QUOTENAME(RDB_COLUMN_NM) + ','
-        FROM #tmp_DynDM_D_INV_REPEAT_METADATA
-        WHERE DATAMART_NM IS NOT NULL
-        ORDER BY RDB_COLUMN_NM;
-
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #tmp_DynDM_D_INV_REPEAT_METADATA;
 
@@ -421,12 +404,6 @@ BEGIN
         SET @D_REPEAT_COMMA_NAME = @RDB_COLUMN_COMMA_LIST;
 
         SET @D_REPEAT_COMMA_NAME1 = LEFT(@RDB_COLUMN_COMMA_LIST, LEN(@RDB_COLUMN_COMMA_LIST) - 1);
-
-        -- bug #9 fix: trim the trailing comma from the TRY_CAST list too,
-        -- mirroring @D_REPEAT_COMMA_NAME1.
-        DECLARE @D_REPEAT_DATE_CAST_NAME1 NVARCHAR(4000) = '';
-        IF LEN(@RDB_COLUMN_DATE_CAST_LIST) > 0
-            SET @D_REPEAT_DATE_CAST_NAME1 = LEFT(@RDB_COLUMN_DATE_CAST_LIST, LEN(@RDB_COLUMN_DATE_CAST_LIST) - 1);
 
 
         declare @SQL varchar(8000);
@@ -527,11 +504,7 @@ BEGIN
                 N' INSERT INTO #tmp_DynDM_REPEAT_BLOCK_OUT
 					select INVESTIGATION_KEY ,BLOCK_NM as BLOCK_NM_BLOCK_OUT ,ANSWER_GROUP_SEQ_NBR,variable as RDB_COLUMN_NM_BLOCK_OUT,value as dateColumn '
                     + ' from ( '
-                    -- bug #9 fix: project via the TRY_CAST-to-DATE
-                    -- list so the UNPIVOT IN list below sees uniform
-                    -- DATE columns.  See sp_dyn_dm_repeatvarch (205-...)
-                    -- for the full rationale.
-                    + ' select INVESTIGATION_KEY ,BLOCK_NM ,ANSWER_GROUP_SEQ_NBR,  ' + @D_REPEAT_DATE_CAST_NAME1
+                    + ' select INVESTIGATION_KEY ,BLOCK_NM ,ANSWER_GROUP_SEQ_NBR,  ' + @D_REPEAT_COMMA_NAME1
                     + ' from  '+@tmp_DynDM_REPEAT_BLOCK+'  '
                     + ' ) as t '
                     + ' unpivot ( '
