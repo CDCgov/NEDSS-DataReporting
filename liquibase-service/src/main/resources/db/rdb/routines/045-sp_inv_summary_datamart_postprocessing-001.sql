@@ -563,8 +563,12 @@ BEGIN
                             NOTI.NOTIFICATION_SUBMITTED_BY,
                             NOTI.NOTIFICATION_LAST_CHANGE_TIME,
                             CASE
-                                WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN RDB_DATE.DATE_MM_DD_YYYY
-                                ELSE NULL END                                                                           AS 'NOTIFICATION_CREATE_DATE',
+                                WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN COALESCE(
+                                    RDB_DATE.DATE_MM_DD_YYYY,
+                                    CAST(
+                                        CAST(NRT_NOTI.NOTIF_ADD_TIME AS DATE) AS DATETIME
+                                    )
+                                ) ELSE NULL END AS 'NOTIFICATION_CREATE_DATE',
                             CASE
                                 WHEN NOTI.NOTIFICATION_STATUS IS NOT NULL THEN RDB_DATE_SENT.DATE_MM_DD_YYYY
                                 ELSE NULL END                                                                 AS 'NOTIFICATION_SENT_DATE',
@@ -576,6 +580,8 @@ BEGIN
                                               ON A.INVESTIGATION_KEY = NOT_EVENT.INVESTIGATION_KEY
                               LEFT OUTER JOIN [dbo].[NOTIFICATION] NOTI with (nolock)
                                               ON NOTI.NOTIFICATION_KEY = NOT_EVENT.NOTIFICATION_KEY
+                              LEFT OUTER JOIN [dbo].[NRT_INVESTIGATION_NOTIFICATION] NRT_NOTI with (nolock)
+                                              ON NRT_NOTI.notif_local_id = NOTI.NOTIFICATION_LOCAL_ID
                               LEFT OUTER JOIN [dbo].[RDB_DATE] RDB_DATE with (nolock)
                                               ON NOT_EVENT.NOTIFICATION_SUBMIT_DT_KEY = RDB_DATE.DATE_KEY
                               LEFT OUTER JOIN [dbo].[RDB_DATE] RDB_DATE_SENT with (nolock)
