@@ -90,7 +90,7 @@ DATABASE_PORT=${DATABASE_PORT:-3433}
 DATABASE_PASSWORD=${DATABASE_PASSWORD:-$(docker compose config --format json | jq -r '.services."nbs-mssql".environment.DATABASE_PASSWORD')}
 
 run_query() {
-    sqlcmd -S "localhost,${DATABASE_PORT}" -U sa -P "$DATABASE_PASSWORD" \
+    sqlcmd -S "localhost,${DATABASE_PORT}" -U sa -P "$DATABASE_PASSWORD" -C \
         -d RDB_MODERN -h -1 -W -Q "SET NOCOUNT ON; $1" |
         tr -d '\r' | grep -v '^[[:space:]]*$' || true
 }
