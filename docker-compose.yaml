@@ -12,6 +12,7 @@ services:
       - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
+      - ./bootstrap:/bootstrap
     ports:
       - 3433:1433
     mem_limit: 2.5G
