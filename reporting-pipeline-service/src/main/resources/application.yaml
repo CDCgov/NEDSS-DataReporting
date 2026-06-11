@@ -103,7 +103,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,liquibase
   prometheus:
     metrics:
       export:
