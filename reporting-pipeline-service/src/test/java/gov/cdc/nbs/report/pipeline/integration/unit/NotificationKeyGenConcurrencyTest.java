@@ -79,22 +79,13 @@ class NotificationKeyGenConcurrencyTest extends UnitTest {
 
   private final List<Long> insertedNotifUids = new CopyOnWriteArrayList<>();
 
-  private static boolean reusedExistingStack = false;
-
   /**
-   * Reuse an already-running nbs-mssql+liquibase stack on the fixed compose port (3433) if present,
-   * rather than letting Testcontainers try to bind the same fixed port. Falls back to the parent's
-   * Testcontainers lifecycle when nothing is listening yet.
+   * The nbs-mssql + liquibase stack is started by {@link UnitTest.Initializer} during Spring
+   * context initialization (single-start, shared across every {@code @Tag("Unit")} class in the
+   * run), so there is no container lifecycle to trigger here.
    */
-  @Override
   @BeforeAll
   void setUp() {
-    if (dbReachable()) {
-      log.warn("Reusing already-running DB stack on :3433; skipping Testcontainers startup.");
-      reusedExistingStack = true;
-    } else {
-      super.setUp();
-    }
     jdbcUser = env.getProperty("spring.datasource.admin.username", "rtr_admin");
     jdbcPassword = env.getProperty("spring.datasource.admin.password", "rtr_admin");
     String configured =
@@ -141,15 +132,6 @@ class NotificationKeyGenConcurrencyTest extends UnitTest {
     // either an externally-managed stack we reused or a Testcontainers stack other Unit test
     // classes
     // in the same run also share. Ryuk / JVM shutdown reclaims a Testcontainers stack at run end.
-  }
-
-  private static boolean dbReachable() {
-    try (var socket = new java.net.Socket()) {
-      socket.connect(new java.net.InetSocketAddress("localhost", 3433), 2000);
-      return true;
-    } catch (Exception e) {
-      return false;
-    }
   }
 
   @AfterEach
