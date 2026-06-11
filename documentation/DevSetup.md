@@ -5,7 +5,6 @@
 ## Docker Containers
 
 1. [mssql](https://github.com/cdcent/NEDSSDB/pkgs/container/nedssdb) - Restored MSSQL Server database pre-configured to work with RTR. Notable configurations
-   1. NBS_ODSE.NBS_Configuration entry added with `config_key = 'ENV'`, `config_value = 'UAT'`
    2. RTR User creation scripts applied
    3. Change Data Capture (CDC) enabled for relevant databases and tables
 2. [liquibase](../liquibase-service/Dockerfile) - Liquibase container with all migration scripts copied from `../liquibase-service/src/main/resources/db/`. Configured to automatically apply migrations and 1 time onboarding scripts and then close. Entrypoint: [migrate.sh](../liquibase-service/migrate.sh)
