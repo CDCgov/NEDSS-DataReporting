@@ -37,6 +37,7 @@ BEGIN
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_labtest_result_postprocessing';
 	DECLARE @curr_test_result_grp_key BIGINT;
 	DECLARE @max_test_result_grp_key BIGINT;
+	DECLARE @applock_rc INT;
 
     BEGIN TRY
 
@@ -869,26 +870,69 @@ BEGIN
 
 		--------------------------------------------------------------------------------------------------------------------------------------------
 
-		BEGIN TRANSACTION 
+		BEGIN TRANSACTION
+
+			-- Bug #17: the IDENT_CURRENT + DBCC CHECKIDENT(RESEED) + INSERT pattern below is NOT
+			-- atomic. DBCC CHECKIDENT is a non-transactional metadata operation that escapes the
+			-- UPDLOCK/HOLDLOCK taken on the MAX read, so concurrent / retried postprocessing sessions
+			-- interleave here and either collide on the IDENTITY (Error 2627 duplicate PRIMARY KEY),
+			-- deadlock (Error 1205), or silently drop each other's inserts. Serialize the whole
+			-- read-MAX/RESEED/INSERT critical section with an exclusive application lock so only one
+			-- session allocates keys for this table at a time.
+			EXEC @applock_rc = sp_getapplock @Resource = 'nrt_lab_test_result_group_key_keygen',
+				@LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
+
+			-- Bug #17 (residual): sp_getapplock returns 0/1 on success and -1/-2/-3/-999 on
+			-- timeout/deadlock/error/parameter-error. The original EXEC ignored the return code, so a
+			-- timed-out or errored lock acquisition let the session proceed UNSERIALIZED. Fail loudly
+			-- instead so the caller retries rather than racing.
+			IF @applock_rc < 0
+				THROW 50017, 'sp_getapplock failed to acquire nrt_lab_test_result_group_key_keygen (serialization lost)', 1;
 
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING keys for new TEST_RESULT_GROUP ';
 
-			SELECT @curr_test_result_grp_key = CONVERT(BIGINT, IDENT_CURRENT('dbo.nrt_lab_test_result_group_key'));
-			SELECT @max_test_result_grp_key = ISNULL(MAX(TEST_RESULT_GRP_KEY), 0)
+			-- Bug #19 / residual #17: allocate group keys EXPLICITLY (MAX + ROW_NUMBER, IDENTITY_INSERT
+			-- under the exclusive applock) instead of the IDENT_CURRENT + DBCC CHECKIDENT(RESEED) +
+			-- auto-IDENTITY dance. The old dance had a DETERMINISTIC defect independent of concurrency:
+			-- when the key table is empty (e.g. a from-scratch pipeline run before the
+			-- TEST_RESULT_GROUPING-sourced sentinel backfill has populated it), @max = ISNULL(MAX,0) = 0,
+			-- the RESEED guard @curr(1) < @max(0) is FALSE so no reseed runs, and SQL Server's
+			-- empty-table seed quirk makes the first auto-IDENTITY INSERT assign TEST_RESULT_GRP_KEY = 1
+			-- -- silently consuming the slot reserved for the default sentinel (key=1, LAB_TEST_UID NULL).
+			-- A subsequent / concurrent run then re-derives the sentinel (or its grouping row) and
+			-- collides on PRIMARY KEY value (1) (Error 2627) at this INSERT or the downstream
+			-- TEST_RESULT_GROUPING insert. Seeding the base from ISNULL(MAX, 1) (NOT 0) guarantees every
+			-- newly allocated key is >= 2, so the sentinel slot is never reused regardless of table
+			-- emptiness or IDENTITY state, and explicit values eliminate the non-atomic RESEED entirely.
+			-- The committed-read (no NOLOCK) de-dup against the live key table, driven by the
+			-- session-local #TMP_Lab_Result_Val, still guarantees every new active UID is inserted once.
+			SELECT @max_test_result_grp_key = ISNULL(MAX(TEST_RESULT_GRP_KEY), 1)
 			FROM [dbo].nrt_lab_test_result_group_key WITH (UPDLOCK, HOLDLOCK);
 
-			IF @curr_test_result_grp_key < @max_test_result_grp_key
-				DBCC CHECKIDENT ('[dbo].nrt_lab_test_result_group_key', RESEED, @max_test_result_grp_key);
+			SET IDENTITY_INSERT [dbo].nrt_lab_test_result_group_key ON;
 
-			INSERT INTO [dbo].nrt_lab_test_result_group_key (LAB_TEST_UID)
-			SELECT DISTINCT n.lab_test_uid
-			FROM #TEST_Result_Group_N n
-			LEFT JOIN [dbo].nrt_lab_test_result_group_key ck WITH (NOLOCK)
-				ON ck.LAB_TEST_UID = n.LAB_TEST_UID
-			WHERE ck.LAB_TEST_UID IS NULL
+			INSERT INTO [dbo].nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)
+			SELECT @max_test_result_grp_key + ROW_NUMBER() OVER (ORDER BY n.lab_test_uid),
+				n.lab_test_uid
+			FROM (
+				SELECT DISTINCT f.lab_test_uid
+				FROM #TMP_Lab_Result_Val f
+				LEFT JOIN [dbo].nrt_lab_test_result_group_key ck
+					ON ck.LAB_TEST_UID = f.LAB_TEST_UID
+				WHERE f.RECORD_STATUS_CD <> 'INACTIVE'
+					AND ck.LAB_TEST_UID IS NULL
+			) n;
 
 			SELECT @ROWCOUNT_NO = @@ROWCOUNT;
+
+			SET IDENTITY_INSERT [dbo].nrt_lab_test_result_group_key OFF;
+
+			-- Realign the IDENTITY seed with the now-max key so any later auto-IDENTITY consumer of
+			-- this table stays consistent with the explicitly-allocated values.
+			SELECT @curr_test_result_grp_key = ISNULL(MAX(TEST_RESULT_GRP_KEY), 1)
+			FROM [dbo].nrt_lab_test_result_group_key WITH (UPDLOCK, HOLDLOCK);
+			DBCC CHECKIDENT ('[dbo].nrt_lab_test_result_group_key', RESEED, @curr_test_result_grp_key);
 
 			IF @pDebug = 'true'
 				SELECT @Proc_Step_Name AS step, * 
