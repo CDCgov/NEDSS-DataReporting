@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: "db/changelog/migrations/v1.0/rdb/rdb.changelog-16.1.yaml"
