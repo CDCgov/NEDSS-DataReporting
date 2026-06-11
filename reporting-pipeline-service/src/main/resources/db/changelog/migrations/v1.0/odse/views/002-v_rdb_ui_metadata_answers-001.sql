@@ -1,14 +1,9 @@
-DECLARE @DropCommand NVARCHAR(MAX) = '
-IF EXISTS(SELECT * FROM sys.views WHERE name = ''v_rdb_ui_metadata_answers'')
+IF EXISTS(SELECT * FROM sys.views WHERE name = 'v_rdb_ui_metadata_answers')
 BEGIN
     DROP VIEW [dbo].v_rdb_ui_metadata_answers
 END;
-'
-
-EXEC [NBS_ODSE].sys.sp_executesql @DropCommand;
 GO
 
-DECLARE @CreateViewCommand NVARCHAR(MAX) = '
 CREATE VIEW [dbo].v_rdb_ui_metadata_answers 
 AS
 SELECT 
@@ -18,7 +13,7 @@ SELECT
 	nrdbm.rdb_table_nm,
 	nrdbm.rdb_column_nm,
 	nuim.code_set_group_id,
-	CAST(REPLACE(answer_txt, CHAR(13) + CHAR(10), '' '') AS VARCHAR(2000)) AS answer_txt,
+	CAST(REPLACE(answer_txt, CHAR(13) + CHAR(10), ' ') AS VARCHAR(2000)) AS answer_txt,
 	pa.act_uid,
 	pa.record_status_cd,
 	nuim.nbs_question_uid,
@@ -43,9 +38,6 @@ LEFT OUTER JOIN nbs_odse.[dbo].nbs_answer pa WITH (NOLOCK)
 LEFT JOIN nbs_srte.[dbo].code_value_general cvg WITH (NOLOCK)
 	ON cvg.code = nuim.data_type
 WHERE 
-	cvg.code_set_nm = ''NBS_DATA_TYPE''
-  	AND nuim.data_location = ''NBS_ANSWER.ANSWER_TXT'';
-'
-
-EXEC [NBS_ODSE].sys.sp_executesql @CreateViewCommand;
+	cvg.code_set_nm = 'NBS_DATA_TYPE'
+  	AND nuim.data_location = 'NBS_ANSWER.ANSWER_TXT';
 GO

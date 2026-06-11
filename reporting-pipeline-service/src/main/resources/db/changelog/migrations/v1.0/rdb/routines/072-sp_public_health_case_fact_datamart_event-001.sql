@@ -76,7 +76,7 @@ BEGIN
              ,CODE
              ,CODE_SHORT_DESC_TXT
         INTO #TEMP_INV_FORM_CODE_DATA
-        from nbs_odse.dbo.v_inv_form_code_data
+        from v_inv_form_code_data
         ORDER BY DATA_LOCATION;
 
 

@@ -164,7 +164,7 @@ BEGIN
                                   END AS DATA_TYPE,
                               rdb_table_nm,
                               answer_group_seq_nbr
-              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) AS metadata
                  INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL AS CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
@@ -311,7 +311,7 @@ BEGIN
                               DATA_TYPE,
                               ACT_UID AS INTERVIEW_UID,
                               RECORD_STATUS_CD
-              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND (
@@ -670,7 +670,7 @@ BEGIN
                               data_type,
                               rdb_table_nm,
                               answer_group_seq_nbr
-              from nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              from v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE ACT_UID IN (SELECT value FROM STRING_SPLIT(@ix_uids, ','))) as metadata
                  INNER JOIN NBS_SRTE.DBO.CODE_VALUE_GENERAL CVG WITH (NOLOCK)
                             ON UPPER(CVG.CODE) = UPPER(DATA_TYPE)
@@ -721,7 +721,7 @@ BEGIN
                               RECORD_STATUS_CD,
                               NBS_ANSWER_UID,
                               ANSWER_TXT
-              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND ANSWER_GROUP_SEQ_NBR IS NULL
@@ -987,7 +987,7 @@ BEGIN
                               INVESTIGATION_FORM_CD,
                               QUESTION_GROUP_SEQ_NBR,
                               DATA_TYPE
-              FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+              FROM v_rdb_ui_metadata_answers WITH (NOLOCK)
               WHERE RDB_TABLE_NM = 'D_INTERVIEW'
                 AND QUESTION_GROUP_SEQ_NBR IS NULL
                 AND DATA_TYPE in ('Date/Time', 'Date', 'DATETIME', 'DATE')
@@ -1082,7 +1082,7 @@ BEGIN
                         LEFT(ANSWER_TXT, CHARINDEX('~', ANSWER_TXT + '~') - 1) AS [USER],
                         RECORD_STATUS_CD
         INTO #INTERVIEW_NOTE_INIT
-        FROM nbs_odse.dbo.v_rdb_ui_metadata_answers WITH (NOLOCK)
+        FROM v_rdb_ui_metadata_answers WITH (NOLOCK)
         WHERE act_uid in (SELECT value FROM STRING_SPLIT(@ix_uids, ','))
           AND QUESTION_IDENTIFIER = 'IXS111'
           AND RDB_TABLE_NM = 'D_INTERVIEW_NOTE';
