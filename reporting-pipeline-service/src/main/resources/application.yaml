@@ -83,10 +83,12 @@ spring:
     url: ${DB_CONNECTION_URL}
 
   liquibase:
-    enabled: ${ENABLE_AUTO_MIGRATION:false}
+    enabled: ${ENABLE_AUTO_MIGRATION:true}
     change-log: classpath:db/changelog/db.changelog-master.yaml
     user: ${RTR_ADMIN_NAME}
     password: ${RTR_ADMIN_PASSWORD}
+    parameters:
+      rdb_database_name: ${RDB_DATABASE_NAME}
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}

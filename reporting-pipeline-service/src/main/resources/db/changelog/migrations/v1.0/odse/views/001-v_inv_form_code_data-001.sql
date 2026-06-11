@@ -31,5 +31,6 @@ WHERE  question_identifier in (
 AND CODESET.CODE_SET_GROUP_ID IS NOT NULL;
 GO
 
-USE [RDB_MODERN];
+
+USE [${rdb_database_name}];
 GO

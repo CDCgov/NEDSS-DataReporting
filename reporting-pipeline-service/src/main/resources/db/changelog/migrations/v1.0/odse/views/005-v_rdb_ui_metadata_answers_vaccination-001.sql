@@ -47,5 +47,6 @@ WHERE
 	AND nuim.data_location = 'NBS_ANSWER.ANSWER_TXT';
 GO
 
-USE [RDB_MODERN];
+
+USE [${rdb_database_name}];
 GO

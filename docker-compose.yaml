@@ -153,6 +153,8 @@ services:
       - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_CONNECTION_URL=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
+      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     ports:
       - "8095:8095"

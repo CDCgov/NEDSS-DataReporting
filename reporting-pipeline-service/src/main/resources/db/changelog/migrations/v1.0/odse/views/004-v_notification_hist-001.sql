@@ -171,5 +171,6 @@ FROM orderedHist
 GROUP BY PUBLIC_HEALTH_CASE_UID, notification_uid;
 GO
 
-USE [RDB_MODERN];
+
+USE [${rdb_database_name}];
 GO
