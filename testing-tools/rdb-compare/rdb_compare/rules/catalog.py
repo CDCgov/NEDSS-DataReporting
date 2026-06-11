@@ -84,6 +84,36 @@ SKIP_TABLES = [
         "nrt_patient); no RDB counterpart to compare.",
         id="SKIP-NRT_PREFIX",
     ),
+    # --- APP-720: transient SELECT INTO scratch / working tables ---
+    # These are intermediate tables the SAS MasterETL and RTR pipelines build
+    # with SELECT INTO mid-run (UID worklists, staging/keystores, *_REPT report
+    # intermediates, temp/incremental scratch). They are not reporting output:
+    # in the captured runs they were `presence=both` with no column verdict, and
+    # whether they exist at scan time depends on run timing/cleanup -- so counting
+    # them in discovered/compared makes the totals non-comparable run-to-run
+    # (the spurious "7.12=202 vs 7.13=180" table-count delta). The existing
+    # ETL_*/L_*/S_*/SAS_*/TEMP_* families miss them only because those globs are
+    # prefix-anchored. Patterns below are scoped to match ONLY these scratch
+    # tables in the APP-720 7.12/7.13 universe (verified -- no real comparand hit).
+    SkipTableRule("PHC_*", "Skip-list: transient PHC UID worklists/keys built via SELECT INTO; not reporting output.", id="SKIP-PHC_PREFIX"),
+    SkipTableRule("*_REPT", "Skip-list: SAS report-build intermediate tables (suffix _REPT); not compared.", id="SKIP-REPT_SUFFIX"),
+    SkipTableRule("*_REPT_*", "Skip-list: SAS report-build intermediate/temp tables (e.g. *_REPT_TEMP, *_REPT_FINAL).", id="SKIP-REPT_INFIX"),
+    SkipTableRule("STAGING_*", "Skip-list: staging tables (prefixed STAGING_).", id="SKIP-STAGING_PREFIX"),
+    SkipTableRule("*_KEYS", "Skip-list: key-mapping scratch tables (suffix _KEYS, e.g. DIMENSIONAL_KEYS, PHC_KEYS).", id="SKIP-KEYS_SUFFIX"),
+    SkipTableRule("*KEYSTORE*", "Skip-list: entity keystore scratch tables (e.g. ENTITY_KEYSTORE_STD/INC).", id="SKIP-KEYSTORE"),
+    SkipTableRule("TMP_*", "Skip-list: temporary tables (prefixed TMP_; complements TEMP_*).", id="SKIP-TMP_PREFIX"),
+    SkipTableRule("*TEMP_INC", "Skip-list: incremental temp scratch (e.g. F_PAGE_CASE_TEMP_INC); TEMP_* glob is prefix-only.", id="SKIP-TEMP_INC_SUFFIX"),
+    SkipTableRule("UPDATED_*_LIST", "Skip-list: ETL delta worklists (e.g. UPDATED_OBSERVATION_LIST); not reporting output.", id="SKIP-UPDATED_LIST"),
+    SkipTableRule("DIMENSION_KEYS_PAGECASEID", "Skip-list: page-case-id key-mapping scratch table.", id="SKIP-DIMENSION_KEYS_PAGECASEID"),
+    SkipTableRule("ACTIVITY_LOG_MASTER_LAST_SAS", "Skip-list: SAS MasterETL run-bookkeeping table; not compared.", id="SKIP-ACTIVITY_LOG_MASTER_LAST_SAS"),
+    SkipTableRule("INIT", "Skip-list: ETL init/bootstrap scratch table; not reporting output.", id="SKIP-INIT"),
+    # F_S_* are staging fact intermediates (the _S_ infix mirrors the existing
+    # S_* staging family). Only these two were verified transient (they dropped
+    # out of the 7.13 scan); F_S_TB_PAM / F_S_VAR_PAM persist in both runs and
+    # are left in scope pending confirmation -- revisit whether F_S_* should be a
+    # family skip once those two are characterized.
+    SkipTableRule("F_S_INV_CASE", "Skip-list: staging fact intermediate (SELECT INTO); not reporting output.", id="SKIP-F_S_INV_CASE"),
+    SkipTableRule("F_S_STD_HIV_CASE", "Skip-list: staging fact intermediate (SELECT INTO); not reporting output.", id="SKIP-F_S_STD_HIV_CASE"),
 ]
 
 
@@ -827,15 +857,12 @@ KNOWN_BUGS = [
         id="BUG-LDF_DATAMART_COLUMN_REF-DATAMART_COLUMN_NM",
     ),
     # 32. PHC_UIDS.CASE_MANAGEMENT_UID NULL in modern.
-    KnownBugRule(
-        "PHC_UIDS",
-        "CASE_MANAGEMENT_UID",
-        "RDB_MODERN has NULL for CASE_MANAGEMENT_UID while legacy RDB populates "
-        "it; RDB_MODERN/RDB also store different (non-STD vs STD) record sets in "
-        "PHC_UIDS. Needs investigation (see also PHC_UIDS_REPT).",
-        ticket="RTR-diffs:bug-32",
-        id="BUG-PHC_UIDS-CASE_MANAGEMENT_UID",
-    ),
+    # RETIRED (APP-720): PHC_UIDS is now skip-listed (SKIP-PHC_PREFIX) as a
+    # transient SELECT INTO UID worklist, so this column-level known-bug rule can
+    # never fire (skip rules outrank known-bug in sort order). The underlying
+    # CASE_MANAGEMENT_UID NULL + non-STD/STD record-set observation (ticket
+    # RTR-diffs:bug-32) is preserved here for traceability; re-open it against a
+    # real comparand if PHC case-management linkage needs verification.
     # 34. TREATMENT.TREATMENT_COMMENTS NULL vs empty.
     KnownBugRule(
         "TREATMENT",
