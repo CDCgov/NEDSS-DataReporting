@@ -14,14 +14,8 @@ if [[ -n "$RUN_MIGRATIONS" && "$RUN_MIGRATIONS" == "true" ]]; then
         --password="${DB_PASSWORD}" \
         update
 
-    # Determine target reporting database based on NBS_ODSE configuration
-    echo "Determining target reporting database..."
-    ENV_CHECK=$(sqlcmd -b -C -S "${DB_HOST}" -d "NBS_ODSE" -U "${DB_USERNAME}" -P "${DB_PASSWORD}" -Q "SET NOCOUNT ON; SELECT config_value FROM dbo.NBS_configuration WHERE config_key = 'ENV'" -h -1 -W 2>/dev/null | tr -d '\r' | xargs)
-
-    TARGET_DB="rdb"
-    if [[ "$ENV_CHECK" == "UAT" ]]; then
-        TARGET_DB="rdb_modern"
-    fi
+    # Temporary, we don't have a way to specify RDB now, but this script will be removed soon
+    TARGET_DB="rdb_modern"
     echo "Target reporting database resolved to: $TARGET_DB"
 
     # RDB / RDB_Modern
