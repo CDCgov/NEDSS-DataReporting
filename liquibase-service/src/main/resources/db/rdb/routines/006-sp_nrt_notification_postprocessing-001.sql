@@ -117,7 +117,7 @@ BEGIN
 
         BEGIN TRANSACTION;
 
-        -- Bug #26 (sibling of bug #17): serialize the notification key-gen + dimension inserts and
+        -- APP-738 (sibling of APP-736): serialize the notification key-gen + dimension inserts and
         -- refresh the at-SP-start snapshots. #temp_ntf_table / #temp_ntf_event_table captured each
         -- notification's NOTIFICATION_KEY (the "is this new?" signal) at SP start with (NOLOCK);
         -- d_notification_key is IDENTITY and nrt_notification_key.notification_uid has no unique index,

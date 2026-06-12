@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 /**
- * Concurrency regression test for bug #26 (sibling of bug #17).
+ * Concurrency regression test for APP-738 (sibling of APP-736).
  *
  * <p>{@code sp_nrt_notification_postprocessing} (routine 006) allocates {@code d_notification_key}
  * (IDENTITY on {@code nrt_notification_key}, whose {@code notification_uid} has no unique index)
@@ -281,7 +281,7 @@ class NotificationKeyGenConcurrencyTest extends UnitTest {
     try (Connection conn = connection();
         Statement st = conn.createStatement()) {
       StringBuilder sb = new StringBuilder("SET NOCOUNT ON; ");
-      // Bug #26 context: the SP's NOTIFICATION_EVENT insert requires a NOT-NULL INVESTIGATION_KEY
+      // APP-738 context: the SP's NOTIFICATION_EVENT insert requires a NOT-NULL INVESTIGATION_KEY
       // (INVESTIGATION joined on CASE_UID = public_health_case_uid). In a clean DB that
       // investigation does not exist, so the NOTIFICATION_EVENT insert rolls the whole proc back
       // and
