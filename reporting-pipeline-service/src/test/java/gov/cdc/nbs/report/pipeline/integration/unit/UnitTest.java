@@ -3,86 +3,66 @@ package gov.cdc.nbs.report.pipeline.integration.unit;
 import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-@DataJpaTest()
-@AutoConfigureTestDatabase(replace = Replace.NONE)
-@TestInstance(Lifecycle.PER_CLASS)
-@ActiveProfiles("test")
 @Tag("Unit")
+@DataJpaTest
+@ActiveProfiles("test")
+@TestInstance(Lifecycle.PER_CLASS)
+@AutoConfigureTestDatabase(replace = Replace.NONE)
+@ContextConfiguration(initializers = UnitTest.Initializer.class)
 @Import(DataSourceConfig.class)
 public abstract class UnitTest {
 
   private static final Logger log = LoggerFactory.getLogger(UnitTest.class);
+  private static final Slf4jLogConsumer consumer = new Slf4jLogConsumer(log);
   private static final File base = new File("../docker-compose.yaml");
 
   private static boolean started = false;
-  private static ComposeContainer environment;
-
-  @Autowired
-  @Qualifier("customComposeFile")
-  private File customComposeFile;
 
   @SuppressWarnings("resource")
-  void initializeEnvironment() {
-    List<File> composeFiles = new ArrayList<>(Arrays.asList(base));
-    if (customComposeFile != null) {
-      log.warn(
-          "Using custom compose override. Base: {}, Custom: {}",
-          base.getPath(),
-          customComposeFile.getPath());
-      composeFiles.add(customComposeFile);
-    }
-    environment =
-        new ComposeContainer(composeFiles)
-            .withServices("nbs-mssql")
-            .waitingFor("nbs-mssql", Wait.forHealthcheck())
-            .withServices("liquibase")
-            .waitingFor("liquibase", Wait.forLogMessage(".*Migrations complete.*\\n", 1))
-            // Set the maximum startup timeout all the waits set are bounded to
-            .withStartupTimeout(Duration.ofMinutes(5));
-  }
+  private static final ComposeContainer environment =
+      new ComposeContainer(base)
+          .withServices("nbs-mssql")
+          .waitingFor("nbs-mssql", Wait.forHealthcheck())
+          .withLogConsumer("nbs-mssql", consumer)
+          // Set the maximum startup timeout all the waits set are bounded to
+          .withStartupTimeout(Duration.ofMinutes(10));
 
-  @BeforeAll
-  void setUp() throws Exception {
+  @AfterAll
+  void tearDown() {
     synchronized (UnitTest.class) {
-      if (!started) {
-        if (environment == null) {
-          initializeEnvironment();
-        }
-        environment.start();
-        started = true;
+      if (started) {
+        environment.stop();
+        started = false;
       }
     }
   }
 
-  @AfterAll
-  void tearDown() throws Exception {
-    synchronized (UnitTest.class) {
-      if (started) {
-        if (environment == null) {
-          initializeEnvironment();
-        }
-        environment.stop();
-        started = false;
+  static class Initializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    @Override
+    public void initialize(ConfigurableApplicationContext context) {
+      // Force container startup BEFORE Spring sets up the data source or Liquibase
+      if (!started) {
+        environment.start();
+        started = true;
       }
     }
   }

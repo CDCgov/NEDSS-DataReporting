@@ -2,8 +2,8 @@ USE RDB_MODERN;
 -----------------------------------------------------------------------
 -- CLEANUPS
 -----------------------------------------------------------------------
-EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL';
 -- Cleanup Modern RDB
+DELETE FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD_GROUP]
 DELETE FROM [RDB_MODERN].[dbo].[COVID_CASE_DATAMART]
 DELETE FROM [RDB_MODERN].[dbo].[D_ORGANIZATION]
 DELETE FROM [RDB_MODERN].[dbo].[D_PATIENT]
@@ -35,12 +35,10 @@ DELETE FROM [RDB_MODERN].[dbo].[L_INV_EPIDEMIOLOGY]
 DELETE FROM [RDB_MODERN].[dbo].[L_INV_ADMINISTRATIVE]
 DELETE FROM [RDB_MODERN].[dbo].[nrt_patient_key]
 DELETE FROM [RDB_MODERN].[dbo].[nrt_organization_key]
-DELETE FROM [RDB_MODERN].[dbo].[CONFIRMATION_METHOD_GROUP]
 DELETE FROM [RDB_MODERN].[dbo].[nrt_provider_key]
 DELETE FROM [RDB_MODERN].[dbo].[CASE_COUNT]
 DELETE FROM [RDB_MODERN].[dbo].[JOB_FLOW_LOG]
 
-EXEC sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
 -----------------------------------------------------------------------
 -- SECTION 2: RDB_MODERN SEEDING
 -----------------------------------------------------------------------

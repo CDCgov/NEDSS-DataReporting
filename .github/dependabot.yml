@@ -7,8 +7,6 @@ updates:
   - package-ecosystem: "gradle"
     directories:
       - "/"
-      - "/liquibase-service"
-      - "/reporting-pipeline-service"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 2

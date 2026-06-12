@@ -1,0 +1,54 @@
+{
+  "0": [
+    {
+      "CONFIRMATION_DT": "2026-06-08T00:00:00.000"
+    }
+  ],
+  "1": [
+    {
+      "CASE_RPT_MMWR_WK": 23,
+      "CASE_RPT_MMWR_YR": 2026,
+      "CONFIRMATION_DT": "2026-06-08T00:00:00.000",
+      "CONFIRMATION_METHOD": "Active Surveillance",
+      "DETECT_METH_DESC_TXT": "Patient self-referral",
+      "DISEASE": "Acanthamoeba Disease (Excluding Keratitis)",
+      "DISEASE_CD": "50225",
+      "HSPTLIZD_IND": "Yes",
+      "HSPTL_ADMISSION_DT": "2026-06-07T00:00:00.000",
+      "HSPTL_DISCHARGE_DT": "2026-06-08T00:00:00.000",
+      "HSPTL_DURATION_DAYS": 1,
+      "HSP_DETAIL": "<b></b>ORG10000001GA01<br>CHOA - Scottish Rite<br>1001 Johnson Ferry Rd NE<br>Atlanta, Georgia 30034<br>Dekalb County<br>404-785-5252<br> ",
+      "HSP_KEY": 3.0,
+      "HSP_QEC": "2",
+      "HSP_UID": 10003007.0,
+      "INVESTIGATION_CREATED_BY": "Kent, Ariella",
+      "INVESTIGATION_CREATE_DATE": "2026-06-08T17:11:05.093",
+      "INVESTIGATION_LAST_UPDTD_BY": "Kent, Ariella",
+      "INVESTIGATION_LAST_UPDTD_DATE": "2026-06-08T17:11:05.093",
+      "INVESTIGATION_STATUS": "Open",
+      "INV_CASE_STATUS": "Confirmed",
+      "INV_LOCAL_ID": "CAS10000010031GA01",
+      "INV_SHARE_IND": "T",
+      "INV_START_DT": "2026-06-08T00:00:00.000",
+      "JURISDICTION_CD": "130005",
+      "JURISDICTION_NM": "Dekalb County",
+      "PATIENT_COUNTRY": "United States",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_DOB": "1978-01-18T00:00:00.000",
+      "PATIENT_FIRST_NAME": "Obi Wan",
+      "PATIENT_LAST_NAME": "Kenobi",
+      "PATIENT_LOCAL_ID": "PSN1000001000GA01",
+      "PATIENT_RACE_CALC": "Unknown",
+      "PATIENT_STATE": "Georgia",
+      "PROGRAM_AREA": "GCD",
+      "PROGRAM_JURISDICTION_OID": 1300500009,
+      "REPORTING_FACILITY_DETAIL": "<b></b>ORG10000001GA01<br>CHOA - Scottish Rite<br>1001 Johnson Ferry Rd NE<br>Atlanta, Georgia 30034<br>Dekalb County<br>404-785-5252<br> ",
+      "REPORTING_FACILITY_KEY": 3.0,
+      "REPORTING_FACILITY_QEC": "2",
+      "REPORTING_FACILITY_UID": 10003007.0,
+      "RPT_PRV_KEY": 1.0,
+      "RPT_SRC_CD_DESC": "Hospital",
+      "TRANSMISSION_MODE": "Airborne"
+    }
+  ]
+}

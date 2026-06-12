@@ -2,11 +2,11 @@ USE [NBS_ODSE]
 DECLARE @superuser_id bigint = 10009282
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid bigint = 20100000
-DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 20100001
-DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 20100002
-DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 20100003
-DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN20100000GA01'
+DECLARE @dbo_Entity_entity_uid bigint = 1000005000
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000005001
+DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000005002
+DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 1000005003
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000005000GA01'
 
 -- dbo.Entity
 INSERT INTO [dbo].[entity]

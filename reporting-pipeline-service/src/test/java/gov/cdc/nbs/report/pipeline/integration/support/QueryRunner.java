@@ -1,11 +1,11 @@
 package gov.cdc.nbs.report.pipeline.integration.support;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 public class QueryRunner {
@@ -14,10 +14,8 @@ public class QueryRunner {
 
   /**
    * Splits the provided sql on the ';' character. Each statement is then executed by the provided
-   * JdbcClient within an {@link Await#waitFor}. An assertion is made to ensure results are returned
-   * within the retry time limit. Results of all queries are compiled into a single {@link HashMap}
-   * where the key is the index of the statement (0,1,...) and the value is a {@literal
-   * List<Map<String, Object>>}
+   * JdbcClient. Results of all queries are compiled into a single {@link HashMap} where the key is
+   * the index of the statement (0,1,...) and the value is a {@literal List<Map<String, Object>>}
    *
    * @param sql A single or multiple SQL queries separated by ';'
    * @param client A JdbcClient for executing the provided sql
@@ -25,13 +23,11 @@ public class QueryRunner {
    */
   public static Map<String, List<Map<String, Object>>> queryForMap(String sql, JdbcClient client) {
     Map<String, List<Map<String, Object>>> results = new HashMap<>();
-    String[] queries = sql.trim().split(";");
+    List<String> queries = splitStatements(sql);
     int queryIndex = 0;
 
     for (String query : queries) {
-      Optional<List<Map<String, Object>>> result =
-          Await.waitFor(() -> QueryRunner.select(query, client));
-      assertThat(result).isPresent();
+      Optional<List<Map<String, Object>>> result = QueryRunner.select(query, client);
       results.put(String.valueOf(queryIndex), result.get());
       queryIndex++;
     }
@@ -46,5 +42,22 @@ public class QueryRunner {
     } else {
       return Optional.of(result);
     }
+  }
+
+  public static List<String> splitStatements(String sql) {
+    if (sql == null || sql.isBlank()) {
+      return List.of();
+    }
+
+    return Stream.of(sql.split(";"))
+        .map(
+            statement ->
+                statement
+                    .lines()
+                    .filter(line -> !line.stripLeading().startsWith("--"))
+                    .collect(Collectors.joining(System.lineSeparator())))
+        .map(String::trim)
+        .filter(statement -> !statement.isBlank())
+        .toList();
   }
 }

@@ -15,8 +15,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.json.JSONException;
 import org.junit.jupiter.api.parallel.Execution;
@@ -29,6 +31,20 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 class DataDrivenFunctionalTests extends FunctionalTest {
+
+  /**
+   * If empty, all functional test directories are executed.
+   *
+   * <p>Examples:
+   *
+   * <ul>
+   *   <li>List.of("hivNotificationActualReferral")
+   *   <li>List.of("interview", "elrEColi")
+   * </ul>
+   */
+  // private static final List<String> SELECTED_TEST_NAMES =
+  // List.of("hivNotificationActualReferral");
+  private static final List<String> SELECTED_TEST_NAMES = List.of();
 
   private final JdbcClient client;
 
@@ -48,7 +64,20 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    */
   static Stream<Path> functionalTestDirectoryProvider() throws IOException {
     Path root = Paths.get("src/test/resources/testData/functional");
-    return Files.list(root).filter(Files::isDirectory); // Filter out files
+    Stream<Path> directories = Files.list(root).filter(Files::isDirectory);
+
+    if (SELECTED_TEST_NAMES.isEmpty()) {
+      return directories;
+    }
+
+    Set<String> selectedNames =
+        SELECTED_TEST_NAMES.stream()
+            .map(name -> name.toLowerCase(Locale.ROOT))
+            .collect(java.util.stream.Collectors.toSet());
+
+    return directories.filter(
+        directory ->
+            selectedNames.contains(directory.getFileName().toString().toLowerCase(Locale.ROOT)));
   }
 
   /**
@@ -107,17 +136,35 @@ class DataDrivenFunctionalTests extends FunctionalTest {
 
       // For each query in query.sql, execute and validate it matches expected. Allow
       // retry to wait on processing to complete
-      String[] queryList = queries.trim().split(";");
-      for (int i = 0; i < queryList.length; i++) {
-        String query = queryList[i];
+      List<String> queryList = QueryRunner.splitStatements(queries);
+      for (int i = 0; i < queryList.size(); i++) {
+        String query = queryList.get(i);
         String expectedResult = expectedNode.get(String.valueOf(i)).toString();
 
-        Optional<List<Map<String, Object>>> results =
-            Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
+        Optional<List<Map<String, Object>>> results;
+        try {
+          results = Await.waitForMatch(() -> QueryRunner.select(query, client), expectedResult);
+        } catch (RuntimeException e) {
+          throw new AssertionError(
+              String.format(
+                  "Error executing query %d in %s/%s/query.sql. SQL:%n%s",
+                  i, testDirectory.getFileName(), stepDirectory.getFileName(), query.strip()),
+              e);
+        }
 
-        assertThat(results).isPresent();
+        assertThat(results)
+            .withFailMessage(
+                "Query %d in %s/%s did not return results within the time limit",
+                i, testDirectory.getFileName(), stepDirectory.getFileName())
+            .isPresent();
         String actual = mapper.writeValueAsString(results.get());
-        JSONAssert.assertEquals(expectedResult, actual, JSONCompareMode.LENIENT);
+        JSONAssert.assertEquals(
+            String.format(
+                "Query %d in %s/%s matched expected JSON",
+                i, testDirectory.getFileName(), stepDirectory.getFileName()),
+            expectedResult,
+            actual,
+            JSONCompareMode.LENIENT);
       }
     }
   }

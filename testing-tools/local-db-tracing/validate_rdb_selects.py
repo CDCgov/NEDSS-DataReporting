@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 import html
 import json
 import os
@@ -10,12 +11,17 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from tracing_constants import WARNING_NAME_MISMATCH_VALUES
 from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_models import SqlCmdError
 from tracing_sql import SqlCmdClient, require_sqlcmd
 
 
 USE_DATABASE_PATTERN = re.compile(r"^\s*USE\s+\[(?P<database>[^\]]+)\]\s*;\s*$", re.IGNORECASE)
+THREE_PART_OBJECT_PATTERN = re.compile(
+    r"\[(?P<database>[^\]]+)\]\s*\.\s*\[[^\]]+\]\s*\.\s*\[[^\]]+\]",
+    re.IGNORECASE,
+)
 EXPECTED_MARKER = "-- EXPECTED_ROWS_JSON:"
 JSON_HEADER_PREFIX = "JSON_F52E2B61"
 SELECT_STATEMENT_PREFIX_PATTERN = re.compile(r"^\s*(SELECT|WITH)\b", re.IGNORECASE)
@@ -169,6 +175,13 @@ def parse_use_database(statements: list[SqlStatement]) -> str | None:
     return None
 
 
+def parse_database_from_three_part_names(sql_text: str) -> str | None:
+    match = THREE_PART_OBJECT_PATTERN.search(sql_text)
+    if not match:
+        return None
+    return match.group("database")
+
+
 def is_use_database_statement(sql: str) -> bool:
     return USE_DATABASE_PATTERN.match(sql.strip()) is not None
 
@@ -189,6 +202,32 @@ def ensure_query_returns_json(sql: str) -> str:
     if stripped.endswith(";"):
         stripped = stripped[:-1].rstrip()
     return f"{stripped}\nFOR JSON PATH;"
+
+
+def rewrite_query_database(sql: str, source_database: str | None, target_database: str | None) -> str:
+    if not source_database or not target_database:
+        return sql
+    if source_database.strip().lower() == target_database.strip().lower():
+        return sql
+
+    source_escaped = re.escape(source_database.strip())
+    target_bracketed = f"[{target_database.strip()}]."
+
+    # Rewrite bracketed three-part prefixes: [SOURCE].[schema].[table] -> [TARGET].[schema].[table]
+    rewritten = re.sub(
+        rf"\[(?i:{source_escaped})\]\s*\.",
+        target_bracketed,
+        sql,
+    )
+
+    # Rewrite unbracketed three-part prefixes: SOURCE.[schema].[table] -> [TARGET].[schema].[table]
+    rewritten = re.sub(
+        rf"\b(?i:{source_escaped})\b\s*\.",
+        target_bracketed,
+        rewritten,
+    )
+
+    return rewritten
 
 
 def parse_cases(sql_text: str) -> tuple[list[SqlStatement], list[SelectCase]]:
@@ -314,6 +353,16 @@ def is_null_vs_empty_mismatch(expected: object, actual: object) -> bool:
     return False
 
 
+def is_kent_ariella_name_value(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+
+    normalized = value.strip().casefold()
+    if not normalized:
+        return False
+    return normalized in WARNING_NAME_MISMATCH_VALUES
+
+
 def field_name_ends_with_id_uid_or_key(field_name: str) -> bool:
     upper_name = field_name.upper()
     return upper_name.endswith("_ID") or upper_name.endswith("_UID") or upper_name.endswith("_KEY")
@@ -340,6 +389,41 @@ def normalize_trailing_zero_millis(value: object) -> object:
     return re.sub(r"(?<=\d)\.000(?=(?:Z|[+-]\d{2}:?\d{2})?$)", "", value)
 
 
+def is_iso_datetime_or_date_string(value: object) -> bool:
+    """Check if a value looks like an ISO format date or datetime string."""
+    if not isinstance(value, str):
+        return False
+
+    candidate = value.strip()
+    if not candidate:
+        return False
+
+    try:
+        datetime.fromisoformat(candidate)
+        return True
+    except ValueError:
+        return False
+
+
+def is_midnight_time(value: str) -> bool:
+    """Check if an ISO datetime string has a midnight time component (00:00:00)."""
+    # Match times that are exactly 00:00:00 or 00:00:00.000, etc.
+    return bool(re.search(r"T00:00:00(\.0+)?(Z|[+-]\d{2}:?\d{2})?$", value))
+
+
+def is_midnight_mismatch(expected: object, actual: object) -> bool:
+    """Check if one datetime is midnight and the other isn't."""
+    if not (isinstance(expected, str) and isinstance(actual, str)):
+        return False
+    if not ("T" in expected and "T" in actual):
+        return False  # Only check if both have time components
+
+    expected_is_midnight = is_midnight_time(expected)
+    actual_is_midnight = is_midnight_time(actual)
+    # Return True if one is midnight and the other isn't (they differ)
+    return expected_is_midnight != actual_is_midnight
+
+
 def is_datetime_zero_millis_mismatch(expected: object, actual: object) -> bool:
     if not (isinstance(expected, str) and isinstance(actual, str)):
         return False
@@ -361,8 +445,18 @@ def is_warning_mismatch(
         return False
     if is_null_vs_empty_mismatch(expected_value, actual_value):
         return True
+    if is_kent_ariella_name_value(expected_value) or is_kent_ariella_name_value(actual_value):
+        return True
     if is_datetime_zero_millis_mismatch(expected_value, actual_value):
         return True
+    # Check if both are date/datetime values - if so, it's a warning (unless midnight mismatch)
+    if isinstance(expected_value, str) and isinstance(actual_value, str):
+        if is_iso_datetime_or_date_string(expected_value) and is_iso_datetime_or_date_string(actual_value):
+            # If one is midnight and the other isn't, it's an error (not a warning)
+            if is_midnight_mismatch(expected_value, actual_value):
+                return False
+            # Otherwise, date/datetime differences are warnings
+            return True
     if field_name_is_warning_exception(field_name):
         return True
     return field_name_ends_with_id_uid_or_key(field_name)
@@ -376,11 +470,11 @@ def normalize_json_arrays(data: object) -> object:
     """
     if isinstance(data, dict):
         return {key: normalize_json_arrays(value) for key, value in data.items()}
-    
+
     if isinstance(data, list):
         # Normalize each element recursively
         normalized_items = [normalize_json_arrays(item) for item in data]
-        
+
         # Sort arrays if they contain objects (dicts) - sort by JSON representation
         if normalized_items and isinstance(normalized_items[0], dict):
             try:
@@ -388,9 +482,9 @@ def normalize_json_arrays(data: object) -> object:
             except (TypeError, ValueError):
                 # If sorting fails, keep original order
                 pass
-        
+
         return normalized_items
-    
+
     return data
 
 
@@ -399,14 +493,14 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
     # Normalize arrays to ensure consistent ordering for comparison
     expected = normalize_json_arrays(expected)
     actual = normalize_json_arrays(actual)
-    
+
     expected_fields = flatten_json_fields(expected)
     actual_fields = flatten_json_fields(actual)
     field_names = set(expected_fields.keys()) | set(actual_fields.keys())
-    
+
     warning_count = 0
     failure_count = 0
-    
+
     for field_name in field_names:
         expected_has = field_name in expected_fields
         actual_has = field_name in actual_fields
@@ -420,7 +514,7 @@ def count_differences(expected: object, actual: object) -> tuple[int, int]:
             warning_count += 1
         else:
             failure_count += 1
-    
+
     return warning_count, failure_count
 
 
@@ -439,16 +533,16 @@ def numeric_sort_key(field_name: str) -> tuple:
     Returns a tuple where array indices are integers for proper numeric sorting.
     """
     parts: list = []
-    
+
     # Pattern to match either array indices [N] or field names
     pattern = r'\[(\d+)\]|([^\[\]]+)'
-    
+
     for match in re.finditer(pattern, field_name):
         if match.group(1):  # Array index
             parts.append((1, int(match.group(1))))  # Tuple with 1 for array, then numeric index
         elif match.group(2):  # Field name
             parts.append((0, match.group(2)))  # Tuple with 0 for field, then string
-    
+
     return tuple(parts) if parts else ((0, field_name),)
 
 
@@ -497,17 +591,31 @@ def comparison_cell(value: object, differs: bool, is_warning: bool = False) -> s
     return text
 
 
-def render_field_comparison_table(expected: object, actual: object) -> list[str]:
+def format_column_label(base_label: str, database_name: str | None) -> str:
+    if database_name and database_name.strip():
+        return f"{base_label} ({database_name.strip()})"
+    return base_label
+
+
+def render_field_comparison_table(
+    expected: object,
+    actual: object,
+    expected_database_name: str | None = None,
+    returned_database_name: str | None = None,
+) -> list[str]:
     # Normalize arrays to ensure consistent ordering for comparison
     expected = normalize_json_arrays(expected)
     actual = normalize_json_arrays(actual)
-    
+
     expected_fields = flatten_json_fields(expected)
     actual_fields = flatten_json_fields(actual)
     field_names = sorted(set(expected_fields.keys()) | set(actual_fields.keys()), key=numeric_sort_key)
 
+    expected_header = markdown_table_cell(format_column_label("Expected", expected_database_name))
+    returned_header = markdown_table_cell(format_column_label("Returned", returned_database_name))
+
     lines = [
-        "| Field | Expected | Returned |",
+        f"| Field | {expected_header} | {returned_header} |",
         "| --- | --- | --- |",
     ]
 
@@ -540,6 +648,8 @@ def render_markdown_report(
     results: list[dict[str, object]],
 ) -> str:
     database_name = str(summary.get("database") or "").strip()
+    expected_database_name = str(summary.get("expected_database") or "").strip() or None
+    returned_database_name = str(summary.get("returned_database") or database_name).strip() or None
     report_title = (
         f"# {database_name} Select Validation Results"
         if database_name
@@ -590,7 +700,7 @@ def render_markdown_report(
     failing_results = [result for result in results if result["status"] == "fail"]
     warning_results = [result for result in results if result["status"] == "warning"]
     details_results = failing_results + warning_results
-    
+
     if details_results:
         lines.extend(["", "## Details", ""])
         for result in details_results:
@@ -602,9 +712,18 @@ def render_markdown_report(
                 lines.append(f"Error: <span class=\"{error_span_class}\">{html.escape(str(result['error']))}</span>")
                 lines.append("")
             if result.get("actual") is not None:
-                lines.extend(render_field_comparison_table(result.get("expected"), result.get("actual")))
+                lines.extend(
+                    render_field_comparison_table(
+                        result.get("expected"),
+                        result.get("actual"),
+                        expected_database_name=expected_database_name,
+                        returned_database_name=returned_database_name,
+                    )
+                )
             else:
-                lines.append("| Field | Expected | Returned |")
+                expected_header = markdown_table_cell(format_column_label("Expected", expected_database_name))
+                returned_header = markdown_table_cell(format_column_label("Returned", returned_database_name))
+                lines.append(f"| Field | {expected_header} | {returned_header} |")
                 lines.append("| --- | --- | --- |")
                 lines.append("| query_error | <span class=\"error\">(query did not return JSON)</span> | <span class=\"error\">missing</span> |")
             lines.append("")
@@ -706,11 +825,18 @@ def render_json_with_mask(value: object, mask: object, use_color: bool, diff_col
     return json.dumps(value, sort_keys=True)
 
 
-def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> dict[str, object]:
+def compare_case(
+    client: SqlCmdClient,
+    prelude_sql: str,
+    case: SelectCase,
+    source_database: str | None = None,
+    target_database: str | None = None,
+) -> dict[str, object]:
     sql_batch_parts = ["SET NOCOUNT ON;"]
     if prelude_sql.strip():
         sql_batch_parts.append(prelude_sql)
-    sql_batch_parts.append(ensure_query_returns_json(case.query_sql))
+    query_sql = rewrite_query_database(case.query_sql, source_database, target_database)
+    sql_batch_parts.append(ensure_query_returns_json(query_sql))
     sql_batch = "\n\n".join(sql_batch_parts)
 
     try:
@@ -736,7 +862,7 @@ def compare_case(client: SqlCmdClient, prelude_sql: str, case: SelectCase) -> di
                 status = "warning"
             else:
                 status = "fail"
-        
+
         result: dict[str, object] = {
             "case_index": case.case_index,
             "label": case.label,
@@ -797,6 +923,7 @@ def main() -> int:
     if not cases:
         raise SystemExit("No SELECT cases found in the SQL file.")
     inferred_database = parse_use_database(statements)
+    inferred_expected_database = inferred_database or parse_database_from_three_part_names(sql_text)
     database = args.database or inferred_database
     if not database:
         raise SystemExit("Could not determine database from SQL file. Pass --database explicitly.")
@@ -819,7 +946,13 @@ def main() -> int:
 
     case_results: list[dict[str, object]] = []
     for case in cases:
-        result = compare_case(client, prelude_sql, case)
+        result = compare_case(
+            client,
+            prelude_sql,
+            case,
+            source_database=inferred_expected_database,
+            target_database=database,
+        )
         case_results.append(result)
         status = str(result["status"]).upper()
         if status == "PASS":
@@ -846,6 +979,8 @@ def main() -> int:
         "input_file": str(input_file),
         "server": args.server,
         "database": database,
+        "expected_database": inferred_expected_database,
+        "returned_database": database,
         "case_count": len(case_results),
         "pass_count": pass_count,
         "warning_count": warning_count,

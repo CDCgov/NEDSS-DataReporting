@@ -8,19 +8,72 @@ Real Time Reporting (RTR) enables immediate data transformation by transitioning
 
 RTR uses Kafka to stream change events from transactional data sources into reporting-optimized Kafka topics and the reporting database.   This repository consists of two primary packages: 
 
-- `liquibase-service` - A job that handles database version control via Liquibase. Deploys stored procedures, tables, and views required for the RTR pipeline.
 - `reporting-pipeline-service` - Handles all change events (e.g. LDF, People, Observation) and executes post-processing logic to hydrate dimensions, fact tables, and datamarts.
+
+## How It Works
+
+When a user or process changes data in the NBS ODSE database, Debezium captures the change via CDC logs and publishes it to Kafka. The Reporting Pipeline Service consumes those events, calls stored procedures to transform and hydrate the reporting database dimensions, fact tables, and datamarts — all in near real-time.
+
+```mermaid
+  sequenceDiagram
+      autonumber
+      actor Client as NBS Web / Process
+      participant ODSE
+      participant Debezium
+      participant Kafka
+      participant Pipeline as Reporting Pipeline Service
+      participant RDBProcs as RDB Stored Procs
+      participant RDBTables as RDB Tables
+
+      %% Transaction and CDC
+      Client->>ODSE: NBS User or Process changes ODSE Data
+      ODSE->>Debezium: Captures changes via CDC logs
+      Debezium->>Kafka: Publish change event to nbs_*
+
+      %% Entity service transformation
+      Pipeline->>Kafka: Consume nbs_* change events
+      Pipeline->>RDBProcs: sp_*_event
+      RDBProcs-->>Pipeline: Return detailed entity record
+      Pipeline->>Kafka: Publish entity details to nrt_* topic
+
+      %% Post-processing: dimension and fact hydration
+      Note over Pipeline, RDBTables: Every 20 seconds (fixed-delay)
+      Pipeline->>Kafka: Consume nrt_* events, cache entity UIDs by type
+      Pipeline->>RDBProcs: sp_nrt_* / sp_d_* dimension procs
+      RDBProcs->>RDBTables: D_PATIENT, D_PROVIDER, D_ORGANIZATION,<br/>D_PLACE, D_CONTACT_RECORD, D_VACCINATION,<br/>D_INTERVIEW, INVESTIGATION, ...
+      Pipeline->>RDBProcs: sp_f_* fact procs
+      RDBProcs->>RDBTables: F_PAGE_CASE, F_CONTACT_RECORD_CASE,<br/>F_INTERVIEW_CASE, F_STD_PAGE_CASE, F_VACCINATION
+      Pipeline->>RDBProcs: sp_d_lab_test_postprocessing / sp_d_labtest_result_postprocessing
+      RDBProcs->>RDBTables: LAB_TEST, LAB_RPT_USER_COMMENT
+      Pipeline->>RDBProcs: sp_page_builder_postprocessing
+      RDBProcs->>RDBTables: D_INV_CLINICAL, D_INV_ADMINISTRATIVE,<br/>D_INV_RISK_FACTOR, D_INV_SYMPTOM, ... (per rdb_table_name_list)
+      RDBProcs-->>Pipeline: Return affected datamarts (DatamartData)
+      Pipeline->>Kafka: Publish DatamartData to nbs_Datamart topic
+
+      %% Datamart hydration
+      Note over Pipeline, RDBTables: Every 60 seconds (fixed-delay)
+      Pipeline->>Kafka: Consume nbs_Datamart events, cache datamart IDs by type
+      Pipeline->>RDBProcs: sp_lab100_datamart_postprocessing / sp_lab101_datamart_postprocessing
+      RDBProcs->>RDBTables: LAB100, LAB101
+      Pipeline->>RDBProcs: Condition-specific datamart procs
+      RDBProcs->>RDBTables: HEPATITIS_DATAMART, TB_DATAMART,<br/>VAR_DATAMART, STD_HIV_DATAMART, ...
+      Pipeline->>RDBProcs: sp_inv_summary_datamart_postprocessing
+      RDBProcs->>RDBTables: INV_SUMM_DATAMART
+      RDBProcs-->>Pipeline: Return dynamic datamart names
+      Pipeline->>RDBProcs: sp_dyn_datamart_postprocessing (per returned name)
+      RDBProcs->>RDBTables: DM_INV_HEPATITIS_CORE, DM_INV_STD,<br/>DM_INV_HIV, DM_INV_GENERIC_V2, ...
+      Pipeline->>RDBProcs: sp_morbidity_report_datamart_postprocessing
+      RDBProcs->>RDBTables: MORBIDITY_REPORT_DATAMART
+```
 
 ## Documentation and Related Repositories
 
 - Please refer to the full setup documentation in the [System Admin Guide](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
 - Helm Charts:
-  - [Liquibase](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/liquibase)
   - [Debezium Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/debezium)
   - [Kafka Connect Sink Connector](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/kafka-connect-sink)
   - [RTR Services](https://github.com/CDCgov/NEDSS-Helm/tree/main/charts/rtr)
 - [Database Upgrade Notes](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
-- [Database Upgrade without Liquibase](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
 
 ---
 
@@ -102,12 +155,12 @@ To run Spotless on a specific file or set of files, you can use the `-PspotlessF
 
 *   **Format a specific service (bypasses the incremental check):**
     ```sh
-    ./gradlew :liquibase-service:spotlessApply -PspotlessFiles='.*\.java'
+    ./gradlew :reporting-pipeline-service:spotlessApply -PspotlessFiles='.*\.java'
     ```
 
 *   **Format a specific file using its relative path:**
     ```sh
-    ./gradlew spotlessApply -PspotlessFiles='liquibase-service/src/main/java/MyFile.java'
+    ./gradlew spotlessApply -PspotlessFiles='reporting-pipeline-service/src/main/java/MyFile.java'
     ```
 
 *   **Format multiple specific files (comma-separated):**

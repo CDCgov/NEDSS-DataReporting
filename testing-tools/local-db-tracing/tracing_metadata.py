@@ -6,14 +6,15 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from tracing_constants import DEFAULT_CORE_REPLAY_IGNORED_TABLES, REPLAY_METADATA_CACHE_VERSION
+from tracing_constants import (
+    DEFAULT_CORE_REPLAY_IGNORED_TABLES,
+    DEFAULT_SUPERUSER_ID,
+    REPLAY_METADATA_CACHE_VERSION,
+)
 from tracing_models import PrimaryKeyColumn, TableStatus, CaptureInstance, UidGeneratorEntry
 from tracing_paths import replay_metadata_cache_file_for_database
 from tracing_sql import SqlCmdClient, read_tsv, sql_identifier, sql_quote
 from tracing_state import utc_now
-
-
-DEFAULT_SUPERUSER_ID = 10009282
 
 
 def infer_core_replay_ignored_tables(
@@ -35,7 +36,7 @@ def infer_core_replay_ignored_tables(
     ignored_tables: set[tuple[str, str]] = set()
     for schema_name, table_name in DEFAULT_CORE_REPLAY_IGNORED_TABLES:
         ignored_tables.add(
-            actual_names_by_lower.get((schema_name.lower(), table_name.lower()), (schema_name, table_name))
+            actual_names_by_lower.get((schema_name, table_name), (schema_name, table_name))
         )
     return ignored_tables
 
