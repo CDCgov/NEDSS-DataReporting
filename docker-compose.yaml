@@ -16,19 +16,6 @@ services:
       - 3433:1433
     mem_limit: 2.5G
 
-  liquibase:
-    build:
-      dockerfile: ./liquibase-service/Dockerfile
-    environment:
-      - RUN_MIGRATIONS=true
-      - DB_USERNAME=${RTR_ADMIN_NAME:-rtr_admin}
-      - DB_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
-      - DB_HOST=nbs-mssql
-    depends_on:
-      nbs-mssql:
-        condition: service_healthy
-    mem_limit: 200M
-
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
     depends_on:
@@ -95,8 +82,6 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
     ports:
       - 8083:8083
     volumes:
@@ -130,8 +115,6 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
     ports:
       - "8085:8083"
     volumes:
@@ -170,6 +153,8 @@ services:
       - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_CONNECTION_URL=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
+      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
     ports:
       - "8095:8095"
@@ -178,8 +163,6 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
-      liquibase:
-        condition: service_completed_successfully
       debezium:
         condition: service_healthy
       kafka-connect:
