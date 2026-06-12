@@ -1,7 +1,12 @@
 # _quarantine
 
 Fixtures here are excluded from `scripts/merge_and_verify.sh` (it globs
-`30_sp_coverage/*.sql`; quarantined files carry a non-`.sql` suffix).
+`30_sp_coverage/*.sql`; quarantined files carry a non-`.sql` suffix). Each file's
+suffix states why it is out: `.broken` / `.apply-error-*` / `.generated-always-violation`
+fail on apply; `.tempdb-blowup` is a resource runaway; `.odse-only-superseded-by-*` was
+replaced by an ODSE-only sibling; `.no-datamart-row-*` / `.partial-*` are incomplete
+chains; `.ordering-dep-*` / `.regresses-*` are run-order or cross-fixture conflicts. To
+quarantine, rename a fixture with such a suffix; to restore, rename it back to `.sql`.
 
 ## Currently quarantined
 
@@ -10,8 +15,7 @@ Fixtures here are excluded from `scripts/merge_and_verify.sh` (it globs
   full single-batch pipeline run its tail-EXEC chain
   (`sp_f_page_case_postprocessing` → `sp_hepatitis_datamart_postprocessing`,
   both keyed to PHC 22008500) spilled **~70GB into tempdb** and filled
-  the host disk to 100%, wedging MSSQL twice (the recurring blocker
-  documented in `../../../BLOCKED.md`). The two SPs run fine
+  the host disk to 100%, wedging MSSQL twice. The two SPs run fine
   incrementally on a warm DB (which is how the prior run got
   the +61), but in the cold single-batch merge they run against the
   full dataset and a runaway join/spill blows up tempdb. Quarantined
@@ -92,9 +96,17 @@ per-fixture recipes in `../../../docs/ODSE_ONLY_CONVERSION.md`.
   authors the same chain ODSE-only and the pipeline derives the LAB_* rows. (LAB101
   datamart fullness is separately gated by bug #16, tracked against the ODSE path.)
 
+## Other quarantined (reason in the suffix)
+
+- **`zz_d_investigation_repeat_forms_3.sql.ordering-dep-on-hep2-phc-22076100`**: depends on a Hep-2 PHC (22076100) authored by a later fixture, so it is not safe in the plain alphabetical apply order.
+- **`zz_lab101_fill.sql.partial-5of46-tick6-dvarpam-suspect`**: filled only 5/46 LAB101 columns and is suspected of perturbing D_VAR_PAM; superseded by the LAB100/101 fill.
+- **`zz_tb_datamart_addl_chain.sql.no-datamart-row-incomplete-chain`** / **`zz_var_datamart_addl_chain.sql.apply-error-msg515`**: incomplete TB / VAR datamart chains (no datamart row produced; Msg 515 on apply).
+- **`zz_tb_datamart_enrich_r3.sql.generated-always-violation`**: writes a `GENERATED ALWAYS` column.
+- **`zz_var_datamart_enrich_r3.sql.regresses-shared-var-datamart`**: regresses the shared VAR_DATAMART coverage.
+
 ## Restored
 
-- **`zz_lab100_101_fill.sql`** (bug #19, fixed 2026-06-04). Was quarantined
+- **`zz_lab100_101_fill.sql`** (APP-737, fixed 2026-06-04). Was quarantined
   as `.bug19-labtest-record-status-547`: re-landing it tripped
   `CHK_LABTEST_RECORD_STATUS` (Error 547) inside `sp_d_lab_test_postprocessing`
   at the "INSERTING new entries to LAB_TEST" step. ROOT CAUSE (proven via a
@@ -133,5 +145,5 @@ Both fixtures are now restored to `fixtures/30_sp_coverage/` with the
 fix applied. Merged pipeline now lands at 33.6% column coverage
 (+5.7pp over the prior 27.9% TB+STD+BMIRD baseline).
 
-Keep this directory empty as a marker. Future quarantines should
-allocate new sibling directories.
+Quarantine and restore are just renames (drop or re-add the `.sql` extension);
+the reason lives in the filename suffix, not in a sibling directory.
