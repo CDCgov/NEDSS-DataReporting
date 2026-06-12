@@ -1,0 +1,8 @@
+# See https://docs.gitguardian.com/ggshield-docs/configuration
+
+# Required, otherwise ggshield considers the file to use the deprecated v1 format
+version: 2
+
+secret:
+  ignored_paths:
+    - 'env.sample'
