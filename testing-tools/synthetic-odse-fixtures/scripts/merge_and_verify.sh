@@ -27,6 +27,7 @@
 #   ./scripts/merge_and_verify.sh             # run full sequence
 #   ./scripts/merge_and_verify.sh --skip-reset # skip step 1 (DB already prepared)
 #   ./scripts/merge_and_verify.sh --no-tier-2  # stop after Tier 1
+#   ./scripts/merge_and_verify.sh --no-verify  # skip the coverage summary
 
 set -euo pipefail
 
@@ -68,12 +69,14 @@ readonly CT_UIDS='20000170,20120010'
 # CLI flags
 SKIP_RESET=0
 NO_TIER_2=0
+NO_VERIFY=0
 for arg in "$@"; do
   case "$arg" in
     --skip-reset) SKIP_RESET=1 ;;
     --no-tier-2)  NO_TIER_2=1 ;;
+    --no-verify)  NO_VERIFY=1 ;;
     -h|--help)
-      sed -n '2,29p' "$0"
+      sed -n '2,30p' "$0"
       exit 0
       ;;
     *) echo "Unknown flag: $arg" >&2; exit 2 ;;
@@ -351,7 +354,7 @@ main() {
 
   if [[ $NO_TIER_2 -eq 1 ]]; then
     log "Stopping after Tier 1 (--no-tier-2)"
-    print_coverage_summary
+    if [[ $NO_VERIFY -eq 0 ]]; then print_coverage_summary; fi
     return 0
   fi
 
@@ -383,7 +386,7 @@ main() {
   # Tier-3 drain. Idempotent.
   run_interview_chain
 
-  print_coverage_summary
+  if [[ $NO_VERIFY -eq 0 ]]; then print_coverage_summary; fi
   log "Merge complete (CDC pipeline; no nrt_* shortcut)."
 }
 
