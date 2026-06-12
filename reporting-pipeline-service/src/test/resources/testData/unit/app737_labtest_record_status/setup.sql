@@ -1,4 +1,4 @@
--- Regression test for RTR bug #19:
+-- Regression test for RTR APP-737:
 -- sp_d_lab_test_postprocessing builds LAB_TEST.RECORD_STATUS_CD from
 --     COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
 --              #hierarchical_data.RECORD_STATUS_CD_FOR_RESULT_DRUG)
