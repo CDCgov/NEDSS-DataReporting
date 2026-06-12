@@ -397,6 +397,10 @@ CDC events):
    post-Tier-3.
 8. `print_coverage_summary`.
 
+`scripts/apply_odse_fixtures.sh` runs steps 2-7 against an already-running stack:
+it skips the step-1 reset (no volume drop) and the step-8 coverage summary, with
+`--reset` / `--verify` to opt either back in. Use it to iterate without rebuilding.
+
 If two fixture files contain conflicting `INSERT INTO X (uid, ...)` statements
 on the same UID, that is a contract violation and the merge fails loudly.
 There is no auto-deduplication.
