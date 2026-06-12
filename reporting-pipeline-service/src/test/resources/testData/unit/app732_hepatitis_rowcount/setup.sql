@@ -1,4 +1,4 @@
--- APP-732: sp_hepatitis_datamart_postprocessing step-3 row_count logging (bug #5a).
+-- APP-732: sp_hepatitis_datamart_postprocessing step-3 row_count logging (APP-732).
 -- The IF @debug SELECT once sat between SELECT INTO #TMP_F_PAGE_CASE and the
 -- SELECT @ROWCOUNT_NO = @@ROWCOUNT capture, so with @debug=0 the predicate-only
 -- IF reset @@ROWCOUNT to 0 and JOB_FLOW_LOG recorded row_count=0 even though the
