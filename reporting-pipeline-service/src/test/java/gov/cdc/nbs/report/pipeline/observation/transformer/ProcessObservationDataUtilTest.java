@@ -13,7 +13,7 @@ class ProcessObservationDataUtilTest {
   private final ProcessObservationDataUtil util =
       new ProcessObservationDataUtil(Mockito.mock(KafkaTemplate.class));
 
-  // Bug #18: a NULL obs_domain_cd_st_1 must be treated as "not a valid domain" and rejected with a
+  // APP-735: a NULL obs_domain_cd_st_1 must be treated as "not a valid domain" and rejected with a
   // clean IllegalArgumentException (the same path a non-matching value like 'I_Order' takes), NOT a
   // NullPointerException from the bound `value::equals` reference. Both are caught upstream, but
   // the
