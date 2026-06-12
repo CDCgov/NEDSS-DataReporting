@@ -409,7 +409,7 @@ BEGIN
                 WHEN tst.LAB_TEST_Type = 'Order' THEN tst.LAB_TEST_pntr
                 ELSE tst.LAB_TEST_pntr
             END AS root_ordered_test_pntr,
-            -- Bug #19: LAB_TEST.RECORD_STATUS_CD = COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
+            -- APP-737: LAB_TEST.RECORD_STATUS_CD = COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
             -- this column). RECORD_STATUS_CD_MERGE is normalized (PROCESSED/''/NULL/UNPROCESSED* ->
             -- ACTIVE, LOG_DEL -> INACTIVE) but is NULL when root_ordered_test_pntr does not resolve
             -- (merge_order join miss). Previously this fallback passed the RAW ancestor
@@ -896,7 +896,7 @@ BEGIN
 
         BEGIN TRANSACTION
 
-            -- Bug #17: serialize allocation of nrt_lab_test_key IDENTITY values across concurrent /
+            -- APP-736: serialize allocation of nrt_lab_test_key IDENTITY values across concurrent /
             -- retried postprocessing sessions. The sibling routine
             -- (sp_d_labtest_result_postprocessing) races on the analogous
             -- nrt_lab_test_result_group_key allocation; guard this key-gen the same way with an
@@ -905,7 +905,7 @@ BEGIN
             EXEC @applock_rc = sp_getapplock @Resource = 'nrt_lab_test_key_keygen',
                 @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
 
-            -- Bug #17 (residual): sp_getapplock returns < 0 on timeout/deadlock/error. The original
+            -- APP-736 (residual): sp_getapplock returns < 0 on timeout/deadlock/error. The original
             -- EXEC ignored the return code, letting a failed acquisition proceed UNSERIALIZED. Fail
             -- loudly so the caller retries rather than racing on the IDENTITY allocation.
             IF @applock_rc < 0
