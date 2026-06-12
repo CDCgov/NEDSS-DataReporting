@@ -50,7 +50,7 @@ author only NBS_ODSE rows and let the RTR pipeline derive everything in
 RDB_MODERN. These 10 carried direct RDB_MODERN writes whose coverage is either
 already produced by the pipeline or by an existing ODSE-only sibling, so they are
 retired from the active set rather than rewritten. Full triage +
-per-fixture recipes in `../../../ODSE_ONLY_CONVERSION.md`.
+per-fixture recipes in `../../../docs/ODSE_ONLY_CONVERSION.md`.
 
 - **`f_page_case_unblock.sql.odse-only-form_cd-derived-from-condition_code`**:
   only content was `UPDATE nrt_investigation SET INVESTIGATION_FORM_CD=...`.

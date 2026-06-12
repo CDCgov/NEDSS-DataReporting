@@ -14,7 +14,9 @@ chain. It exists in two forms:
 - **`lineage/LINEAGE_COLUMNS.tsv`** is the machine-readable appendix: one row per
   RDB_MODERN column, tracing it back to its ODSE source(s) with the writing SP,
   the fixture that establishes the mapping, and a status flag. `LINEAGE_COLUMNS.jsonl`
-  is the same data as one JSON object per line, for the schema-diff tool.
+  is the same data as one JSON object per line, for the schema-diff tool. Both are
+  **generated and gitignored**: build them from the `lineage/columns/*.tsv` source
+  slices with `python3 scripts/build_lineage_columns.py`.
 
 ## Why this isn't already in the SQL
 

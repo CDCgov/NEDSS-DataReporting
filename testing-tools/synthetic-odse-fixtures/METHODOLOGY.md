@@ -248,4 +248,4 @@ A second, separately-numbered set of RTR bugs (#16 onward) was surfaced
 later by the ODSE-only conversion, when removing the NRT shortcut exposed
 defects the shortcut had masked. Those live in the repo-root
 [`bugs/`](../../bugs) directory and are summarized in
-[`NO_SHORTCUT_FINDINGS.md`](./NO_SHORTCUT_FINDINGS.md).
+[`NO_SHORTCUT_FINDINGS.md`](./docs/NO_SHORTCUT_FINDINGS.md).
