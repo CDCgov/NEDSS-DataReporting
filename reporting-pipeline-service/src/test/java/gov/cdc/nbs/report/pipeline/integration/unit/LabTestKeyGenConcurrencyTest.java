@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 /**
- * Concurrency regression test for bug #17.
+ * Concurrency regression test for APP-736.
  *
  * <p>{@code sp_d_labtest_result_postprocessing} (routine 017) and {@code
  * sp_d_lab_test_postprocessing} (routine 018) allocate IDENTITY keys for new {@code
@@ -314,7 +314,7 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
   }
 
   /**
-   * Deterministic (single-threaded) regression for the RESIDUAL bug #17 facet that the concurrency
+   * Deterministic (single-threaded) regression for the RESIDUAL APP-736 facet that the concurrency
    * test above could not catch: the sentinel-slot re-assignment on a never-used (empty) key table.
    *
    * <p>{@code nrt_lab_test_result_group_key} carries a default sentinel row {@code
