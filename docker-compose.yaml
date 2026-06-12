@@ -41,7 +41,7 @@ services:
       - sas_user_pass=n3dss4dm1n
       - sas_encoding=latin1
       - ADDITIONAL_SAS_FLAGS=-DEBUG
-      - PATH=$PATH:/opt/mssql-tools18/bin
+      - PATH=/home/SAS/.local/bin:/home/SAS/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/mssql-tools18/bin
     depends_on:
       nbs-mssql:
         condition: service_healthy
