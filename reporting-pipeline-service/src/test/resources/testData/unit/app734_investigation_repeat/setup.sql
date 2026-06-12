@@ -1,9 +1,9 @@
 -- APP-734: sp_sld_investigation_repeat_postprocessing
--- Bug #10 (D_REPT_KEY surrogate-key alloc) + Bug #13 (TEXT pivot NULL propagation).
+-- APP-734 (D_REPT_KEY surrogate-key alloc) + APP-734 (TEXT pivot NULL propagation).
 -- Seeds one Pertussis Investigation (PHC 22006000) with 24 nrt_page_case_answer
 -- rows (2 blocks x 3 seq x 4 data types) directly into RDB_MODERN, then runs the
--- chain. Pre-fix: bug #10 filters all new rows out (key stuck at sentinel 1) so
--- D_INVESTIGATION_REPEAT stays empty; even if rows landed, bug #13 leaves TEXT NULL.
+-- chain. Pre-fix: APP-734 filters all new rows out (key stuck at sentinel 1) so
+-- D_INVESTIGATION_REPEAT stays empty; even if rows landed, APP-734 leaves TEXT NULL.
 -- Post-fix: rows land with key 2 and TEXT columns populated -> query.sql matches.
 USE RDB_MODERN;
 INSERT INTO [dbo].[nrt_investigation]

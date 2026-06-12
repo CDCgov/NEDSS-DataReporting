@@ -1,4 +1,4 @@
--- bug #10 fix: pin QUOTED_IDENTIFIER ON so re-applies via sqlcmd don't
+-- APP-734 fix: pin QUOTED_IDENTIFIER ON so re-applies via sqlcmd don't
 -- silently disable features the SP relies on (e.g., the embedded
 -- dynamic SQL).  Liquibase sets QI ON by default; sqlcmd inherits the
 -- session default (typically OFF).
@@ -1148,7 +1148,7 @@ ON #CODED_TABLE_REPT
                     ON [PRIMARY];
             END;
 
-        -- bug #10 fix: re-seed the IDENTITY counter on D_REPT_KEY so the
+        -- APP-734 fix: re-seed the IDENTITY counter on D_REPT_KEY so the
         -- next INSERT yields keys >= 2.  D_REPT_KEY is IDENTITY(1,1);
         -- on a fresh DB the first INSERT assigns D_REPT_KEY=1, which is
         -- the reserved sentinel value that downstream INSERT filters
