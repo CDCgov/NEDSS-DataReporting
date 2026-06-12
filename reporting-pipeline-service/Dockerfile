@@ -24,4 +24,3 @@ HEALTHCHECK --start-period=5s --timeout=10s \
 
 # Run jar
 ENTRYPOINT ["java", "-jar", "reporting-pipeline-service.jar"]
-CMD ["java", "-jar", "reporting-pipeline-service.jar"]
