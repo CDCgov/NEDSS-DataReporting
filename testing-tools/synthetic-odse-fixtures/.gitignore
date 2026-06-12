@@ -1,0 +1,8 @@
+# Generated artifacts (regenerable from source; do not commit).
+# Rebuild lineage from the per-cluster slices in lineage/columns/*.tsv:
+#   python3 scripts/build_lineage_columns.py
+/lineage/LINEAGE_COLUMNS.tsv
+/lineage/LINEAGE_COLUMNS.jsonl
+# Rebuild the merged coverage rollup:
+#   ./scripts/coverage_summary.sh
+/coverage/coverage_merged.md
