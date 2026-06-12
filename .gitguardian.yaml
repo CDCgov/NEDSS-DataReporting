@@ -6,3 +6,6 @@ version: 2
 secret:
   ignored_paths:
     - 'env.sample'
+  ignored_matches:
+    - name: 'local dev password in samples'
+      match: 'PizzaIsGood33!'
