@@ -1,3 +1,8 @@
+-- ============================================================
+-- STEP 0: Reset job_flow_log for post test analysis
+-- ============================================================
+DELETE FROM [dbo].[job_flow_log];
+
 USE [NBS_ODSE];
 
 DECLARE @local_user_id BIGINT = 10007004;
@@ -12,12 +17,6 @@ DECLARE @dbo_Tele_locator_tele_locator_uid_3 BIGINT = 1000003006;
 DECLARE @dbo_Tele_locator_tele_locator_uid_4 BIGINT = 1000003007;
 DECLARE @dbo_Act_act_uid BIGINT = 1000003008;
 DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN1000003000GA01';
-
--- 
--- ============================================================
--- STEP 0: Reset job_flow_log for post test analysis
--- ============================================================
-DROP FROM [dbo].[job_flow_log];
 
 -- ============================================================
 -- STEP 1: Create Patient
