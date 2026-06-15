@@ -88,6 +88,25 @@ spring:
     user: ${RTR_ADMIN_NAME}
     password: ${RTR_ADMIN_PASSWORD}
 
+connector:
+  debezium:
+    enabled: ${DEBEZIUM_AUTOCONFIG_ENABLED:true}
+    url: ${DEBEZIUM_CONNECT_URL}
+    retry-attempts: ${DEBEZIUM_RETRY_ATTEMPTS:20}
+    retry-delay-ms: ${DEBEZIUM_RETRY_DELAY_MS:5000}
+    definitions:
+      - classpath:connectors/debezium/odse_main_connector.json
+      - classpath:connectors/debezium/odse_schema_only_connector.json
+      - classpath:connectors/debezium/odse_meta_connector.json
+      - classpath:connectors/debezium/srte_connector.json
+  kafka-connect:
+    enabled: ${KAFKA_CONNECT_AUTOCONFIG_ENABLED:true}
+    url: ${KAFKA_CONNECT_URL}
+    retry-attempts: ${KAFKA_CONNECT_RETRY_ATTEMPTS:20}
+    retry-delay-ms: ${KAFKA_CONNECT_RETRY_DELAY_MS:5000}
+    definitions:
+      - classpath:connectors/kafka-connect/mssql-connector.json
+
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-enable: ${FF_PHC_DM_ENABLE:false}

@@ -156,6 +156,8 @@ services:
       - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
       - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+      - DEBEZIUM_CONNECT_URL=http://debezium:8083
+      - KAFKA_CONNECT_URL=http://kafka-connect:8083
     ports:
       - "8095:8095"
     depends_on:
