@@ -168,6 +168,26 @@ class InvestigationDataProcessingTests {
         .forEach(m -> assertTrue(m.contains(INVALID_JSON)));
   }
 
+    @Test
+    void testTransformActIdsFallsBackWhenSequenceIsNonCanonical() {
+        Investigation investigation = new Investigation();
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+        investigation.setActIds(
+                """
+                [
+                    {"act_id_seq": 7, "type_cd": "STATE", "root_extension_txt": "STATE-ALT"},
+                    {"act_id_seq": 6, "type_cd": "CITY", "root_extension_txt": "CITY-ALT"},
+                    {"act_id_seq": 9, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-ALT"}
+                ]
+                """);
+
+        InvestigationTransformed transformed = transformer.transformInvestigationData(investigation, BATCH_ID);
+
+        assertEquals("STATE-ALT", transformed.getInvStateCaseId());
+        assertEquals("CITY-ALT", transformed.getCityCountyCaseNbr());
+        assertEquals("LEGACY-ALT", transformed.getLegacyCaseId());
+    }
+
   @Test
   void testInvestigationObservationIds() throws JsonProcessingException {
     Investigation investigation = new Investigation();

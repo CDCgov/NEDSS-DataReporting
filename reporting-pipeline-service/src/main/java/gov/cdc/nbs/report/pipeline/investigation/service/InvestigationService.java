@@ -448,9 +448,13 @@ public class InvestigationService {
     reportingModel.setPhysicianId(investigationTransformed.getPhysicianId());
     reportingModel.setPatientId(investigationTransformed.getPatientId());
     reportingModel.setOrganizationId(investigationTransformed.getOrganizationId());
-    reportingModel.setInvStateCaseId(investigationTransformed.getInvStateCaseId());
-    reportingModel.setCityCountyCaseNbr(investigationTransformed.getCityCountyCaseNbr());
-    reportingModel.setLegacyCaseId(investigationTransformed.getLegacyCaseId());
+    reportingModel.setInvStateCaseId(
+      firstNonBlank(investigationTransformed.getInvStateCaseId(), reportingModel.getInvStateCaseId()));
+    reportingModel.setCityCountyCaseNbr(
+      firstNonBlank(
+        investigationTransformed.getCityCountyCaseNbr(), reportingModel.getCityCountyCaseNbr()));
+    reportingModel.setLegacyCaseId(
+      firstNonBlank(investigationTransformed.getLegacyCaseId(), reportingModel.getLegacyCaseId()));
     reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
     reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
     reportingModel.setCaseCount(investigationTransformed.getCaseCount());
@@ -477,5 +481,15 @@ public class InvestigationService {
     reportingModel.setBatchId(investigationTransformed.getBatchId());
     reportingModel.setNotes(investigation.getPhcNotes());
     return reportingModel;
+  }
+
+  private String firstNonBlank(String preferred, String fallback) {
+    if (preferred != null && !preferred.isBlank()) {
+      return preferred;
+    }
+    if (fallback != null && !fallback.isBlank()) {
+      return fallback;
+    }
+    return null;
   }
 }

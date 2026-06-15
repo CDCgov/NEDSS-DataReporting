@@ -304,21 +304,53 @@ public class ProcessInvestigationDataUtil {
     try {
       JsonNode actIdsJsonArray = parseJsonArray(actIds);
 
+      String statePreferred = null;
+      String stateFallback = null;
+      String cityPreferred = null;
+      String cityFallback = null;
+      String legacyPreferred = null;
+      String legacyFallback = null;
+
       for (JsonNode node : actIdsJsonArray) {
         int actIdSeq = node.get("act_id_seq").asInt();
         String typeCode = node.path(TYPE_CD).asText();
         String rootExtension = node.path("root_extension_txt").asText();
 
-        if (typeCode.equals("STATE") && actIdSeq == 1) {
-          investigationTransformed.setInvStateCaseId(rootExtension);
+        if (rootExtension == null || rootExtension.isBlank()) {
+          continue;
         }
-        if (typeCode.equals("CITY") && actIdSeq == 2) {
-          investigationTransformed.setCityCountyCaseNbr(rootExtension);
+
+        if (typeCode.equals("STATE")) {
+          if (actIdSeq == 1) {
+            statePreferred = rootExtension;
+          } else if (stateFallback == null) {
+            stateFallback = rootExtension;
+          }
         }
-        if (typeCode.equals("LEGACY") && actIdSeq == 3) {
-          investigationTransformed.setLegacyCaseId(rootExtension);
+
+        if (typeCode.equals("CITY")) {
+          if (actIdSeq == 2) {
+            cityPreferred = rootExtension;
+          } else if (cityFallback == null) {
+            cityFallback = rootExtension;
+          }
+        }
+
+        if (typeCode.equals("LEGACY")) {
+          if (actIdSeq == 3) {
+            legacyPreferred = rootExtension;
+          } else if (legacyFallback == null) {
+            legacyFallback = rootExtension;
+          }
         }
       }
+
+      investigationTransformed.setInvStateCaseId(
+          statePreferred != null ? statePreferred : stateFallback);
+      investigationTransformed.setCityCountyCaseNbr(
+          cityPreferred != null ? cityPreferred : cityFallback);
+      investigationTransformed.setLegacyCaseId(
+          legacyPreferred != null ? legacyPreferred : legacyFallback);
     } catch (IllegalArgumentException ex) {
       logger.info(ex.getMessage(), "ActIds");
     } catch (Exception e) {
