@@ -1,1 +1,0 @@
-../../../bootstrap/102-enable_cdc_on_srte_database-001.sql

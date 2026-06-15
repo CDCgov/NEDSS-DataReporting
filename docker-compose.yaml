@@ -12,10 +12,24 @@ services:
       - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     volumes:
       - ./containers/db/initialize:/docker-entrypoint-initdb.d/
-      - ./bootstrap:/bootstrap
     ports:
       - 3433:1433
     mem_limit: 2.5G
+
+  db-bootstrap:
+    image: ghcr.io/cdcent/nedssdb:latest
+    platform: linux/amd64
+    volumes:
+      - ./bootstrap:/bootstrap
+      - ./containers/db:/scripts
+    entrypoint: ["/bin/bash", "/scripts/apply_bootstrap_scripts.sh", "/bootstrap"]
+    environment:
+      - DB_SERVER=nbs-mssql,1433
+      - DB_USER=sa
+      - DB_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
+    depends_on:
+      nbs-mssql:
+        condition: service_healthy
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
@@ -83,6 +97,9 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
+
     ports:
       - 8083:8083
     volumes:
@@ -116,6 +133,8 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
     ports:
       - "8085:8083"
     volumes:
@@ -164,6 +183,8 @@ services:
         condition: service_healthy
       nbs-mssql:
         condition: service_healthy
+      db-bootstrap:
+        condition: service_completed_successfully
       debezium:
         condition: service_healthy
       kafka-connect:
