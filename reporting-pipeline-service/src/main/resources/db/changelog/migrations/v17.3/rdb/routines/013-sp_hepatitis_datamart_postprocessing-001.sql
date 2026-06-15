@@ -1238,10 +1238,17 @@ BEGIN
                       ,P.PROVIDER_MIDDLE_NAME AS PHYSICIAN_MIDDLE_NM
                       ,P.PROVIDER_LAST_NAME AS PHYSICIAN_LAST_NM
                       ,CASE
-                           WHEN RTRIM(LTRIM(P.PROVIDER_FIRST_NAME)) IS NOT NULL THEN
-                               CASE WHEN LEN(P.PROVIDER_MIDDLE_NAME) > 0 THEN RTRIM(LTRIM(CONCAT(P.PROVIDER_LAST_NAME, ', ', RTRIM(LTRIM(P.PROVIDER_FIRST_NAME)), ' ',  P.PROVIDER_MIDDLE_NAME)))
-                                    ELSE CONCAT(P.PROVIDER_LAST_NAME, ', ', RTRIM(LTRIM(P.PROVIDER_FIRST_NAME)), ' ',  P.PROVIDER_MIDDLE_NAME)
+                           WHEN LEN(RTRIM(LTRIM(ISNULL(P.PROVIDER_FIRST_NAME, '')))) > 0 THEN
+                               RTRIM(LTRIM(CONCAT(
+                                   P.PROVIDER_LAST_NAME,
+                                   ', ',
+                                   RTRIM(LTRIM(P.PROVIDER_FIRST_NAME)),
+                                   CASE
+                                       WHEN LEN(RTRIM(LTRIM(ISNULL(P.PROVIDER_MIDDLE_NAME, '')))) > 0
+                                           THEN CONCAT(' ', RTRIM(LTRIM(P.PROVIDER_MIDDLE_NAME)))
+                                       ELSE ''
                                    END
+                               )))
                            ELSE CAST(NULL AS varchar(300)) END AS PHYS_NAME
                       ,P.PROVIDER_CITY AS PHYS_CITY
                       ,P.PROVIDER_STATE AS PHYS_STATE
@@ -1259,10 +1266,17 @@ BEGIN
                       ,INVGTR.PROVIDER_MIDDLE_NAME AS INVESTIGATOR_MIDDLE_NM
                       ,INVGTR.PROVIDER_LAST_NAME AS INVESTIGATOR_LAST_NM
                       ,CASE
-                           WHEN RTRIM(LTRIM(INVGTR.PROVIDER_FIRST_NAME)) IS NOT NULL THEN
-                               CASE WHEN LEN(INVGTR.PROVIDER_MIDDLE_NAME) > 0  THEN CONCAT(INVGTR.PROVIDER_LAST_NAME, ', ', RTRIM(LTRIM(INVGTR.PROVIDER_FIRST_NAME)), ' ', INVGTR.PROVIDER_MIDDLE_NAME)
-                                    ELSE CONCAT(INVGTR.PROVIDER_LAST_NAME, ', ', RTRIM(LTRIM(INVGTR.PROVIDER_FIRST_NAME)), ' ', INVGTR.PROVIDER_MIDDLE_NAME)
+                           WHEN LEN(RTRIM(LTRIM(ISNULL(INVGTR.PROVIDER_FIRST_NAME, '')))) > 0 THEN
+                               RTRIM(LTRIM(CONCAT(
+                                   INVGTR.PROVIDER_LAST_NAME,
+                                   ', ',
+                                   RTRIM(LTRIM(INVGTR.PROVIDER_FIRST_NAME)),
+                                   CASE
+                                       WHEN LEN(RTRIM(LTRIM(ISNULL(INVGTR.PROVIDER_MIDDLE_NAME, '')))) > 0
+                                           THEN CONCAT(' ', RTRIM(LTRIM(INVGTR.PROVIDER_MIDDLE_NAME)))
+                                       ELSE ''
                                    END
+                               )))
                            ELSE CAST(NULL AS varchar(300)) END AS INVESTIGATOR_NAME
                       ,INVGTR.PROVIDER_UID AS INVESTIGATOR_UID
                       ,REPTORG.ORGANIZATION_NAME AS RPT_SRC_SOURCE_NM
