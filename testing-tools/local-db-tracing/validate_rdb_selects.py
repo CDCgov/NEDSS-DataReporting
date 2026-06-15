@@ -11,6 +11,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from tracing_constants import WARNING_NAME_MISMATCH_VALUES
 from tracing_env import load_database_connection_defaults, resolve_server_argument
 from tracing_models import SqlCmdError
 from tracing_sql import SqlCmdClient, require_sqlcmd
@@ -352,6 +353,16 @@ def is_null_vs_empty_mismatch(expected: object, actual: object) -> bool:
     return False
 
 
+def is_kent_ariella_name_value(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+
+    normalized = value.strip().casefold()
+    if not normalized:
+        return False
+    return normalized in WARNING_NAME_MISMATCH_VALUES
+
+
 def field_name_ends_with_id_uid_or_key(field_name: str) -> bool:
     upper_name = field_name.upper()
     return upper_name.endswith("_ID") or upper_name.endswith("_UID") or upper_name.endswith("_KEY")
@@ -433,6 +444,8 @@ def is_warning_mismatch(
     if expected_value == actual_value:
         return False
     if is_null_vs_empty_mismatch(expected_value, actual_value):
+        return True
+    if is_kent_ariella_name_value(expected_value) or is_kent_ariella_name_value(actual_value):
         return True
     if is_datetime_zero_millis_mismatch(expected_value, actual_value):
         return True
