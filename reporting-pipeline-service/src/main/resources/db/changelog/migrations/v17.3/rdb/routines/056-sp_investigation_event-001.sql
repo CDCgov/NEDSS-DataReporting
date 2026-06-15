@@ -34,9 +34,9 @@ BEGIN
                , LEFT(@phc_id_list, 199));
 
         /*Complete Investigation section*/
-        SELECT results.public_health_case_uid,
-               results.program_jurisdiction_oid                                     as program_jurisdiction_oid,
-               jc.code_desc_txt                                                     as jurisdiction_nm,
+         SELECT results.public_health_case_uid,
+             results.program_jurisdiction_oid                                     as program_jurisdiction_oid,
+             COALESCE(NULLIF(jc.code_desc_txt, ''), NULLIF(results.jurisdiction_cd, '')) as jurisdiction_nm,
                act.mood_cd,
                act.class_cd,
                results.case_type_cd,
@@ -200,10 +200,14 @@ BEGIN
                      phc.last_chg_user_id         last_chg_user_id,
                      phc.curr_process_state_cd    curr_process_state_cd,
                      case
-                         when (phc.curr_process_state_cd is not null or phc.curr_process_state_cd != '') then (select *
-                                                                                                               from dbo.fn_get_value_by_cvg(
-                                                                                                                       phc.curr_process_state_cd,
-                                                                                                                       'CM_PROCESS_STAGE'))
+                         when (phc.curr_process_state_cd is not null or phc.curr_process_state_cd != '') then
+                             COALESCE(
+                                 (select *
+                                  from dbo.fn_get_value_by_cvg(
+                                          phc.curr_process_state_cd,
+                                          'CM_PROCESS_STAGE')),
+                                 phc.curr_process_state_cd
+                             )
                          end as                   curr_process_state,
                      phc.investigation_status_cd,
                      case
@@ -247,12 +251,18 @@ BEGIN
                      phc.hospitalized_duration_amt,
                      phc.outbreak_ind,
                      case
-                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_codeset(phc.outbreak_ind, 'INV150'))
+                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then
+                             COALESCE(
+                                 (select * from dbo.fn_get_value_by_cd_codeset(phc.outbreak_ind, 'INV150')),
+                                 phc.outbreak_ind
+                             )
                          end as                   outbreak_ind_val,
                      case
-                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_codeset(phc.outbreak_name, 'INV151'))
+                         when (phc.outbreak_name is not null or phc.outbreak_name != '') then
+                             COALESCE(
+                                 (select * from dbo.fn_get_value_by_cd_codeset(phc.outbreak_name, 'INV151')),
+                                 phc.outbreak_name
+                             )
                          end as                   outbreak_name_desc,
                      phc.hospitalized_ind_cd,
                      case
@@ -273,8 +283,12 @@ BEGIN
                      end as transmission_mode,
                      phc.outcome_cd,
                      case
-                         when (phc.outcome_cd != '') then (select *
-                                                           from dbo.fn_get_value_by_cd_codeset(phc.outcome_cd, 'INV145'))
+                         when (phc.outcome_cd != '') then
+                             COALESCE(
+                                 (select *
+                                  from dbo.fn_get_value_by_cd_codeset(phc.outcome_cd, 'INV145')),
+                                 phc.outcome_cd
+                             )
                          end as                   die_frm_this_illness_ind,
                      phc.day_care_ind_cd,
                      case
@@ -310,8 +324,12 @@ BEGIN
                      phc.infectious_to_date,
                      phc.referral_basis_cd,
                      case
-                         when (phc.referral_basis_cd is not null or phc.referral_basis_cd != '') then (select *
-                                                                                                       from dbo.fn_get_value_by_cvg(phc.referral_basis_cd, 'REFERRAL_BASIS'))
+                         when (phc.referral_basis_cd is not null or phc.referral_basis_cd != '') then
+                             COALESCE(
+                                 (select *
+                                  from dbo.fn_get_value_by_cvg(phc.referral_basis_cd, 'REFERRAL_BASIS')),
+                                 phc.referral_basis_cd
+                             )
                          end as                   referral_basis,
                      phc.inv_priority_cd,
                      phc.contact_inv_status_cd,
