@@ -75,4 +75,3 @@ testing-tools/local-db-tracing/.local/*
 testing-tools/local-db-tracing/output/*
 testing-tools/local-db-tracing/known_replay_associations.json
 
-containers/test-db/backups/

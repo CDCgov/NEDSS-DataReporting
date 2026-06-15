@@ -7,7 +7,6 @@
 1. [mssql](https://github.com/cdcent/NEDSSDB/pkgs/container/nedssdb) - Restored MSSQL Server database pre-configured to work with RTR. Notable configurations
    2. RTR User creation scripts applied
    3. Change Data Capture (CDC) enabled for relevant databases and tables
-2. [liquibase](../liquibase-service/Dockerfile) - Liquibase container with all migration scripts copied from `../liquibase-service/src/main/resources/db/`. Configured to automatically apply migrations and 1 time onboarding scripts and then close. Entrypoint: [migrate.sh](../liquibase-service/migrate.sh)
 3. [kafka](../docker-compose.yaml) - Message broker
 4. [kafka-connect](../containers/kafka-connect/Dockerfile) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. Requires POST of [mssql-connector.json](../containers/kafka-connect/initialize/mssql-connector.json) after container start up.
 5. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Requires POST for each connector to be sent after container start up.

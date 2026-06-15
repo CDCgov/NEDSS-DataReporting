@@ -11,7 +11,7 @@ When adding a new functional test, pick the next available range, and add your t
 
 | Test                     | Starting ID | Ending ID  |
 | ------------------------ | ----------- | ---------- |
-| bmirdCase                | 1000001000  | 1000001030 |
+| casesBmirdGeneric        | 1000001000  | 1000001030 |
 | covidMarkReviewed        | 1000002000  | 1000002013 |
 | fullPathSupervisorReview | 1000003000  | 1000003009 |
 | interview                | 1000004000  | 1000004005 |

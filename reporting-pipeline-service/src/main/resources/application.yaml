@@ -83,7 +83,7 @@ spring:
     url: ${DB_CONNECTION_URL}
 
   liquibase:
-    enabled: ${ENABLE_AUTO_MIGRATION:false}
+    enabled: ${ENABLE_AUTO_MIGRATION:true}
     change-log: classpath:db/changelog/db.changelog-master.yaml
     user: ${RTR_ADMIN_NAME}
     password: ${RTR_ADMIN_PASSWORD}
@@ -101,7 +101,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,liquibase
   prometheus:
     metrics:
       export:
