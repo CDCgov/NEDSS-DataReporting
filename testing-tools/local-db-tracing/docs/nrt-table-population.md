@@ -74,7 +74,7 @@ exec rdb_modern.dbo.sp_populate_nrt_multikey
 
 ## Script Location and Format
 
-**Location**: `liquibase-service/src/main/resources/db/001-master/02_onboarding_script_data_load/`
+**Location**: `bootstrap/`
 
 ### Key Scripts
 - **021-sp_populate_nrt-001.sql**: Main sp_populate_nrt procedure definition
@@ -126,5 +126,4 @@ These features allow the system to utilize the newly populated NRT data.
 
 ## Related Documentation
 - [Database Tracing Workflow](./database-tracing-workflow.md)
-- Liquibase Changelog: 001-master changelog
 - Onboarding Documentation: Database initialization procedures
