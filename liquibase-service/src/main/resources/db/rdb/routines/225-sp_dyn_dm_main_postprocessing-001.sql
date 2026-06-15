@@ -32,7 +32,7 @@ BEGIN
                 INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[Msg_Description1],[Error_Description])
                 VALUES (@batch_id,@DATAFLOW_NAME,@PACKAGE_NAME,'ERROR',0,'Input Validation',0,'Missing required parameter','Parameter @datamart_name is required');
 
-                RAISERROR('Parameter @datamart_name is required', 16, 1);
+                THROW 50000, 'Parameter @datamart_name is required', 1;
             END
 
 
@@ -61,7 +61,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_invest_form_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_invest_form_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -83,7 +83,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_case_management_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_case_management_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -110,7 +110,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ADMINISTRATIVE', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ADMINISTRATIVE', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -136,7 +136,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CLINICAL', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CLINICAL', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -161,7 +161,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_COMPLICATION', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_COMPLICATION', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -186,7 +186,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CONTACT', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CONTACT', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -212,7 +212,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_DEATH', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_DEATH', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -238,7 +238,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_EPIDEMIOLOGY', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_EPIDEMIOLOGY', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -263,7 +263,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_HIV', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_HIV', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -289,7 +289,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PATIENT_OBS', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PATIENT_OBS', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -315,7 +315,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ISOLATE_TRACKING', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ISOLATE_TRACKING', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -341,7 +341,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_LAB_FINDING', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_LAB_FINDING', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -367,7 +367,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MEDICAL_HISTORY', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MEDICAL_HISTORY', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -393,7 +393,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MOTHER', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MOTHER', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -418,7 +418,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_OTHER', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_OTHER', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -444,7 +444,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PREGNANCY_BIRTH', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PREGNANCY_BIRTH', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -470,7 +470,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RESIDENCY', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RESIDENCY', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -496,7 +496,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RISK_FACTOR', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RISK_FACTOR', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -522,7 +522,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SOCIAL_HISTORY', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SOCIAL_HISTORY', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -548,7 +548,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SYMPTOM', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SYMPTOM', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -574,7 +574,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TREATMENT', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TREATMENT', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -600,7 +600,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TRAVEL', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TRAVEL', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -626,7 +626,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_UNDER_CONDITION', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_UNDER_CONDITION', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -652,7 +652,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_VACCINATION', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_VACCINATION', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -677,7 +677,7 @@ BEGIN
                  @debug = @debug;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_STD', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_STD', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -699,7 +699,7 @@ BEGIN
                  @phc_id_list = @phc_id_list;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_org_data_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_org_data_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -722,7 +722,7 @@ BEGIN
                  @phc_id_list = @phc_id_list;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_provider_data_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_provider_data_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -745,7 +745,7 @@ BEGIN
                  @phc_id_list = @phc_id_list;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_repeatvarch_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_repeatvarch_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -768,7 +768,7 @@ BEGIN
                  @phc_id_list = @phc_id_list;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_repeatdate_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_repeatdate_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -792,7 +792,7 @@ BEGIN
                  @phc_id_list = @phc_id_list;
             COMMIT TRANSACTION;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_repeatnumeric_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_repeatnumeric_postprocessing', 1;
         END TRY
         BEGIN CATCH
             IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -907,7 +907,7 @@ BEGIN
                 @datamart_name = @datamart_name,
                 @debug = @debug;
             IF @returnCode IS NULL OR @returnCode < 0
-                RAISERROR('Error in sp_dyn_dm_createdm_postprocessing', 16, 1);
+                THROW 50000, 'Error in sp_dyn_dm_createdm_postprocessing', 1;
         END TRY
         BEGIN CATCH
             SET @anyFailed = 1;
@@ -930,7 +930,7 @@ BEGIN
 
         -- Raise once after cleanup so the Java caller observes failure without silently swallowing it
         IF @anyFailed = 1
-            RAISERROR('One or more steps failed in sp_dyn_dm_main_postprocessing', 16, 1);
+            THROW 50000, 'One or more steps failed in sp_dyn_dm_main_postprocessing', 1;
 
         -- Log completion
         SET @Proc_Step_no = @Proc_Step_no + 1;

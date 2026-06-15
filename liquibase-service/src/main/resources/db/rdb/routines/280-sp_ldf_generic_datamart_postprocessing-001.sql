@@ -124,7 +124,7 @@ CREATE PROCEDURE [dbo].[sp_ldf_generic_datamart_postprocessing]
 
 		-- Raise once if any target failed so the Java caller observes failure
 		IF @anyFailed = 1
-			RAISERROR('One or more targets failed in sp_ldf_generic_datamart_postprocessing', 16, 1);
+			THROW 50000, 'One or more targets failed in sp_ldf_generic_datamart_postprocessing', 1;
 
 		SET @Proc_Step_no = 999;
 		SET @Proc_Step_Name = 'SP_COMPLETE';
