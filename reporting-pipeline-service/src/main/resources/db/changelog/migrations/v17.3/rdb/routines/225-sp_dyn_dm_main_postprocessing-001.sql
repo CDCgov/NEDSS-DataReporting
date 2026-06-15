@@ -1,10 +1,10 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_main_postprocessing]') 
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_dyn_dm_main_postprocessing]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
     DROP PROCEDURE [dbo].[sp_dyn_dm_main_postprocessing]
 END
-GO 
+GO
 
 CREATE PROCEDURE [dbo].sp_dyn_dm_main_postprocessing
     @datamart_name VARCHAR(100),
@@ -20,7 +20,7 @@ BEGIN
         DECLARE @DATAFLOW_NAME VARCHAR(100) = 'DYNAMIC_DATAMART POST-Processing';
         DECLARE @PACKAGE_NAME VARCHAR(100) = 'sp_dyn_dm_main_postprocessing';
         DECLARE @returnCode INT = 0;
-        DECLARE @returnMsg VARCHAR(200) = '';
+        DECLARE @anyFailed BIT = 0;
 
         -- Generate batch_id for logging
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
@@ -32,7 +32,7 @@ BEGIN
                 INSERT INTO [dbo].[job_flow_log] (batch_id,[Dataflow_Name],[package_Name],[Status_Type],[step_number],[step_name],[row_count],[Msg_Description1],[Error_Description])
                 VALUES (@batch_id,@DATAFLOW_NAME,@PACKAGE_NAME,'ERROR',0,'Input Validation',0,'Missing required parameter','Parameter @datamart_name is required');
 
-                RAISERROR('Parameter @datamart_name is required', 16, 1);
+                THROW 50000, 'Parameter @datamart_name is required', 1;
             END
 
 
@@ -51,549 +51,757 @@ BEGIN
         VALUES ( @batch_id ,@DATAFLOW_NAME ,@PACKAGE_NAME  ,'START' ,@Proc_Step_no ,@Proc_Step_Name ,0, LEFT('DataMart: ' + @datamart_name, 199) );
 
 
-
         -- Process form and case management data
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_invest_form_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_invest_form_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
-
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_invest_form_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_invest_form_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_invest_form_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_form_postprocessing';
 
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_case_management_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_case_management_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_case_management_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_case_management_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_case_management_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_case_management_postprocessing';
 
 
-        -- Process dimension tables - each in a separate transaction
+        -- Process dimension tables - each in its own TRY/CATCH island
         -- D_INV_ADMINISTRATIVE dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_ADMINISTRATIVE',
-             @DIM_KEY = 'D_INV_ADMINISTRATIVE_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ADMINISTRATIVE';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_ADMINISTRATIVE',
+                 @DIM_KEY = 'D_INV_ADMINISTRATIVE_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ADMINISTRATIVE', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ADMINISTRATIVE', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_ADMINISTRATIVE';
 
 
         -- D_INV_CLINICAL dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_CLINICAL',
-             @DIM_KEY = 'D_INV_CLINICAL_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CLINICAL';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_CLINICAL',
+                 @DIM_KEY = 'D_INV_CLINICAL_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CLINICAL', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CLINICAL', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_CLINICAL';
 
         -- D_INV_COMPLICATION dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_COMPLICATION',
-             @DIM_KEY = 'D_INV_COMPLICATION_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_COMPLICATION';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_COMPLICATION',
+                 @DIM_KEY = 'D_INV_COMPLICATION_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_COMPLICATION', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_COMPLICATION', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_COMPLICATION';
 
         -- D_INV_CONTACT dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_CONTACT',
-             @DIM_KEY = 'D_INV_CONTACT_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CONTACT';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_CONTACT',
+                 @DIM_KEY = 'D_INV_CONTACT_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CONTACT', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_CONTACT', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_CONTACT';
 
 
         -- D_INV_DEATH dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_DEATH',
-             @DIM_KEY = 'D_INV_DEATH_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_DEATH';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_DEATH',
+                 @DIM_KEY = 'D_INV_DEATH_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_DEATH', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_DEATH', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_DEATH';
 
 
         -- D_INV_EPIDEMIOLOGY dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_EPIDEMIOLOGY',
-             @DIM_KEY = 'D_INV_EPIDEMIOLOGY_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_EPIDEMIOLOGY';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_EPIDEMIOLOGY',
+                 @DIM_KEY = 'D_INV_EPIDEMIOLOGY_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_EPIDEMIOLOGY', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_EPIDEMIOLOGY', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_EPIDEMIOLOGY';
 
         -- D_INV_HIV dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_HIV',
-             @DIM_KEY = 'D_INV_HIV_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_HIV';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_HIV',
+                 @DIM_KEY = 'D_INV_HIV_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_HIV', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_HIV', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_HIV';
 
 
         -- D_INV_PATIENT_OBS dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_PATIENT_OBS',
-             @DIM_KEY = 'D_INV_PATIENT_OBS_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PATIENT_OBS';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_PATIENT_OBS',
+                 @DIM_KEY = 'D_INV_PATIENT_OBS_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PATIENT_OBS', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PATIENT_OBS', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_PATIENT_OBS';
 
 
         -- D_INV_ISOLATE_TRACKING dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_ISOLATE_TRACKING',
-             @DIM_KEY = 'D_INV_ISOLATE_TRACKING_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ISOLATE_TRACKING';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_ISOLATE_TRACKING',
+                 @DIM_KEY = 'D_INV_ISOLATE_TRACKING_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ISOLATE_TRACKING', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_ISOLATE_TRACKING', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_ISOLATE_TRACKING';
 
 
         -- D_INV_LAB_FINDING dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_LAB_FINDING',
-             @DIM_KEY = 'D_INV_LAB_FINDING_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_LAB_FINDING';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_LAB_FINDING',
+                 @DIM_KEY = 'D_INV_LAB_FINDING_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_LAB_FINDING', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_LAB_FINDING', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_LAB_FINDING';
 
 
         -- D_INV_MEDICAL_HISTORY dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_MEDICAL_HISTORY',
-             @DIM_KEY = 'D_INV_MEDICAL_HISTORY_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MEDICAL_HISTORY';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_MEDICAL_HISTORY',
+                 @DIM_KEY = 'D_INV_MEDICAL_HISTORY_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MEDICAL_HISTORY', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MEDICAL_HISTORY', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_MEDICAL_HISTORY';
 
 
         -- D_INV_MOTHER dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_MOTHER',
-             @DIM_KEY = 'D_INV_MOTHER_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MOTHER';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_MOTHER',
+                 @DIM_KEY = 'D_INV_MOTHER_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MOTHER', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_MOTHER', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_MOTHER';
 
         -- D_INV_OTHER dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_OTHER',
-             @DIM_KEY = 'D_INV_OTHER_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_OTHER';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_OTHER',
+                 @DIM_KEY = 'D_INV_OTHER_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_OTHER', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_OTHER', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_OTHER';
 
 
         -- D_INV_PREGNANCY_BIRTH dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_PREGNANCY_BIRTH',
-             @DIM_KEY = 'D_INV_PREGNANCY_BIRTH_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PREGNANCY_BIRTH';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_PREGNANCY_BIRTH',
+                 @DIM_KEY = 'D_INV_PREGNANCY_BIRTH_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PREGNANCY_BIRTH', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_PREGNANCY_BIRTH', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_PREGNANCY_BIRTH';
 
 
         -- D_INV_RESIDENCY dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_RESIDENCY',
-             @DIM_KEY = 'D_INV_RESIDENCY_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RESIDENCY';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_RESIDENCY',
+                 @DIM_KEY = 'D_INV_RESIDENCY_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RESIDENCY', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RESIDENCY', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_RESIDENCY';
 
 
         -- D_INV_RISK_FACTOR dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_RISK_FACTOR',
-             @DIM_KEY = 'D_INV_RISK_FACTOR_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RISK_FACTOR';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_RISK_FACTOR',
+                 @DIM_KEY = 'D_INV_RISK_FACTOR_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RISK_FACTOR', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_RISK_FACTOR', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_RISK_FACTOR';
 
 
         -- D_INV_SOCIAL_HISTORY dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_SOCIAL_HISTORY',
-             @DIM_KEY = 'D_INV_SOCIAL_HISTORY_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SOCIAL_HISTORY';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_SOCIAL_HISTORY',
+                 @DIM_KEY = 'D_INV_SOCIAL_HISTORY_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SOCIAL_HISTORY', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SOCIAL_HISTORY', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_SOCIAL_HISTORY';
 
 
         -- D_INV_SYMPTOM dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_SYMPTOM',
-             @DIM_KEY = 'D_INV_SYMPTOM_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SYMPTOM';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_SYMPTOM',
+                 @DIM_KEY = 'D_INV_SYMPTOM_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SYMPTOM', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_SYMPTOM', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_SYMPTOM';
 
 
         -- D_INV_TREATMENT dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_TREATMENT',
-             @DIM_KEY = 'D_INV_TREATMENT_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TREATMENT';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_TREATMENT',
+                 @DIM_KEY = 'D_INV_TREATMENT_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TREATMENT', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TREATMENT', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_TREATMENT';
 
 
         -- D_INV_TRAVEL dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_TRAVEL',
-             @DIM_KEY = 'D_INV_TRAVEL_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TRAVEL';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_TRAVEL',
+                 @DIM_KEY = 'D_INV_TRAVEL_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TRAVEL', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_TRAVEL', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_TRAVEL';
 
 
         -- D_INV_UNDER_CONDITION dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_UNDER_CONDITION',
-             @DIM_KEY = 'D_INV_UNDER_CONDITION_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_UNDER_CONDITION';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_UNDER_CONDITION',
+                 @DIM_KEY = 'D_INV_UNDER_CONDITION_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_UNDER_CONDITION', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_UNDER_CONDITION', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_UNDER_CONDITION';
 
 
         -- D_INV_VACCINATION dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_VACCINATION',
-             @DIM_KEY = 'D_INV_VACCINATION_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_VACCINATION';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_VACCINATION',
+                 @DIM_KEY = 'D_INV_VACCINATION_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_VACCINATION', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_VACCINATION', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_VACCINATION';
 
          -- D_INV_STD dimension
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @RDB_TABLE_NM = 'D_INV_STD',
-             @DIM_KEY = 'D_INV_STD_KEY',
-             @phc_id_list = @phc_id_list,
-             @debug = @debug;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_STD';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_page_builder_d_inv_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @RDB_TABLE_NM = 'D_INV_STD',
+                 @DIM_KEY = 'D_INV_STD_KEY',
+                 @phc_id_list = @phc_id_list,
+                 @debug = @debug;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_STD', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_page_builder_d_inv_postprocessing - D_INV_STD', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_page_builder_d_inv_postprocessing D_INV_STD';
 
         -- Process organization data
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_org_data_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_org_data_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_org_data_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_org_data_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_org_data_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_org_data_postprocessing';
 
 
         -- Process provider data
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_provider_data_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_provider_data_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_provider_data_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_provider_data_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_provider_data_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_provider_data_postprocessing';
 
 
         -- Process repeating varchar data
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_repeatvarch_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_repeatvarch_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_repeatvarch_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_repeatvarch_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_repeatvarch_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatvarch_postprocessing';
 
 
         -- Process repeating date data
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_repeatdate_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_repeatdate_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_repeatdate_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_repeatdate_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_repeatdate_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatdate_postprocessing';
 
 
 
         -- Process repeating numeric data
-        BEGIN TRANSACTION;
-        EXEC @returnCode = dbo.sp_dyn_dm_repeatnumeric_postprocessing
-             @batch_id = @batch_id,
-             @datamart_name = @datamart_name,
-             @phc_id_list = @phc_id_list;
-        COMMIT TRANSACTION;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_repeatnumeric_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            BEGIN TRANSACTION;
+            EXEC @returnCode = dbo.sp_dyn_dm_repeatnumeric_postprocessing
+                 @batch_id = @batch_id,
+                 @datamart_name = @datamart_name,
+                 @phc_id_list = @phc_id_list;
+            COMMIT TRANSACTION;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_repeatnumeric_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_repeatnumeric_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_repeatnumeric_postprocessing';
 
@@ -693,35 +901,36 @@ BEGIN
         IF @debug = 'true' PRINT 'Step completed: DynDM_AlterKey_sp';
 
 
-        
-        EXEC @returnCode = dbo.sp_dyn_dm_createdm_postprocessing
-            @batch_id = @batch_id,
-            @datamart_name = @datamart_name,
-            @debug = @debug;
-        if @returnCode is null or @returnCode < 0
-        BEGIN
-            set @returnMsg = 'Error in sp_dyn_dm_createdm_postprocessing';
-            goto CLEANUP_HANDLER;
-        END
+        BEGIN TRY
+            EXEC @returnCode = dbo.sp_dyn_dm_createdm_postprocessing
+                @batch_id = @batch_id,
+                @datamart_name = @datamart_name,
+                @debug = @debug;
+            IF @returnCode IS NULL OR @returnCode < 0
+                THROW 50000, 'Error in sp_dyn_dm_createdm_postprocessing', 1;
+        END TRY
+        BEGIN CATCH
+            SET @anyFailed = 1;
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count], [Error_Description])
+            VALUES (@batch_id, @DATAFLOW_NAME, @PACKAGE_NAME, 'ERROR', @Proc_Step_no,
+                    LEFT('sp_dyn_dm_createdm_postprocessing', 199), 0, LEFT(ERROR_MESSAGE(), 500));
+        END CATCH
 
         IF @debug = 'true' PRINT 'Step completed: sp_dyn_dm_createdm_postprocessing';
 
 
-        CLEANUP_HANDLER:
-        begin
-            -- Cleanup
-            EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
-                @batch_id = @batch_id,
-                @datamart_name = @datamart_name,
-                @debug = @debug;
+        -- Cleanup always runs regardless of step failures
+        EXEC dbo.sp_dyn_dm_invest_clear_postprocessing
+            @batch_id = @batch_id,
+            @datamart_name = @datamart_name,
+            @debug = @debug;
 
+        if @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
 
-            if @debug = 'true' PRINT 'Step completed: sp_dyn_dm_invest_clear_postprocessing';
-
-            -- raise error so that it goes to catch block and not log "complete"
-            if @returnMsg <> ''
-                RAISERROR(@returnMsg, 16, 1);
-        end
+        -- Raise once after cleanup so the Java caller observes failure without silently swallowing it
+        IF @anyFailed = 1
+            THROW 50000, 'One or more steps failed in sp_dyn_dm_main_postprocessing', 1;
 
         -- Log completion
         SET @Proc_Step_no = @Proc_Step_no + 1;
@@ -800,7 +1009,7 @@ BEGIN
             @FullErrorMessage AS stored_procedure,
             CAST(NULL AS VARCHAR(50))  AS investigation_form_cd
             WHERE 1=1;
-            
+
     END CATCH
 
 END;
