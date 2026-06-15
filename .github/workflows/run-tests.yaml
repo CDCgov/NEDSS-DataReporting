@@ -3,7 +3,6 @@ on:
   pull_request:
     paths:
       - "reporting-pipeline-service/**"
-      - "liquibase-service/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
