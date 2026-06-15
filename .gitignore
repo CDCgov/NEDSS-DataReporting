@@ -75,4 +75,8 @@ testing-tools/local-db-tracing/.local/*
 testing-tools/local-db-tracing/output/*
 testing-tools/local-db-tracing/known_replay_associations.json
 
+# Local docker-compose overrides (e.g. comparison-fixtures fast-drain tuning) — not for PR
+docker-compose.override.yaml
+docker-compose.override.yml
+
 containers/test-db/backups/
