@@ -11,10 +11,10 @@ services:
       - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
       - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     entrypoint:
-      ["/bin/bash", "-c", "cp /bootstrap/*.sql /docker-entrypoint-initdb.d/ && ./entrypoint.sh"]
+      ["/bin/bash", "-c", "cp -r /tmp/sql/*/*.sql /docker-entrypoint-initdb.d/ && exec ./entrypoint.sh"]
     volumes:
-      - ./containers/db/initialize:/docker-entrypoint-initdb.d/
-      - ./bootstrap:/bootstrap
+      - ./containers/db/initialize:/tmp/sql/initilize
+      - ./bootstrap:/tmp/sql/bootstrap
     ports:
       - 3433:1433
     mem_limit: 2.5G
