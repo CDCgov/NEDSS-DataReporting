@@ -1148,9 +1148,11 @@ ON #CODED_TABLE_REPT
                     ON [PRIMARY];
             END;
 
-        -- APP-734 fix: re-seed the IDENTITY counter on D_REPT_KEY so the
-        -- next INSERT yields keys >= 2.  D_REPT_KEY is IDENTITY(1,1);
-        -- on a fresh DB the first INSERT assigns D_REPT_KEY=1, which is
+        -- APP-734 fix: re-seed the D_REPT_KEY IDENTITY counter on
+        -- LOOKUP_TABLE_N_REPT so the next INSERT yields keys >= 2.
+        -- D_REPT_KEY is the IDENTITY(1,1) column of LOOKUP_TABLE_N_REPT;
+        -- the INSERT below supplies only PAGE_CASE_UID, so D_REPT_KEY is
+        -- auto-generated. On a fresh DB the first generated D_REPT_KEY is 1,
         -- the reserved sentinel value that downstream INSERT filters
         -- (line 1349: `WHERE D_INVESTIGATION_REPEAT_KEY != 1`) treat as
         -- "skip this row".
