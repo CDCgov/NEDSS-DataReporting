@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.PlaceholderResolutionException;
 
 @Component
 public class JdbcUrlPropertyContributor {
@@ -19,7 +20,13 @@ public class JdbcUrlPropertyContributor {
   static final String PORT_KEY = "connector.database.port";
 
   public JdbcUrlPropertyContributor(ConfigurableEnvironment environment) {
-    String url = environment.getProperty(URL_KEY);
+    String url;
+    try {
+      url = environment.getProperty(URL_KEY);
+    } catch (PlaceholderResolutionException e) {
+      log.info("{} placeholder unresolved; skipping host/port derivation", URL_KEY);
+      return;
+    }
     if (url == null) {
       log.info("{} not set; skipping host/port derivation", URL_KEY);
       return;
@@ -27,7 +34,7 @@ public class JdbcUrlPropertyContributor {
     Map<String, Object> derived = new HashMap<>();
     derived.put(HOST_KEY, JdbcUrlParser.host(url));
     derived.put(PORT_KEY, JdbcUrlParser.port(url));
-    environment.getPropertySources().addFirst(new MapPropertySource(SOURCE_NAME, derived));
+    environment.getPropertySources().addLast(new MapPropertySource(SOURCE_NAME, derived));
     log.info(
         "Derived {}={} and {}={} from {}",
         HOST_KEY,
