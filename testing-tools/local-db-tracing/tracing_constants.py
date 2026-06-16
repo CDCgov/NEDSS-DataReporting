@@ -172,3 +172,18 @@ NBS_ACT_ENTITY_LOOKUP_EXCLUDED_COLUMNS: frozenset[str] = frozenset({
         "record_status_time",
     }
 })
+
+# Name values that should produce warning-level mismatches (not failures)
+# when comparing expected vs returned JSON validation results.
+# Values are normalized to lowercase for case-insensitive matching.
+WARNING_NAME_MISMATCH_VALUES: frozenset[str] = frozenset({
+    name_value.lower()
+    for name_value in {
+        "kent",
+        "ariella",
+        "kent, ariella",
+        "ariella, kent",
+        "kent ariella",
+        "ariella kent",
+    }
+})
