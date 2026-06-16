@@ -39,12 +39,8 @@ public abstract class UnitTest {
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
       new ComposeContainer(base)
-          .withServices("nbs-mssql", "liquibase")
+          .withServices("nbs-mssql")
           .waitingFor("nbs-mssql", Wait.forHealthcheck())
-          .waitingFor(
-              "liquibase",
-              Wait.forLogMessage(".*Migrations complete.*\\n", 1)
-                  .withStartupTimeout(Duration.ofMinutes(10)))
           .withLogConsumer("nbs-mssql", consumer)
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(10));
