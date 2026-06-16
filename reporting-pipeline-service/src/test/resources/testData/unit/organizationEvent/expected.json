@@ -21,7 +21,7 @@
       "last_chg_time": "2026-04-03 14:43:38",
       "organization_name": "[{\"on_org_uid\":20001000,\"organization_name\":\"Wellstar Cobb Medical Center\"}]",
       "organization_address": "[{\"addr_elp_cd\":\"O\",\"addr_elp_use_cd\":\"WP\",\"addr_pl_uid\":20001002,\"street_addr1\":\"3950 Austell Rd SW\",\"street_addr2\":\"\",\"city\":\"Austell\",\"zip\":\"30106\",\"cnty_cd\":\"13067\",\"state\":\"13\",\"cntry_cd\":\"840\",\"state_desc\":\"Georgia\",\"county\":\"Cobb County\",\"within_city_limits_ind\":null,\"country\":\"United States\",\"address_comments\":\"Emergency room address\",\"county_desc\":\"Cobb County\"}]",
-      "organization_telephone": "[{\"ph_tl_uid\":20001001,\"ph_elp_cd\":\"PH\",\"ph_elp_use_cd\":\"WP\",\"telephone_nbr\":\"770-732-4000\",\"extension_txt\":\"\",\"email_address\":\"\",\"phone_comments\":\"\"}]",
+      "organization_telephone": "[{\"ph_tl_uid\":20001001,\"ph_elp_cd\":\"PH\",\"ph_elp_use_cd\":\"WP\",\"telephone_nbr\":\"770-732-4000\",\"extension_txt\":null,\"email_address\":null,\"phone_comments\":null}]",
       "organization_fax": null,
       "organization_entity_id": "[{\"entity_uid\":20001000,\"type_cd\":\"FI\",\"record_status_cd\":\"ACTIVE\",\"root_extension_txt\":\"110035\",\"entity_id_seq\":1,\"assigning_authority_cd\":\"CMS\",\"facility_id_auth\":\"CMS Provider\"},{\"entity_uid\":20001000,\"type_cd\":\"QEC\",\"record_status_cd\":\"ACTIVE\",\"root_extension_txt\":\"99\",\"entity_id_seq\":2,\"assigning_authority_cd\":null,\"facility_id_auth\":null}]"
     }

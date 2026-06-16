@@ -1,6 +1,6 @@
 -- ==========================================
 -- RTR Liquibase Admin Setup
--- $(RTR_ADMIN_NAME) (Liquibase Onboarding & Migrations)
+-- $(RTR_ADMIN_NAME) (Liquibase Migrations)
 -- ==========================================
 
 USE [master];
