@@ -9,7 +9,6 @@ on:
     #      - CNDE-*
     paths:
       - "reporting-pipeline-service/**"
-      - "liquibase-service/**"
       - "build.gradle"
       - "settings.gradle"
       - "gradle/**"
@@ -26,21 +25,6 @@ jobs:
     with:
       microservice_name: nbs7-reporting-pipeline
       dockerfile_relative_path: -f ./reporting-pipeline-service/Dockerfile .
-      environment_classifier: SNAPSHOT
-      java_version: "21"
-    secrets:
-      NBS_ACCOUNTID: ${{secrets.NBS_ACCOUNTID}}
-
-  call-build-liquibase-service-container-workflow:
-    permissions:
-      id-token: write
-      contents: read
-      security-events: write
-    name: Build Liquibase Service Container
-    uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
-    with:
-      microservice_name: nbs7-liquibase
-      dockerfile_relative_path: -f ./liquibase-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "21"
     secrets:
