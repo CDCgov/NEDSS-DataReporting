@@ -117,6 +117,9 @@ management:
   endpoint:
     prometheus:
       access: read_only
+    health:
+      show-details: always
+      show-components: always
   endpoints:
     web:
       exposure:
