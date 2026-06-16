@@ -95,11 +95,6 @@ services:
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_CONSUMER_METADATA_MAX_AGE_MS: 1000
-      CONNECT_CONFIG_PROVIDERS: "env"
-      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
-      DB_URL: "jdbc:sqlserver://nbs-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;"
-      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
-      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s
@@ -127,13 +122,6 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_CONFIG_PROVIDERS: "env"
-      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
-      DB_HOST: "nbs-mssql"
-      DB_PORT: "1433"
-      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
-      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
-      KAFKA_SERVER: "kafka:29092"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s

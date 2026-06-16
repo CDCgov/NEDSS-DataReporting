@@ -89,6 +89,12 @@ spring:
     password: ${RTR_ADMIN_PASSWORD}
 
 connector:
+  database:
+    url: ${DB_CONNECTION_URL}
+    username: ${RTR_ADMIN_NAME}
+    password: ${RTR_ADMIN_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
   debezium:
     enabled: ${DEBEZIUM_AUTOCONFIG_ENABLED:true}
     url: ${DEBEZIUM_CONNECT_URL}

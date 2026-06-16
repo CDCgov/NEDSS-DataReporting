@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.connector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
 
 class KafkaConnectConfigTest {
@@ -12,6 +13,8 @@ class KafkaConnectConfigTest {
     properties.getKafkaConnect().setEnabled(false);
     properties.getKafkaConnect().setUrl("http://unreachable:9999");
 
-    new KafkaConnectConfig(properties, new ObjectMapper(), new DefaultResourceLoader()).run(null);
+    new KafkaConnectConfig(
+            properties, new ObjectMapper(), new DefaultResourceLoader(), new StandardEnvironment())
+        .run(null);
   }
 }

@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.connector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
 
 class DebeziumConfigTest {
@@ -12,6 +13,8 @@ class DebeziumConfigTest {
     properties.getDebezium().setEnabled(false);
     properties.getDebezium().setUrl("http://unreachable:9999");
 
-    new DebeziumConfig(properties, new ObjectMapper(), new DefaultResourceLoader()).run(null);
+    new DebeziumConfig(
+            properties, new ObjectMapper(), new DefaultResourceLoader(), new StandardEnvironment())
+        .run(null);
   }
 }

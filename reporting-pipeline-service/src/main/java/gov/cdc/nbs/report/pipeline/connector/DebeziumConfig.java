@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -17,12 +18,17 @@ public class DebeziumConfig implements ApplicationRunner {
   private final ConnectorProperties.Group properties;
   private final ObjectMapper objectMapper;
   private final ResourceLoader resourceLoader;
+  private final Environment environment;
 
   public DebeziumConfig(
-      ConnectorProperties properties, ObjectMapper objectMapper, ResourceLoader resourceLoader) {
+      ConnectorProperties properties,
+      ObjectMapper objectMapper,
+      ResourceLoader resourceLoader,
+      Environment environment) {
     this.properties = properties.getDebezium();
     this.objectMapper = objectMapper;
     this.resourceLoader = resourceLoader;
+    this.environment = environment;
   }
 
   @Override
@@ -39,7 +45,8 @@ public class DebeziumConfig implements ApplicationRunner {
             properties.getRetryDelayMs(),
             new RestTemplate(),
             objectMapper,
-            resourceLoader);
+            resourceLoader,
+            environment::resolveRequiredPlaceholders);
 
     client.waitForReady();
     for (String definition : properties.getDefinitions()) {

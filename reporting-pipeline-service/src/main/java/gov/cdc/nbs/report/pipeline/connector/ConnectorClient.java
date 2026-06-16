@@ -1,11 +1,14 @@
 package gov.cdc.nbs.report.pipeline.connector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestTemplate;
 
 public class ConnectorClient {
@@ -18,6 +21,7 @@ public class ConnectorClient {
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
   private final ResourceLoader resourceLoader;
+  private final UnaryOperator<String> placeholderResolver;
 
   public ConnectorClient(
       String baseUrl,
@@ -25,13 +29,15 @@ public class ConnectorClient {
       long retryDelayMs,
       RestTemplate restTemplate,
       ObjectMapper objectMapper,
-      ResourceLoader resourceLoader) {
+      ResourceLoader resourceLoader,
+      UnaryOperator<String> placeholderResolver) {
     this.baseUrl = baseUrl;
     this.retryAttempts = retryAttempts;
     this.retryDelayMs = retryDelayMs;
     this.restTemplate = restTemplate;
     this.objectMapper = objectMapper;
     this.resourceLoader = resourceLoader;
+    this.placeholderResolver = placeholderResolver;
   }
 
   public void waitForReady() {
@@ -66,7 +72,9 @@ public class ConnectorClient {
   @SuppressWarnings("unchecked")
   public void registerIfMissing(String resourcePath) throws java.io.IOException {
     Resource resource = resourceLoader.getResource(resourcePath);
-    Map<String, Object> connectorDef = objectMapper.readValue(resource.getInputStream(), Map.class);
+    String raw = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+    String resolved = placeholderResolver.apply(raw);
+    Map<String, Object> connectorDef = objectMapper.readValue(resolved, Map.class);
 
     String name = (String) connectorDef.get("name");
     Map<String, Object> config = (Map<String, Object>) connectorDef.get("config");

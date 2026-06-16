@@ -1,6 +1,7 @@
 package gov.cdc.nbs.report.pipeline.connector;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
@@ -41,7 +42,7 @@ class ConnectorClientTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
 
-    new ConnectorClient(BASE_URL, 3, 1, restTemplate, objectMapper, resourceLoader).waitForReady();
+    newClient(BASE_URL, 3).waitForReady();
 
     server.verify();
   }
@@ -53,25 +54,47 @@ class ConnectorClientTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withServerError());
 
-    ConnectorClient client =
-        new ConnectorClient(BASE_URL, 2, 1, restTemplate, objectMapper, resourceLoader);
+    assertThrows(IllegalStateException.class, newClient(BASE_URL, 2)::waitForReady);
+    server.verify();
+  }
 
-    assertThrows(IllegalStateException.class, client::waitForReady);
+  @Test
+  void registerIfMissing_resolves_placeholders_before_posting() throws Exception {
+    String resourcePath = "classpath:connectors/templated-connector.json";
+
+    server
+        .expect(requestTo(BASE_URL + "/connectors"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+    server
+        .expect(requestTo(BASE_URL + "/connectors/templated-connector/config"))
+        .andExpect(method(HttpMethod.PUT))
+        .andExpect(jsonPath("$['connection.url']").value("jdbc:sqlserver://resolved-host:1433"))
+        .andRespond(withSuccess());
+
+    new ConnectorClient(
+            BASE_URL,
+            1,
+            1,
+            restTemplate,
+            objectMapper,
+            resourceLoader,
+            raw -> raw.replace("${connector.database.url}", "jdbc:sqlserver://resolved-host:1433"))
+        .registerIfMissing(resourcePath);
+
     server.verify();
   }
 
   @Test
   void registerIfMissing_skips_when_connector_already_registered() throws Exception {
     String resourcePath = "classpath:connectors/test-connector.json";
-    writeTempConnectorResource();
 
     server
         .expect(requestTo(BASE_URL + "/connectors"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess("[\"test-connector\"]", MediaType.APPLICATION_JSON));
 
-    new ConnectorClient(BASE_URL, 1, 1, restTemplate, objectMapper, resourceLoader)
-        .registerIfMissing(resourcePath);
+    newClient(BASE_URL, 1).registerIfMissing(resourcePath);
 
     server.verify();
   }
@@ -79,7 +102,6 @@ class ConnectorClientTest {
   @Test
   void registerIfMissing_puts_config_when_connector_absent() throws Exception {
     String resourcePath = "classpath:connectors/test-connector.json";
-    writeTempConnectorResource();
 
     server
         .expect(requestTo(BASE_URL + "/connectors"))
@@ -90,17 +112,13 @@ class ConnectorClientTest {
         .andExpect(method(HttpMethod.PUT))
         .andRespond(withSuccess());
 
-    new ConnectorClient(BASE_URL, 1, 1, restTemplate, objectMapper, resourceLoader)
-        .registerIfMissing(resourcePath);
+    newClient(BASE_URL, 1).registerIfMissing(resourcePath);
 
     server.verify();
   }
 
-  private void writeTempConnectorResource() throws Exception {
-    java.nio.file.Path dir = java.nio.file.Paths.get("build/resources/test/connectors");
-    java.nio.file.Files.createDirectories(dir);
-    java.nio.file.Files.writeString(
-        dir.resolve("test-connector.json"),
-        "{\"name\":\"test-connector\",\"config\":{\"connector.class\":\"x\"}}");
+  private ConnectorClient newClient(String url, int retries) {
+    return new ConnectorClient(
+        url, retries, 1, restTemplate, objectMapper, resourceLoader, raw -> raw);
   }
 }
