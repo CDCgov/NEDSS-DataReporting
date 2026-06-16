@@ -75,13 +75,17 @@ services:
       start_period: 10s
 
   kafka-connect:
-    build:
-      dockerfile: ./containers/kafka-connect/Dockerfile
+    image: confluentinc/cp-kafka-connect:7.6.1
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - "confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.6 && /etc/confluent/docker/run"
     depends_on:
       kafka:
         condition: service_healthy
     ports:
       - 8083:8083
+    volumes:
+      - kafka-connect-plugins:/usr/share/confluent-hub-components
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "kafka:29092"
       CONNECT_GROUP_ID: "cp-kafka-connect.groupId"
@@ -149,3 +153,6 @@ services:
         condition: service_healthy
       kafka-connect:
         condition: service_healthy
+
+volumes:
+  kafka-connect-plugins:
