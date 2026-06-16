@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.core.io.Resource;
@@ -25,6 +26,7 @@ public class ConnectorHealthIndicator implements HealthIndicator {
   private final ResourceLoader resourceLoader;
   private final RestTemplate restTemplate;
 
+  @Autowired
   public ConnectorHealthIndicator(
       ConnectorProperties properties, ObjectMapper objectMapper, ResourceLoader resourceLoader) {
     this(properties, objectMapper, resourceLoader, new RestTemplate());
