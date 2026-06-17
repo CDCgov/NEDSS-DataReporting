@@ -304,15 +304,7 @@ public class ProcessInvestigationDataUtil {
     try {
       JsonNode actIdsJsonArray = parseJsonArray(actIds);
 
-      String statePreferred = null;
-      String stateFallback = null;
-      String cityPreferred = null;
-      String cityFallback = null;
-      String legacyPreferred = null;
-      String legacyFallback = null;
-
       for (JsonNode node : actIdsJsonArray) {
-        int actIdSeq = node.get("act_id_seq").asInt();
         String typeCode = node.path(TYPE_CD).asText();
         String rootExtension = node.path("root_extension_txt").asText();
 
@@ -320,37 +312,18 @@ public class ProcessInvestigationDataUtil {
           continue;
         }
 
-        if (typeCode.equals("STATE")) {
-          if (actIdSeq == 1) {
-            statePreferred = rootExtension;
-          } else if (stateFallback == null) {
-            stateFallback = rootExtension;
-          }
+        // act_id_seq is an auto-increment counter per PHC, not a reliable positional
+        // indicator. Match solely on type_cd and take the first non-blank value per type.
+        if (typeCode.equals("STATE") && investigationTransformed.getInvStateCaseId() == null) {
+          investigationTransformed.setInvStateCaseId(rootExtension);
         }
-
-        if (typeCode.equals("CITY")) {
-          if (actIdSeq == 2) {
-            cityPreferred = rootExtension;
-          } else if (cityFallback == null) {
-            cityFallback = rootExtension;
-          }
+        if (typeCode.equals("CITY") && investigationTransformed.getCityCountyCaseNbr() == null) {
+          investigationTransformed.setCityCountyCaseNbr(rootExtension);
         }
-
-        if (typeCode.equals("LEGACY")) {
-          if (actIdSeq == 3) {
-            legacyPreferred = rootExtension;
-          } else if (legacyFallback == null) {
-            legacyFallback = rootExtension;
-          }
+        if (typeCode.equals("LEGACY") && investigationTransformed.getLegacyCaseId() == null) {
+          investigationTransformed.setLegacyCaseId(rootExtension);
         }
       }
-
-      investigationTransformed.setInvStateCaseId(
-          statePreferred != null ? statePreferred : stateFallback);
-      investigationTransformed.setCityCountyCaseNbr(
-          cityPreferred != null ? cityPreferred : cityFallback);
-      investigationTransformed.setLegacyCaseId(
-          legacyPreferred != null ? legacyPreferred : legacyFallback);
     } catch (IllegalArgumentException ex) {
       logger.info(ex.getMessage(), "ActIds");
     } catch (Exception e) {
