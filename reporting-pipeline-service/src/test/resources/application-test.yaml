@@ -34,7 +34,7 @@ connector:
     username: ${RTR_ADMIN_NAME:rtr_admin}
     password: ${RTR_ADMIN_PASSWORD:rtr_admin}
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:kafka:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:kafka:29092}
   debezium:
     enabled: true
     url: http://localhost:8085
