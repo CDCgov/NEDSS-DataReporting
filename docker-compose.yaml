@@ -84,9 +84,12 @@ services:
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.6.1
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - "confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.6 && /etc/confluent/docker/run"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >-
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.6 &&
+        exec /etc/confluent/docker/run
     depends_on:
       kafka:
         condition: service_healthy
