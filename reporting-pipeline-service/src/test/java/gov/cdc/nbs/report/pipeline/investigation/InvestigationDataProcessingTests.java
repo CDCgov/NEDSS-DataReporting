@@ -207,6 +207,24 @@ class InvestigationDataProcessingTests {
     assertNull(transformed.getLegacyCaseId());
   }
 
+    @Test
+    void testTransformActIdsUsesLatestSequenceWhenMultipleLegacyRowsExist() {
+        Investigation investigation = new Investigation();
+        investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+        investigation.setActIds(
+                """
+                [
+                    {"act_id_seq": 20, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLD"},
+                    {"act_id_seq": 10, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLDER"},
+                    {"act_id_seq": 30, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-NEWEST"}
+                ]
+                """);
+
+        InvestigationTransformed transformed = transformer.transformInvestigationData(investigation, BATCH_ID);
+
+        assertEquals("LEGACY-NEWEST", transformed.getLegacyCaseId());
+    }
+
   @Test
   void testInvestigationObservationIds() throws JsonProcessingException {
     Investigation investigation = new Investigation();
