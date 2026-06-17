@@ -1,22 +1,32 @@
 package gov.cdc.nbs.report.pipeline.connector;
 
 import java.util.List;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
-@Data
 @ConfigurationProperties(prefix = "connector")
-public class ConnectorProperties {
+public record ConnectorProperties(@DefaultValue Group debezium, @DefaultValue Group kafkaConnect) {
 
-  private Group debezium = new Group();
-  private Group kafkaConnect = new Group();
+  @ConstructorBinding
+  public ConnectorProperties {}
 
-  @Data
-  public static class Group {
-    private boolean enabled;
-    private String url;
-    private int retryAttempts = 20;
-    private long retryDelayMs = 5000;
-    private List<String> definitions = List.of();
+  public ConnectorProperties() {
+    this(new Group(), new Group());
+  }
+
+  public record Group(
+      boolean enabled,
+      String url,
+      @DefaultValue("20") int retryAttempts,
+      @DefaultValue("5000") long retryDelayMs,
+      @DefaultValue List<String> definitions) {
+
+    @ConstructorBinding
+    public Group {}
+
+    public Group() {
+      this(false, null, 20, 5000L, List.of());
+    }
   }
 }

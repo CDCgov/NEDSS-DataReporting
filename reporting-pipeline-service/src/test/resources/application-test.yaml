@@ -10,7 +10,6 @@ spring:
       password: ${RTR_ADMIN_PASSWORD:rtr_admin}
   jpa:
     show-sql: "true"
-    database-platform: org.hibernate.dialect.SQLServerDialect
     hibernate:
       ddl-auto: none
   kafka:

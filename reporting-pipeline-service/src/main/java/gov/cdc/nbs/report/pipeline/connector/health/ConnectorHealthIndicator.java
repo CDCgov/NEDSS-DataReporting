@@ -48,8 +48,8 @@ public class ConnectorHealthIndicator implements HealthIndicator {
     Map<String, Object> details = new LinkedHashMap<>();
     List<String> failures = new ArrayList<>();
 
-    checkGroup("debezium", properties.getDebezium(), details, failures);
-    checkGroup("kafkaConnect", properties.getKafkaConnect(), details, failures);
+    checkGroup("debezium", properties.debezium(), details, failures);
+    checkGroup("kafkaConnect", properties.kafkaConnect(), details, failures);
 
     Health.Builder builder = failures.isEmpty() ? Health.up() : Health.down();
     builder.withDetails(details);
@@ -64,15 +64,15 @@ public class ConnectorHealthIndicator implements HealthIndicator {
       ConnectorProperties.Group group,
       Map<String, Object> details,
       List<String> failures) {
-    if (!group.isEnabled()) {
+    if (!group.enabled()) {
       details.put(groupName, Map.of("status", "DISABLED"));
       return;
     }
 
     Map<String, String> connectorStatuses = new LinkedHashMap<>();
-    for (String definition : group.getDefinitions()) {
+    for (String definition : group.definitions()) {
       String name = connectorNameFrom(definition);
-      String status = fetchConnectorStatus(group.getUrl(), name);
+      String status = fetchConnectorStatus(group.url(), name);
       connectorStatuses.put(name, status);
       if (!RUNNING.equals(status)) {
         failures.add(groupName + "/" + name + "=" + status);

@@ -9,12 +9,11 @@ class KafkaConnectConfigTest {
 
   @Test
   void run_is_noop_when_disabled() throws Exception {
-    ConnectorProperties properties = new ConnectorProperties();
-    properties.getKafkaConnect().setEnabled(false);
-    properties.getKafkaConnect().setUrl("http://unreachable:9999");
-
     new KafkaConnectConfig(
-            properties, new ObjectMapper(), new DefaultResourceLoader(), new StandardEnvironment())
+            new ConnectorProperties(),
+            new ObjectMapper(),
+            new DefaultResourceLoader(),
+            new StandardEnvironment())
         .run(null);
   }
 }

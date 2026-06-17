@@ -25,7 +25,7 @@ public class KafkaConnectConfig implements ApplicationRunner {
       ObjectMapper objectMapper,
       ResourceLoader resourceLoader,
       Environment environment) {
-    this.properties = properties.getKafkaConnect();
+    this.properties = properties.kafkaConnect();
     this.objectMapper = objectMapper;
     this.resourceLoader = resourceLoader;
     this.environment = environment;
@@ -33,23 +33,23 @@ public class KafkaConnectConfig implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    if (!properties.isEnabled()) {
+    if (!properties.enabled()) {
       log.info("Kafka Connect connector auto-configuration is disabled");
       return;
     }
 
     ConnectorClient client =
         new ConnectorClient(
-            properties.getUrl(),
-            properties.getRetryAttempts(),
-            properties.getRetryDelayMs(),
+            properties.url(),
+            properties.retryAttempts(),
+            properties.retryDelayMs(),
             new RestTemplate(),
             objectMapper,
             resourceLoader,
             environment::resolveRequiredPlaceholders);
 
     client.waitForReady();
-    for (String definition : properties.getDefinitions()) {
+    for (String definition : properties.definitions()) {
       client.registerIfMissing(definition);
     }
   }

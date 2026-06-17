@@ -9,12 +9,11 @@ class DebeziumConfigTest {
 
   @Test
   void run_is_noop_when_disabled() throws Exception {
-    ConnectorProperties properties = new ConnectorProperties();
-    properties.getDebezium().setEnabled(false);
-    properties.getDebezium().setUrl("http://unreachable:9999");
-
     new DebeziumConfig(
-            properties, new ObjectMapper(), new DefaultResourceLoader(), new StandardEnvironment())
+            new ConnectorProperties(),
+            new ObjectMapper(),
+            new DefaultResourceLoader(),
+            new StandardEnvironment())
         .run(null);
   }
 }

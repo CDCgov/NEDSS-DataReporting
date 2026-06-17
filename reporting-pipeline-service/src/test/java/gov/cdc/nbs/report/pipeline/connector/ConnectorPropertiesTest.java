@@ -32,29 +32,29 @@ class ConnectorPropertiesTest {
     ConnectorProperties properties =
         new Binder(source).bind("connector", ConnectorProperties.class).get();
 
-    assertTrue(properties.getDebezium().isEnabled());
-    assertEquals("http://debezium:8083", properties.getDebezium().getUrl());
-    assertEquals(10, properties.getDebezium().getRetryAttempts());
-    assertEquals(1000L, properties.getDebezium().getRetryDelayMs());
+    assertTrue(properties.debezium().enabled());
+    assertEquals("http://debezium:8083", properties.debezium().url());
+    assertEquals(10, properties.debezium().retryAttempts());
+    assertEquals(1000L, properties.debezium().retryDelayMs());
     assertEquals(
         List.of("classpath:connectors/debezium/odse_main_connector.json"),
-        properties.getDebezium().getDefinitions());
+        properties.debezium().definitions());
 
-    assertTrue(properties.getKafkaConnect().isEnabled());
-    assertEquals("http://kafka-connect:8083", properties.getKafkaConnect().getUrl());
+    assertTrue(properties.kafkaConnect().enabled());
+    assertEquals("http://kafka-connect:8083", properties.kafkaConnect().url());
     assertEquals(
         List.of("classpath:connectors/kafka-connect/mssql-connector.json"),
-        properties.getKafkaConnect().getDefinitions());
+        properties.kafkaConnect().definitions());
   }
 
   @Test
   void defaults_disable_groups_and_use_default_retry_settings() {
     ConnectorProperties properties = new ConnectorProperties();
 
-    assertFalse(properties.getDebezium().isEnabled());
-    assertFalse(properties.getKafkaConnect().isEnabled());
-    assertEquals(20, properties.getDebezium().getRetryAttempts());
-    assertEquals(5000L, properties.getDebezium().getRetryDelayMs());
-    assertTrue(properties.getDebezium().getDefinitions().isEmpty());
+    assertFalse(properties.debezium().enabled());
+    assertFalse(properties.kafkaConnect().enabled());
+    assertEquals(20, properties.debezium().retryAttempts());
+    assertEquals(5000L, properties.debezium().retryDelayMs());
+    assertTrue(properties.debezium().definitions().isEmpty());
   }
 }
