@@ -128,12 +128,46 @@ GO
 --     CITY   -> city_county_case_nbr
 --     LEGACY -> legacy_case_id   (+ covid INV_LEGACY_CASE_ID)
 --   (Proven path — see zz_covid_case_answer_gap.sql.)
---   seq 1 is the existing PHC_LOCAL_ID on every target; seq 2/3/4 are free.
---   Guard on (act_uid, type_cd) so re-apply is a no-op and we never collide
---   with a STATE/CITY/LEGACY some other fixture may add at a different seq.
+--
+--   IMPORTANT FOR LEGACY MASTERETL PARITY:
+--   Some legacy flows behave positionally by act_id_seq. To keep those
+--   consumers aligned with expected semantics, normalize to:
+--      STATE=1, CITY=2, LEGACY=3
+--   and move PHC_LOCAL_ID out of slot 1 (to seq 10) for these PHCs.
+--
+--   Guard on (act_uid, type_cd) so re-apply is a no-op for missing rows,
+--   and normalize existing rows in-place for deterministic behavior.
 -- =====================================================================
 DECLARE @t datetime = '2026-04-04T00:00:00';
 DECLARE @u bigint   = 10009282;
+
+-- Normalize existing act_id seq positions for target PHCs.
+-- 1) free seq 1 by moving PHC_LOCAL_ID -> 10
+UPDATE a
+SET a.act_id_seq = 10
+FROM [dbo].[act_id] a
+WHERE a.act_uid IN (22001000, 22002000, 22003000, 22004000, 22005000, 22006000, 22007000)
+     AND a.type_cd = N'PHC_LOCAL_ID'
+     AND a.act_id_seq <> 10;
+
+-- 2) move STATE/CITY/LEGACY to a temporary range to avoid unique-key collisions
+UPDATE a
+SET a.act_id_seq = a.act_id_seq + 100
+FROM [dbo].[act_id] a
+WHERE a.act_uid IN (22001000, 22002000, 22003000, 22004000, 22005000, 22006000, 22007000)
+     AND a.type_cd IN (N'STATE', N'CITY', N'LEGACY');
+
+-- 3) assign canonical seq positions used by legacy positional consumers
+UPDATE a
+SET a.act_id_seq =
+          CASE
+                    WHEN a.type_cd = N'STATE' THEN 1
+                    WHEN a.type_cd = N'CITY' THEN 2
+                    WHEN a.type_cd = N'LEGACY' THEN 3
+          END
+FROM [dbo].[act_id] a
+WHERE a.act_uid IN (22001000, 22002000, 22003000, 22004000, 22005000, 22006000, 22007000)
+     AND a.type_cd IN (N'STATE', N'CITY', N'LEGACY');
 
 INSERT INTO [dbo].[act_id]
     ([act_uid], [act_id_seq], [add_time], [add_user_id],
@@ -142,27 +176,27 @@ INSERT INTO [dbo].[act_id]
 SELECT s.phc, s.seq, @t, @u, @t, @u, N'ACTIVE', @t,
        s.prefix + CAST(s.phc AS varchar(20)), s.tcd, N'A', @t
 FROM (VALUES
-        (CAST(22001000 AS bigint), 2, N'STATE',  N'GA-2026-STATE-'),
-        (22001000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22001000, 4, N'LEGACY', N'LEGACY-'),
-        (22002000, 2, N'STATE',  N'GA-2026-STATE-'),
-        (22002000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22002000, 4, N'LEGACY', N'LEGACY-'),
-        (22003000, 2, N'STATE',  N'GA-2026-STATE-'),
-        (22003000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22003000, 4, N'LEGACY', N'LEGACY-'),
-        (22004000, 2, N'STATE',  N'GA-2026-STATE-'),
-        (22004000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22004000, 4, N'LEGACY', N'LEGACY-'),
-        (22005000, 2, N'STATE',  N'GA-2026-STATE-'),
-        (22005000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22005000, 4, N'LEGACY', N'LEGACY-'),
-        (22006000, 2, N'STATE',  N'GA-2026-STATE-'),
-        (22006000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22006000, 4, N'LEGACY', N'LEGACY-'),
-        (22007000, 2, N'STATE',  N'GA-2026-STATE-'),
-        (22007000, 3, N'CITY',   N'FULTON-2026-CITY-'),
-        (22007000, 4, N'LEGACY', N'LEGACY-')
+                    (CAST(22001000 AS bigint), 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22001000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22001000, 3, N'LEGACY', N'LEGACY-'),
+                    (22002000, 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22002000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22002000, 3, N'LEGACY', N'LEGACY-'),
+                    (22003000, 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22003000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22003000, 3, N'LEGACY', N'LEGACY-'),
+                    (22004000, 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22004000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22004000, 3, N'LEGACY', N'LEGACY-'),
+                    (22005000, 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22005000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22005000, 3, N'LEGACY', N'LEGACY-'),
+                    (22006000, 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22006000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22006000, 3, N'LEGACY', N'LEGACY-'),
+                    (22007000, 1, N'STATE',  N'GA-2026-STATE-'),
+                    (22007000, 2, N'CITY',   N'FULTON-2026-CITY-'),
+                    (22007000, 3, N'LEGACY', N'LEGACY-')
      ) AS s(phc, seq, tcd, prefix)
 WHERE NOT EXISTS (SELECT 1 FROM [dbo].[act_id] a
                   WHERE a.act_uid = s.phc AND a.type_cd = s.tcd);
