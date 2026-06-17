@@ -391,7 +391,10 @@ BEGIN
                                                                ON org.organization_uid = p.subject_entity_uid
                                                  WHERE p.act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS organization_participations) AS organization_participations
-                                        -- act_ids associated with public health case
+                                                     -- act_ids for public health case, with STATE fallback behavior:
+                                                     -- 1) use existing act_id rows
+                                                     -- 2) if STATE root_extension_txt is NULL, use phc.local_id
+                                                     -- 3) if no STATE row exists, add a synthetic STATE row from phc.local_id
                                            ,
                                         (SELECT (SELECT act.source_act_uid,
                                                         act.target_Act_uid   as public_health_case_uid,
