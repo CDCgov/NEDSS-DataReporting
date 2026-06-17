@@ -1,4 +1,11 @@
-IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_sld_investigation_repeat_postprocessing]') 
+-- APP-734 fix: pin QUOTED_IDENTIFIER ON so re-applies via sqlcmd don't
+-- silently disable features the SP relies on (e.g., the embedded
+-- dynamic SQL).  Liquibase sets QI ON by default; sqlcmd inherits the
+-- session default (typically OFF).
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_sld_investigation_repeat_postprocessing]')
 	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
@@ -1141,7 +1148,32 @@ ON #CODED_TABLE_REPT
                     ON [PRIMARY];
             END;
 
+        -- APP-734 fix: re-seed the D_REPT_KEY IDENTITY counter on
+        -- LOOKUP_TABLE_N_REPT so the next INSERT yields keys >= 2.
+        -- D_REPT_KEY is the IDENTITY(1,1) column of LOOKUP_TABLE_N_REPT;
+        -- the INSERT below supplies only PAGE_CASE_UID, so D_REPT_KEY is
+        -- auto-generated. On a fresh DB the first generated D_REPT_KEY is 1,
+        -- the reserved sentinel value that downstream INSERT filters
+        -- (line 1349: `WHERE D_INVESTIGATION_REPEAT_KEY != 1`) treat as
+        -- "skip this row".
+        --
+        -- DBCC CHECKIDENT semantics:
+        --   - empty table:  next inserted value = new_reseed_value
+        --   - non-empty:    next inserted value = new_reseed_value + 1
+        -- We DELETE just below, making the table empty, so the next
+        -- value is exactly @reseed_to.  Set it to max(2, MAX(D_INV_REPEAT_KEY)+1)
+        -- so we avoid the sentinel 1 and don't collide with any prior
+        -- non-sentinel key.
+        DECLARE @reseed_to INT = (
+            SELECT CASE WHEN ISNULL(MAX([D_INVESTIGATION_REPEAT_KEY]), 1) < 2
+                        THEN 2
+                        ELSE ISNULL(MAX([D_INVESTIGATION_REPEAT_KEY]), 1) + 1
+                   END
+            FROM dbo.D_INVESTIGATION_REPEAT
+        );
+
         DELETE FROM dbo.LOOKUP_TABLE_N_REPT;
+        DBCC CHECKIDENT ('dbo.LOOKUP_TABLE_N_REPT', RESEED, @reseed_to) WITH NO_INFOMSGS;
 
         INSERT INTO dbo.LOOKUP_TABLE_N_REPT
         SELECT PAGE_CASE_UID
