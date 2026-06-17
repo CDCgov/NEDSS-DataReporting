@@ -425,19 +425,56 @@ BEGIN
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
                                            ,
-                                        (SELECT (SELECT act_id.act_uid            AS [id],
-                                                        act_id_seq                AS [act_id_seq],
-                                                        act_id.record_status_cd   AS [record_status],
-                                                        act_id.root_extension_txt AS [root_extension_txt],
-                                                        act_id.type_cd            AS [type_cd],
-                                                        act_id.type_desc_txt      AS [type_desc_txt],
-                                                        act_id.add_time              act_id_add_time,
-                                                        act_id.add_user_id           act_id_add_user_id,
-                                                        act_id.last_chg_user_id      act_id_last_chg_user_id,
-                                                        act_id.last_chg_time      AS [act_id_last_change_time]
-                                                 FROM nbs_odse.dbo.act_id WITH (NOLOCK)
-                                                 WHERE act_uid = phc.public_health_case_uid
-                                                 FOR json path,INCLUDE_NULL_VALUES) AS act_ids) AS act_ids,
+                                        (SELECT (SELECT act_id_rows.[id],
+                                                        act_id_rows.[act_id_seq],
+                                                        act_id_rows.[record_status],
+                                                        act_id_rows.[root_extension_txt],
+                                                        act_id_rows.[type_cd],
+                                                        act_id_rows.[type_desc_txt],
+                                                        act_id_rows.act_id_add_time,
+                                                        act_id_rows.act_id_add_user_id,
+                                                        act_id_rows.act_id_last_chg_user_id,
+                                                        act_id_rows.[act_id_last_change_time]
+                                                 FROM (
+                                                          SELECT act_id.act_uid AS [id],
+                                                                 act_id.act_id_seq AS [act_id_seq],
+                                                                 act_id.record_status_cd AS [record_status],
+                                                                 COALESCE(
+                                                                     act_id.root_extension_txt,
+                                                                     CASE
+                                                                         WHEN act_id.type_cd = 'STATE' THEN phc.local_id
+                                                                     END
+                                                                 ) AS [root_extension_txt],
+                                                                 act_id.type_cd AS [type_cd],
+                                                                 act_id.type_desc_txt AS [type_desc_txt],
+                                                                 act_id.add_time AS act_id_add_time,
+                                                                 act_id.add_user_id AS act_id_add_user_id,
+                                                                 act_id.last_chg_user_id AS act_id_last_chg_user_id,
+                                                                 act_id.last_chg_time AS [act_id_last_change_time]
+                                                          FROM nbs_odse.dbo.act_id WITH (NOLOCK)
+                                                          WHERE act_id.act_uid = phc.public_health_case_uid
+                                                          UNION ALL
+                                                          SELECT phc_fallback.public_health_case_uid AS [id],
+                                                                 0 AS [act_id_seq],
+                                                                 phc_fallback.record_status_cd AS [record_status],
+                                                                 phc_fallback.local_id AS [root_extension_txt],
+                                                                 'STATE' AS [type_cd],
+                                                                 'Local Public Health Case Identifier' AS [type_desc_txt],
+                                                                 phc_fallback.add_time AS act_id_add_time,
+                                                                 phc_fallback.add_user_id AS act_id_add_user_id,
+                                                                 phc_fallback.last_chg_user_id AS act_id_last_chg_user_id,
+                                                                 phc_fallback.last_chg_time AS [act_id_last_change_time]
+                                                          FROM nbs_odse.dbo.public_health_case phc_fallback WITH (NOLOCK)
+                                                          WHERE phc_fallback.public_health_case_uid = phc.public_health_case_uid
+                                                            AND phc_fallback.local_id IS NOT NULL
+                                                            AND NOT EXISTS (
+                                                                SELECT 1
+                                                                FROM nbs_odse.dbo.act_id fallback_state WITH (NOLOCK)
+                                                                WHERE fallback_state.act_uid = phc_fallback.public_health_case_uid
+                                                                  AND fallback_state.type_cd = 'STATE'
+                                                            )
+                                                      ) AS act_id_rows
+                                                 FOR json path, INCLUDE_NULL_VALUES) AS act_ids) AS act_ids,
                                         -- get associated confirmation method
                                         (SELECT (select cm.public_health_case_uid,
                                                         cm.confirmation_method_cd,
