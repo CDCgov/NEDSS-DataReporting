@@ -449,12 +449,15 @@ public class InvestigationService {
     reportingModel.setPatientId(investigationTransformed.getPatientId());
     reportingModel.setOrganizationId(investigationTransformed.getOrganizationId());
     reportingModel.setInvStateCaseId(
-      firstNonBlank(investigationTransformed.getInvStateCaseId(), reportingModel.getInvStateCaseId()));
+        firstNonBlank(
+            investigationTransformed.getInvStateCaseId(), reportingModel.getInvStateCaseId()));
     reportingModel.setCityCountyCaseNbr(
-      firstNonBlank(
-        investigationTransformed.getCityCountyCaseNbr(), reportingModel.getCityCountyCaseNbr()));
+        firstNonBlank(
+            investigationTransformed.getCityCountyCaseNbr(),
+            reportingModel.getCityCountyCaseNbr()));
     reportingModel.setLegacyCaseId(
-      firstNonBlank(investigationTransformed.getLegacyCaseId(), reportingModel.getLegacyCaseId()));
+        firstNonBlank(
+            investigationTransformed.getLegacyCaseId(), reportingModel.getLegacyCaseId()));
     reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
     reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
     reportingModel.setCaseCount(investigationTransformed.getCaseCount());
