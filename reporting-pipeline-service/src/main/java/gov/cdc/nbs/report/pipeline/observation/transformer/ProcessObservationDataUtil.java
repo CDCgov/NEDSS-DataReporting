@@ -572,7 +572,7 @@ public class ProcessObservationDataUtil {
   }
 
   void assertDomainCdMatches(String value, String... vals) {
-    // Bug #18: null-safe comparison. A NULL obs_domain_cd_st_1 is simply "not a valid domain" and
+    // APP-735: null-safe comparison. A NULL obs_domain_cd_st_1 is simply "not a valid domain" and
     // must take the clean IllegalArgumentException path (caught + skipped upstream like any
     // non-'Order'/'Result' value), not blow up with an NPE from a bound `value::equals` reference.
     if (Arrays.stream(vals).noneMatch(v -> Objects.equals(value, v))) {
