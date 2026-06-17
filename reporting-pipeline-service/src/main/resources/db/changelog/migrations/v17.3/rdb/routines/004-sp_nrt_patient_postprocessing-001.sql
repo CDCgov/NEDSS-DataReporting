@@ -20,7 +20,7 @@ BEGIN
         declare @create_dttm datetime2(7) = current_timestamp ;
         declare @update_dttm datetime2(7) = current_timestamp ;
         declare @dataflow_name varchar(200) = 'Patient POST-Processing';
-        declare @package_name varchar(200) = 'RDB_MODERN.sp_nrt_patient_postprocessing';
+        declare @package_name varchar(200) = 'sp_nrt_patient_postprocessing';
         declare @datamart_error nvarchar(MAX) = 'The following datamart updates had an error:';
         declare @return_code INT = 0;
         declare @sql NVARCHAR(MAX) = '';
