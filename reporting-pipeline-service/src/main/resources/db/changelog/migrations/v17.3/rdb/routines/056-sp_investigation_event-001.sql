@@ -395,6 +395,8 @@ BEGIN
                                                      -- 1) use existing act_id rows
                                                      -- 2) if STATE root_extension_txt is NULL, use phc.local_id
                                                      -- 3) if no STATE row exists, add a synthetic STATE row from phc.local_id
+                                                    --  
+                                                    -- Output is a JSON list of act_id objects
                                            ,
                                         (SELECT (SELECT act.source_act_uid,
                                                         act.target_Act_uid   as public_health_case_uid,
