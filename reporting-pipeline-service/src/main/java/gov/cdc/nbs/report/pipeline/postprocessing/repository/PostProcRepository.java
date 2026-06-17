@@ -81,7 +81,8 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
 
   @Query(
       value =
-          "exec sp_inv_summary_datamart_postprocessing :publicHealthCaseUids, :notificationUids, :observationUids",
+          "exec sp_inv_summary_datamart_postprocessing :publicHealthCaseUids, :notificationUids,"
+              + " :observationUids",
       nativeQuery = true)
   List<DatamartData> executeStoredProcForInvSummaryDatamart(
       @Param("publicHealthCaseUids") String publicHealthCaseUids,
@@ -125,4 +126,7 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
 
   @Query(value = "EXEC sp_nrt_backfill_event :statusCd", nativeQuery = true)
   List<BackfillData> executeBackfillEvent(@Param("statusCd") String statusCd);
+
+  @Procedure("sp_event_metric_cleanup_postprocessing")
+  void executeEventMetricCleanup();
 }
