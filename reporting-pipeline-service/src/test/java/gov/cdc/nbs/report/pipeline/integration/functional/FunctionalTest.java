@@ -39,6 +39,7 @@ public abstract class FunctionalTest {
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
       new ComposeContainer(base)
+          .withPull(false)
           // List specific services to prevent launching wildfly container
           .withServices("nbs-mssql", "kafka", "debezium", "kafka-connect")
           .waitingFor("nbs-mssql", Wait.forHealthcheck())
