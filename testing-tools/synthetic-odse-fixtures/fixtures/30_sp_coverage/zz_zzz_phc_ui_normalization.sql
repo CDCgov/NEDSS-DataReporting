@@ -60,3 +60,20 @@ SET activity_from_time = COALESCE(activity_from_time, DATEADD(day, -2, add_time)
 WHERE public_health_case_uid >= 20000000
   AND (activity_from_time IS NULL OR rpt_to_county_time IS NULL);
 GO
+
+-- ----- PASS 3: prog_area_cd (classic investigation DETAIL view) -----
+-- Some fixtures set prog_area_cd to values not in NBS_SRTE.program_area_code
+-- (COV/VAC/MAL). The classic investigation detail resolves its form via
+-- CommonAction.getInvestigationFormCd(condition, prog_area), which returns NULL
+-- when (prog_area, condition) doesn't resolve -> "Null object to
+-- DSInvestigationFormCd" Error page. Set the canonical program area from the
+-- condition (NBS_SRTE.dbo.condition_code) so the detail page renders. Only
+-- touches PHCs whose prog_area_cd is invalid; idempotent.
+UPDATE phc
+SET phc.prog_area_cd = cc.prog_area_cd
+FROM dbo.public_health_case phc
+JOIN NBS_SRTE.dbo.condition_code cc ON cc.condition_cd = phc.cd
+WHERE phc.public_health_case_uid >= 20000000
+  AND NOT EXISTS (SELECT 1 FROM NBS_SRTE.dbo.program_area_code pac
+                  WHERE pac.prog_area_cd = phc.prog_area_cd);
+GO
