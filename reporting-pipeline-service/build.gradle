@@ -9,6 +9,9 @@ plugins {
 // Override the Spring Boot managed Tomcat version to address security vulnerabilities
 ext['tomcat.version'] = '10.1.55'
 
+// Override the Spring Boot managed Logback version to address GHSA-25qh-j22f-pwp8 and GHSA-qqpg-mvqg-649v
+ext['logback.version'] = '1.5.25'
+
 group = 'gov.cdc.etldatapipeline'
 version = '0.0.1-SNAPSHOT'
 
