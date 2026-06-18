@@ -203,6 +203,18 @@ VALUES
      '2026-04-20T09:00:00', @superuser_id, N'ACTIVE', '2026-04-20T09:00:00',
      1, N'OBS', N'OBS', N'A', '2026-04-20T09:00:00', N'Component');
 
+-- Lab Order -> Investigation (LabReport cross-subject edge; wires
+-- associated_phc_uids in nrt_observation for RDB_MODERN LAB100)
+INSERT INTO [dbo].[act_relationship]
+    ([source_act_uid],[target_act_uid],[type_cd],[add_time],[add_user_id],
+     [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+     [sequence_nbr],[source_class_cd],[target_class_cd],[status_cd],[status_time],
+     [type_desc_txt])
+VALUES
+    (@a_order, 20050010, N'LabReport', '2026-04-20T08:00:00', @superuser_id,
+     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     1, N'OBS', N'CASE', N'A', '2026-04-20T08:00:00', N'Lab Report');
+
 -- act_id for the Order (accession-style local id -> ACCESSION_NBR feed)
 INSERT INTO [dbo].[act_id]
     ([act_uid],[act_id_seq],[add_time],[add_user_id],

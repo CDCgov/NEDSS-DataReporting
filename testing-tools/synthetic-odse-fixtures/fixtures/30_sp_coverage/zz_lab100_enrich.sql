@@ -199,6 +199,25 @@ BEGIN
          1, N'OBS', N'OBS', N'A', '2026-04-23T09:00:00', N'Component');
 
     -- =================================================================
+    -- act_relationship: Lab Order -> Investigation (LabReport cross-subject)
+    -- Wires associated_phc_uids in nrt_observation so sp_observation_event
+    -- projects the investigation uid and RDB_MODERN LAB100 populates.
+    -- Both STD labs link to investigation 22004000 (STD dedicated entities).
+    -- =================================================================
+    INSERT INTO [dbo].[act_relationship]
+        ([source_act_uid],[target_act_uid],[type_cd],[add_time],[add_user_id],
+         [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+         [sequence_nbr],[source_class_cd],[target_class_cd],[status_cd],[status_time],
+         [type_desc_txt])
+    VALUES
+        (@rpr_order, 22004000, N'LabReport', '2026-04-22T08:00:00', @superuser_id,
+         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         1, N'OBS', N'CASE', N'A', '2026-04-22T08:00:00', N'Lab Report'),
+        (@ana_order, 22004000, N'LabReport', '2026-04-23T08:00:00', @superuser_id,
+         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         1, N'OBS', N'CASE', N'A', '2026-04-23T08:00:00', N'Lab Report');
+
+    -- =================================================================
     -- act_id on each Order: OBS_LOCAL_ID + FILLER (-> ACCESSION_NBR)
     -- =================================================================
     INSERT INTO [dbo].[act_id]
