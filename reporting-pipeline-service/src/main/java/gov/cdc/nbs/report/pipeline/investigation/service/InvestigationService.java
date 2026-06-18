@@ -39,6 +39,7 @@ import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Setter
@@ -449,15 +450,23 @@ public class InvestigationService {
     reportingModel.setPatientId(investigationTransformed.getPatientId());
     reportingModel.setOrganizationId(investigationTransformed.getOrganizationId());
     reportingModel.setInvStateCaseId(
-        firstNonBlank(
-            investigationTransformed.getInvStateCaseId(), reportingModel.getInvStateCaseId()));
+      StringUtils.hasText(investigationTransformed.getInvStateCaseId())
+        ? investigationTransformed.getInvStateCaseId()
+        : StringUtils.hasText(reportingModel.getInvStateCaseId())
+          ? reportingModel.getInvStateCaseId()
+          : null);
     reportingModel.setCityCountyCaseNbr(
-        firstNonBlank(
-            investigationTransformed.getCityCountyCaseNbr(),
-            reportingModel.getCityCountyCaseNbr()));
+      StringUtils.hasText(investigationTransformed.getCityCountyCaseNbr())
+        ? investigationTransformed.getCityCountyCaseNbr()
+        : StringUtils.hasText(reportingModel.getCityCountyCaseNbr())
+          ? reportingModel.getCityCountyCaseNbr()
+          : null);
     reportingModel.setLegacyCaseId(
-        firstNonBlank(
-            investigationTransformed.getLegacyCaseId(), reportingModel.getLegacyCaseId()));
+      StringUtils.hasText(investigationTransformed.getLegacyCaseId())
+        ? investigationTransformed.getLegacyCaseId()
+        : StringUtils.hasText(reportingModel.getLegacyCaseId())
+          ? reportingModel.getLegacyCaseId()
+          : null);
     reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
     reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
     reportingModel.setCaseCount(investigationTransformed.getCaseCount());
@@ -484,15 +493,5 @@ public class InvestigationService {
     reportingModel.setBatchId(investigationTransformed.getBatchId());
     reportingModel.setNotes(investigation.getPhcNotes());
     return reportingModel;
-  }
-
-  private String firstNonBlank(String preferred, String fallback) {
-    if (preferred != null && !preferred.isBlank()) {
-      return preferred;
-    }
-    if (fallback != null && !fallback.isBlank()) {
-      return fallback;
-    }
-    return null;
   }
 }
