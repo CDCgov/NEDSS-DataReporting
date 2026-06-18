@@ -139,4 +139,130 @@ IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090013 
   INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090013,22047500,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
 
 
+-- 10100 treatment for investigation 22046000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090014) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090014,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090014)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090014,'2026-04-15T09:00:00',@su,N'1',N'Supportive care; antivirals reserved for severe or fulminant acute hepatitis B',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090014GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22046000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Acute HBV is usually self-limited.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090014 AND target_act_uid=22046000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090014,22046000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 10100 treatment for investigation 22054000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090015) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090015,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090015)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090015,'2026-04-15T09:00:00',@su,N'1',N'Supportive care; antivirals reserved for severe or fulminant acute hepatitis B',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090015GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22054000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Acute HBV is usually self-limited.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090015 AND target_act_uid=22054000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090015,22054000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 10104 treatment for investigation 22076100
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090016) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090016,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090016)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090016,'2026-04-15T09:00:00',@su,N'1',N'Tenofovir disoproxil fumarate 300 mg PO daily',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090016GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22076100),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'First-line oral antiviral for chronic/perinatal HBV.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090016 AND target_act_uid=22076100 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090016,22076100,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 10105 treatment for investigation 22076000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090017) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090017,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090017)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090017,'2026-04-15T09:00:00',@su,N'1',N'Tenofovir disoproxil fumarate 300 mg PO daily',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090017GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22076000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'First-line oral antiviral for chronic HBV.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090017 AND target_act_uid=22076000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090017,22076000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 10110 treatment for investigation 22008500
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090018) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090018,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090018)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090018,'2026-04-15T09:00:00',@su,N'1',N'Supportive care; no specific antiviral therapy',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090018GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22008500),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Hepatitis A is self-limited.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090018 AND target_act_uid=22008500 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090018,22008500,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 10110 treatment for investigation 22065000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090019) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090019,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090019)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090019,'2026-04-15T09:00:00',@su,N'1',N'Supportive care; no specific antiviral therapy',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090019GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22065000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Hepatitis A is self-limited.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090019 AND target_act_uid=22065000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090019,22065000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 10481 treatment for investigation 22043000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090020) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090020,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090020)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090020,'2026-04-15T09:00:00',@su,N'1',N'Supportive care',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090020GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22043000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Non-ABC hepatitis, supportive management.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090020 AND target_act_uid=22043000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090020,22043000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 115631 treatment for investigation 22049000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090021) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090021,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090021)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090021,'2026-04-15T09:00:00',@su,N'1',N'Supportive care and hydration; antibiotics avoided (HUS risk)',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090021GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22049000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Antibiotics not recommended for STEC.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090021 AND target_act_uid=22049000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090021,22049000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 115751 treatment for investigation 22049200
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090022) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090022,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090022)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090022,'2026-04-15T09:00:00',@su,N'1',N'Trimethoprim-sulfamethoxazole 160/800 mg PO BID x 7-10 days',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090022GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22049200),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'First-line for cyclosporiasis.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090022 AND target_act_uid=22049200 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090022,22049200,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 32016 treatment for investigation 22060600
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090023) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090023,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090023)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090023,'2026-04-15T09:00:00',@su,N'1',N'100%% supplemental oxygen via non-rebreather; hyperbaric oxygen if severe',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090023GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22060600),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'CO poisoning oxygen therapy.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090023 AND target_act_uid=22060600 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090023,22060600,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 502651 treatment for investigation 22049400
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090024) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090024,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090024)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090024,'2026-04-15T09:00:00',@su,N'1',N'Ceftriaxone 1-2 g IV daily for invasive disease; otherwise supportive',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090024GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22049400),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Most salmonellosis is self-limited.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090024 AND target_act_uid=22049400 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090024,22049400,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 11065 treatment for investigation 22063100
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090025) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090025,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090025)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090025,'2026-04-15T09:00:00',@su,N'1',N'Nirmatrelvir/Ritonavir (Paxlovid) 300/100 mg PO BID x 5 days',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090025GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22063100),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Oral antiviral for COVID-19.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090025 AND target_act_uid=22063100 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090025,22063100,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 11065 treatment for investigation 22071000
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090026) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090026,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090026)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090026,'2026-04-15T09:00:00',@su,N'1',N'Nirmatrelvir/Ritonavir (Paxlovid) 300/100 mg PO BID x 5 days',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090026GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22071000),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Oral antiviral for COVID-19.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090026 AND target_act_uid=22071000 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090026,22071000,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
+-- 11065 treatment for investigation 22073100
+IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=22090027) INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (22090027,N'TRMT',N'EVN');
+IF NOT EXISTS (SELECT 1 FROM dbo.treatment WHERE treatment_uid=22090027)
+  INSERT INTO dbo.treatment (treatment_uid,add_time,add_user_id,cd,cd_desc_txt,cd_system_cd,cd_system_desc_txt,class_cd,last_chg_time,last_chg_user_id,local_id,jurisdiction_cd,program_jurisdiction_oid,record_status_cd,record_status_time,shared_ind,status_cd,status_time,version_ctrl_nbr,activity_from_time,activity_to_time,txt)
+  VALUES (22090027,'2026-04-15T09:00:00',@su,N'1',N'Nirmatrelvir/Ritonavir (Paxlovid) 300/100 mg PO BID x 5 days',N'2.16.840.1.114222.4.5.1',N'NEDSS Base System',N'TRMT','2026-04-15T09:00:00',@su,N'TRT22090027GA01',N'130001',(SELECT program_jurisdiction_oid FROM dbo.public_health_case WHERE public_health_case_uid=22073100),N'ACTIVE','2026-04-15T09:00:00',N'T',N'A','2026-04-15T09:00:00',1,'2026-04-15T09:00:00','2026-04-29T09:00:00',N'Oral antiviral for COVID-19.');
+IF NOT EXISTS (SELECT 1 FROM dbo.act_relationship WHERE source_act_uid=22090027 AND target_act_uid=22073100 AND type_cd='TreatmentToPHC')
+  INSERT INTO dbo.act_relationship (source_act_uid,target_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time) VALUES (22090027,22073100,N'TreatmentToPHC',N'TRMT',N'CASE','2026-04-15T09:00:00',@su,'2026-04-15T09:00:00',@su,N'ACTIVE','2026-04-15T09:00:00',N'A','2026-04-15T09:00:00');
+
+
 GO
