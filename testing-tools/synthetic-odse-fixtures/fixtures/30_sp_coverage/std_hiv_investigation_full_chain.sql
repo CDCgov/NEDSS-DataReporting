@@ -181,7 +181,7 @@ VALUES
     (@std_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10311', N'Syphilis, primary', N'NND', N'NND',
      N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22004000GA01',
-     N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+     N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'STD', N'130001',
      22004000, N'N', NULL,
      N'14', N'2026',

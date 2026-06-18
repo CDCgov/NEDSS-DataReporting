@@ -189,7 +189,7 @@ BEGIN
          N'F', '1990-06-15T00:00:00', N'PAT', N'F', N'Y',
          '2026-04-15T00:00:00', N'2186-5', '2026-04-01T00:00:00', @su,
          N'PSN22015300GA01', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
-         N'Morbid', N'Demographic', N'Coverage', N'JR', 1,
+         N'Sandra', N'Rose', N'Coleman', N'JR', 1,
          '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00',
          N'Y', @patient, N'Y',
          N'36', N'Y', N'M',
@@ -201,7 +201,7 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time])
     VALUES
         (@patient, 1, '2026-04-01T00:00:00', @su,
-         N'Morbid', N'Demographic', N'Coverage', N'JR', N'L',
+         N'Sandra', N'Rose', N'Coleman', N'JR', N'L',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[person_race]
@@ -434,7 +434,7 @@ BEGIN
         (@inv, '2026-04-01T00:00:00', @su, N'I',
          N'C', N'10110', N'Hepatitis A, acute', N'NND', N'NND',
          N'O', '2026-04-01T00:00:00', @su, N'CAS22015200GA01',
-         N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+         N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'T', 1, N'HEP', N'130001',
          @inv, N'Y', N'N',
          '2026-04-02T00:00:00', '2026-04-02T08:30:00', '2026-04-04T00:00:00',
@@ -614,6 +614,17 @@ BEGIN
         (@morb_order, @repfac,  N'ReporterOfMorbReport',N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Morb (org)'),
         (@morb_order, @repfac,  N'AUT',                 N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Author Organization'),
         (@morb_order, @hosp,    N'HospOfMorbObs',       N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Hospital of Morb');
+
+    -- UI visibility: link the patient as SubjOfPHC of the investigation. Without
+    -- this the investigation never renders under the patient in classic NBS
+    -- (the morb participations above link the patient to the OBS, not the PHC).
+    -- This was the lone synthetic investigation with no SubjOfPHC link.
+    INSERT INTO [dbo].[participation]
+        ([act_uid], [subject_entity_uid], [type_cd], [act_class_cd], [subject_class_cd],
+         [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
+         [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
+    VALUES
+        (@inv, @patient, N'SubjOfPHC', N'CASE', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Public Health Case');
 
     -- =================================================================
     -- CROSS-SUBJECT edge: Morb Order -> Investigation (MorbReport).

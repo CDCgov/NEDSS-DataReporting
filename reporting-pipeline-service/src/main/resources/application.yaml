@@ -83,7 +83,7 @@ spring:
     url: ${DB_CONNECTION_URL}
 
   liquibase:
-    enabled: ${ENABLE_AUTO_MIGRATION:false}
+    enabled: ${ENABLE_AUTO_MIGRATION:true}
     change-log: classpath:db/changelog/db.changelog-master.yaml
     user: ${RTR_ADMIN_NAME}
     password: ${RTR_ADMIN_PASSWORD}
@@ -101,7 +101,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,liquibase
   prometheus:
     metrics:
       export:
@@ -112,6 +112,8 @@ service:
     cached-ids: ${FIXED_DELAY_ID:20000}
     datamart: ${FIXED_DELAY_DM:60000}
     backfill: ${FIXED_DELAY_BF:600000}
+  schedule:
+    event-metric-cleanup: ${EVENT_METRIC_CLEANUP_CRON:0 0 0 * * *}
   max-retries: ${MAX_RETRIES:3}
 
 server:

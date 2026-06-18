@@ -24,7 +24,6 @@ Unlike the older per-service model (v7.12.0 and prior), **account names in v7.13
 The bootstrap scripts in this directory (CDC enablement, SQL Agent job creation) require the admin account. Specifically:
 
 - Scripts 101 and 102 call `sys.sp_cdc_enable_db` / `msdb.dbo.rds_cdc_enable_db` — requires `sysadmin` locally or `setupadmin` + CDC stored procedure execute rights on RDS.
-- Script 103 creates and attaches a SQL Server Agent job — requires `SQLAgentOperatorRole` on `msdb`.
 
 ---
 
@@ -42,14 +41,7 @@ Same as 101 but targets `NBS_SRTE` and its reference-data tables.
 
 **Run against:** `NBS_SRTE`
 
-### 103 — Create Event Metric Cleanup Job
-
-Creates a SQL Server Agent job (`EventMetricCleanup`) that runs `sp_event_metric_cleanup_postprocessing` daily at midnight. Targets `rdb_modern` in UAT environments and `rdb` everywhere else. The script is safe to re-run — it drops and recreates the job and schedule if they already exist.
-
-**Run against:** `msdb` (requires SQL Server Agent)
-
 ## Prerequisites
 
-- SQL Server Agent must be running (for script 103)
 - The executing login must be the admin account described above
 - Scripts 101 and 102 should be run before starting the Debezium connectors or the reporting-pipeline-service

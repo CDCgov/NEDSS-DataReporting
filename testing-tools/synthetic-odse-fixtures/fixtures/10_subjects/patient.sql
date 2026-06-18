@@ -209,7 +209,7 @@ VALUES
      N'F', '1985-06-15T00:00:00', N'PAT', N'F', N'N',
      N'2135-2', '2026-04-01T00:00:00', @superuser_id, N'PSN20020010GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
-     N'Variant', N'Marie', N'Patient', N'JR', 1,
+     N'Diane', N'Marie', N'Whitfield', N'JR', 1,
      '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00',
      '2026-04-01T00:00:00', '2026-04-01T00:00:00',
      N'N', @dbo_Entity_patient_v2_uid, N'Y',
@@ -230,7 +230,7 @@ INSERT INTO [dbo].[person_name]
      [record_status_cd], [record_status_time], [status_cd], [status_time])
 VALUES
     (@dbo_Entity_patient_v2_uid, 1, '2026-04-01T00:00:00', @superuser_id,
-     N'Variant', N'Marie', N'Patient', N'JR', N'PhD', N'L',
+     N'Diane', N'Marie', N'Whitfield', N'JR', N'PhD', N'L',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00');
 
 -- v2 alias name (nm_use_cd='AL') — surfaces in the patient_name JSON

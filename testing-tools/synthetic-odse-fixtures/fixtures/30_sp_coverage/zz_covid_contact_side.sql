@@ -283,7 +283,7 @@ VALUES
     (@ctt_phc, '2026-04-15T10:00:00', @superuser_id2, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
      N'O', '2026-04-15T10:00:00', @superuser_id2, N'CAS22063100GA01',
-     N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
+     N'OPEN', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
      N'T', 1, N'COV', N'130001',
      22063100, N'N', NULL,
      N'16', N'2026',

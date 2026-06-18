@@ -137,7 +137,7 @@ VALUES
     (@inv_rept_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10190', N'Pertussis', N'NND', N'NND',
      N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22006000GA01',
-     N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+     N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'VAC', N'130001',
      22006000, N'N', NULL,
      N'14', N'2026');

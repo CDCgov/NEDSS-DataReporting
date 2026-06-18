@@ -140,7 +140,7 @@ VALUES
     (@gap_phc2, '2026-04-10T00:00:00', @gap_user2, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
      N'O', '2026-04-10T00:00:00', @gap_user2, N'CAS22071000GA01',
-     N'ACTIVE', '2026-04-10T00:00:00', N'A', '2026-04-10T00:00:00',
+     N'OPEN', '2026-04-10T00:00:00', N'A', '2026-04-10T00:00:00',
      N'T', 1, N'COV', N'130001',
      @gap_phc2, N'Y', N'GA-COVID-OUTBREAK-2026-04',
      N'AI',

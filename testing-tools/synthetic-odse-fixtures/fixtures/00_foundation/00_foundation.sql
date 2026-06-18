@@ -68,7 +68,7 @@ VALUES
      N'M', '1990-01-15T00:00:00', N'PAT', N'M', N'N',
      N'2186-5', '2026-04-01T00:00:00', @superuser_id, N'PSN20000000GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
-     N'Foundation', N'Patient', 1, '2026-04-01T00:00:00',
+     N'Raymond', N'Foster', 1, '2026-04-01T00:00:00',
      N'N', @dbo_Entity_patient_uid, N'Y');
 
 -- Patient person_name (status_cd / status_time are NOT NULL on this table).
@@ -78,7 +78,7 @@ INSERT INTO [dbo].[person_name]
      [record_status_cd], [record_status_time], [status_cd], [status_time])
 VALUES
     (@dbo_Entity_patient_uid, 1, '2026-04-01T00:00:00', @superuser_id,
-     N'Foundation', N'Patient', N'L',
+     N'Raymond', N'Foster', N'L',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00');
 
 -- Patient postal_locator (home address).
@@ -91,7 +91,7 @@ VALUES
     (@dbo_Postal_locator_patient, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
      N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
-     N'100 Foundation Way', N'30303');
+     N'742 Mapleview Drive', N'30303');
 
 -- Patient tele_locator (home phone).
 INSERT INTO [dbo].[tele_locator]
@@ -333,7 +333,7 @@ VALUES
     (@dbo_Act_investigation_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'10110', N'Foundation investigation', N'O',
      '2026-04-01T00:00:00', @superuser_id, N'CAS20000100GA01',
-     N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+     N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'F', 1, N'STD', N'1');
 
 -- =====================================================================

@@ -125,7 +125,7 @@ BEGIN
         (@hep_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
          N'C', N'10110', N'Hepatitis A, acute', N'NND', N'NND',
          N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22008500GA01',
-         N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+         N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'T', 1, N'HEP', N'130001',
          22008500, N'N', NULL,
          N'14', N'2026');

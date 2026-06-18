@@ -156,7 +156,7 @@ BEGIN
         (@tbr, @t, @su, N'I',
          N'C', N'10250', N'Spotted Fever Rickettsiosis', N'NND', N'NND',
          N'O', @t, @su, N'CAS22060000GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @tbr, N'N', NULL,
          N'14', N'2026');
@@ -268,7 +268,7 @@ BEGIN
         (@mpx, @t, @su, N'I',
          N'C', N'11801', N'Monkeypox', N'NND', N'NND',
          N'O', @t, @su, N'CAS22060200GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @mpx, N'N', NULL,
          N'14', N'2026');
@@ -368,7 +368,7 @@ BEGIN
         (@bab, @t, @su, N'I',
          N'C', N'12010', N'Babesiosis', N'NND', N'NND',
          N'O', @t, @su, N'CAS22060400GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @bab, N'N', NULL,
          N'14', N'2026');
@@ -466,7 +466,7 @@ BEGIN
         (@com, @t, @su, N'I',
          N'C', N'32016', N'Carbon Monoxide Poisoning', N'NND', N'NND',
          N'O', @t, @su, N'CAS22060600GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @com, N'N', NULL,
          N'14', N'2026');
