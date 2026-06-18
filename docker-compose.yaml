@@ -118,7 +118,7 @@ services:
       start_period: 10s
 
   debezium:
-    image: debezium/connect:2.4
+    image: quay.io/debezium/connect:2.7
     depends_on:
       kafka:
         condition: service_healthy
