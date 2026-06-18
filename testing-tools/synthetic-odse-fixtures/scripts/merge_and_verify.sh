@@ -140,20 +140,30 @@ reset_baseline() {
   log "Step 1: docker compose down -v && build && up -d FULL pipeline"
   # Full real pipeline (no nrt_* shortcut): CDC (debezium) + kafka-connect sink
   # project ODSE -> nrt_*, and reporting-pipeline-service runs the *_event +
-  # postprocessing SPs. Rebuild liquibase + service so working-tree routine/code
-  # changes ship into the images.
+  # postprocessing SPs. Rebuild the service so working-tree routine/code changes
+  # ship into the image. Since #886 the liquibase migrations live inside
+  # reporting-pipeline-service and run at its startup (there is no separate
+  # liquibase service/container anymore).
   ( cd "$NEDSS_DR_ROOT" \
       && docker compose down -v >/dev/null 2>&1 \
-      && docker compose build liquibase reporting-pipeline-service >/dev/null 2>&1 \
+      && docker compose build reporting-pipeline-service >/dev/null 2>&1 \
       && docker compose up -d >/dev/null 2>&1 )
 
-  log "Waiting for liquibase migrations..."
-  local timeout=600 elapsed=0
+  log "Waiting for reporting-pipeline-service to apply migrations and become healthy..."
+  # Cold start is slow: the service waits on the nbs-mssql DB restore (minutes)
+  # and kafka before it boots and runs migrations, so allow generous headroom.
+  # Poll the container healthcheck (pipe-free): it only reports healthy after the
+  # Spring Boot app has fully started, which is after liquibase migrations run.
+  local timeout=1200 elapsed=0 cid="" health=""
   while [[ $elapsed -lt $timeout ]]; do
-    [[ "$(docker ps -a --filter name=liquibase --format '{{.Status}}' | head -1)" == Exited* ]] && { log "Liquibase done."; break; }
+    cid=$( cd "$NEDSS_DR_ROOT" && docker compose ps -q reporting-pipeline-service 2>/dev/null )
+    if [[ -n "$cid" ]]; then
+      health=$( docker inspect --format '{{.State.Health.Status}}' "$cid" 2>/dev/null )
+      [[ "$health" == healthy ]] && { log "Service healthy; migrations applied."; break; }
+    fi
     sleep 10; elapsed=$((elapsed + 10))
   done
-  [[ $elapsed -ge $timeout ]] && { err "Liquibase did not complete within ${timeout}s"; return 1; }
+  [[ $elapsed -ge $timeout ]] && { err "reporting-pipeline-service did not become healthy within ${timeout}s"; return 1; }
 
   log "Waiting for pipeline to be ready (debezium/connect connectors + service initial drain)..."
   wait_for_pipeline_drain 300 || { err "pipeline not ready"; return 1; }
