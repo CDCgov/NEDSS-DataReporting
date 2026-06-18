@@ -450,23 +450,23 @@ public class InvestigationService {
     reportingModel.setPatientId(investigationTransformed.getPatientId());
     reportingModel.setOrganizationId(investigationTransformed.getOrganizationId());
     reportingModel.setInvStateCaseId(
-      StringUtils.hasText(investigationTransformed.getInvStateCaseId())
-        ? investigationTransformed.getInvStateCaseId()
-        : StringUtils.hasText(reportingModel.getInvStateCaseId())
-          ? reportingModel.getInvStateCaseId()
-          : null);
+        StringUtils.hasText(investigationTransformed.getInvStateCaseId())
+            ? investigationTransformed.getInvStateCaseId()
+            : StringUtils.hasText(reportingModel.getInvStateCaseId())
+                ? reportingModel.getInvStateCaseId()
+                : null);
     reportingModel.setCityCountyCaseNbr(
-      StringUtils.hasText(investigationTransformed.getCityCountyCaseNbr())
-        ? investigationTransformed.getCityCountyCaseNbr()
-        : StringUtils.hasText(reportingModel.getCityCountyCaseNbr())
-          ? reportingModel.getCityCountyCaseNbr()
-          : null);
+        StringUtils.hasText(investigationTransformed.getCityCountyCaseNbr())
+            ? investigationTransformed.getCityCountyCaseNbr()
+            : StringUtils.hasText(reportingModel.getCityCountyCaseNbr())
+                ? reportingModel.getCityCountyCaseNbr()
+                : null);
     reportingModel.setLegacyCaseId(
-      StringUtils.hasText(investigationTransformed.getLegacyCaseId())
-        ? investigationTransformed.getLegacyCaseId()
-        : StringUtils.hasText(reportingModel.getLegacyCaseId())
-          ? reportingModel.getLegacyCaseId()
-          : null);
+        StringUtils.hasText(investigationTransformed.getLegacyCaseId())
+            ? investigationTransformed.getLegacyCaseId()
+            : StringUtils.hasText(reportingModel.getLegacyCaseId())
+                ? reportingModel.getLegacyCaseId()
+                : null);
     reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
     reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
     reportingModel.setCaseCount(investigationTransformed.getCaseCount());
