@@ -70,7 +70,7 @@ public class ConnectorClient {
   }
 
   @SuppressWarnings("unchecked")
-  public void registerIfMissing(String resourcePath) throws java.io.IOException {
+  public void register(String resourcePath) throws java.io.IOException {
     Resource resource = resourceLoader.getResource(resourcePath);
     String raw = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
     String resolved = placeholderResolver.apply(raw);
@@ -79,12 +79,8 @@ public class ConnectorClient {
     String name = (String) connectorDef.get("name");
     Map<String, Object> config = (Map<String, Object>) connectorDef.get("config");
 
-    String existing = restTemplate.getForObject(baseUrl + "/connectors", String.class);
-    if (existing != null && existing.contains("\"" + name + "\"")) {
-      log.info("Connector '{}' already registered at {}, skipping", name, baseUrl);
-      return;
-    }
-
+    // Connect compares the config to the current configuration if already registered and only
+    // changes / restarts if something changed. If the config is identical, its a no-op.
     restTemplate.put(baseUrl + "/connectors/" + name + "/config", config);
     log.info("Registered connector '{}' at {}", name, baseUrl);
   }

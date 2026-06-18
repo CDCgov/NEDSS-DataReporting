@@ -50,7 +50,7 @@ public class DebeziumConfig implements ApplicationRunner {
 
     client.waitForReady();
     for (String definition : properties.definitions()) {
-      client.registerIfMissing(definition);
+      client.register(definition);
     }
   }
 }

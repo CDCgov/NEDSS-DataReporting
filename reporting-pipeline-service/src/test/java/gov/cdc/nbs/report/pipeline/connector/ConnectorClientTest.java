@@ -59,13 +59,9 @@ class ConnectorClientTest {
   }
 
   @Test
-  void registerIfMissing_resolves_placeholders_before_posting() throws Exception {
+  void register_resolves_placeholders_before_putting() throws Exception {
     String resourcePath = "classpath:connectors/templated-connector.json";
 
-    server
-        .expect(requestTo(BASE_URL + "/connectors"))
-        .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
     server
         .expect(requestTo(BASE_URL + "/connectors/templated-connector/config"))
         .andExpect(method(HttpMethod.PUT))
@@ -80,39 +76,24 @@ class ConnectorClientTest {
             objectMapper,
             resourceLoader,
             raw -> raw.replace("${connector.database.url}", "jdbc:sqlserver://resolved-host:1433"))
-        .registerIfMissing(resourcePath);
+        .register(resourcePath);
 
     server.verify();
   }
 
   @Test
-  void registerIfMissing_skips_when_connector_already_registered() throws Exception {
+  void register_puts_config_without_checking_existing() throws Exception {
     String resourcePath = "classpath:connectors/test-connector.json";
 
-    server
-        .expect(requestTo(BASE_URL + "/connectors"))
-        .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess("[\"test-connector\"]", MediaType.APPLICATION_JSON));
-
-    newClient(BASE_URL, 1).registerIfMissing(resourcePath);
-
-    server.verify();
-  }
-
-  @Test
-  void registerIfMissing_puts_config_when_connector_absent() throws Exception {
-    String resourcePath = "classpath:connectors/test-connector.json";
-
-    server
-        .expect(requestTo(BASE_URL + "/connectors"))
-        .andExpect(method(HttpMethod.GET))
-        .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
+    // Connect treats PUT /config as an idempotent upsert, so the client always PUTs and never
+    // performs an existence check (GET /connectors) first. MockRestServiceServer is strict, so an
+    // unexpected GET here would fail the test.
     server
         .expect(requestTo(BASE_URL + "/connectors/test-connector/config"))
         .andExpect(method(HttpMethod.PUT))
         .andRespond(withSuccess());
 
-    newClient(BASE_URL, 1).registerIfMissing(resourcePath);
+    newClient(BASE_URL, 1).register(resourcePath);
 
     server.verify();
   }
