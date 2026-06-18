@@ -142,7 +142,7 @@ BEGIN
         (@tbl, @t, @su, N'I',
          N'C', N'502582', N'Latent Tuberculosis Infection (2020 TBLISS)', N'NND', N'NND',
          N'O', @t, @su, N'CAS22047000GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'TB', N'130001',
          @tbl, N'N', NULL,
          N'14', N'2026');
@@ -324,7 +324,7 @@ BEGIN
         (@tri, @t, @su, N'I',
          N'C', N'10270', N'Trichinellosis', N'NND', N'NND',
          N'O', @t, @su, N'CAS22047500GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @tri, N'N', NULL,
          N'14', N'2026');

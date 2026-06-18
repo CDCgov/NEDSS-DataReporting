@@ -136,7 +136,7 @@ BEGIN
         (@stec, @t, @su, N'I',
          N'C', N'115631', N'STEC (PB)', N'NND', N'NND',
          N'O', @t, @su, N'CAS22049000GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @stec, N'N', NULL,
          N'14', N'2026');
@@ -374,7 +374,7 @@ BEGIN
         (@cyc, @t, @su, N'I',
          N'C', N'115751', N'Cyclosporiasis (PB)', N'NND', N'NND',
          N'O', @t, @su, N'CAS22049200GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @cyc, N'N', NULL,
          N'14', N'2026');
@@ -587,7 +587,7 @@ BEGIN
         (@sal, @t, @su, N'I',
          N'C', N'502651', N'Salmonellosis (PB)', N'NND', N'NND',
          N'O', @t, @su, N'CAS22049400GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @sal, N'N', NULL,
          N'14', N'2026');
@@ -727,7 +727,7 @@ BEGIN
         (@mal, @t, @su, N'I',
          N'C', N'10130', N'Malaria', N'NND', N'NND',
          N'O', @t, @su, N'CAS22049500GA01',
-         N'ACTIVE', @t, N'A', @t,
+         N'OPEN', @t, N'A', @t,
          N'T', 1, N'MAL', N'130001',
          @mal, N'N', NULL,
          N'14', N'2026');

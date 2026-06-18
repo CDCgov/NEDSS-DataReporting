@@ -126,7 +126,7 @@ VALUES
     (@tb_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10220', N'Tuberculosis', N'NND', N'NND',
      N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22001000GA01',
-     N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+     N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'TB', N'130001',
      22001000, N'N', NULL,
      N'14', N'2026');

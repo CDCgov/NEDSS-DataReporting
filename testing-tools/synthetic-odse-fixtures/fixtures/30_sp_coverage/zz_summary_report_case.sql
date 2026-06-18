@@ -100,7 +100,7 @@ BEGIN
         (@phc_uid, @ts, @superuser_id, N'S',          -- case_type_cd 'S' = Summary
          N'C', N'10110', N'Hepatitis A, acute', N'NND', N'NND',
          N'O', @ts, @superuser_id, N'CAS22065000GA01',
-         N'ACTIVE', @ts, N'A', @ts,
+         N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_uid, N'N', NULL,
          N'13121', N'14', N'2026', '2026-04-04T00:00:00');  -- rpt_cnty_cd Fulton GA (NOT NULL COUNTY_* path); rpt_to_state_time -> EARLIEST_RPT_TO_STATE_DT (SR100.DATE_REPORTED/MONTH_REPORTED NOT NULL gate)

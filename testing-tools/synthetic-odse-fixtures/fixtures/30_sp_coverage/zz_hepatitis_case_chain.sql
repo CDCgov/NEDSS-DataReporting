@@ -72,7 +72,7 @@ BEGIN
         (@phc_uid, @ts, @superuser_id, N'I',
          N'C', N'10481', N'Hepatitis Non-ABC, Acute', N'NND', N'NND',
          N'O', @ts, @superuser_id, N'CAS22043000GA01',
-         N'ACTIVE', @ts, N'A', @ts,
+         N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_uid, N'N', NULL,
          N'14', N'2026');

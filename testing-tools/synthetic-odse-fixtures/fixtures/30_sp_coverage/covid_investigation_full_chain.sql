@@ -203,7 +203,7 @@ VALUES
     (@covid_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
      N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22003000GA01',
-     N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+     N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'COV', N'130001',
      22003000, N'N', NULL,
      N'14', N'2026',

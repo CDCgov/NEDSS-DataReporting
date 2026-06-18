@@ -131,7 +131,7 @@ BEGIN
         (@phc_chronic, @ts, @su, N'I',
          N'C', N'10105', N'Hepatitis B virus infection, Chronic', N'NND', N'NND',
          N'O', @ts, @su, N'CAS22076000GA01',
-         N'ACTIVE', @ts, N'A', @ts,
+         N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_chronic, N'N', NULL,
          N'14', N'2026');
@@ -206,7 +206,7 @@ BEGIN
         (@phc_perinatal, @ts, @su, N'I',
          N'C', N'10104', N'Hepatitis B Viral Infection, Perinatal', N'NND', N'NND',
          N'O', @ts, @su, N'CAS22076100GA01',
-         N'ACTIVE', @ts, N'A', @ts,
+         N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_perinatal, N'N', NULL,
          N'14', N'2026');
