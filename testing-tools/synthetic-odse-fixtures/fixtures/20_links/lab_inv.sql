@@ -24,7 +24,8 @@ GO
 --   Lab's v2 has 4 observations (Order parent + Result child + C_Order +
 --   C_Result). The cross-subject edge wires the Order parent (20070010)
 --   to the Investigation. The Result/C_Order/C_Result children are tied
---   to the Order via Lab-internal act_relationships of type_cd='COMP';
+--   via lab-internal edges (Result->Order COMP, C_Order->Order APND,
+--   C_Result->C_Order COMP);
 --   they don't need their own cross-subject edges.
 --
 -- Coverage unlocked:
