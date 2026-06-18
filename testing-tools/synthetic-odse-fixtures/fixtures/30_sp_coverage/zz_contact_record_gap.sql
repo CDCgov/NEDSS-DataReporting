@@ -192,6 +192,18 @@ BEGIN
          N'Daniel', N'James', N'Okafor', N'L',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00');
 
+    -- person_race so D_PATIENT.PATIENT_RACE_CALCULATED populates and the UI
+    -- patient file shows a Race (this patient had none).
+    INSERT INTO [dbo].[person_race]
+        ([person_uid], [race_cd], [race_category_cd], [add_time], [add_user_id],
+         [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time],
+         [as_of_date])
+    VALUES
+        (@ctt_party_uid, N'2054-5', N'2054-5',  -- Black or African American root
+         '2026-04-15T10:00:00', @superuser_id,
+         '2026-04-15T10:00:00', @superuser_id, N'ACTIVE', '2026-04-15T10:00:00',
+         '2026-04-15T10:00:00');
+
     INSERT INTO [dbo].[postal_locator]
         ([postal_locator_uid], [add_time], [add_user_id], [city_desc_txt],
          [cntry_cd], [cnty_cd], [last_chg_time], [last_chg_user_id],

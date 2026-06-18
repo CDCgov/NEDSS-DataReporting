@@ -189,7 +189,7 @@ BEGIN
          N'F', '1990-06-15T00:00:00', N'PAT', N'F', N'Y',
          '2026-04-15T00:00:00', N'2186-5', '2026-04-01T00:00:00', @su,
          N'PSN22015300GA01', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
-         N'Morbid', N'Demographic', N'Coverage', N'JR', 1,
+         N'Sandra', N'Rose', N'Coleman', N'JR', 1,
          '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00',
          N'Y', @patient, N'Y',
          N'36', N'Y', N'M',
@@ -201,7 +201,7 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time])
     VALUES
         (@patient, 1, '2026-04-01T00:00:00', @su,
-         N'Morbid', N'Demographic', N'Coverage', N'JR', N'L',
+         N'Sandra', N'Rose', N'Coleman', N'JR', N'L',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[person_race]
