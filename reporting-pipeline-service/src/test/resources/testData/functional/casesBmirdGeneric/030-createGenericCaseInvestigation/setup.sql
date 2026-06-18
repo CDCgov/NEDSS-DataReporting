@@ -20,14 +20,14 @@ DECLARE @dbo_NBS_act_entity_nbs_act_entity_uid_3 bigint;
 DECLARE @dbo_NBS_act_entity_nbs_act_entity_uid_3_output TABLE ([value] bigint);
 
 -- Alter EPI columns that are not configured to the correct size on RDB_MODERN.dbo.D_INVESTIGATION_REPEAT
-ALTER TABLE [RDB_MODERN].[dbo].[D_INVESTIGATION_REPEAT]
+/*ALTER TABLE [RDB_MODERN].[dbo].[D_INVESTIGATION_REPEAT]
   ALTER COLUMN [EPI_CITY_OF_EXP] varchar(2000) NULL;
 ALTER TABLE [RDB_MODERN].[dbo].[D_INVESTIGATION_REPEAT]
   ALTER COLUMN [EPI_CNTRY_OF_EXP] varchar(2000) NULL;
 ALTER TABLE [RDB_MODERN].[dbo].[D_INVESTIGATION_REPEAT]
   ALTER COLUMN [EPI_CNTY_OF_EXP] varchar(2000) NULL;
 ALTER TABLE [RDB_MODERN].[dbo].[D_INVESTIGATION_REPEAT]
-  ALTER COLUMN [EPI_ST_OR_PROV_OF_EXP] varchar(2000) NULL;
+  ALTER COLUMN [EPI_ST_OR_PROV_OF_EXP] varchar(2000) NULL;*/
 
 -- STEP 1: Created a generic case investigation for existing patient
 -- dbo.Postal_locator

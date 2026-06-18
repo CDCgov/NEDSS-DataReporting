@@ -6,6 +6,11 @@ BEGIN
 END
 GO 
 
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 CREATE PROCEDURE dbo.sp_sld_investigation_repeat_postprocessing
     @Batch_id bigint,
     @phc_id_list nvarchar(max),
@@ -211,11 +216,12 @@ BEGIN
             ) AS x;
         SET @sql = N'
 				SELECT [PAGE_CASE_UID_text] as PAGE_CASE_UID_text,
-				BLOCK_NM as BLOCK_NM_text, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_text, ' + STUFF(@columns, 1, 2, '') + ' into  '+@text_output_table_name +'  FROM (
-				SELECT [PAGE_CASE_UID_text], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
+                [INVESTIGATION_FORM_CD] as INVESTIGATION_FORM_CD_text,
+                BLOCK_NM as BLOCK_NM_text, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_text, ' + STUFF(@columns, 1, 2, '') + ' into  '+@text_output_table_name +'  FROM (
+                SELECT [PAGE_CASE_UID_text], [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
 					FROM #text_data_REPT
 					where PAGE_CASE_UID_text > 0
-					group by [PAGE_CASE_UID_text], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
+                    group by [PAGE_CASE_UID_text], [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
 						) AS j PIVOT (max(answer_txt) FOR [RDB_COLUMN_NM] in
 						(' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ')) AS p;';
 
@@ -305,11 +311,13 @@ ON #CODED_TABLE_REPT
             END;
 
 
-        SELECT p1.PAGE_CASE_UID, p1.ANSWER_GROUP_SEQ_NBR, p1.NBS_QUESTION_UID, STUFF(
+        SELECT p1.PAGE_CASE_UID, p1.INVESTIGATION_FORM_CD, p1.BLOCK_NM, p1.ANSWER_GROUP_SEQ_NBR, p1.NBS_QUESTION_UID, STUFF(
                 (
                     SELECT TOP 10 ' | ' + ANSWER_TXT1
                     FROM #CODED_TABLE_REPT AS p2
                     WHERE p2.PAGE_CASE_UID = p1.PAGE_CASE_UID AND
+                        p2.INVESTIGATION_FORM_CD = p1.INVESTIGATION_FORM_CD AND
+                        p2.BLOCK_NM = p1.BLOCK_NM AND
                         p2.nbs_question_uid = p1.NBS_QUESTION_UID AND
                         p2.ANSWER_GROUP_SEQ_NBR = p1.ANSWER_GROUP_SEQ_NBR AND
                         p2.ANSWER_GROUP_SEQ_NBR = p1.ANSWER_GROUP_SEQ_NBR
@@ -318,7 +326,7 @@ ON #CODED_TABLE_REPT
         INTO #CODED_TABLE_DESC_REPT_TEMP
         FROM #CODED_TABLE_REPT AS p1
         --where  nbs_question_uid is not null
-        GROUP BY PAGE_CASE_UID, RDB_COLUMN_NM, NBS_QUESTION_UID, ANSWER_GROUP_SEQ_NBR;
+        GROUP BY PAGE_CASE_UID, INVESTIGATION_FORM_CD, BLOCK_NM, RDB_COLUMN_NM, NBS_QUESTION_UID, ANSWER_GROUP_SEQ_NBR;
 
         IF OBJECT_ID('tempdb..#CODED_TABLE_DESC_REPT', 'U') IS NOT NULL
             BEGIN
@@ -331,6 +339,8 @@ ON #CODED_TABLE_REPT
                                          OUTER JOIN
              #CODED_TABLE_DESC_REPT_TEMP AS ctt
              ON ct.PAGE_CASE_UID = ctt.PAGE_CASE_UID AND
+            ct.INVESTIGATION_FORM_CD = ctt.INVESTIGATION_FORM_CD AND
+            ct.BLOCK_NM = ctt.BLOCK_NM AND
                 ct.NBS_QUESTION_UID = ctt.NBS_QUESTION_UID AND
                 ct.ANSWER_GROUP_SEQ_NBR = ctt.ANSWER_GROUP_SEQ_NBR;
 
@@ -359,18 +369,20 @@ ON #CODED_TABLE_REPT
                 DROP TABLE #CODED_COUNTY_TABLE_DESC_REPT_TEMP;
             END;
 
-        SELECT p1.PAGE_CASE_UID, p1.ANSWER_GROUP_SEQ_NBR, p1.NBS_QUESTION_UID, STUFF(
+        SELECT p1.PAGE_CASE_UID, p1.INVESTIGATION_FORM_CD, p1.BLOCK_NM, p1.ANSWER_GROUP_SEQ_NBR, p1.NBS_QUESTION_UID, STUFF(
                 (
                     SELECT TOP 10 ' |' + ANSWER_TXT1
                     FROM #CODED_COUNTY_TABLE_REPT AS p2
                     WHERE p2.PAGE_CASE_UID = p1.PAGE_CASE_UID AND
+                        p2.INVESTIGATION_FORM_CD = p1.INVESTIGATION_FORM_CD AND
+                        p2.BLOCK_NM = p1.BLOCK_NM AND
                         p2.nbs_question_uid = p1.NBS_QUESTION_UID AND
                         p2.ANSWER_GROUP_SEQ_NBR = p1.ANSWER_GROUP_SEQ_NBR
                     ORDER BY PAGE_CASE_UID, ANSWER_GROUP_SEQ_NBR, NBS_QUESTION_UID, NBS_CASE_ANSWER_UID DESC FOR XML PATH(''), TYPE
                 ).value( '.', 'varchar(2000)' ), 1, 2, '') AS ANSWER_DESC11
         INTO #CODED_COUNTY_TABLE_DESC_REPT_TEMP
         FROM #CODED_COUNTY_TABLE_REPT AS p1
-        GROUP BY PAGE_CASE_UID, ANSWER_GROUP_SEQ_NBR, NBS_QUESTION_UID;
+        GROUP BY PAGE_CASE_UID, INVESTIGATION_FORM_CD, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, NBS_QUESTION_UID;
 
         IF OBJECT_ID('tempdb..#CODED_COUNTY_TABLE_DESC_REPT', 'U') IS NOT NULL
             BEGIN
@@ -383,6 +395,8 @@ ON #CODED_TABLE_REPT
                                                  OUTER JOIN
              #CODED_COUNTY_TABLE_DESC_REPT_TEMP AS cctt
              ON cct.PAGE_CASE_UID = cctt.PAGE_CASE_UID AND
+            cct.INVESTIGATION_FORM_CD = cctt.INVESTIGATION_FORM_CD AND
+            cct.BLOCK_NM = cctt.BLOCK_NM AND
                 cct.ANSWER_GROUP_SEQ_NBR = cctt.ANSWER_GROUP_SEQ_NBR AND
                 cct.NBS_QUESTION_UID = cctt.NBS_QUESTION_UID;
 
@@ -436,8 +450,6 @@ ON #CODED_TABLE_REPT
               UPPER(unit_type_cd) = 'CODED'
                 )
           AND CVG.CODE_SET_NM = 'NBS_DATA_TYPE'
-          AND (nrt_page.investigation_form_cd IS NULL
-            )
           AND QUESTION_GROUP_SEQ_NBR IS NOT NULL
           AND --revisit
             ( phc.LAST_CHG_TIME <= nrt_page.last_chg_time OR
@@ -594,12 +606,13 @@ ON #CODED_TABLE_REPT
             ) AS x;
         SET @sql = N'
 							SELECT [PAGE_CASE_UID] as PAGE_CASE_UID_coded,
+                            [INVESTIGATION_FORM_CD] as INVESTIGATION_FORM_CD_coded,
 							BLOCK_NM as BLOCK_NM_coded, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_coded,' + STUFF(@columns, 1, 2, '') + ' into '+ @coded_output_table_name +' FROM (
-							SELECT [PAGE_CASE_UID], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [ANSWER_DESC11] , [RDB_COLUMN_NM]
+                            SELECT [PAGE_CASE_UID], [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [ANSWER_DESC11] , [RDB_COLUMN_NM]
 								FROM #CODED_TABLE_MERGED_REPT
 								where PAGE_CASE_UID > 0
 								group by
-								PAGE_CASE_UID, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [ANSWER_DESC11] , [RDB_COLUMN_NM]
+                                PAGE_CASE_UID, [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [ANSWER_DESC11] , [RDB_COLUMN_NM]
 									) AS j PIVOT (max(ANSWER_DESC11) FOR [RDB_COLUMN_NM] in
 									(' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ')) AS p;';
 
@@ -718,11 +731,12 @@ ON #CODED_TABLE_REPT
             ) AS x;
         SET @sql = N'
 									SELECT [PAGE_CASE_UID] as PAGE_CASE_UID_date,
+                                    [INVESTIGATION_FORM_CD] as INVESTIGATION_FORM_CD_date,
 									BLOCK_NM as BLOCK_NM_date, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_date,' + STUFF(@columns, 1, 2, '') + ' into '+@date_output_table_name + ' FROM (
-									SELECT [PAGE_CASE_UID], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt1] , [RDB_COLUMN_NM]
+                                    SELECT [PAGE_CASE_UID], [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt1] , [RDB_COLUMN_NM]
 										FROM #PAGE_DATE_TABLE_REPT
 										where PAGE_CASE_UID > 0
-										group by  PAGE_CASE_UID, BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt1] , [RDB_COLUMN_NM]
+                                        group by  PAGE_CASE_UID, [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt1] , [RDB_COLUMN_NM]
 											) AS j PIVOT (max(answer_txt1) FOR [RDB_COLUMN_NM] in
 											(' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ')) AS p;';
 
@@ -931,12 +945,13 @@ ON #CODED_TABLE_REPT
             ) AS x;
         SET @sql = N'
 				SELECT [PAGE_CASE_UID] as PAGE_CASE_UID_numeric,
+                [INVESTIGATION_FORM_CD] as INVESTIGATION_FORM_CD_numeric,
 				BLOCK_NM as BLOCK_NM_numeric, ANSWER_GROUP_SEQ_NBR as ANSWER_GROUP_SEQ_NBR_numeric, ' + STUFF(@columns, 1, 2, '') + ' into '+@numeric_output_table_name+' FROM (
-				SELECT [PAGE_CASE_UID], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
+                SELECT [PAGE_CASE_UID], [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
 					FROM #NUMERIC_DATA_TRANS1_REPT
 					where PAGE_CASE_UID > 0
 					and (isNumeric(ANSWER_TXT) = 1) AND  ANSWER_TXT IS NOT NULL
-					group by [PAGE_CASE_UID], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
+                    group by [PAGE_CASE_UID], [INVESTIGATION_FORM_CD], BLOCK_NM, ANSWER_GROUP_SEQ_NBR, [answer_txt] , [RDB_COLUMN_NM]
 						) AS j PIVOT (max(answer_txt) FOR [RDB_COLUMN_NM] in
 						(' + STUFF(REPLACE(@columns, ', p.[', ',['), 1, 1, '') + ')) AS p;';
 
@@ -993,7 +1008,7 @@ ON #CODED_TABLE_REPT
 		BEGIN
 			CREATE TABLE '+@text_output_table_name+'
 			(
-						[PAGE_CASE_UID_text] [bigint] NULL, [INVESTIGATION_FORM_CD] [varchar](50) NULL, [BLOCK_NM_text] [varchar](30) NULL, [ANSWER_GROUP_SEQ_NBR_text] [int] NULL
+                        [PAGE_CASE_UID_text] [bigint] NULL, [INVESTIGATION_FORM_CD_text] [varchar](50) NULL, [BLOCK_NM_text] [varchar](30) NULL, [ANSWER_GROUP_SEQ_NBR_text] [int] NULL
 			)ON [PRIMARY];
 
 		END;')
@@ -1003,17 +1018,17 @@ ON #CODED_TABLE_REPT
         declare @staging_step nvarchar(2500);
 
         set @staging_step=
-                '	SELECT PAGE_CASE_UID_date AS PAGE_CASE_UID, BLOCK_NM_date AS BLOCK_NM, ANSWER_GROUP_SEQ_NBR_date AS ANSWER_GROUP_SEQ_NBR
+                '	SELECT PAGE_CASE_UID_date AS PAGE_CASE_UID, INVESTIGATION_FORM_CD_date AS INVESTIGATION_FORM_CD, BLOCK_NM_date AS BLOCK_NM, ANSWER_GROUP_SEQ_NBR_date AS ANSWER_GROUP_SEQ_NBR
                     INTO '+@staging_table_name+'
 			FROM '+@date_output_table_name+'
 			UNION
-			SELECT PAGE_CASE_UID_text, BLOCK_NM_text, ANSWER_GROUP_SEQ_NBR_text
+            SELECT PAGE_CASE_UID_text, INVESTIGATION_FORM_CD_text, BLOCK_NM_text, ANSWER_GROUP_SEQ_NBR_text
 			FROM '+@text_output_table_name+'
 			UNION
-			SELECT PAGE_CASE_UID_numeric, BLOCK_NM_numeric, ANSWER_GROUP_SEQ_NBR_numeric
+            SELECT PAGE_CASE_UID_numeric, INVESTIGATION_FORM_CD_numeric, BLOCK_NM_numeric, ANSWER_GROUP_SEQ_NBR_numeric
 			FROM '+@numeric_output_table_name+'
 			UNION
-			SELECT PAGE_CASE_UID_coded, BLOCK_NM_coded, ANSWER_GROUP_SEQ_NBR_coded
+            SELECT PAGE_CASE_UID_coded, INVESTIGATION_FORM_CD_coded, BLOCK_NM_coded, ANSWER_GROUP_SEQ_NBR_coded
 			FROM '+@coded_output_table_name+';'
 
         if @debug = 'true'
@@ -1071,17 +1086,17 @@ ON #CODED_TABLE_REPT
 									from '+@staging_table_name+' sk
 									LEFT OUTER  JOIN '+@date_output_table_name+' ddo   ON
 									ddo.PAGE_CASE_UID_date=sk.PAGE_CASE_UID    and
-									/*ddo.INVESTIGATION_FORM_CD_date = sk.INVESTIGATION_FORM_CD and */
+                                    ddo.INVESTIGATION_FORM_CD_date = sk.INVESTIGATION_FORM_CD and
 									ddo.BLOCK_NM_date = sk.BLOCK_NM and
 									ddo.ANSWER_GROUP_SEQ_NBR_date = sk.ANSWER_GROUP_SEQ_NBR
 									LEFT OUTER  JOIN '+@text_output_table_name+' tdo   ON  tdo.PAGE_CASE_UID_text=sk.PAGE_CASE_UID
-									/*and tdo.INVESTIGATION_FORM_CD_text = sk.INVESTIGATION_FORM_CD */
+                                    and tdo.INVESTIGATION_FORM_CD_text = sk.INVESTIGATION_FORM_CD
 									and tdo.BLOCK_NM_text = sk.BLOCK_NM and  tdo.ANSWER_GROUP_SEQ_NBR_text = sk.ANSWER_GROUP_SEQ_NBR
 									LEFT OUTER  JOIN '+@numeric_output_table_name+' t2 ON t2.PAGE_CASE_UID_NUMERIC=sk.PAGE_CASE_UID
-									/*and t2.INVESTIGATION_FORM_CD_numeric = sk.INVESTIGATION_FORM_CD */
+                                    and t2.INVESTIGATION_FORM_CD_numeric = sk.INVESTIGATION_FORM_CD
 									and t2.BLOCK_NM_numeric = sk.BLOCK_NM and  t2.ANSWER_GROUP_SEQ_NBR_numeric = sk.ANSWER_GROUP_SEQ_NBR
 									LEFT OUTER  JOIN '+@coded_output_table_name+' t1  ON  t1.PAGE_CASE_UID_coded=sk.PAGE_CASE_UID
-									/*and t1.INVESTIGATION_FORM_CD_coded = sk.INVESTIGATION_FORM_CD*/
+                                    and t1.INVESTIGATION_FORM_CD_coded = sk.INVESTIGATION_FORM_CD
 									and t1.BLOCK_NM_coded = sk.BLOCK_NM and  t1.ANSWER_GROUP_SEQ_NBR_coded = sk.ANSWER_GROUP_SEQ_NBR';
 
 
@@ -1105,6 +1120,11 @@ ON #CODED_TABLE_REPT
         ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN PAGE_CASE_UID_date;
         ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN PAGE_CASE_UID_coded;
         ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN PAGE_CASE_UID_text;
+
+        ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN INVESTIGATION_FORM_CD_numeric;
+        ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN INVESTIGATION_FORM_CD_date;
+        ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN INVESTIGATION_FORM_CD_coded;
+        ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN INVESTIGATION_FORM_CD_text;
 
         ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN BLOCK_NM_numeric;
         ALTER TABLE dbo.S_INVESTIGATION_REPEAT DROP COLUMN BLOCK_NM_date;
