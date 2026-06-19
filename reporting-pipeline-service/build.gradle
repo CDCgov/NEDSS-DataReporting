@@ -34,6 +34,9 @@ test {
 tasks.register("test-functional", Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+    if (System.getProperty("tests") != null) {
+        systemProperty "tests", System.getProperty("tests")
+    }
 
     useJUnitPlatform {
         includeTags "Functional"
