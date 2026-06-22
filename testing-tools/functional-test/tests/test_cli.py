@@ -38,8 +38,9 @@ class FakeDatabase:
 
 
 @pytest.fixture(autouse=True)
-def _no_password_env(monkeypatch):
-    monkeypatch.delenv("FUNCTIONAL_TEST_DB_PASSWORD", raising=False)
+def _isolate_env(monkeypatch):
+    # Neutralize any real .env / environment so tests are deterministic.
+    monkeypatch.setattr(cli, "load_database_connection_defaults", lambda: {})
     FakeDatabase.instances.clear()
 
 
@@ -57,6 +58,42 @@ class TestParser:
         parser = cli.build_parser()
         args = parser.parse_args(["-S", "host", "-U", "user", "-d", "/data"])
         assert args.password is None
+
+    def test_server_default_when_no_env(self):
+        parser = cli.build_parser()
+        args = parser.parse_args(["-d", "/data"])
+        assert args.address == "localhost,3433"
+        assert args.user is None
+        assert args.password is None
+
+    def test_env_defaults_populate_flags(self, monkeypatch):
+        monkeypatch.setattr(
+            cli,
+            "load_database_connection_defaults",
+            lambda: {
+                "DATABASE_SERVER": "db",
+                "DATABASE_PORT": "1500",
+                "DATABASE_USERNAME": "sa",
+                "DATABASE_PASSWORD": "pw",
+            },
+        )
+        args = cli.build_parser().parse_args(["-d", "/data"])
+        assert args.address == "db,1500"
+        assert args.user == "sa"
+        assert args.password == "pw"
+
+    def test_flags_override_env_defaults(self, monkeypatch):
+        monkeypatch.setattr(
+            cli,
+            "load_database_connection_defaults",
+            lambda: {"DATABASE_USERNAME": "sa", "DATABASE_PASSWORD": "pw"},
+        )
+        args = cli.build_parser().parse_args(
+            ["-d", "/data", "-S", "other:9", "-U", "u2", "-P", "p2"]
+        )
+        assert args.address == "other:9"
+        assert args.user == "u2"
+        assert args.password == "p2"
 
     def test_repeated_test_flag_and_options(self):
         parser = cli.build_parser()
@@ -126,13 +163,24 @@ class TestMainListAndErrors:
         rc = cli.main(["-S", "host", "-U", "user", "-d", str(tmp_path)])
         assert rc == 2
 
-    def test_password_reads_env_when_omitted(self, tmp_path, monkeypatch):
+    def test_no_user_without_env_returns_2(self, tmp_path, monkeypatch):
         _make_test_tree(tmp_path, [{"a": 1}])
-        monkeypatch.setenv("FUNCTIONAL_TEST_DB_PASSWORD", "secret")
+        monkeypatch.setattr(cli, "Database", _boom)
+        rc = cli.main(["-S", "host", "-P", "pw", "-d", str(tmp_path)])
+        assert rc == 2
+
+    def test_credentials_from_env_when_omitted(self, tmp_path, monkeypatch):
+        _make_test_tree(tmp_path, [{"a": 1}])
+        monkeypatch.setattr(
+            cli,
+            "load_database_connection_defaults",
+            lambda: {"DATABASE_USERNAME": "sa", "DATABASE_PASSWORD": "secret"},
+        )
         monkeypatch.setattr(cli, "Database", FakeDatabase)
-        rc = cli.main(["-S", "host", "-U", "user", "-d", str(tmp_path)])
+        rc = cli.main(["-S", "host", "-d", str(tmp_path), "--retry-delay", "0"])
         assert rc == 0
-        assert FakeDatabase.instances[0].args[3] == "secret"
+        _host, _port, user, password, _db = FakeDatabase.instances[0].args
+        assert (user, password) == ("sa", "secret")
 
     def test_connection_failure_returns_2(self, tmp_path, monkeypatch):
         _make_test_tree(tmp_path, [{"a": 1}])

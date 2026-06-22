@@ -260,15 +260,14 @@ class TestBuildIdRemapper:
         assert rm.new_start == 1000014000
         assert rm.offset == 10000
 
-    def test_mapping_only_covers_block(self, tmp_path):
+    def test_block_window_excludes_outlier(self, tmp_path):
         test_dir = self._make_test(tmp_path)
         rm = build_id_remapper(test_dir, 1000014000)
-        assert rm.mapping == {
-            1000004000: 1000014000,
-            1000004001: 1000014001,
-            1000004002: 1000014002,
-        }
-        assert 10009282 not in rm.mapping
+        assert rm.in_block(1000004000)
+        assert rm.in_block(1000004002)
+        assert rm.in_block(1000004999)  # whole 1000-block, not just declared ids
+        assert not rm.in_block(10009282)  # superuser outlier
+        assert not rm.in_block(1000004000 + 1000)  # just past the block
 
     def test_apply_shifts_ids_in_block(self, tmp_path):
         rm = build_id_remapper(self._make_test(tmp_path), 1000014000)
@@ -285,6 +284,36 @@ class TestBuildIdRemapper:
         rm = build_id_remapper(self._make_test(tmp_path), 1000004000)
         assert rm.offset == 0
         assert rm.apply("id = 1000004000") == "id = 1000004000"
+
+    def test_non_contiguous_block_detects_true_start(self, tmp_path):
+        # morbidityReport-style: gaps inside the block must not change the start.
+        setup = (
+            "DECLARE @superuser_id bigint = 10009282\n"
+            "DECLARE @a bigint = 1000005000\n"
+            "DECLARE @b bigint = 1000005001\n"
+            "DECLARE @c bigint = 1000005011\n"  # gap before this
+            "DECLARE @d bigint = 1000005027\n"
+        )
+        test_dir = tmp_path / "morbidity"
+        step = test_dir / "010"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text(setup)
+        rm = build_id_remapper(test_dir, 1000014000)
+        assert rm.orig_start == 1000005000  # not 1000005011 (longest contiguous run)
+        assert rm.offset == 9000
+        # Every id across the gap shifts consistently.
+        assert rm.apply("1000005000 1000005011 1000005027") == "1000014000 1000014011 1000014027"
+        assert rm.apply("10009282") == "10009282"
+
+    def test_declare_without_semicolon(self, tmp_path):
+        test_dir = tmp_path / "nosemi"
+        step = test_dir / "010"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text(
+            "DECLARE @superuser_id bigint = 10009282\nDECLARE @a bigint = 1000005000\n"
+        )
+        rm = build_id_remapper(test_dir, 1000014000)
+        assert rm.orig_start == 1000005000
 
     def test_no_declares_raises(self, tmp_path):
         test_dir = tmp_path / "empty"

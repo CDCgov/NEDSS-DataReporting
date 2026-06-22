@@ -43,34 +43,51 @@ uv sync
 ## Usage
 
 ```sh
-uv run functional-test -S <address> -U <user> -P <password> -d <data_dir> [-t <test> ...]
+uv run functional-test -d <data_dir> [-S <address>] [-U <user>] [-P <password>] [-t <test> ...]
 ```
 
-The connection flags follow `sqlcmd` conventions:
+The connection flags follow `sqlcmd` conventions. Only `-d` is required —
+`-S`/`-U`/`-P` default to values read from a `.env` file (see below).
 
 | Flag | Long form | Required | Description |
 | ---- | --------- | -------- | ----------- |
-| `-S` | `--server` | yes | Database address: `host`, `host:port` or `host,port` (e.g. `localhost:3433`). |
-| `-U` | `--user` | yes | Database user (needs write on `NBS_ODSE`, read on `RDB_MODERN`). |
-| `-P` | `--password` | no | Password. If omitted, read from the `FUNCTIONAL_TEST_DB_PASSWORD` env var. |
+| `-S` | `--server` | no | Database address: `host`, `host:port` or `host,port`. Defaults to `DATABASE_SERVER,DATABASE_PORT` (else `localhost,3433`). |
+| `-U` | `--user` | no | Database user (needs write on `NBS_ODSE`, read on `RDB_MODERN`). Defaults to `DATABASE_USERNAME`. |
+| `-P` | `--password` | no | Password. Defaults to `DATABASE_PASSWORD`. |
 | `-d` | `--data-dir` | yes | The `testData/functional` directory. |
 | `-t` | `--test` | no | A test name to run. Repeat `-t` to run several. If omitted, all tests run. |
 | `-i` | `--id` | no | Override the test's starting UID; all IDs are shifted on the fly. Requires exactly one `-t`. |
 
+### Connection defaults from `.env`
+
+The connection settings are read from a `.env` file using the **same variable
+names as the `local-db-tracing` tools**, so one `.env` configures both:
+
+| Variable | Default | Used for |
+| -------- | ------- | -------- |
+| `DATABASE_SERVER` | `localhost` | host portion of `-S` |
+| `DATABASE_PORT` | `3433` | port portion of `-S` |
+| `DATABASE_USERNAME` | — | `-U` |
+| `DATABASE_PASSWORD` | — | `-P` |
+
+The `.env` is located by walking up from the current directory (then from the
+tool's own location). Real environment variables override `.env` values, and
+explicit `-S`/`-U`/`-P` flags override both.
+
 ### Examples
 
-Run every test against a local dev instance:
+Run every test against a local dev instance (explicit connection flags):
 
 ```sh
 uv run functional-test -S localhost:3433 -U rtr_admin -P rtr_admin \
     -d ../../reporting-pipeline-service/src/test/resources/testData/functional
 ```
 
-Run two specific tests, keeping the password out of the command line:
+Run two specific tests, taking connection details from `.env` (a `.env` with
+`DATABASE_SERVER` / `DATABASE_USERNAME` / `DATABASE_PASSWORD` is enough):
 
 ```sh
-export FUNCTIONAL_TEST_DB_PASSWORD=rtr_admin
-uv run functional-test -S localhost:3433 -U rtr_admin \
+uv run functional-test \
     -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
     -t interview -t elrEColi
 ```

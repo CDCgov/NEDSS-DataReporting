@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
+from .env import load_database_connection_defaults, resolve_server_argument
 from .runner import (
     DEFAULT_MAX_RETRY,
     DEFAULT_RETRY_DELAY,
@@ -44,14 +44,20 @@ def _bold(t: str) -> str:
     return _c(t, "1")
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentParser:
+    if defaults is None:
+        defaults = load_database_connection_defaults()
+
     parser = argparse.ArgumentParser(
         prog="functional-test",
         description=(
             "Run NEDSS reporting-pipeline functional tests against an already-running "
             "database and application. For each test step the setup SQL is executed against "
             "the source database (NBS_ODSE) and each query is polled against the reporting "
-            "database (RDB_MODERN) until its result matches the expected JSON."
+            "database (RDB_MODERN) until its result matches the expected JSON.\n\n"
+            "Connection defaults are read from a .env file (or environment) using the same "
+            "variable names as the local-db-tracing tools: DATABASE_SERVER, DATABASE_PORT, "
+            "DATABASE_USERNAME, DATABASE_PASSWORD. Flags below override them."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -59,23 +65,25 @@ def build_parser() -> argparse.ArgumentParser:
         "-S",
         "--server",
         dest="address",
-        required=True,
+        default=resolve_server_argument(defaults),
         metavar="ADDRESS",
-        help="Database address: host, host:port or host,port (e.g. localhost:3433).",
+        help="Database address: host, host:port or host,port. Defaults to "
+        "DATABASE_SERVER,DATABASE_PORT from .env.",
     )
     parser.add_argument(
         "-U",
         "--user",
         dest="user",
-        required=True,
-        help="Database user (needs write on NBS_ODSE, read on RDB_MODERN).",
+        default=defaults.get("DATABASE_USERNAME"),
+        help="Database user (needs write on NBS_ODSE, read on RDB_MODERN). "
+        "Defaults to DATABASE_USERNAME from .env.",
     )
     parser.add_argument(
         "-P",
         "--password",
         dest="password",
-        default=None,
-        help="Database password. If omitted, read from the FUNCTIONAL_TEST_DB_PASSWORD env var.",
+        default=defaults.get("DATABASE_PASSWORD"),
+        help="Database password. Defaults to DATABASE_PASSWORD from .env.",
     )
     parser.add_argument(
         "-d",
@@ -202,15 +210,20 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {test_dir.name}")
         return 0
 
+    if not args.user:
+        print(
+            _red("No database user. Pass -U or set DATABASE_USERNAME in .env / the environment."),
+            file=sys.stderr,
+        )
+        return 2
+
     password = args.password
-    if password is None:
-        password = os.environ.get("FUNCTIONAL_TEST_DB_PASSWORD")
-        if password is None:
-            print(
-                _red("No password provided. Pass -P or set FUNCTIONAL_TEST_DB_PASSWORD."),
-                file=sys.stderr,
-            )
-            return 2
+    if not password:
+        print(
+            _red("No password. Pass -P or set DATABASE_PASSWORD in .env / the environment."),
+            file=sys.stderr,
+        )
+        return 2
 
     host, port = parse_address(args.address)
 
