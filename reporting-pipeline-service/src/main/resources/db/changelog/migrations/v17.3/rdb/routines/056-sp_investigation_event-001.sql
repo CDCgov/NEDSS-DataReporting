@@ -34,9 +34,9 @@ BEGIN
                , LEFT(@phc_id_list, 199));
 
         /*Complete Investigation section*/
-        SELECT results.public_health_case_uid,
-               results.program_jurisdiction_oid                                     as program_jurisdiction_oid,
-               jc.code_desc_txt                                                     as jurisdiction_nm,
+         SELECT results.public_health_case_uid,
+             results.program_jurisdiction_oid                                     as program_jurisdiction_oid,
+             COALESCE(NULLIF(jc.code_desc_txt, ''), NULLIF(results.jurisdiction_cd, '')) as jurisdiction_nm,
                act.mood_cd,
                act.class_cd,
                results.case_type_cd,
@@ -200,10 +200,14 @@ BEGIN
                      phc.last_chg_user_id         last_chg_user_id,
                      phc.curr_process_state_cd    curr_process_state_cd,
                      case
-                         when (phc.curr_process_state_cd is not null or phc.curr_process_state_cd != '') then (select *
-                                                                                                               from dbo.fn_get_value_by_cvg(
-                                                                                                                       phc.curr_process_state_cd,
-                                                                                                                       'CM_PROCESS_STAGE'))
+                         when (phc.curr_process_state_cd is not null or phc.curr_process_state_cd != '') then
+                             COALESCE(
+                                 (select *
+                                  from dbo.fn_get_value_by_cvg(
+                                          phc.curr_process_state_cd,
+                                          'CM_PROCESS_STAGE')),
+                                 phc.curr_process_state_cd
+                             )
                          end as                   curr_process_state,
                      phc.investigation_status_cd,
                      case
@@ -247,12 +251,18 @@ BEGIN
                      phc.hospitalized_duration_amt,
                      phc.outbreak_ind,
                      case
-                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_codeset(phc.outbreak_ind, 'INV150'))
+                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then
+                             COALESCE(
+                                 (select * from dbo.fn_get_value_by_cd_codeset(phc.outbreak_ind, 'INV150')),
+                                 phc.outbreak_ind
+                             )
                          end as                   outbreak_ind_val,
                      case
-                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then (select *
-                                                                                             from dbo.fn_get_value_by_cd_codeset(phc.outbreak_name, 'INV151'))
+                         when (phc.outbreak_name is not null or phc.outbreak_name != '') then
+                             COALESCE(
+                                 (select * from dbo.fn_get_value_by_cd_codeset(phc.outbreak_name, 'INV151')),
+                                 phc.outbreak_name
+                             )
                          end as                   outbreak_name_desc,
                      phc.hospitalized_ind_cd,
                      case
@@ -273,8 +283,12 @@ BEGIN
                      end as transmission_mode,
                      phc.outcome_cd,
                      case
-                         when (phc.outcome_cd != '') then (select *
-                                                           from dbo.fn_get_value_by_cd_codeset(phc.outcome_cd, 'INV145'))
+                         when (phc.outcome_cd != '') then
+                             COALESCE(
+                                 (select *
+                                  from dbo.fn_get_value_by_cd_codeset(phc.outcome_cd, 'INV145')),
+                                 phc.outcome_cd
+                             )
                          end as                   die_frm_this_illness_ind,
                      phc.day_care_ind_cd,
                      case
@@ -310,8 +324,12 @@ BEGIN
                      phc.infectious_to_date,
                      phc.referral_basis_cd,
                      case
-                         when (phc.referral_basis_cd is not null or phc.referral_basis_cd != '') then (select *
-                                                                                                       from dbo.fn_get_value_by_cvg(phc.referral_basis_cd, 'REFERRAL_BASIS'))
+                         when (phc.referral_basis_cd is not null or phc.referral_basis_cd != '') then
+                             COALESCE(
+                                 (select *
+                                  from dbo.fn_get_value_by_cvg(phc.referral_basis_cd, 'REFERRAL_BASIS')),
+                                 phc.referral_basis_cd
+                             )
                          end as                   referral_basis,
                      phc.inv_priority_cd,
                      phc.contact_inv_status_cd,
@@ -373,7 +391,12 @@ BEGIN
                                                                ON org.organization_uid = p.subject_entity_uid
                                                  WHERE p.act_uid = phc.public_health_case_uid
                                                  FOR json path,INCLUDE_NULL_VALUES) AS organization_participations) AS organization_participations
-                                        -- act_ids associated with public health case
+                                                     -- act_ids for public health case, with STATE fallback behavior:
+                                                     -- 1) use existing act_id rows
+                                                     -- 2) if STATE root_extension_txt is NULL, use phc.local_id
+                                                     -- 3) if no STATE row exists, add a synthetic STATE row from phc.local_id
+                                                    --  
+                                                    -- Output is a JSON list of act_id objects
                                            ,
                                         (SELECT (SELECT act.source_act_uid,
                                                         act.target_Act_uid   as public_health_case_uid,
@@ -407,19 +430,56 @@ BEGIN
                                                  FOR json path,INCLUDE_NULL_VALUES) AS investigation_observation_ids) AS investigation_observation_ids
                                         -- act_ids associated with public health case
                                            ,
-                                        (SELECT (SELECT act_id.act_uid            AS [id],
-                                                        act_id_seq                AS [act_id_seq],
-                                                        act_id.record_status_cd   AS [record_status],
-                                                        act_id.root_extension_txt AS [root_extension_txt],
-                                                        act_id.type_cd            AS [type_cd],
-                                                        act_id.type_desc_txt      AS [type_desc_txt],
-                                                        act_id.add_time              act_id_add_time,
-                                                        act_id.add_user_id           act_id_add_user_id,
-                                                        act_id.last_chg_user_id      act_id_last_chg_user_id,
-                                                        act_id.last_chg_time      AS [act_id_last_change_time]
-                                                 FROM nbs_odse.dbo.act_id WITH (NOLOCK)
-                                                 WHERE act_uid = phc.public_health_case_uid
-                                                 FOR json path,INCLUDE_NULL_VALUES) AS act_ids) AS act_ids,
+                                        (SELECT (SELECT act_id_rows.[id],
+                                                        act_id_rows.[act_id_seq],
+                                                        act_id_rows.[record_status],
+                                                        act_id_rows.[root_extension_txt],
+                                                        act_id_rows.[type_cd],
+                                                        act_id_rows.[type_desc_txt],
+                                                        act_id_rows.act_id_add_time,
+                                                        act_id_rows.act_id_add_user_id,
+                                                        act_id_rows.act_id_last_chg_user_id,
+                                                        act_id_rows.[act_id_last_change_time]
+                                                 FROM (
+                                                          SELECT act_id.act_uid AS [id],
+                                                                 act_id.act_id_seq AS [act_id_seq],
+                                                                 act_id.record_status_cd AS [record_status],
+                                                                 COALESCE(
+                                                                     act_id.root_extension_txt,
+                                                                     CASE
+                                                                         WHEN act_id.type_cd = 'STATE' THEN phc.local_id
+                                                                     END
+                                                                 ) AS [root_extension_txt],
+                                                                 act_id.type_cd AS [type_cd],
+                                                                 act_id.type_desc_txt AS [type_desc_txt],
+                                                                 act_id.add_time AS act_id_add_time,
+                                                                 act_id.add_user_id AS act_id_add_user_id,
+                                                                 act_id.last_chg_user_id AS act_id_last_chg_user_id,
+                                                                 act_id.last_chg_time AS [act_id_last_change_time]
+                                                          FROM nbs_odse.dbo.act_id WITH (NOLOCK)
+                                                          WHERE act_id.act_uid = phc.public_health_case_uid
+                                                          UNION ALL
+                                                          SELECT phc_fallback.public_health_case_uid AS [id],
+                                                                 0 AS [act_id_seq],
+                                                                 phc_fallback.record_status_cd AS [record_status],
+                                                                 phc_fallback.local_id AS [root_extension_txt],
+                                                                 'STATE' AS [type_cd],
+                                                                 'Local Public Health Case Identifier' AS [type_desc_txt],
+                                                                 phc_fallback.add_time AS act_id_add_time,
+                                                                 phc_fallback.add_user_id AS act_id_add_user_id,
+                                                                 phc_fallback.last_chg_user_id AS act_id_last_chg_user_id,
+                                                                 phc_fallback.last_chg_time AS [act_id_last_change_time]
+                                                          FROM nbs_odse.dbo.public_health_case phc_fallback WITH (NOLOCK)
+                                                          WHERE phc_fallback.public_health_case_uid = phc.public_health_case_uid
+                                                            AND phc_fallback.local_id IS NOT NULL
+                                                            AND NOT EXISTS (
+                                                                SELECT 1
+                                                                FROM nbs_odse.dbo.act_id fallback_state WITH (NOLOCK)
+                                                                WHERE fallback_state.act_uid = phc_fallback.public_health_case_uid
+                                                                  AND fallback_state.type_cd = 'STATE'
+                                                            )
+                                                      ) AS act_id_rows
+                                                 FOR json path, INCLUDE_NULL_VALUES) AS act_ids) AS act_ids,
                                         -- get associated confirmation method
                                         (SELECT (select cm.public_health_case_uid,
                                                         cm.confirmation_method_cd,
