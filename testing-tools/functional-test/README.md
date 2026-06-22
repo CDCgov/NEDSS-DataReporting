@@ -55,6 +55,7 @@ The connection flags follow `sqlcmd` conventions:
 | `-P` | `--password` | no | Password. If omitted, read from the `FUNCTIONAL_TEST_DB_PASSWORD` env var. |
 | `-d` | `--data-dir` | yes | The `testData/functional` directory. |
 | `-t` | `--test` | no | A test name to run. Repeat `-t` to run several. If omitted, all tests run. |
+| `-i` | `--id` | no | Override the test's starting UID; all IDs are shifted on the fly. Requires exactly one `-t`. |
 
 ### Examples
 
@@ -73,6 +74,22 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
     -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
     -t interview -t elrEColi
 ```
+
+Run the `interview` test but shift its UID block to start at `1000014000`
+(useful for running against a dev instance that already contains the original
+range — the files on disk are left unchanged):
+
+```sh
+uv run functional-test -S localhost:3433 -U rtr_admin -P rtr_admin \
+    -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
+    -t interview -i 1000014000
+```
+
+The original starting ID is detected as the low end of the largest contiguous
+block of `DECLARE @... bigint = N;` literals in the test's `setup.sql` files
+(shared IDs such as the superuser are excluded). Every reference to a block ID
+in `setup.sql`, `query.sql` and `expected.json` is shifted by the same offset,
+including IDs embedded in strings like `PSN1000004000GA01`.
 
 List the discovered tests without connecting:
 

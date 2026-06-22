@@ -5,6 +5,7 @@ import json
 import pytest
 
 from functional_test import runner
+from functional_test.remapper import build_id_remapper
 from functional_test.runner import (
     _wait_for_match,
     discover_steps,
@@ -232,6 +233,92 @@ class TestRunStep:
         result = run_step(BoomDB(), step, max_retry=1, retry_delay=0)
         assert result.passed is False
         assert "bad sql" in result.queries[0].error
+
+
+SETUP_WITH_IDS = """USE [NBS_ODSE];
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @patient_uid bigint = 1000004000;
+DECLARE @postal_uid bigint = 1000004001;
+DECLARE @case_uid bigint = 1000004002;
+INSERT INTO Person (person_uid, local_id) VALUES (@patient_uid, N'PSN1000004000GA01');
+"""
+
+
+class TestBuildIdRemapper:
+    def _make_test(self, root):
+        step = root / "interview" / "010-step"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text(SETUP_WITH_IDS)
+        (step / "query.sql").write_text("SELECT a FROM t WHERE id = 1000004000")
+        (step / "expected.json").write_text("{}")
+        return root / "interview"
+
+    def test_detects_block_start_excluding_outlier(self, tmp_path):
+        test_dir = self._make_test(tmp_path)
+        rm = build_id_remapper(test_dir, 1000014000)
+        assert rm.orig_start == 1000004000  # superuser 10009282 excluded
+        assert rm.new_start == 1000014000
+        assert rm.offset == 10000
+
+    def test_mapping_only_covers_block(self, tmp_path):
+        test_dir = self._make_test(tmp_path)
+        rm = build_id_remapper(test_dir, 1000014000)
+        assert rm.mapping == {
+            1000004000: 1000014000,
+            1000004001: 1000014001,
+            1000004002: 1000014002,
+        }
+        assert 10009282 not in rm.mapping
+
+    def test_apply_shifts_ids_in_block(self, tmp_path):
+        rm = build_id_remapper(self._make_test(tmp_path), 1000014000)
+        assert rm.apply("id = 1000004000") == "id = 1000014000"
+        assert rm.apply("PSN1000004000GA01") == "PSN1000014000GA01"
+
+    def test_apply_leaves_other_numbers_untouched(self, tmp_path):
+        rm = build_id_remapper(self._make_test(tmp_path), 1000014000)
+        assert rm.apply("10009282") == "10009282"  # outlier
+        assert rm.apply("2026-04-20T04:21:34.363") == "2026-04-20T04:21:34.363"
+        assert rm.apply("1300600015") == "1300600015"  # not in block
+
+    def test_zero_offset_is_identity(self, tmp_path):
+        rm = build_id_remapper(self._make_test(tmp_path), 1000004000)
+        assert rm.offset == 0
+        assert rm.apply("id = 1000004000") == "id = 1000004000"
+
+    def test_no_declares_raises(self, tmp_path):
+        test_dir = tmp_path / "empty"
+        step = test_dir / "010"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text("INSERT INTO t VALUES (1);")
+        with pytest.raises(ValueError, match="DECLARE"):
+            build_id_remapper(test_dir, 1000014000)
+
+    def test_run_test_applies_remap_to_db_calls(self, tmp_path):
+        test_dir = tmp_path / "interview"
+        step = test_dir / "010-step"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text(SETUP_WITH_IDS)
+        (step / "query.sql").write_text("SELECT a WHERE id = 1000004000")
+        (step / "expected.json").write_text(json.dumps({"0": [{"id": 1000014000}]}))
+        db = FakeDB(results=[[{"id": 1000014000}]])
+        result = run_test(db, test_dir, max_retry=1, retry_delay=0, new_start_id=1000014000)
+        assert result.passed is True
+        # The setup and query handed to the DB had IDs shifted.
+        assert "1000014000" in db.setup_calls[0]
+        assert "1000004000" not in db.setup_calls[0]
+        assert db.select_calls[0] == "SELECT a WHERE id = 1000014000"
+
+    def test_run_test_remap_error_recorded(self, tmp_path):
+        test_dir = tmp_path / "nodecl"
+        step = test_dir / "010"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text("INSERT INTO t VALUES (1);")
+        (step / "query.sql").write_text("SELECT 1")
+        (step / "expected.json").write_text("{}")
+        result = run_test(FakeDB(), test_dir, max_retry=1, retry_delay=0, new_start_id=999)
+        assert result.passed is False
+        assert "DECLARE" in result.error
 
 
 class TestRunTest:

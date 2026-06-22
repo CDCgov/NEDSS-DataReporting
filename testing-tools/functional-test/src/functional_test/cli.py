@@ -94,6 +94,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Test name to run; repeat -t to run several. If omitted, all tests are run.",
     )
     parser.add_argument(
+        "-i",
+        "--id",
+        dest="start_id",
+        type=int,
+        default=None,
+        metavar="START_ID",
+        help=(
+            "Override the test's starting UID. All IDs in the test's allocated block are "
+            "shifted on the fly (files on disk are not modified). Requires exactly one -t."
+        ),
+    )
+    parser.add_argument(
         "--database",
         default="NBS_ODSE",
         help="Initial database for the connection. Setup SQL switches DB with USE [...].",
@@ -176,6 +188,14 @@ def main(argv: list[str] | None = None) -> int:
         print(_red(str(exc)), file=sys.stderr)
         return 2
 
+    if args.start_id is not None and len(test_dirs) != 1:
+        print(
+            _red("-i/--id requires exactly one test (selected with a single -t); "
+                 f"{len(test_dirs)} tests selected."),
+            file=sys.stderr,
+        )
+        return 2
+
     if args.list:
         print(f"Discovered {len(test_dirs)} test(s) in {args.data_dir}:")
         for test_dir in test_dirs:
@@ -213,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_retry=args.max_retry,
                 retry_delay=args.retry_delay,
                 on_event=lambda msg: print(_dim(msg)),
+                new_start_id=args.start_id,
             )
             results.append(result)
             _print_test_result(result)

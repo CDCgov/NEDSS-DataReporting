@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from .compare import lenient_match, normalize_rows
+from .remapper import IdRemapper, build_id_remapper
 
 SETUP_FILE = "setup.sql"
 QUERY_FILE = "query.sql"
@@ -214,6 +215,7 @@ def run_step(
     max_retry: int,
     retry_delay: float,
     on_event: Optional[Callable[[str], None]] = None,
+    remapper: Optional[IdRemapper] = None,
 ) -> StepResult:
     result = StepResult(name=step_dir.name)
 
@@ -227,8 +229,15 @@ def run_step(
             return result
 
     setup_sql = setup_path.read_text()
-    queries = split_statements(query_path.read_text())
-    expected_map = json.loads(expected_path.read_text())
+    query_text = query_path.read_text()
+    expected_text = expected_path.read_text()
+    if remapper is not None:
+        setup_sql = remapper.apply(setup_sql)
+        query_text = remapper.apply(query_text)
+        expected_text = remapper.apply(expected_text)
+
+    queries = split_statements(query_text)
+    expected_map = json.loads(expected_text)
 
     try:
         db.execute_setup(setup_sql)
@@ -285,6 +294,7 @@ def run_test(
     max_retry: int,
     retry_delay: float,
     on_event: Optional[Callable[[str], None]] = None,
+    new_start_id: Optional[int] = None,
 ) -> TestResult:
     result = TestResult(name=test_dir.name)
     try:
@@ -297,10 +307,23 @@ def run_test(
         result.error = "No step directories found"
         return result
 
+    remapper: Optional[IdRemapper] = None
+    if new_start_id is not None:
+        try:
+            remapper = build_id_remapper(test_dir, new_start_id)
+        except ValueError as exc:
+            result.error = str(exc)
+            return result
+        if on_event:
+            on_event(
+                f"    remapping ids: {remapper.orig_start} -> {remapper.new_start} "
+                f"(offset {remapper.offset:+d})"
+            )
+
     for step_dir in steps:
         if on_event:
             on_event(f"    step {step_dir.name}")
-        step_result = run_step(db, step_dir, max_retry, retry_delay, on_event)
+        step_result = run_step(db, step_dir, max_retry, retry_delay, on_event, remapper)
         result.steps.append(step_result)
 
     return result

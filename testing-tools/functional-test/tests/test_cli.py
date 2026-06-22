@@ -81,6 +81,18 @@ class TestParser:
         assert args.password == "p"
         assert args.tests == ["interview"]
 
+    def test_id_flag_parsed_as_int(self):
+        parser = cli.build_parser()
+        args = parser.parse_args(
+            ["-S", "h", "-U", "u", "-P", "p", "-d", "/data", "-t", "interview", "-i", "1000014000"]
+        )
+        assert args.start_id == 1000014000
+
+    def test_id_defaults_none(self):
+        parser = cli.build_parser()
+        args = parser.parse_args(["-S", "h", "-U", "u", "-P", "p", "-d", "/data"])
+        assert args.start_id is None
+
     def test_missing_required_args_exits(self):
         parser = cli.build_parser()
         with pytest.raises(SystemExit):
@@ -160,6 +172,36 @@ class TestMainRun:
         host, port, user, password, database = FakeDatabase.instances[0].args
         assert (host, port) == ("myhost", 3433)
         assert database == "NBS_ODSE"
+
+
+class TestMainIdFlag:
+    def test_id_requires_single_test(self, tmp_path, monkeypatch):
+        # Two tests, -i with no -t selects all -> error before connecting.
+        _make_test_tree(tmp_path, [{"a": 1}])
+        (tmp_path / "other" / "010").mkdir(parents=True)
+        for fn in ("setup.sql", "query.sql"):
+            (tmp_path / "other" / "010" / fn).write_text("x")
+        (tmp_path / "other" / "010" / "expected.json").write_text("{}")
+        monkeypatch.setattr(cli, "Database", _boom)
+        rc = cli.main(["-S", "h", "-U", "u", "-P", "p", "-d", str(tmp_path), "-i", "5"])
+        assert rc == 2
+
+    def test_id_passed_to_run_test(self, tmp_path, monkeypatch):
+        _make_test_tree(tmp_path, [{"a": 1}])
+        monkeypatch.setattr(cli, "Database", FakeDatabase)
+        captured = {}
+        real_run_test = cli.run_test
+
+        def wrapper(db, test_dir, **kwargs):
+            captured.update(kwargs)
+            return real_run_test(db, test_dir, **kwargs)
+
+        monkeypatch.setattr(cli, "run_test", wrapper)
+        cli.main(
+            ["-S", "h", "-U", "u", "-P", "p", "-d", str(tmp_path),
+             "-t", "mytest", "-i", "1000014000", "--retry-delay", "0"]
+        )
+        assert captured.get("new_start_id") == 1000014000
 
 
 def _boom(*args, **kwargs):
