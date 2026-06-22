@@ -179,7 +179,7 @@ BEGIN
                 WHEN VAR.CODE_SET_GROUP_ID = '' AND VAR.CODE_SET_NM NOT IN ('PSL_CNTRY') 
                 THEN VAR.ANSWER_TXT
                 WHEN VAR.CODE_SET_NM = 'PSL_CNTRY' 
-                THEN CVG.CODE_DESC_TXT
+                THEN COALESCE(CVG.CODE_DESC_TXT, VAR.ANSWER_TXT)
                 ELSE VAR.ANSWER_TXT
             END AS ANSWER_TXT,
             VAR.CODE_SET_NM,
@@ -223,7 +223,7 @@ BEGIN
             VAR_PAM_UID,
             LAST_CHG_TIME
         INTO #S_PAM_CHG_TIME
-        FROM #S_VAR_PAM_SET_CVG;
+        FROM #S_VAR_PAM_SET_CVG2;
         
         if
         @debug = 'true'
@@ -256,7 +256,7 @@ BEGIN
                 VAR_PAM_UID,
                 DATAMART_COLUMN_NM,
                 ANSWER_TXT
-            FROM #S_VAR_PAM_SET_CVG
+            FROM #S_VAR_PAM_SET_CVG2
         ) AS SourceTable
         PIVOT (
             MAX(ANSWER_TXT)
