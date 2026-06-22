@@ -33,11 +33,7 @@ class DataDrivenFunctionalTests extends FunctionalTest {
 
   /**
    * Specific tests can be executed by manually adding the test name to the list below or by
-<<<<<<< HEAD
-   * specifying the "tests" parameter. </br>If empty, all functional test directories are executed.
-=======
    * specifying the "tests" parameter.
->>>>>>> mp/test/command-line-test-list
    *
    * <p>If empty, all functional test directories are executed.
    *
