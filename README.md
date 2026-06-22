@@ -100,9 +100,10 @@ To run only the `functional` tests in the reporting-pipeline-service
 ./gradlew clean reporting-pipeline-service:test-functional
 ```
 
-Specific `functional` tests can be executed using the `tests` argument
+Specific `functional` and `unit` tests can be executed using the `tests` argument
 ```sh
 ./gradlew clean reporting-pipeline-service:test-functional -D tests=elrEColi,interview
+./gradlew clean reporting-pipeline-service:test-unit -D tests=covidCaseDatamart
 ```
 
 ### Adding MasterEtl-level Validation for Functional Tests
