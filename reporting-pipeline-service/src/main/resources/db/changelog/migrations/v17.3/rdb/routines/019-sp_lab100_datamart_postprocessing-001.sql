@@ -476,8 +476,8 @@ BEGIN
 
         select
             * , coalesce(
-                TRY_CAST(substring(left(RTRIM(CAST(oid AS varchar(30))) + space(11), 11), 7, 5) as int),
-                TRY_CAST(substring(right(space(11) + RTRIM(CAST(oid AS varchar(30))), 11), 7, 5) as int)
+                TRY_CAST(NULLIF(LTRIM(RTRIM(substring(left(RTRIM(CAST(oid AS varchar(30))) + space(11), 11), 7, 5))), '') as int),
+                TRY_CAST(NULLIF(LTRIM(RTRIM(substring(right(space(11) + RTRIM(CAST(oid AS varchar(30))), 11), 7, 5))), '') as int)
             ) as PROGRAM_AREA_ID  -- Prefer current left-aligned behavior; fallback preserves SAS-style SUBSTR(PUT(OID,11.),7,5)
         into #TMP_LAB_RESULTS_ORDER_CONTACT1
         from #TMP_LABTEST_UPDATED
