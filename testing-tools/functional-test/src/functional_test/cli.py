@@ -102,7 +102,8 @@ def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentPar
         metavar="TEST",
         help="Test name to run; repeat -t to run several. If omitted, all tests are run.",
     )
-    parser.add_argument(
+    remap_group = parser.add_mutually_exclusive_group()
+    remap_group.add_argument(
         "-i",
         "--id",
         dest="start_id",
@@ -112,6 +113,18 @@ def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentPar
         help=(
             "Override the test's starting UID. All IDs in the test's allocated block are "
             "shifted on the fly (files on disk are not modified). Requires exactly one -t."
+        ),
+    )
+    remap_group.add_argument(
+        "-s",
+        "--shift-id",
+        dest="shift_id",
+        type=int,
+        default=None,
+        metavar="DELTA",
+        help=(
+            "Shift every test's UIDs by this integer delta on the fly (files on disk are "
+            "not modified). Works with any number of tests. Mutually exclusive with -i."
         ),
     )
     parser.add_argument(
@@ -248,6 +261,7 @@ def main(argv: list[str] | None = None) -> int:
                 retry_delay=args.retry_delay,
                 on_event=lambda msg: print(_dim(msg)),
                 new_start_id=args.start_id,
+                shift_id=args.shift_id,
             )
             results.append(result)
             _print_test_result(result)

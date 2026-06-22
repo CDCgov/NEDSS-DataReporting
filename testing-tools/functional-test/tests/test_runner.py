@@ -5,7 +5,7 @@ import json
 import pytest
 
 from functional_test import runner
-from functional_test.remapper import build_id_remapper
+from functional_test.remapper import build_id_remapper, build_shift_remapper
 from functional_test.runner import (
     _wait_for_match,
     discover_steps,
@@ -337,6 +337,39 @@ class TestBuildIdRemapper:
         assert "1000014000" in db.setup_calls[0]
         assert "1000004000" not in db.setup_calls[0]
         assert db.select_calls[0] == "SELECT a WHERE id = 1000014000"
+
+    def test_shift_remapper_uses_delta_as_offset(self, tmp_path):
+        rm = build_shift_remapper(self._make_test(tmp_path), 10000)
+        assert rm.orig_start == 1000004000
+        assert rm.offset == 10000
+        assert rm.new_start == 1000014000
+        assert rm.apply("id = 1000004000") == "id = 1000014000"
+
+    def test_shift_remapper_negative_delta(self, tmp_path):
+        rm = build_shift_remapper(self._make_test(tmp_path), -4000)
+        assert rm.offset == -4000
+        assert rm.apply("1000004002") == "1000000002"
+
+    def test_run_test_applies_shift_to_db_calls(self, tmp_path):
+        test_dir = tmp_path / "interview"
+        step = test_dir / "010-step"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text(SETUP_WITH_IDS)
+        (step / "query.sql").write_text("SELECT a WHERE id = 1000004000")
+        (step / "expected.json").write_text(json.dumps({"0": [{"id": 1000014000}]}))
+        db = FakeDB(results=[[{"id": 1000014000}]])
+        result = run_test(db, test_dir, max_retry=1, retry_delay=0, shift_id=10000)
+        assert result.passed is True
+        assert db.select_calls[0] == "SELECT a WHERE id = 1000014000"
+
+    def test_run_test_shift_takes_precedence_over_start_id(self, tmp_path):
+        # Both provided (CLI forbids this, but run_test should be unambiguous).
+        rm_dir = self._make_test(tmp_path)
+        db = FakeDB(results=[[{"id": 1000099999}]])
+        (rm_dir / "010-step" / "query.sql").write_text("SELECT a WHERE id = 1000004000")
+        (rm_dir / "010-step" / "expected.json").write_text(json.dumps({"0": [{"id": 1000005000}]}))
+        run_test(db, rm_dir, max_retry=1, retry_delay=0, new_start_id=1000014000, shift_id=1000)
+        assert db.select_calls[0] == "SELECT a WHERE id = 1000005000"  # shifted by +1000
 
     def test_run_test_remap_error_recorded(self, tmp_path):
         test_dir = tmp_path / "nodecl"

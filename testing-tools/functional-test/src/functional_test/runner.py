@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from .compare import lenient_match, normalize_rows
-from .remapper import IdRemapper, build_id_remapper
+from .remapper import IdRemapper, build_id_remapper, build_shift_remapper
 
 SETUP_FILE = "setup.sql"
 QUERY_FILE = "query.sql"
@@ -295,6 +295,7 @@ def run_test(
     retry_delay: float,
     on_event: Optional[Callable[[str], None]] = None,
     new_start_id: Optional[int] = None,
+    shift_id: Optional[int] = None,
 ) -> TestResult:
     result = TestResult(name=test_dir.name)
     try:
@@ -308,9 +309,12 @@ def run_test(
         return result
 
     remapper: Optional[IdRemapper] = None
-    if new_start_id is not None:
+    if shift_id is not None or new_start_id is not None:
         try:
-            remapper = build_id_remapper(test_dir, new_start_id)
+            if shift_id is not None:
+                remapper = build_shift_remapper(test_dir, shift_id)
+            else:
+                remapper = build_id_remapper(test_dir, new_start_id)
         except ValueError as exc:
             result.error = str(exc)
             return result

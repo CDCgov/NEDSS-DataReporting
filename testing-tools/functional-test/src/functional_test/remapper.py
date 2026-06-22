@@ -95,12 +95,12 @@ def _largest_cluster(ids: set[int], gap: int) -> list[int]:
     return max(clusters, key=lambda cluster: (len(cluster), -cluster[0]))
 
 
-def build_id_remapper(test_dir: Path, new_start_id: int) -> IdRemapper:
-    """Build a remapper that shifts ``test_dir``'s UID block to ``new_start_id``.
+def _detect_block_start(test_dir: Path) -> int:
+    """Return the low end of ``test_dir``'s UID block.
 
-    The current starting id is the low end of the largest cluster of
-    ``DECLARE @... bigint = N;`` literals across the test's setup files. Raises
-    ``ValueError`` if no such literals are found.
+    The start is the low end of the largest cluster of
+    ``DECLARE @... bigint = N;`` literals (in the test ID range) across the
+    test's setup files. Raises ``ValueError`` if no such literals are found.
     """
     setup_files = sorted(test_dir.rglob(SETUP_FILE))
     if not setup_files:
@@ -118,6 +118,20 @@ def build_id_remapper(test_dir: Path, new_start_id: int) -> IdRemapper:
             f"No test-range IDs (>= {TEST_ID_THRESHOLD}) declared under {test_dir}; cannot remap IDs"
         )
 
-    cluster = _largest_cluster(candidates, gap=BLOCK_SIZE)
-    lo = cluster[0]
+    return _largest_cluster(candidates, gap=BLOCK_SIZE)[0]
+
+
+def build_id_remapper(test_dir: Path, new_start_id: int) -> IdRemapper:
+    """Build a remapper that shifts ``test_dir``'s UID block to ``new_start_id``."""
+    lo = _detect_block_start(test_dir)
     return IdRemapper(orig_start=lo, new_start=new_start_id, offset=new_start_id - lo)
+
+
+def build_shift_remapper(test_dir: Path, delta: int) -> IdRemapper:
+    """Build a remapper that shifts ``test_dir``'s UID block by ``delta``.
+
+    Unlike :func:`build_id_remapper`, the offset is the same for every test, so
+    this works when running multiple tests at once.
+    """
+    lo = _detect_block_start(test_dir)
+    return IdRemapper(orig_start=lo, new_start=lo + delta, offset=delta)

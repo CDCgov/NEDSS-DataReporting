@@ -129,6 +129,18 @@ class TestParser:
         parser = cli.build_parser()
         args = parser.parse_args(["-S", "h", "-U", "u", "-P", "p", "-d", "/data"])
         assert args.start_id is None
+        assert args.shift_id is None
+
+    def test_shift_id_parsed_as_int(self):
+        parser = cli.build_parser()
+        args = parser.parse_args(["-d", "/data", "-s", "-4000"])
+        assert args.shift_id == -4000
+        assert args.start_id is None
+
+    def test_id_and_shift_id_mutually_exclusive(self):
+        parser = cli.build_parser()
+        with pytest.raises(SystemExit):
+            parser.parse_args(["-d", "/data", "-i", "1000014000", "-s", "10000"])
 
     def test_missing_required_args_exits(self):
         parser = cli.build_parser()
@@ -250,6 +262,29 @@ class TestMainIdFlag:
              "-t", "mytest", "-i", "1000014000", "--retry-delay", "0"]
         )
         assert captured.get("new_start_id") == 1000014000
+
+    def test_shift_id_works_with_multiple_tests(self, tmp_path, monkeypatch):
+        # Two tests, -s with no -t selects all -> allowed (unlike -i).
+        _make_test_tree(tmp_path, [{"a": 1}])
+        other = tmp_path / "other" / "010"
+        other.mkdir(parents=True)
+        (other / "setup.sql").write_text("DECLARE @a bigint = 1000005000\n")
+        (other / "query.sql").write_text("SELECT 1")
+        (other / "expected.json").write_text("{}")
+        monkeypatch.setattr(cli, "Database", FakeDatabase)
+        seen = []
+        real_run_test = cli.run_test
+
+        def wrapper(db, test_dir, **kwargs):
+            seen.append((test_dir.name, kwargs.get("shift_id")))
+            return real_run_test(db, test_dir, **kwargs)
+
+        monkeypatch.setattr(cli, "run_test", wrapper)
+        rc = cli.main(["-S", "h", "-U", "u", "-P", "p", "-d", str(tmp_path),
+                       "-s", "10000", "--retry-delay", "0"])
+        assert rc != 2  # not a usage error
+        assert {name for name, _ in seen} == {"mytest", "other"}
+        assert all(shift == 10000 for _, shift in seen)
 
 
 def _boom(*args, **kwargs):

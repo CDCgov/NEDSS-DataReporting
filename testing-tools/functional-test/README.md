@@ -57,6 +57,7 @@ The connection flags follow `sqlcmd` conventions. Only `-d` is required —
 | `-d` | `--data-dir` | yes | The `testData/functional` directory. |
 | `-t` | `--test` | no | A test name to run. Repeat `-t` to run several. If omitted, all tests run. |
 | `-i` | `--id` | no | Override the test's starting UID; all IDs are shifted on the fly. Requires exactly one `-t`. |
+| `-s` | `--shift-id` | no | Shift every test's UIDs by this integer delta on the fly. Works with any number of tests. Mutually exclusive with `-i`. |
 
 ### Connection defaults from `.env`
 
@@ -107,6 +108,16 @@ block of `DECLARE @... bigint = N;` literals in the test's `setup.sql` files
 (shared IDs such as the superuser are excluded). Every reference to a block ID
 in `setup.sql`, `query.sql` and `expected.json` is shifted by the same offset,
 including IDs embedded in strings like `PSN1000004000GA01`.
+
+To shift by a relative delta instead of an absolute start — which also works
+when running several tests at once — use `-s`. Each test's block is detected
+independently and shifted by the same delta:
+
+```sh
+uv run functional-test \
+    -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
+    -t interview -t morbidityReport -s 100000
+```
 
 List the discovered tests without connecting:
 
