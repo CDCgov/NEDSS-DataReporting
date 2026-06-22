@@ -83,18 +83,20 @@ services:
       start_period: 10s
 
   kafka-connect:
-    build:
-      dockerfile: ./containers/kafka-connect/Dockerfile
+    image: confluentinc/cp-kafka-connect:7.6.1
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >-
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.6 &&
+        exec /etc/confluent/docker/run
     depends_on:
       kafka:
         condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
-
     ports:
       - 8083:8083
     volumes:
-      - ./containers/kafka-connect/initialize/:/kafka/healthcheck/
+      - kafka-connect-plugins:/usr/share/confluent-hub-components
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "kafka:29092"
       CONNECT_GROUP_ID: "cp-kafka-connect.groupId"
@@ -108,13 +110,8 @@ services:
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_CONSUMER_METADATA_MAX_AGE_MS: 1000
-      CONNECT_CONFIG_PROVIDERS: "env"
-      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
-      DB_URL: "jdbc:sqlserver://nbs-mssql:1433;databaseName=rdb_modern;encrypt=true;trustServerCertificate=true;"
-      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
-      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
     healthcheck:
-      test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s
 
   debezium:
@@ -122,12 +119,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      nbs-mssql:
-        condition: service_healthy
     ports:
       - "8085:8083"
-    volumes:
-      - ./containers/debezium/initialize/:/kafka/healthcheck/
     environment:
       BOOTSTRAP_SERVERS: kafka:29092
       GROUP_ID: connect-cluster
@@ -144,15 +137,8 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
-      CONNECT_CONFIG_PROVIDERS: "env"
-      CONNECT_CONFIG_PROVIDERS_ENV_CLASS: "org.apache.kafka.common.config.provider.EnvVarConfigProvider"
-      DB_HOST: "nbs-mssql"
-      DB_PORT: "1433"
-      DB_USERNAME: ${RTR_ADMIN_NAME:-rtr_admin}
-      DB_PASSWORD: ${RTR_ADMIN_PASSWORD:-rtr_admin}
-      KAFKA_SERVER: "kafka:29092"
     healthcheck:
-      test: ["CMD", "/kafka/healthcheck/healthcheck.sh"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s
 
   reporting-pipeline-service:
@@ -165,6 +151,8 @@ services:
       - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
       - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+      - DEBEZIUM_CONNECT_URL=http://debezium:8083
+      - KAFKA_CONNECT_URL=http://kafka-connect:8083
     ports:
       - "8095:8095"
     depends_on:
@@ -176,3 +164,6 @@ services:
         condition: service_healthy
       kafka-connect:
         condition: service_healthy
+
+volumes:
+  kafka-connect-plugins:

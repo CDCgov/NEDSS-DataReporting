@@ -8,8 +8,8 @@
    2. RTR User creation scripts applied
    3. Change Data Capture (CDC) enabled for relevant databases and tables
 3. [kafka](../docker-compose.yaml) - Message broker
-4. [kafka-connect](../containers/kafka-connect/Dockerfile) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. Requires POST of [mssql-connector.json](../containers/kafka-connect/initialize/mssql-connector.json) after container start up.
-5. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Requires POST for each connector to be sent after container start up.
+4. [kafka-connect](../docker-compose.yaml) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. The MSSQL JDBC sink connector is registered automatically by `reporting-pipeline-service` on startup from [mssql-connector.json](../reporting-pipeline-service/src/main/resources/connectors/kafka-connect/mssql-connector.json).
+5. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Source connectors are registered automatically by `reporting-pipeline-service` on startup from [connectors/debezium](../reporting-pipeline-service/src/main/resources/connectors/debezium).
 6. [reporting-pipeline-service](../reporting-pipeline-service/Dockerfile) - Process Kafka messages for investigation, ldf, observation, organization, and person data (also handles key-uid mappings)
 
 ### Prerequisites:
