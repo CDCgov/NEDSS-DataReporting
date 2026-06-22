@@ -45,10 +45,6 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    *
    * <p>Direct java class example:
    *
-   * <pre>
-   * ./gradlew clean reporting-pipeline-service:test-functional -Dtests=d_tb_pam
-   * </pre>
-   *
    * <ul>
    *   <li>List.of("hivNotificationActualReferral")
    *   <li>List.of("interview", "elrEColi")
