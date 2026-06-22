@@ -475,7 +475,10 @@ BEGIN
             drop table #TMP_LAB_RESULTS_ORDER_CONTACT1;
 
         select
-            * , SUBSTRING(RIGHT(SPACE(11) + RTRIM(oid), 11), 7, 5) as PROGRAM_AREA_ID  --VS =SUBSTR(PUT(OID,11.),7,5)
+            * , coalesce(
+                TRY_CAST(NULLIF(LTRIM(RTRIM(substring(left(RTRIM(CAST(oid AS varchar(30))) + space(11), 11), 7, 5))), '') as int),
+                TRY_CAST(NULLIF(LTRIM(RTRIM(substring(right(space(11) + RTRIM(CAST(oid AS varchar(30))), 11), 7, 5))), '') as int)
+            ) as PROGRAM_AREA_ID  -- Prefer current left-aligned behavior; fallback preserves SAS-style SUBSTR(PUT(OID,11.),7,5)
         into #TMP_LAB_RESULTS_ORDER_CONTACT1
         from #TMP_LABTEST_UPDATED
         ;
@@ -502,8 +505,8 @@ BEGIN
             tlroc1.*, pac.*
         into #TMP_LAB_RESULTS_ORDER_CONTACT2
         from #TMP_LAB_RESULTS_ORDER_CONTACT1 tlroc1
-                 left outer join dbo.nrt_srte_Program_area_code pac with(NOLOCK)
-                                 on left( pac.NBS_UID+ space(5), 5)  = cast(tlroc1.PROGRAM_AREA_ID as int)
+             left outer join dbo.nrt_srte_Program_area_code pac with(NOLOCK)
+                     on TRY_CAST(left(cast(pac.NBS_UID as varchar(30)) + space(5), 5) as int) = tlroc1.PROGRAM_AREA_ID
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
         INSERT INTO dbo.[JOB_FLOW_LOG]

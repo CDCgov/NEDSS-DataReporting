@@ -169,6 +169,66 @@ class InvestigationDataProcessingTests {
   }
 
   @Test
+  void testTransformActIdsExtractsByTypeCdRegardlessOfSequence() {
+    // act_id_seq is an auto-increment counter per PHC, not a reliable positional marker.
+    // LEGACY rows regularly land on seq values other than 3 in real ODSE data.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 7,  "type_cd": "STATE",  "root_extension_txt": "GA-STATE-001"},
+          {"act_id_seq": 9,  "type_cd": "CITY",   "root_extension_txt": "GA-CITY-001"},
+          {"act_id_seq": 11, "type_cd": "LEGACY",  "root_extension_txt": "FULTON-LEGACY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertEquals("GA-STATE-001", transformed.getInvStateCaseId());
+    assertEquals("GA-CITY-001", transformed.getCityCountyCaseNbr());
+    assertEquals("FULTON-LEGACY-001", transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsLegacyCaseIdNullWhenNoLegacyRow() {
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 1, "type_cd": "STATE", "root_extension_txt": "GA-STATE-001"},
+          {"act_id_seq": 2, "type_cd": "CITY",  "root_extension_txt": "GA-CITY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsUsesLatestSequenceWhenMultipleLegacyRowsExist() {
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+                [
+                    {"act_id_seq": 20, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLD"},
+                    {"act_id_seq": 10, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLDER"},
+                    {"act_id_seq": 30, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-NEWEST"}
+                ]
+                """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertEquals("LEGACY-NEWEST", transformed.getLegacyCaseId());
+  }
+
+  @Test
   void testInvestigationObservationIds() throws JsonProcessingException {
     Investigation investigation = new Investigation();
 
