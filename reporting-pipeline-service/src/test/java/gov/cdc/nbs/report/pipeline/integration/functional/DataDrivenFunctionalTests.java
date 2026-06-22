@@ -34,11 +34,10 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 class DataDrivenFunctionalTests extends FunctionalTest {
 
   /**
-   * <p>
    * Specific tests can be executed by manually adding the test name to the list below or by
-   * specifying the "tests" parameter. </p>
-   * 
-   * <p>If empty, all functional test directories are executed.</p>
+   * specifying the "tests" parameter.
+   *
+   * <p>If empty, all functional test directories are executed.
    *
    * <p>Command line example:
    *
