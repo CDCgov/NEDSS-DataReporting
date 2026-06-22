@@ -5,7 +5,6 @@
 ## Docker Containers
 
 1. [mssql](https://github.com/cdcent/NEDSSDB/pkgs/container/nedssdb) - Restored MSSQL Server database pre-configured to work with RTR. Notable configurations
-   1. NBS_ODSE.NBS_Configuration entry added with `config_key = 'ENV'`, `config_value = 'UAT'`
    2. RTR User creation scripts applied
    3. Change Data Capture (CDC) enabled for relevant databases and tables
 3. [kafka](../docker-compose.yaml) - Message broker

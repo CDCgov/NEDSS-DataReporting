@@ -1501,4 +1501,11 @@ public class PostProcessingService {
   private void completeLog(String sp) {
     logger.info(SP_EXECUTION_COMPLETED, sp);
   }
+
+  @Scheduled(cron = "${service.schedule.event-metric-cleanup}")
+  protected void eventMetricCleanup() {
+    logger.info("Running event metric cleanup...");
+    postProcRepository.executeEventMetricCleanup();
+    logger.info(SP_EXECUTION_COMPLETED, "sp_event_metric_cleanup_postprocessing");
+  }
 }

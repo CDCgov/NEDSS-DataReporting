@@ -1,1 +1,0 @@
-../containers/db/initialize/103-create_event_metric_cleanup_job-001.sql
