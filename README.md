@@ -100,7 +100,11 @@ To run only the `functional` tests in the reporting-pipeline-service
 ./gradlew clean reporting-pipeline-service:test-functional
 ```
 
-To run only _some_ of the `functional` tests in the reporting-pipeline-service, set `SELECTED_TEST_NAMES` in `reporting-pipeline-service\src\test\java\gov\cdc\nbs\report\pipeline\integration\functional\DataDrivenFunctionalTests.java`. Examples are in the code as a comment. If this list is empty, all functional tests will run.
+Specific `functional` and `unit` tests can be executed using the `tests` argument
+```sh
+./gradlew clean reporting-pipeline-service:test-functional -D tests=elrEColi,interview
+./gradlew clean reporting-pipeline-service:test-unit -D tests=covidCaseDatamart
+```
 
 ### Adding MasterEtl-level Validation for Functional Tests
 Review [FuncationTestValidation.md](./documentation/FunctionalTestValidation.md) for more details.

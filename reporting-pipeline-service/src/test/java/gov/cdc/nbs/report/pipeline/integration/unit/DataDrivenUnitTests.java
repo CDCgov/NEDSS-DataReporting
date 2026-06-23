@@ -3,12 +3,14 @@ package gov.cdc.nbs.report.pipeline.integration.unit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import gov.cdc.nbs.report.pipeline.integration.support.Await;
+import gov.cdc.nbs.report.pipeline.integration.support.DirectoryProvider;
 import gov.cdc.nbs.report.pipeline.integration.support.QueryRunner;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -42,17 +44,39 @@ class DataDrivenUnitTests extends UnitTest {
           .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
           .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
-  public DataDrivenUnitTests() {
-    super();
-  }
+  /**
+   * Specific tests can be executed by manually adding the test name to the list below or by
+   * specifying the "tests" parameter.
+   *
+   * <p>If empty, all unit tests are executed.
+   *
+   * <p>Command line example:
+   *
+   * <pre>
+   * ./gradlew clean reporting-pipeline-service:test-unit -Dtests=covidCaseDatamart
+   * </pre>
+   *
+   * <p>Direct java class example:
+   *
+   * <ul>
+   *   <li>List.of("covidCaseDatamart")
+   * </ul>
+   */
+  private static List<String> selectedTestNames = List.of();
 
   /**
    * Provides each of the folders present in the /resources/testData/unit/ directory to the
    * testRunner one at a time.
    */
   static Stream<Path> unitTestDirectoryProvider() throws IOException {
-    Path root = Paths.get("src/test/resources/testData/unit");
-    return Files.list(root).filter(Files::isDirectory); // Filter out files
+    String testsArg = System.getProperty("tests");
+
+    if (testsArg != null) {
+      selectedTestNames = new ArrayList<>(selectedTestNames);
+      Collections.addAll(selectedTestNames, testsArg.split(","));
+    }
+
+    return DirectoryProvider.stream("src/test/resources/testData/unit", selectedTestNames);
   }
 
   /**
