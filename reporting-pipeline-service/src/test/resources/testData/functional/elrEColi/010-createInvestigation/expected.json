@@ -379,7 +379,7 @@
   ],
   "13": [
     {
-      "CONDITION_KEY": 1,
+      "CONDITION_CD": null,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13296,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -392,7 +392,7 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "CONDITION_KEY": 239,
+      "CONDITION_CD": "11563",
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13296,
       "LAB_TEST_TECHNICIAN_KEY": 1,
