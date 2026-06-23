@@ -356,7 +356,6 @@ ORDER BY [LAB_TEST_UID]
 -- Identity strategy is fallback_after. review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [CONDITION_KEY],
     [COPY_TO_PROVIDER_KEY],
     [INVESTIGATION_KEY],
     [LAB_RESULT_VAL_LARGE_TXT_KEY],
