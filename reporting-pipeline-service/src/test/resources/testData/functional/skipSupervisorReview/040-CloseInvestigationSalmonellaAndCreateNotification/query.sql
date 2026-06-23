@@ -787,7 +787,6 @@ WHERE [LAB_RPT_LOCAL_ID] = N'OBS1000006008GA01'
 -- Steps: 1, 2
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [CONDITION_KEY],
     [COPY_TO_PROVIDER_KEY],
     [LAB_RESULT_VAL_LARGE_TXT_KEY],
     [LAB_RPT_DT_KEY],
