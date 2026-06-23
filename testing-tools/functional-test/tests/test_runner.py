@@ -223,6 +223,18 @@ class TestRunStep:
         assert result.passed is False
         assert "expected.json" in result.setup_error
 
+    def test_failing_query_stops_remaining_queries_in_step(self, tmp_path):
+        step = _make_step(
+            tmp_path / "010-step",
+            query="SELECT a; SELECT b",
+            expected={"0": [{"a": 1}], "1": [{"b": 2}]},
+        )
+        db = FakeDB(results=[[{"a": 999}]])  # query 0 never matches
+        result = run_step(db, step, max_retry=1, retry_delay=0)
+        assert result.passed is False
+        assert len(result.queries) == 1  # query 1 was never attempted
+        assert db.select_calls == ["SELECT a"]
+
     def test_select_exception_recorded(self, tmp_path):
         step = _make_step(tmp_path / "010-step", query="SELECT a", expected={"0": [{"a": 1}]})
 
@@ -393,6 +405,15 @@ class TestRunTest:
         assert isinstance(result, runner.TestResult)
         assert result.passed is True
         assert [s.name for s in result.steps] == ["010-a", "020-b"]
+
+    def test_failing_step_stops_remaining_steps(self, tmp_path):
+        test_dir = tmp_path / "mytest"
+        _make_step(test_dir / "010-a", query="SELECT a", expected={"0": [{"a": 1}]})
+        _make_step(test_dir / "020-b", query="SELECT b", expected={"0": [{"b": 2}]})
+        db = FakeDB(results=[[{"a": 999}]])  # step 010 fails
+        result = run_test(db, test_dir, max_retry=1, retry_delay=0)
+        assert result.passed is False
+        assert [s.name for s in result.steps] == ["010-a"]  # 020-b never ran
 
     def test_no_steps_is_error(self, tmp_path):
         test_dir = tmp_path / "empty"

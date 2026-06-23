@@ -260,7 +260,7 @@ def run_step(
                     error=f"No expected entry '{i}' in {EXPECTED_FILE}",
                 )
             )
-            continue
+            break
 
         start = time.monotonic()
         try:
@@ -284,6 +284,11 @@ def run_step(
                 error=error,
             )
         )
+
+        # Steps run sequentially and each builds on the previous one's state, so
+        # once a query fails there is no point running the rest of this test.
+        if not matched:
+            break
 
     return result
 
@@ -329,5 +334,8 @@ def run_test(
             on_event(f"    step {step_dir.name}")
         step_result = run_step(db, step_dir, max_retry, retry_delay, on_event, remapper)
         result.steps.append(step_result)
+        # Later steps depend on this one; stop the test at the first failure.
+        if not step_result.passed:
+            break
 
     return result

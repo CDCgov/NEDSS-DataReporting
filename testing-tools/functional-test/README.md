@@ -31,7 +31,13 @@ connection (this mirrors the Java `adminClient`).
 
 Because the pipeline is asynchronous, each query is retried up to
 `--max-retry` times (default 40) with `--retry-delay` seconds between attempts
-(default 6) — the same 4-minute ceiling the Java `Await` helper uses.
+(default 6) — the same 4-minute ceiling the Java `Await` helper uses. This bounds
+the run: it never waits indefinitely.
+
+A test's steps run in order and each builds on the previous one's state, so the
+first failing query stops the rest of that test (remaining queries in the step
+and all later steps are skipped). Other tests still run — use `--fail-fast` to
+stop the whole run at the first failing test instead.
 
 ## Setup
 
