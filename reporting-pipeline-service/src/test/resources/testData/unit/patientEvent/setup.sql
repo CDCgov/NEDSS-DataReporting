@@ -138,7 +138,7 @@ VALUES      (@dbo_Entity_entity_uid,
              '2004-04-07 00:00:00.000',
              '2004-04-07 00:00:00.000',
              N'PAT',
-             N'D',
+             NULL,
              N'M',
              N'N',
              NULL,
@@ -226,7 +226,7 @@ VALUES      (@dbo_Entity_entity_uid,
              NULL,
              NULL,
              NULL,
-             NULL);
+             N'D');
 
 --  Person_name
 INSERT INTO [dbo].[person_name]
