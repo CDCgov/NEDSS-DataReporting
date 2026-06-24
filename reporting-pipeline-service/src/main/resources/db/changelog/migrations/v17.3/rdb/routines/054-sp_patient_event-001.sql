@@ -170,8 +170,8 @@ BEGIN
                    end                                                                     as unk_ethnic_rsn,
                p.sex_unk_reason_cd,
                case
-                   when (p.sex_unk_reason_cd is not null or p.sex_unk_reason_cd != '') then (select TOP 1 *
-                                                                                             from dbo.fn_get_value_by_cd_ques(p.sex_unk_reason_cd, 'NBS272') ORDER BY 1)
+                when (p.sex_unk_reason_cd is not null and p.sex_unk_reason_cd != '') then (select TOP 1 *
+                                                                            from dbo.fn_get_value_by_cd_ques(p.sex_unk_reason_cd, 'NBS272') ORDER BY 1)
                    end                                                                     as curr_sex_unk_rsn,
                p.preferred_gender_cd,
                case
