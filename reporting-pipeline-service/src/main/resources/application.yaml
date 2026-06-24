@@ -113,6 +113,14 @@ connector:
     definitions:
       - classpath:connectors/kafka-connect/mssql-connector.json
 
+seeding:
+  enabled: ${SEEDING_CHECK_ENABLED:true}
+  pipeline-group-id: ${KAFKA_CONSUMER_APP:pipeline-consumer-app}
+  sink-group-id: ${SEEDING_SINK_GROUP_ID:connect-Kafka-Connect-SqlServer-Sink}
+  nbs-topic-prefix: ${SEEDING_NBS_TOPIC_PREFIX:nbs_}
+  nrt-topic-prefix: ${SEEDING_NRT_TOPIC_PREFIX:nrt_}
+  admin-timeout-ms: ${SEEDING_ADMIN_TIMEOUT_MS:10000}
+
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-enable: ${FF_PHC_DM_ENABLE:false}
