@@ -6,7 +6,7 @@ DECLARE @dbo_Entity_entity_uid bigint = 1000003000;
 DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000003001;
 DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000003002;
 DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 1000003003;
-DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN1000003000GA01';
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000003000GA01';
 
 -- STEP 1: CreatePatient
 -- dbo.Entity

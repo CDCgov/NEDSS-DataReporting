@@ -4,7 +4,7 @@ DECLARE @local_user_id bigint = 10007004;
 -- Adjust the UID declarations below manually so they remain unique across other tests.
 DECLARE @dbo_Act_act_uid bigint = 1000003008;
 DECLARE @dbo_Act_act_uid_2 bigint = 1000003009;
-DECLARE @dbo_Notification_local_id NVARCHAR(40) = N'NOT1000003009GA01';
+DECLARE @dbo_Notification_local_id nvarchar(40) = N'NOT1000003009GA01';
 
 -- STEP 3: CreateNotification
 -- dbo.Act

@@ -14,7 +14,7 @@ SET    [last_chg_time] = N'2026-04-24T15:24:03.983',
        [record_status_cd] = N'APPROVED',
        [record_status_time] = N'2026-04-24T15:24:03.983',
        [txt] = N'Notification Approved 04/21/2026',
-       [version_ctrl_nbr] = Isnull([version_ctrl_nbr], 0) + 1
+       [version_ctrl_nbr] = ISNULL([version_ctrl_nbr], 0) + 1
 WHERE  [notification_uid] = @dbo_Act_act_uid_2;
 
 -- dbo.PublicHealthCaseFact

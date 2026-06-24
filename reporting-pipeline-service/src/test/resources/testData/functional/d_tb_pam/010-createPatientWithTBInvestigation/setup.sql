@@ -19,8 +19,8 @@ VALUES      (@dbo_Entity_entity_uid,
 
 -- dbo.Person
 -- step: 1
-DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(bigint, @dbo_Entity_entity_uid)))
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid)))
   + N'GA01';
 
 INSERT INTO [dbo].[person]
@@ -297,8 +297,8 @@ VALUES      (@dbo_Act_act_uid,
 
 -- dbo.Public_health_case
 -- step: 1
-DECLARE @dbo_Public_health_case_local_id NVARCHAR(40) = N'CAS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(bigint, @dbo_Act_act_uid)))
+DECLARE @dbo_Public_health_case_local_id nvarchar(40) = N'CAS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid)))
   + N'GA01';
 
 INSERT INTO [dbo].[public_health_case]
@@ -464,7 +464,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -500,7 +500,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_2_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -536,7 +536,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_3_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -572,7 +572,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_4_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -608,7 +608,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_5_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -644,7 +644,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_6_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -680,7 +680,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_7_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -716,7 +716,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_8_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -752,7 +752,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_9_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -788,7 +788,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_10_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -824,7 +824,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_11_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -860,7 +860,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_12_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -896,7 +896,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_13_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -932,7 +932,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_14_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -968,7 +968,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_15_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1004,7 +1004,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_16_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1040,7 +1040,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_17_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1076,7 +1076,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_18_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1112,7 +1112,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_19_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1148,7 +1148,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_20_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1184,7 +1184,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_21_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1220,7 +1220,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_22_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1256,7 +1256,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_23_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1292,7 +1292,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_24_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1328,7 +1328,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_25_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1364,7 +1364,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_26_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1400,7 +1400,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_27_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1436,7 +1436,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_28_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1472,7 +1472,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_29_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1508,7 +1508,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_30_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1544,7 +1544,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_31_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1580,7 +1580,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_32_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1616,7 +1616,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_33_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1652,7 +1652,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_34_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1688,7 +1688,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_35_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1724,7 +1724,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_36_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1760,7 +1760,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_37_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1796,7 +1796,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_38_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1832,7 +1832,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_39_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1868,7 +1868,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_40_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1904,7 +1904,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_41_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1940,7 +1940,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_42_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1976,7 +1976,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_43_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2012,7 +2012,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_44_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2048,7 +2048,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_45_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2084,7 +2084,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_46_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2120,7 +2120,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_47_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2156,7 +2156,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_48_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2192,7 +2192,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_49_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2228,7 +2228,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_50_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2264,7 +2264,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_51_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2300,7 +2300,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_52_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2336,7 +2336,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_53_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2372,7 +2372,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_54_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2408,7 +2408,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_55_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2444,7 +2444,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_56_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2480,7 +2480,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_57_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2516,7 +2516,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_58_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2552,7 +2552,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_59_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2588,7 +2588,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_60_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2624,7 +2624,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_61_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2660,7 +2660,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_62_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2696,7 +2696,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_63_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2732,7 +2732,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_64_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2768,7 +2768,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_65_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2804,7 +2804,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_66_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2840,7 +2840,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_67_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2876,7 +2876,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_68_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2912,7 +2912,7 @@ INSERT INTO [dbo].[nbs_act_entity]
              [record_status_cd],
              [record_status_time],
              [type_cd])
-output      inserted.[nbs_act_entity_uid]
+OUTPUT      INSERTED.[nbs_act_entity_uid]
 INTO @dbo_NBS_act_entity_nbs_act_entity_uid_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2934,7 +2934,7 @@ UPDATE [dbo].[person]
 SET    [last_chg_time] = N'2026-06-17T19:14:40.787',
        [record_status_time] = N'2026-06-17T19:14:40.787',
        [status_time] = N'2026-06-17T19:14:40.787',
-       [version_ctrl_nbr] = Isnull([version_ctrl_nbr], 0) + 1
+       [version_ctrl_nbr] = ISNULL([version_ctrl_nbr], 0) + 1
 WHERE  [person_uid] = @dbo_Entity_entity_uid;
 
 -- dbo.Entity_locator_participation
