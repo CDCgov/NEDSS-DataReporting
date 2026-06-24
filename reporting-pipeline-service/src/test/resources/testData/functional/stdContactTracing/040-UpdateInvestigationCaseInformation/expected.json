@@ -285,7 +285,7 @@
   "14": [
     {
       "CLOSED_BY_KEY": 1,
-      "CONDITION_KEY": 44,
+      "CONDITION_CD": "10312",
       "DELIVERING_HOSP_KEY": 1,
       "DELIVERING_MD_KEY": 1,
       "DISPOSITIONED_BY_KEY": 1,
@@ -538,7 +538,6 @@
   ],
   "26": [
     {
-      "CONDITION_KEY": 242,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -554,7 +553,6 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "CONDITION_KEY": 1,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -577,7 +575,6 @@
       "CASE_RPT_MMWR_YR": 2026,
       "COINFECTION_ID": "COIN1000XX01",
       "CONDITION_CD": "10312",
-      "CONDITION_KEY": 44,
       "CONFIRMATION_DT": "2026-04-24T00:00:00.000",
       "CURR_PROCESS_STATE": "Surveillance Follow-up",
       "DETECTION_METHOD_DESC_TXT": "Self-referral",
