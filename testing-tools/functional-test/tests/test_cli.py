@@ -142,6 +142,13 @@ class TestParser:
         with pytest.raises(SystemExit):
             parser.parse_args(["-d", "/data", "-i", "1000014000", "-s", "10000"])
 
+    def test_debug_defaults_false(self):
+        parser = cli.build_parser()
+        args = parser.parse_args(["-d", "/data"])
+        assert args.debug is False
+        args = parser.parse_args(["-d", "/data", "--debug"])
+        assert args.debug is True
+
     def test_missing_required_args_exits(self):
         parser = cli.build_parser()
         with pytest.raises(SystemExit):
@@ -232,6 +239,35 @@ class TestMainRun:
         host, port, user, password, database = FakeDatabase.instances[0].args
         assert (host, port) == ("myhost", 3433)
         assert database == "NBS_ODSE"
+
+
+class TestDebugFlag:
+    def test_failure_without_debug_hides_expected_actual(self, tmp_path, monkeypatch, capsys):
+        _make_test_tree(tmp_path, [{"a": 999}])  # expects 999, FakeDatabase returns 1 -> fail
+        monkeypatch.setattr(cli, "Database", FakeDatabase)
+        rc = cli.main(
+            ["-S", "h", "-U", "u", "-P", "p", "-d", str(tmp_path),
+             "--retry-delay", "0", "--max-retry", "1"]
+        )
+        out = capsys.readouterr().out
+        assert rc == 1
+        assert "FAILED" in out
+        assert "expected:" not in out
+        assert "actual:" not in out
+        assert "--debug" in out  # hint shown
+
+    def test_failure_with_debug_shows_expected_actual(self, tmp_path, monkeypatch, capsys):
+        _make_test_tree(tmp_path, [{"a": 999}])
+        monkeypatch.setattr(cli, "Database", FakeDatabase)
+        rc = cli.main(
+            ["-S", "h", "-U", "u", "-P", "p", "-d", str(tmp_path),
+             "--retry-delay", "0", "--max-retry", "1", "--debug"]
+        )
+        out = capsys.readouterr().out
+        assert rc == 1
+        assert "expected:" in out
+        assert "actual:" in out
+        assert "999" in out and "\"a\": 1" in out  # expected and actual values both shown
 
 
 class TestMainIdFlag:

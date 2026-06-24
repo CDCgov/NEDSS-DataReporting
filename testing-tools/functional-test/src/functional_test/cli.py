@@ -154,31 +154,45 @@ def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentPar
         action="store_true",
         help="Stop after the first failing test.",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Live-print each query's SQL and its expected vs actual results on every poll "
+        "attempt (so a failing/slow query's data is visible as it changes across retries).",
+    )
     return parser
 
 
-def _print_failure_detail(query: QueryResult) -> None:
+def _print_failure_line(query: QueryResult) -> None:
     print(_red(f"      ✗ query {query.index} FAILED ({query.attempts} attempt(s), "
                f"{query.elapsed:.1f}s)"))
     if query.error:
         print(_dim(f"        error: {query.error}"))
+
+
+def _print_query_detail(index: int, query: str, expected, actual, note: str = "") -> None:
+    header = f"      query {index} detail" + (f" ({note})" if note else "") + ":"
+    print(_dim(header))
     print(_dim("        query:"))
-    for line in query.query.splitlines():
+    for line in query.splitlines():
         print(_dim(f"          {line}"))
-    expected_str = json.dumps(query.expected, indent=2, default=str)
-    actual_str = json.dumps(query.actual, indent=2, default=str)
     print(_dim("        expected:"))
-    for line in expected_str.splitlines():
+    for line in json.dumps(expected, indent=2, default=str).splitlines():
         print(_dim(f"          {line}"))
     print(_dim("        actual:"))
-    if query.actual is None:
-        print(_dim("          (no rows / not fetched)"))
+    if not actual:
+        print(_dim("          (no rows)"))
     else:
-        for line in actual_str.splitlines():
+        for line in json.dumps(actual, indent=2, default=str).splitlines():
             print(_dim(f"          {line}"))
 
 
 def _print_test_result(result: TestResult) -> None:
+    """Print the end-of-test pass/fail summary.
+
+    Individual query failures are printed live as they happen (see the on_query
+    callback in main); here we only summarize test- and step-level status.
+    """
     if result.passed:
         print(_green(f"  ✓ {result.name}"))
         return
@@ -194,10 +208,6 @@ def _print_test_result(result: TestResult) -> None:
         if step.setup_error:
             print(_red("      ✗ setup.sql FAILED"))
             print(_dim(f"        {step.setup_error}"))
-        for query in step.queries:
-            if query.passed:
-                continue
-            _print_failure_detail(query)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -250,18 +260,39 @@ def main(argv: list[str] | None = None) -> int:
 
     print(_bold(f"Running {len(test_dirs)} functional test(s)\n"))
 
+    def emit(msg: str) -> None:
+        print(_dim(msg))
+        sys.stdout.flush()
+
+    def on_query(query: QueryResult) -> None:
+        # Print each failure the moment it happens, not at the end of the test.
+        if not query.passed:
+            _print_failure_line(query)
+            sys.stdout.flush()
+
+    def on_poll(index: int, query: str, expected, attempt: int, actual, matched: bool) -> None:
+        # In debug, show the query and what it returns on every poll, so the
+        # actual data is visible live as it changes across retries.
+        if args.debug:
+            note = f"attempt {attempt}: " + ("matched" if matched else "no match")
+            _print_query_detail(index, query, expected, actual, note)
+            sys.stdout.flush()
+
     results: list[TestResult] = []
     try:
         for test_dir in test_dirs:
             print(_bold(f"  • {test_dir.name}"))
+            sys.stdout.flush()
             result = run_test(
                 db,
                 test_dir,
                 max_retry=args.max_retry,
                 retry_delay=args.retry_delay,
-                on_event=lambda msg: print(_dim(msg)),
+                on_event=emit,
                 new_start_id=args.start_id,
                 shift_id=args.shift_id,
+                on_query=on_query,
+                on_poll=on_poll,
             )
             results.append(result)
             _print_test_result(result)
@@ -277,6 +308,9 @@ def main(argv: list[str] | None = None) -> int:
     print(_bold("=" * 60))
     summary = f"{passed} passed, {failed} failed, {len(results)} total"
     print(_bold(_green(summary) if failed == 0 else _red(summary)))
+
+    if failed and not args.debug:
+        print(_dim("Re-run with --debug to see the query and expected vs actual for failures."))
 
     return 0 if failed == 0 else 1
 

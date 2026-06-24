@@ -140,7 +140,17 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
 | `--max-retry` | `40` | Maximum polls per query before failing. |
 | `--retry-delay` | `6` | Seconds between polls. |
 | `--fail-fast` | off | Stop after the first failing test. |
+| `--debug` | off | Live-print each query's SQL and its expected vs actual results on every poll attempt. |
 | `--list` | off | List discovered tests and exit (no DB connection). |
+
+Failures are printed **live** — the moment a query exhausts its retries, not at
+the end of the run. By default a failed query reports only which query failed
+(and any error).
+
+With `--debug`, each query additionally prints its SQL and its expected vs
+actual JSON **on every poll attempt** — so you can watch a slow or failing
+query's data change across retries instead of waiting for the timeout. This is
+the fastest way to see *why* a query isn't matching.
 
 The process exits `0` when all tests pass, `1` when any test fails, and `2` on
 a usage/connection error.

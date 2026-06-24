@@ -130,3 +130,17 @@ class TestLenientMatchScalars:
     def test_strings(self):
         assert lenient_match("Jeff", "Jeff")
         assert not lenient_match("Jeff", "jeff")
+
+    def test_date_only_matches_midnight_datetime(self):
+        # DATE columns come back as midnight datetimes; expected may be date-only.
+        assert lenient_match("2026-04-09", "2026-04-09T00:00:00.000")
+        assert lenient_match("2026-04-09T00:00:00.000", "2026-04-09")
+        assert lenient_match("2026-04-09", "2026-04-09T00:00:00")
+
+    def test_date_only_does_not_match_nonmidnight(self):
+        assert not lenient_match("2026-04-09", "2026-04-09T04:21:34.363")
+        assert not lenient_match("2026-04-09", "2026-04-10T00:00:00.000")
+
+    def test_full_datetime_still_compared_exactly(self):
+        assert lenient_match("2026-04-20T04:21:34.363", "2026-04-20T04:21:34.363")
+        assert not lenient_match("2026-04-20T04:21:34.363", "2026-04-20T04:21:34.000")

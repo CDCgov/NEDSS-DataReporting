@@ -193,8 +193,12 @@ def _wait_for_match(
     expected: Any,
     max_retry: int,
     retry_delay: float,
+    on_attempt: Optional[Callable[[int, Any, bool], None]] = None,
 ) -> tuple[bool, int, Any]:
     """Poll ``fetch`` until rows match ``expected`` or retries are exhausted.
+
+    ``on_attempt`` (if given) is called after every poll with
+    (attempt_number, rows, matched) so callers can surface progress live.
 
     Returns (matched, attempts, last_actual).
     """
@@ -202,7 +206,10 @@ def _wait_for_match(
     for attempt in range(1, max_retry + 1):
         rows = normalize_rows(fetch())
         last_actual = rows
-        if rows and lenient_match(expected, rows):
+        matched = bool(rows) and lenient_match(expected, rows)
+        if on_attempt:
+            on_attempt(attempt, rows, matched)
+        if matched:
             return True, attempt, rows
         if attempt < max_retry:
             time.sleep(retry_delay)
@@ -216,6 +223,8 @@ def run_step(
     retry_delay: float,
     on_event: Optional[Callable[[str], None]] = None,
     remapper: Optional[IdRemapper] = None,
+    on_query: Optional[Callable[["QueryResult"], None]] = None,
+    on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
 ) -> StepResult:
     result = StepResult(name=step_dir.name)
 
@@ -250,40 +259,49 @@ def run_step(
             on_event(f"      query {i} ...")
         expected = expected_map.get(str(i))
         if expected is None:
-            result.queries.append(
-                QueryResult(
-                    index=i,
-                    query=query,
-                    passed=False,
-                    attempts=0,
-                    elapsed=0.0,
-                    error=f"No expected entry '{i}' in {EXPECTED_FILE}",
-                )
+            query_result = QueryResult(
+                index=i,
+                query=query,
+                passed=False,
+                attempts=0,
+                elapsed=0.0,
+                error=f"No expected entry '{i}' in {EXPECTED_FILE}",
             )
+            result.queries.append(query_result)
+            if on_query:
+                on_query(query_result)
             break
 
         start = time.monotonic()
+        attempt_cb = None
+        if on_poll:
+            attempt_cb = (
+                lambda attempt, rows, matched, i=i, q=query, e=expected: on_poll(
+                    i, q, e, attempt, rows, matched
+                )
+            )
         try:
             matched, attempts, actual = _wait_for_match(
-                lambda q=query: db.select(q), expected, max_retry, retry_delay
+                lambda q=query: db.select(q), expected, max_retry, retry_delay, attempt_cb
             )
             error = None
         except Exception as exc:  # noqa: BLE001
             matched, attempts, actual = False, 0, None
             error = f"{type(exc).__name__}: {exc}"
 
-        result.queries.append(
-            QueryResult(
-                index=i,
-                query=query,
-                passed=matched,
-                attempts=attempts,
-                elapsed=time.monotonic() - start,
-                expected=expected,
-                actual=actual,
-                error=error,
-            )
+        query_result = QueryResult(
+            index=i,
+            query=query,
+            passed=matched,
+            attempts=attempts,
+            elapsed=time.monotonic() - start,
+            expected=expected,
+            actual=actual,
+            error=error,
         )
+        result.queries.append(query_result)
+        if on_query:
+            on_query(query_result)
 
         # Steps run sequentially and each builds on the previous one's state, so
         # once a query fails there is no point running the rest of this test.
@@ -301,6 +319,8 @@ def run_test(
     on_event: Optional[Callable[[str], None]] = None,
     new_start_id: Optional[int] = None,
     shift_id: Optional[int] = None,
+    on_query: Optional[Callable[["QueryResult"], None]] = None,
+    on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
 ) -> TestResult:
     result = TestResult(name=test_dir.name)
     try:
@@ -332,7 +352,9 @@ def run_test(
     for step_dir in steps:
         if on_event:
             on_event(f"    step {step_dir.name}")
-        step_result = run_step(db, step_dir, max_retry, retry_delay, on_event, remapper)
+        step_result = run_step(
+            db, step_dir, max_retry, retry_delay, on_event, remapper, on_query, on_poll
+        )
         result.steps.append(step_result)
         # Later steps depend on this one; stop the test at the first failure.
         if not step_result.passed:

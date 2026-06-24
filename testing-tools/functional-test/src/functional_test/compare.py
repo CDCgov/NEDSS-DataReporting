@@ -18,7 +18,19 @@ from __future__ import annotations
 
 import datetime
 import decimal
+import re
 from typing import Any
+
+# A datetime string at exactly midnight, e.g. "2026-04-09T00:00:00.000". DATE
+# columns come back from the driver as midnight datetimes, but expected.json may
+# store them as date-only ("2026-04-09"); both should compare equal.
+_DATE_AT_MIDNIGHT = re.compile(r"^(\d{4}-\d{2}-\d{2})T00:00:00(?:\.0+)?$")
+
+
+def _canonical_temporal(value: str) -> str:
+    """Reduce a midnight datetime string to its date so it matches date-only."""
+    match = _DATE_AT_MIDNIGHT.match(value)
+    return match.group(1) if match else value
 
 
 def to_comparable(value: Any) -> Any:
@@ -62,6 +74,10 @@ def _scalars_match(expected: Any, actual: Any) -> bool:
             return decimal.Decimal(str(expected)) == decimal.Decimal(str(actual))
         except (decimal.InvalidOperation, ValueError):
             return False
+    if isinstance(expected, str) and isinstance(actual, str):
+        # A date-only value matches the same date at midnight (DATE columns come
+        # back as "...T00:00:00.000").
+        return _canonical_temporal(expected) == _canonical_temporal(actual)
     # Fall back to direct equality; compare numbers-as-strings loosely is not
     # done here because Jackson keeps strings as strings.
     return expected == actual
@@ -69,6 +85,10 @@ def _scalars_match(expected: Any, actual: Any) -> bool:
 
 def lenient_match(expected: Any, actual: Any) -> bool:
     """Return True if ``actual`` matches ``expected`` under LENIENT rules."""
+    # Fast path for identical values. Guard against bool/int equivalence
+    # (True == 1) so bool strictness is still enforced below.
+    if expected == actual and isinstance(expected, bool) == isinstance(actual, bool):
+        return True
     if isinstance(expected, dict):
         if not isinstance(actual, dict):
             return False
