@@ -40,9 +40,9 @@ services:
       - 2323:2323
     environment:
       - db_host=nbs-mssql
-      - rdb_user=${DB_USER:-sa}
+      - rdb_user=${DATABASE_USERNAME:-sa}
       - rdb_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
-      - odse_user=${DB_USER:-sa}
+      - odse_user=${DATABASE_USERNAME:-sa}
       - odse_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - sas_user_pass=n3dss4dm1n
       - sas_encoding=latin1
