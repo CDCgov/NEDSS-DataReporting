@@ -8,8 +8,6 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
-      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
-      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     entrypoint:
       - /bin/bash
       - -c
