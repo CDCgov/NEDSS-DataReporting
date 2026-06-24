@@ -18,10 +18,10 @@ Custom scripts that prepare the SQL Server instance for local development and CI
 
 ### 098–099 — User Accounts
 
-Creates the SQL Server logins and database users required by the application and migrations.
+Creates the SQL Server logins and database users required by the application and testing harnesses.
 
 | File | Purpose |
 | :--- | :--- |
-| `098-rtr-admin.sql` | Creates the `rtr-admin` migration account |
+| `098-rtr-admin.sql` | Creates the `rtr-admin` account for running functional / unit tests |
 | `099-rtr-service-user.sql` | Creates the `rtr-service-user` application account |
 
