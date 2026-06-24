@@ -24,7 +24,7 @@ BEGIN
         USE [NBS_SRTE];
         IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = ''$(RTR_ADMIN_NAME)'')
             CREATE USER [$(RTR_ADMIN_NAME)] FOR LOGIN [$(RTR_ADMIN_NAME)];
-        ALTER ROLE [db_owner] ADD MEMBER [$(RTR_ADMIN_NAME)];
+        ALTER ROLE [db_reader] ADD MEMBER [$(RTR_ADMIN_NAME)];
     ');
 END
 
@@ -37,7 +37,7 @@ BEGIN
         USE [NBS_ODSE];
         IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = ''$(RTR_ADMIN_NAME)'')
             CREATE USER [$(RTR_ADMIN_NAME)] FOR LOGIN [$(RTR_ADMIN_NAME)];
-        ALTER ROLE [db_owner] ADD MEMBER [$(RTR_ADMIN_NAME)];
+        ALTER ROLE [db_reader] ADD MEMBER [$(RTR_ADMIN_NAME)];
     ');
 END
 
