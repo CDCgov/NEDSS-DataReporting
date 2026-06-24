@@ -3,10 +3,10 @@ DECLARE @superuser_id bigint = 10009282;
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
 DECLARE @dbo_Entity_entity_uid bigint = 1000004000;
-DECLARE @dbo_Entity_entity_uid_2 bigint = 1000004002;
-DECLARE @dbo_Act_act_uid bigint = 1000004004;
 DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000004001;
+DECLARE @dbo_Entity_entity_uid_2 bigint = 1000004002;
 DECLARE @dbo_Postal_locator_postal_locator_uid_2 bigint = 1000004003;
+DECLARE @dbo_Act_act_uid bigint = 1000004004;
 
 -- Derived local_ids
 DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';

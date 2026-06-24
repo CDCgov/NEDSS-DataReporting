@@ -2,8 +2,8 @@ USE [NBS_ODSE];
 
 DECLARE @superuser_id BIGINT = 10009282;
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Act_act_uid_2 bigint = 1000003009;
 DECLARE @dbo_Act_act_uid BIGINT = 1000003008;
+DECLARE @dbo_Act_act_uid_2 bigint = 1000003009;
 
 -- STEP 4: ApproveNotification
 -- dbo.Notification
