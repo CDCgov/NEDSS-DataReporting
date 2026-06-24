@@ -13,8 +13,8 @@ SELECT
     [PATIENT_ADDED_BY],
     [PATIENT_LAST_UPDATED_BY]
 FROM [RDB_MODERN].[dbo].[D_PATIENT]
-WHERE [PATIENT_LOCAL_ID] = 'PSN1000004000GA01'
-AND PATIENT_LAST_CHANGE_TIME = '2026-04-20 04:21:34.363';
+WHERE [PATIENT_LOCAL_ID] = N'PSN1000004000GA01'
+AND PATIENT_LAST_CHANGE_TIME = N'2026-04-20 04:21:34.363';
 
 -- Query 1: Verify nrt_patient was created for MPR
 SELECT
@@ -30,7 +30,7 @@ SELECT
     [country_code],
     [entry_method]
 FROM [RDB_MODERN].[dbo].[nrt_patient]
-WHERE [local_id] = 'PSN1000004000GA01' AND [patient_uid] = 1000004000;
+WHERE [local_id] = N'PSN1000004000GA01' AND [patient_uid] = 1000004000;
 
 -- Query 2: Verify nrt_patient was created for version
 SELECT
@@ -43,7 +43,7 @@ SELECT
     [state],
     [state_code]
 FROM [RDB_MODERN].[dbo].[nrt_patient]
-WHERE [local_id] = 'PSN1000004000GA01' AND [patient_uid] = 1000004002;
+WHERE [local_id] = N'PSN1000004000GA01' AND [patient_uid] = 1000004002;
 
 -- Query 3: Verify INVESTIGATION was created
 SELECT
@@ -63,4 +63,4 @@ SELECT
     [CURR_PROCESS_STATE],
     [COINFECTION_ID]
 FROM [RDB_MODERN].[dbo].[INVESTIGATION]
-WHERE [INV_LOCAL_ID] = 'CAS1000004004GA01';
+WHERE [INV_LOCAL_ID] = N'CAS1000004004GA01';
