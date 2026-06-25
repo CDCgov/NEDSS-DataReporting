@@ -1,12 +1,12 @@
 USE [NBS_ODSE];
 
-DECLARE @superuser_id BIGINT = 10009282;
+DECLARE @superuser_id bigint = 10009282;
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid BIGINT = 1000011000;
-DECLARE @dbo_Postal_locator_postal_locator_uid BIGINT = 1000011001;
-DECLARE @dbo_Entity_entity_uid_2 BIGINT = 1000011002;
-DECLARE @dbo_Postal_locator_postal_locator_uid_2 BIGINT = 1000011003;
-DECLARE @dbo_Act_act_uid BIGINT = 1000011004;
+DECLARE @dbo_Entity_entity_uid bigint = 1000011000;
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000011001;
+DECLARE @dbo_Entity_entity_uid_2 bigint = 1000011002;
+DECLARE @dbo_Postal_locator_postal_locator_uid_2 bigint = 1000011003;
+DECLARE @dbo_Act_act_uid bigint = 1000011004;
 
 -- STEP 1: Create patient with TB investigation
 -- dbo.Entity
@@ -19,8 +19,8 @@ VALUES      (@dbo_Entity_entity_uid,
 
 -- dbo.Person
 -- step: 1
-DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Entity_entity_uid)))
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid)))
   + N'GA01';
 
 INSERT INTO [dbo].[person]
@@ -297,8 +297,8 @@ VALUES      (@dbo_Act_act_uid,
 
 -- dbo.Public_health_case
 -- step: 1
-DECLARE @dbo_Public_health_case_local_id NVARCHAR(40) = N'CAS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid)))
+DECLARE @dbo_Public_health_case_local_id nvarchar(40) = N'CAS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid)))
   + N'GA01';
 
 INSERT INTO [dbo].[public_health_case]
@@ -446,10 +446,10 @@ VALUES      (@dbo_Entity_entity_uid_2,
 
 -- dbo.NBS_case_answer
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -464,7 +464,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -482,10 +482,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_2 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_2 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_2_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -500,7 +500,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_2_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -518,10 +518,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_2 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_2_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_3 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_3 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_3_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -536,7 +536,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_3_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -554,10 +554,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_3 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_3_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_4 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_4 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_4_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -572,7 +572,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_4_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -590,10 +590,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_4 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_4_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_5 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_5 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_5_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -608,7 +608,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_5_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -626,10 +626,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_5 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_5_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_6 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_6 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_6_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -644,7 +644,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_6_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -662,10 +662,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_6 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_6_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_7 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_7 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_7_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -680,7 +680,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_7_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -698,10 +698,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_7 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_7_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_8 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_8 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_8_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -716,7 +716,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_8_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -734,10 +734,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_8 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_8_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_9 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_9 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_9_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -752,7 +752,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_9_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -770,10 +770,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_9 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_9_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_10 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_10 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_10_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -788,7 +788,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_10_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -806,10 +806,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_10 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_10_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_11 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_11 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_11_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -824,7 +824,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_11_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -842,10 +842,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_11 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_11_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_12 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_12 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_12_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -860,7 +860,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_12_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -878,10 +878,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_12 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_12_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_13 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_13 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_13_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -896,7 +896,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_13_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -914,10 +914,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_13 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_13_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_14 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_14 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_14_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -932,7 +932,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_14_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -950,10 +950,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_14 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_14_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_15 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_15 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_15_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -968,7 +968,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_15_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -986,10 +986,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_15 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_15_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_16 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_16 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_16_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1004,7 +1004,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_16_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1022,10 +1022,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_16 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_16_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_17 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_17 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_17_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1040,7 +1040,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_17_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1058,10 +1058,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_17 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_17_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_18 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_18 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_18_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1076,7 +1076,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_18_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1094,10 +1094,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_18 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_18_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_19 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_19 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_19_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1112,7 +1112,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_19_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1130,10 +1130,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_19 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_19_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_20 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_20 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_20_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1148,7 +1148,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_20_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1166,10 +1166,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_20 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_20_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_21 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_21 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_21_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1184,7 +1184,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_21_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1202,10 +1202,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_21 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_21_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_22 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_22 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_22_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1220,7 +1220,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_22_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1238,10 +1238,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_22 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_22_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_23 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_23 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_23_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1256,7 +1256,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_23_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1274,10 +1274,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_23 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_23_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_24 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_24 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_24_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1292,7 +1292,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_24_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1310,10 +1310,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_24 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_24_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_25 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_25 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_25_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1328,7 +1328,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_25_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1346,10 +1346,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_25 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_25_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_26 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_26 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_26_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1364,7 +1364,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_26_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1382,10 +1382,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_26 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_26_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_27 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_27 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_27_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1400,7 +1400,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_27_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1418,10 +1418,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_27 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_27_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_28 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_28 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_28_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1436,7 +1436,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_28_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1454,10 +1454,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_28 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_28_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_29 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_29 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_29_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1472,7 +1472,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_29_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1490,10 +1490,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_29 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_29_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_30 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_30 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_30_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1508,7 +1508,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_30_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1526,10 +1526,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_30 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_30_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_31 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_31 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_31_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1544,7 +1544,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_31_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1562,10 +1562,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_31 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_31_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_32 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_32 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_32_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1580,7 +1580,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_32_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1598,10 +1598,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_32 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_32_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_33 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_33 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_33_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1616,7 +1616,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_33_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1634,10 +1634,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_33 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_33_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_34 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_34 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_34_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1652,7 +1652,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_34_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1670,10 +1670,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_34 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_34_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_35 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_35 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_35_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1688,7 +1688,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_35_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1706,10 +1706,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_35 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_35_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_36 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_36 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_36_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1724,7 +1724,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_36_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1742,10 +1742,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_36 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_36_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_37 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_37 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_37_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1760,7 +1760,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_37_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1778,10 +1778,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_37 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_37_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_38 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_38 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_38_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1796,7 +1796,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_38_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1814,10 +1814,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_38 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_38_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_39 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_39 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_39_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1832,7 +1832,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_39_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1850,10 +1850,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_39 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_39_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_40 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_40 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_40_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1868,7 +1868,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_40_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1886,10 +1886,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_40 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_40_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_41 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_41 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_41_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1904,7 +1904,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_41_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1922,10 +1922,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_41 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_41_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_42 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_42 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_42_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1940,7 +1940,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_42_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1958,10 +1958,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_42 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_42_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_43 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_43 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_43_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -1976,7 +1976,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_43_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -1994,10 +1994,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_43 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_43_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_44 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_44 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_44_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2012,7 +2012,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_44_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2030,10 +2030,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_44 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_44_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_45 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_45 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_45_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2048,7 +2048,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_45_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2066,10 +2066,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_45 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_45_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_46 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_46 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_46_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2084,7 +2084,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_46_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2102,10 +2102,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_46 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_46_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_47 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_47 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_47_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2120,7 +2120,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_47_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2138,10 +2138,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_47 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_47_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_48 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_48 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_48_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2156,7 +2156,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_48_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2174,10 +2174,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_48 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_48_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_49 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_49 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_49_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2192,7 +2192,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_49_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2210,10 +2210,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_49 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_49_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_50 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_50 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_50_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2228,7 +2228,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_50_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2246,10 +2246,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_50 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_50_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_51 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_51 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_51_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2264,7 +2264,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_51_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2282,10 +2282,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_51 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_51_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_52 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_52 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_52_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2300,7 +2300,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_52_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2318,10 +2318,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_52 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_52_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_53 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_53 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_53_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2336,7 +2336,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_53_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2354,10 +2354,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_53 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_53_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_54 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_54 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_54_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2372,7 +2372,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_54_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2390,10 +2390,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_54 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_54_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_55 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_55 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_55_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2408,7 +2408,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_55_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2426,10 +2426,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_55 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_55_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_56 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_56 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_56_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2444,7 +2444,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_56_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2462,10 +2462,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_56 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_56_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_57 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_57 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_57_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2480,7 +2480,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_57_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2498,10 +2498,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_57 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_57_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_58 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_58 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_58_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2516,7 +2516,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_58_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2534,10 +2534,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_58 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_58_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_59 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_59 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_59_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2552,7 +2552,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_59_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2570,10 +2570,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_59 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_59_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_60 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_60 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_60_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2588,7 +2588,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_60_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2606,10 +2606,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_60 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_60_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_61 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_61 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_61_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2624,7 +2624,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_61_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2642,10 +2642,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_61 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_61_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_62 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_62 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_62_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2660,7 +2660,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_62_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2678,10 +2678,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_62 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_62_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_63 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_63 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_63_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2696,7 +2696,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_63_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2714,10 +2714,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_63 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_63_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_64 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_64 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_64_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2732,7 +2732,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_64_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2750,10 +2750,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_64 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_64_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_65 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_65 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_65_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2768,7 +2768,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_65_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2786,10 +2786,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_65 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_65_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_66 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_66 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_66_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2804,7 +2804,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_66_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2822,10 +2822,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_66 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_66_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_67 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_67 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_67_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2840,7 +2840,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_67_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2858,10 +2858,10 @@ SELECT TOP 1 @dbo_NBS_case_answer_nbs_case_answer_uid_67 = [value]
 FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_67_output;
 
 -- step: 1
-DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_68 BIGINT;
+DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_68 bigint;
 DECLARE @dbo_NBS_case_answer_nbs_case_answer_uid_68_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_case_answer]
@@ -2876,7 +2876,7 @@ INSERT INTO [dbo].[nbs_case_answer]
              [record_status_cd],
              [record_status_time],
              [seq_nbr])
-output      inserted.[nbs_case_answer_uid]
+OUTPUT      INSERTED.[nbs_case_answer_uid]
 INTO @dbo_NBS_case_answer_nbs_case_answer_uid_68_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2895,10 +2895,10 @@ FROM   @dbo_NBS_case_answer_nbs_case_answer_uid_68_output;
 
 -- dbo.NBS_act_entity
 -- step: 1
-DECLARE @dbo_NBS_act_entity_nbs_act_entity_uid BIGINT;
+DECLARE @dbo_NBS_act_entity_nbs_act_entity_uid bigint;
 DECLARE @dbo_NBS_act_entity_nbs_act_entity_uid_output TABLE
   (
-     [value] BIGINT
+     [value] bigint
   );
 
 INSERT INTO [dbo].[nbs_act_entity]
@@ -2912,7 +2912,7 @@ INSERT INTO [dbo].[nbs_act_entity]
              [record_status_cd],
              [record_status_time],
              [type_cd])
-output      inserted.[nbs_act_entity_uid]
+OUTPUT      INSERTED.[nbs_act_entity_uid]
 INTO @dbo_NBS_act_entity_nbs_act_entity_uid_output ([value])
 VALUES      (@dbo_Act_act_uid,
              N'2026-06-17T19:14:40.847',
@@ -2934,7 +2934,7 @@ UPDATE [dbo].[person]
 SET    [last_chg_time] = N'2026-06-17T19:14:40.787',
        [record_status_time] = N'2026-06-17T19:14:40.787',
        [status_time] = N'2026-06-17T19:14:40.787',
-       [version_ctrl_nbr] = Isnull([version_ctrl_nbr], 0) + 1
+       [version_ctrl_nbr] = ISNULL([version_ctrl_nbr], 0) + 1
 WHERE  [person_uid] = @dbo_Entity_entity_uid;
 
 -- dbo.Entity_locator_participation
