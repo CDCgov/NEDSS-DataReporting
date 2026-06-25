@@ -160,6 +160,10 @@ public class ProcessDatamartData {
   protected boolean processDmCache(Map<String, Map<String, List<Long>>> dmCache, Long batchId) {
     List<Long> ldfUids = new ArrayList<>();
     BatchProcessingState state = new BatchProcessingState(batchId);
+    // Investigations whose CASE_LAB_DATAMART is (re)built by sp_case_lab_datamart_postprocessing in
+    // this group. They must get a matching sp_inv_summary_datamart_postprocessing pass afterward so
+    // the fresh CASE_LAB_DATAMART is propagated in the same group.
+    Set<Long> caseLabInvUids = new LinkedHashSet<>();
 
     Timer.Sample sample = metrics.startSample();
 
@@ -185,6 +189,9 @@ public class ProcessDatamartData {
 
       try {
         processDatamart(dmKey, dmValues, ldfUids);
+        if (rebuildsCaseLab(dmKey)) {
+          caseLabInvUids.addAll(uids);
+        }
         incrementIf(ppDmSuccess, !state.isRetry);
       } catch (Exception e) {
         incrementIf(ppDmFailure, !state.isRetry);
@@ -197,12 +204,41 @@ public class ProcessDatamartData {
 
     processLdfVaccinePreventDm(state, ldfUids);
 
-    if (dmCache.containsKey(MULTI_ID_DATAMART)) {
-      processMultiIdDatamart(state, dmCache.get(MULTI_ID_DATAMART));
+    // Re-drive sp_inv_summary_datamart_postprocessing for any investigation whose CASE_LAB_DATAMART
+    // was just (re)built, even when this batch carried no inv-summary trigger.
+    // sp_inv_summary_datamart_postprocessing reads from CASE_LAB_DATAMART; enforcing the pass in the
+    // same group closes the ordering gap where sp_case_lab_datamart_postprocessing runs after it,
+    // instead of relying on a later batch to happen to reconcile it.
+    Map<String, List<Long>> multi = dmCache.getOrDefault(MULTI_ID_DATAMART, new HashMap<>());
+    if (!caseLabInvUids.isEmpty()) {
+      List<Long> invList =
+          multi.computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ArrayList<>());
+      for (Long uid : caseLabInvUids) {
+        if (!invList.contains(uid)) {
+          invList.add(uid);
+        }
+      }
+    }
+    if (!multi.isEmpty()) {
+      processMultiIdDatamart(state, multi);
     }
 
     metrics.stopSample(sample, processTimer);
     return !state.hasFailed();
+  }
+
+  // dmTypes whose processDatamart() switch (re)builds CASE_LAB_DATAMART (via
+  // sp_case_lab_datamart_postprocessing); their investigations must be re-driven through
+  // sp_inv_summary_datamart_postprocessing in the same group. Keep in sync with processDatamart().
+  private static final Set<Entity> CASE_LAB_REBUILDERS =
+      EnumSet.of(CASE_LAB_DATAMART, HEPATITIS_DATAMART);
+
+  private boolean rebuildsCaseLab(String dmKey) {
+    try {
+      return CASE_LAB_REBUILDERS.contains(Entity.valueOf(dmKey.split(",")[0].toUpperCase()));
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
   }
 
   private void incrementIf(Counter cnt, boolean notRetry) {
