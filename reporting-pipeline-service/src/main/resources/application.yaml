@@ -128,6 +128,13 @@ featureFlag:
   post-processing-enable: ${FF_POST_PROCESSING_ENABLE:true}
 
 management:
+  health:
+    ping:
+      enabled: false
+    diskspace:
+      enabled: false
+    ssl:
+      enabled: false
   endpoint:
     prometheus:
       access: read_only
