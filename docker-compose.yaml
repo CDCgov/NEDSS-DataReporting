@@ -8,8 +8,6 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
-      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
-      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
     entrypoint:
       - /bin/bash
       - -c
@@ -42,9 +40,9 @@ services:
       - 2323:2323
     environment:
       - db_host=nbs-mssql
-      - rdb_user=${DB_USER:-sa}
+      - rdb_user=${DATABASE_USERNAME:-sa}
       - rdb_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
-      - odse_user=${DB_USER:-sa}
+      - odse_user=${DATABASE_USERNAME:-sa}
       - odse_pass=${DATABASE_PASSWORD:-PizzaIsGood33!}
       - sas_user_pass=n3dss4dm1n
       - sas_encoding=latin1
@@ -148,8 +146,6 @@ services:
       - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
       - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
       - DB_CONNECTION_URL=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
-      - RTR_ADMIN_NAME=${RTR_ADMIN_NAME:-rtr_admin}
-      - RTR_ADMIN_PASSWORD=${RTR_ADMIN_PASSWORD:-rtr_admin}
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
       - DEBEZIUM_CONNECT_URL=http://debezium:8083
       - KAFKA_CONNECT_URL=http://kafka-connect:8083

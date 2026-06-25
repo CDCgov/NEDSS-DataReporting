@@ -6,8 +6,8 @@ spring:
       password: ${RTR_SERVICE_USER_PASSWORD:rtr_service_user}
     admin:
       url: ${DB_URL_ODSE:jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;loginTimeout=3;}
-      username: ${RTR_ADMIN_NAME:rtr_admin}
-      password: ${RTR_ADMIN_PASSWORD:rtr_admin}
+      username: ${DATABASE_USERNAME:sa}
+      password: ${DATABASE_PASSWORD:PizzaIsGood33!}
   jpa:
     show-sql: "true"
     hibernate:
@@ -23,16 +23,16 @@ spring:
       metadata.max.age.ms: 6000
   liquibase:
     enabled: true
-    user: ${RTR_ADMIN_NAME:rtr_admin}
-    password: ${RTR_ADMIN_PASSWORD:rtr_admin}
+    user: ${RTR_SERVICE_USER_NAME:rtr_service_user}
+    password: ${RTR_SERVICE_USER_PASSWORD:rtr_service_user}
 
 connector:
   database:
     url: "jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;loginTimeout=3"
     host: nbs-mssql
     port: "1433"
-    username: ${RTR_ADMIN_NAME:rtr_admin}
-    password: ${RTR_ADMIN_PASSWORD:rtr_admin}
+    username: ${RTR_SERVICE_USER_NAME:rtr_service_user}
+    password: ${RTR_SERVICE_USER_PASSWORD:rtr_service_user}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:kafka:29092}
   debezium:
