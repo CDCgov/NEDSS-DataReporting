@@ -9,7 +9,7 @@ DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000001004;
 DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 1000001005;
 DECLARE @dbo_Tele_locator_tele_locator_uid_3 bigint = 1000001006;
 DECLARE @dbo_Tele_locator_tele_locator_uid_4 bigint = 1000001007;
-DECLARE @dbo_Act_act_uid bigint = 10000010031;
+DECLARE @dbo_Act_act_uid bigint = 1000001031;
 DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Entity_entity_uid))) + N'GA01';
 DECLARE @dbo_Public_health_case_local_id nvarchar(40) = N'CAS' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid))) + N'GA01';
 DECLARE @dbo_NBS_act_entity_nbs_act_entity_uid bigint;
