@@ -417,13 +417,12 @@ BEGIN
             -- failing the whole obs batch. Normalize it identically to RECORD_STATUS_CD_MERGE so the
             -- inserted RECORD_STATUS_CD is always a valid ('ACTIVE'/'INACTIVE') value (or NULL).
             CASE
-                WHEN COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd)
-                     IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED')
-                  OR COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) IS NULL
+                WHEN v.raw_status IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED')
+                  OR v.raw_status IS NULL
                     THEN 'ACTIVE'
-                WHEN COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) = 'LOG_DEL'
+                WHEN v.raw_status = 'LOG_DEL'
                     THEN 'INACTIVE'
-                ELSE COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd)
+                ELSE v.raw_status
             END AS record_status_cd_for_result_drug,
             parent_test.report_sprt_uid AS root_thru_srpt,
             parent_test.report_refr_uid AS root_thru_refr
@@ -434,7 +433,10 @@ BEGIN
         LEFT JOIN dbo.nrt_observation tst3 WITH (NOLOCK) ON parent_test.report_refr_uid = tst3.observation_uid
         LEFT JOIN dbo.nrt_observation tst4 WITH (NOLOCK) ON parent_test.report_observation_uid = tst4.observation_uid
         LEFT JOIN dbo.nrt_observation obs2 WITH (NOLOCK) ON tst.report_refr_uid = obs2.observation_uid
-        LEFT JOIN dbo.nrt_observation obs3 WITH (NOLOCK) ON obs2.report_observation_uid = obs3.observation_uid;
+        LEFT JOIN dbo.nrt_observation obs3 WITH (NOLOCK) ON obs2.report_observation_uid = obs3.observation_uid
+        CROSS APPLY (
+            VALUES (COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd))
+        ) v(raw_status);
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
