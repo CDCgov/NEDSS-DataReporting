@@ -1,33 +1,35 @@
-package gov.cdc.nbs.report.pipeline.seeding;
+package gov.cdc.nbs.report.pipeline.lag;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Configuration for the seeding-completion check.
+ * Configuration for the consumer-lag report.
  *
- * <p>Seeding is "complete" when the initial Debezium snapshot has been fully consumed off the
- * {@code nbs_*} topics by the pipeline and fully written from the {@code nrt_*} topics into {@code
- * RDB_MODERN} by the JDBC sink — i.e. both consumer groups have caught up to the end of every
- * partition. See {@code documentation/SnapshotAwarePostProcessing.md} for why this gate matters.
+ * <p>Reports how much outstanding work the pipeline has: how far the {@code nbs_*} consumer (the
+ * pipeline app) and the {@code nrt_*} consumer (the Kafka Connect sink) are behind the end of their
+ * topics. A non-empty backlog means records remain to be processed; an empty backlog means both
+ * consumers are caught up.
  *
- * @param enabled whether the seeding health check is active
+ * @param enabled whether the lag report is active
  * @param pipelineGroupId consumer group that drains the {@code nbs_*} topics (the pipeline app)
  * @param sinkGroupId consumer group that drains the {@code nrt_*} topics (the Kafka Connect sink)
  * @param nbsTopicPrefix prefix identifying source change-event topics
  * @param nrtTopicPrefix prefix identifying entity-detail topics written to the reporting DB
  * @param adminTimeoutMs timeout applied to each Kafka AdminClient call
+ * @param peekTimeoutMs budget for peeking the oldest unconsumed record timestamps (time-lag)
  */
-@ConfigurationProperties(prefix = "seeding")
-public record SeedingProperties(
+@ConfigurationProperties(prefix = "lag")
+public record LagProperties(
     @DefaultValue("true") boolean enabled,
     @DefaultValue("pipeline-consumer-app") String pipelineGroupId,
     @DefaultValue("connect-Kafka-Connect-SqlServer-Sink") String sinkGroupId,
     @DefaultValue("nbs_") String nbsTopicPrefix,
     @DefaultValue("nrt_") String nrtTopicPrefix,
-    @DefaultValue("10000") long adminTimeoutMs) {
+    @DefaultValue("10000") long adminTimeoutMs,
+    @DefaultValue("2000") long peekTimeoutMs) {
 
   @ConstructorBinding
-  public SeedingProperties {}
+  public LagProperties {}
 }

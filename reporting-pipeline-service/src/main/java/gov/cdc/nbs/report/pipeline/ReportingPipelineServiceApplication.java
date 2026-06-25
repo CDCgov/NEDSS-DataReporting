@@ -1,7 +1,7 @@
 package gov.cdc.nbs.report.pipeline;
 
 import gov.cdc.nbs.report.pipeline.connector.ConnectorProperties;
-import gov.cdc.nbs.report.pipeline.seeding.SeedingProperties;
+import gov.cdc.nbs.report.pipeline.lag.LagProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * various reporting microservices into a single application to simplify the ETL data pipeline.
  */
 @SpringBootApplication
-@EnableConfigurationProperties({ConnectorProperties.class, SeedingProperties.class})
+@EnableConfigurationProperties({ConnectorProperties.class, LagProperties.class})
 public class ReportingPipelineServiceApplication {
 
   /**
