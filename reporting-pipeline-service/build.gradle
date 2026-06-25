@@ -9,6 +9,14 @@ plugins {
 // Override the Spring Boot managed Tomcat version to address security vulnerabilities
 ext['tomcat.version'] = '10.1.55'
 
+// Override the Spring Boot managed Logback version to address GHSA-25qh-j22f-pwp8 and GHSA-qqpg-mvqg-649v
+ext['logback.version'] = '1.5.25'
+
+// Override the Spring Boot managed Commons Lang version to address CVE-2025-48924.
+// Liquibase 5.0.3 + its transitives (opencsv, commons-text) all request >= 3.18.0;
+// the Spring Boot 3.5.x BOM was downgrading them to 3.17.0.
+ext['commons-lang3.version'] = '3.20.0'
+
 group = 'gov.cdc.etldatapipeline'
 version = '0.0.1-SNAPSHOT'
 
@@ -34,6 +42,9 @@ test {
 tasks.register("test-functional", Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+    if (System.getProperty("tests") != null) {
+        systemProperty "tests", System.getProperty("tests")
+    }
 
     useJUnitPlatform {
         includeTags "Functional"
@@ -44,7 +55,9 @@ tasks.register("test-functional", Test) {
 tasks.register("test-unit", Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
-
+    if (System.getProperty("tests") != null) {
+        systemProperty "tests", System.getProperty("tests")
+    }
     useJUnitPlatform {
         includeTags "Unit"
     }

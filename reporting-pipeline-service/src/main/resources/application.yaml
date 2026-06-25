@@ -88,6 +88,31 @@ spring:
     user: ${RTR_ADMIN_NAME}
     password: ${RTR_ADMIN_PASSWORD}
 
+connector:
+  database:
+    url: ${DB_CONNECTION_URL}
+    username: ${RTR_ADMIN_NAME}
+    password: ${RTR_ADMIN_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
+  debezium:
+    enabled: ${DEBEZIUM_AUTOCONFIG_ENABLED:true}
+    url: ${DEBEZIUM_CONNECT_URL}
+    retry-attempts: ${DEBEZIUM_RETRY_ATTEMPTS:20}
+    retry-delay-ms: ${DEBEZIUM_RETRY_DELAY_MS:5000}
+    definitions:
+      - classpath:connectors/debezium/odse_main_connector.json
+      - classpath:connectors/debezium/odse_schema_only_connector.json
+      - classpath:connectors/debezium/odse_meta_connector.json
+      - classpath:connectors/debezium/srte_connector.json
+  kafka-connect:
+    enabled: ${KAFKA_CONNECT_AUTOCONFIG_ENABLED:true}
+    url: ${KAFKA_CONNECT_URL}
+    retry-attempts: ${KAFKA_CONNECT_RETRY_ATTEMPTS:20}
+    retry-delay-ms: ${KAFKA_CONNECT_RETRY_DELAY_MS:5000}
+    definitions:
+      - classpath:connectors/kafka-connect/mssql-connector.json
+
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
   phc-datamart-enable: ${FF_PHC_DM_ENABLE:false}
@@ -98,6 +123,9 @@ management:
   endpoint:
     prometheus:
       access: read_only
+    health:
+      show-details: always
+      show-components: always
   endpoints:
     web:
       exposure:
@@ -112,6 +140,8 @@ service:
     cached-ids: ${FIXED_DELAY_ID:20000}
     datamart: ${FIXED_DELAY_DM:60000}
     backfill: ${FIXED_DELAY_BF:600000}
+  schedule:
+    event-metric-cleanup: ${EVENT_METRIC_CLEANUP_CRON:0 0 0 * * *}
   max-retries: ${MAX_RETRIES:3}
 
 server:

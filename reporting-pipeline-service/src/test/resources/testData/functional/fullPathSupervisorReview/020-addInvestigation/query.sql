@@ -2,7 +2,7 @@
 -- Query 0: Verify CASE_COUNT entry created for patient 
 -- (Table is mostly keys that will change, so just verify 1 for patient and condition is created)
 SELECT
-	count(*) as count
+	count(*) AS count
 FROM
 	[RDB_MODERN].[dbo].[CASE_COUNT]
 WHERE
@@ -12,7 +12,7 @@ WHERE
 		FROM
 			[RDB_MODERN].[dbo].[D_PATIENT]
 		WHERE
-			PATIENT_LOCAL_ID = 'PSN1000003000GA01'
+			PATIENT_LOCAL_ID = N'PSN1000003000GA01'
 	)
 	AND CONDITION_KEY = (
 		SELECT
@@ -20,7 +20,7 @@ WHERE
 		FROM
 			[RDB_MODERN].[dbo].[CONDITION]
 		WHERE
-			CONDITION_DESC = 'Hepatitis A, acute'
+			CONDITION_DESC = N'Hepatitis A, acute'
 	);
 
 -- dbo.CASE_LAB_DATAMART | operations: insert
@@ -77,7 +77,7 @@ WHERE
 		FROM
 			[RDB_MODERN].[dbo].[INVESTIGATION]
 		WHERE
-			INV_LOCAL_ID = 'CAS1000003008GA01'
+			INV_LOCAL_ID = N'CAS1000003008GA01'
 	)
 	AND CONFIRMATION_METHOD_KEY = (
 		SELECT
@@ -85,7 +85,7 @@ WHERE
 		FROM
 			[RDB_MODERN].[dbo].[CONFIRMATION_METHOD]
 		WHERE
-			CONFIRMATION_METHOD_CD = 'LR'
+			CONFIRMATION_METHOD_CD = N'LR'
 	);
 
 -- dbo.D_INV_ADMINISTRATIVE, dbo.L_INV_ADMINISTRATIVE | operations: insert
@@ -850,7 +850,7 @@ WHERE
 		FROM
 			[RDB_MODERN].[dbo].[D_PATIENT]
 		WHERE
-			PATIENT_LOCAL_ID = 'PSN1000003000GA01'
+			PATIENT_LOCAL_ID = N'PSN1000003000GA01'
 	)
 	AND CONDITION_KEY = (
 		SELECT
@@ -858,7 +858,7 @@ WHERE
 		FROM
 			[RDB_MODERN].[dbo].[CONDITION]
 		WHERE
-			CONDITION_DESC = 'Hepatitis A, acute'
+			CONDITION_DESC = N'Hepatitis A, acute'
 	);
 
 -- dbo.HEPATITIS_DATAMART | operations: insert

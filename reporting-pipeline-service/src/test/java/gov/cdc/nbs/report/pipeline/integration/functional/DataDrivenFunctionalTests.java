@@ -6,19 +6,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import gov.cdc.nbs.report.pipeline.integration.support.Await;
+import gov.cdc.nbs.report.pipeline.integration.support.DirectoryProvider;
 import gov.cdc.nbs.report.pipeline.integration.support.QueryRunner;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.json.JSONException;
 import org.junit.jupiter.api.parallel.Execution;
@@ -33,18 +32,25 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 class DataDrivenFunctionalTests extends FunctionalTest {
 
   /**
-   * If empty, all functional test directories are executed.
+   * Specific tests can be executed by manually adding the test name to the list below or by
+   * specifying the "tests" parameter.
    *
-   * <p>Examples:
+   * <p>If empty, all functional test directories are executed.
+   *
+   * <p>Command line example:
+   *
+   * <pre>
+   * ./gradlew clean reporting-pipeline-service:test-functional -Dtests=elrEColi,interview
+   * </pre>
+   *
+   * <p>Direct java class example:
    *
    * <ul>
    *   <li>List.of("hivNotificationActualReferral")
    *   <li>List.of("interview", "elrEColi")
    * </ul>
    */
-  // private static final List<String> SELECTED_TEST_NAMES =
-  // List.of("hivNotificationActualReferral");
-  private static final List<String> SELECTED_TEST_NAMES = List.of();
+  private static List<String> selectedTestNames = List.of();
 
   private final JdbcClient client;
 
@@ -63,21 +69,14 @@ class DataDrivenFunctionalTests extends FunctionalTest {
    * testRunner one at a time.
    */
   static Stream<Path> functionalTestDirectoryProvider() throws IOException {
-    Path root = Paths.get("src/test/resources/testData/functional");
-    Stream<Path> directories = Files.list(root).filter(Files::isDirectory);
+    String testsArg = System.getProperty("tests");
 
-    if (SELECTED_TEST_NAMES.isEmpty()) {
-      return directories;
+    if (testsArg != null) {
+      selectedTestNames = new ArrayList<>(selectedTestNames);
+      Collections.addAll(selectedTestNames, testsArg.split(","));
     }
 
-    Set<String> selectedNames =
-        SELECTED_TEST_NAMES.stream()
-            .map(name -> name.toLowerCase(Locale.ROOT))
-            .collect(java.util.stream.Collectors.toSet());
-
-    return directories.filter(
-        directory ->
-            selectedNames.contains(directory.getFileName().toString().toLowerCase(Locale.ROOT)));
+    return DirectoryProvider.stream("src/test/resources/testData/functional", selectedTestNames);
   }
 
   /**

@@ -47,12 +47,11 @@ public abstract class UnitTest {
 
   @AfterAll
   void tearDown() {
-    synchronized (UnitTest.class) {
-      if (started) {
-        environment.stop();
-        started = false;
-      }
-    }
+    // Intentionally a no-op. The container is a STATIC singleton shared across every @Tag("Unit")
+    // class via the cached Spring context (the Initializer runs once). Stopping it here -- in a
+    // per-class @AfterAll -- tears the DB out from under any sibling Unit class that runs later
+    // (e.g. the key-gen concurrency tests after DataDrivenUnitTests), which then fail with
+    // "Connection refused". Let Ryuk / JVM shutdown reclaim the stack at the end of the run.
   }
 
   static class Initializer

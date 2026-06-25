@@ -304,7 +304,7 @@
   ],
   "7": [
     {
-      "CONDITION_KEY": 239,
+      "PROGRAM_AREA_CD": "GCD",
       "COPY_TO_PROVIDER_KEY": 1,
       "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 13267,
@@ -321,7 +321,7 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "CONDITION_KEY": 1,
+      "PROGRAM_AREA_CD": null,
       "COPY_TO_PROVIDER_KEY": 1,
       "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 13267,
@@ -338,7 +338,7 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "CONDITION_KEY": 1,
+      "PROGRAM_AREA_CD": null,
       "COPY_TO_PROVIDER_KEY": 1,
       "INVESTIGATION_KEY": 1,
       "LAB_RPT_DT_KEY": 13267,
