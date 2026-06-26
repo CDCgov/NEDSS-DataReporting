@@ -117,10 +117,7 @@ lag:
   enabled: ${LAG_REPORT_ENABLED:true}
   pipeline-group-id: ${KAFKA_CONSUMER_APP:pipeline-consumer-app}
   sink-group-id: ${LAG_SINK_GROUP_ID:connect-Kafka-Connect-SqlServer-Sink}
-  nbs-topic-prefix: ${LAG_NBS_TOPIC_PREFIX:nbs_}
-  nrt-topic-prefix: ${LAG_NRT_TOPIC_PREFIX:nrt_}
   admin-timeout-ms: ${LAG_ADMIN_TIMEOUT_MS:10000}
-  peek-timeout-ms: ${LAG_PEEK_TIMEOUT_MS:2000}
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}

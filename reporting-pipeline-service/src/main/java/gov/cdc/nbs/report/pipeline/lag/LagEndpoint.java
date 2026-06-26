@@ -2,8 +2,6 @@ package gov.cdc.nbs.report.pipeline.lag;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.LongSupplier;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.health.Health;
@@ -11,18 +9,17 @@ import org.springframework.boot.actuate.health.Status;
 import org.springframework.stereotype.Component;
 
 /**
- * Reports the pipeline's outstanding work: how far behind the {@code nbs_*} consumer (the pipeline
- * app) and the {@code nrt_*} consumer (the Kafka Connect sink) are from the end of their topics.
+ * Reports the pipeline's outstanding work: how far behind the application's consumer group and the
+ * Kafka Connect sink group are from the topics they consume.
  *
  * <p>This is a dedicated actuator endpoint rather than a {@code HealthIndicator} on purpose: it
- * talks to Kafka (offset reads plus a record peek), and we only want to pay that cost on an
- * explicit request. As its own endpoint it runs lazily when {@code /actuator/lag} is called and is
+ * talks to Kafka (consumer-group offset reads), and we only want to pay that cost on an explicit
+ * request. As its own endpoint it runs lazily when {@code /actuator/lag} is called and is
  * <em>not</em> aggregated into {@code /actuator/health}.
  *
- * <p>Each side reports two complementary measures of backlog: {@code recordsBehind} (how many
- * messages are queued, with a per-topic breakdown) and {@code timeLagSecs} (how far back in time
- * the oldest unconsumed record was produced). When both sides are caught up the status is {@link
- * #READY}; otherwise {@link #PROCESSING}.
+ * <p>Each group reports {@code messagesQueued} — how many messages are still unconsumed, with a
+ * per-topic breakdown. When both groups are caught up the status is {@link #READY}; otherwise
+ * {@link #PROCESSING}.
  */
 @Component
 @Endpoint(id = "lag")
@@ -36,41 +33,45 @@ public class LagEndpoint {
 
   private final TopicLagReader lagReader;
   private final LagProperties properties;
-  private final LongSupplier clock;
 
-  @Autowired
+  /**
+   * Constructs a new {@code LagEndpoint}.
+   *
+   * @param lagReader reads per-topic lag for a consumer group
+   * @param properties the consumer group ids to inspect and whether the report is enabled
+   */
   public LagEndpoint(TopicLagReader lagReader, LagProperties properties) {
-    this(lagReader, properties, System::currentTimeMillis);
-  }
-
-  LagEndpoint(TopicLagReader lagReader, LagProperties properties, LongSupplier clock) {
     this.lagReader = lagReader;
     this.properties = properties;
-    this.clock = clock;
   }
 
+  /**
+   * Reports the backlog of the pipeline and sink consumer groups, exposed at {@code /actuator/lag}.
+   * Each group contributes its total {@code messagesQueued} and a per-topic breakdown of the topics
+   * still carrying lag.
+   *
+   * @return {@link #READY} when both groups are caught up; {@link #PROCESSING} when a backlog
+   *     remains; {@code UP} with a {@code DISABLED} detail when the report is turned off; or {@code
+   *     DOWN} when Kafka offsets cannot be read
+   */
   @ReadOperation
   public Health lag() {
     if (!properties.enabled()) {
       return Health.up().withDetail("status", "DISABLED").build();
     }
     try {
-      Map<String, TopicLag> nbs =
-          lagReader.lagByTopic(properties.pipelineGroupId(), properties.nbsTopicPrefix());
-      Map<String, TopicLag> nrt =
-          lagReader.lagByTopic(properties.sinkGroupId(), properties.nrtTopicPrefix());
+      Map<String, TopicLag> pipeline = lagReader.lagByGroup(properties.pipelineGroupId());
+      Map<String, TopicLag> sink = lagReader.lagByGroup(properties.sinkGroupId());
 
-      long now = clock.getAsLong();
-      boolean caughtUp = totalLag(nbs) == 0 && totalLag(nrt) == 0;
+      boolean caughtUp = totalLag(pipeline) == 0 && totalLag(sink) == 0;
 
       Health.Builder builder = caughtUp ? Health.status(READY) : Health.status(PROCESSING);
       builder
           .withDetail("caughtUp", caughtUp)
-          .withDetail("nbs", summarize(nbs, now))
-          .withDetail("nrt", summarize(nrt, now));
-      if (!hasData(nbs)) {
-        builder.withDetail(
-            "note", "no nbs_* data observed yet; the initial snapshot may not have started");
+          .withDetail("pipeline", summarize(pipeline))
+          .withDetail("sink", summarize(sink));
+      if (!hasData(pipeline)) {
+        builder.withDetail("note", "the pipeline consumer group has not consumed anything yet");
       }
       return builder.build();
     } catch (LagInspectionException e) {
@@ -78,26 +79,20 @@ public class LagEndpoint {
     }
   }
 
-  /** Builds the per-group view: total records behind, the worst time-lag, and a per-topic count. */
-  private static Map<String, Object> summarize(Map<String, TopicLag> lags, long now) {
-    long recordsBehind = 0L;
-    Long oldest = null;
+  /** Builds the per-group view: total messages queued plus a per-topic count of what remains. */
+  private static Map<String, Object> summarize(Map<String, TopicLag> lags) {
+    long messagesQueued = 0L;
     Map<String, Long> byTopic = new LinkedHashMap<>();
     for (Map.Entry<String, TopicLag> entry : lags.entrySet()) {
       TopicLag lag = entry.getValue();
-      recordsBehind += lag.lag();
+      messagesQueued += lag.lag();
       if (!lag.drained()) {
         byTopic.put(entry.getKey(), lag.lag());
-      }
-      Long timestamp = lag.oldestUnconsumedTimestampMillis();
-      if (timestamp != null) {
-        oldest = (oldest == null) ? timestamp : Math.min(oldest, timestamp);
       }
     }
 
     Map<String, Object> summary = new LinkedHashMap<>();
-    summary.put("recordsBehind", recordsBehind);
-    summary.put("timeLagSecs", oldest == null ? 0L : Math.max(0L, now - oldest) / 1000L);
+    summary.put("messagesQueued", messagesQueued);
     summary.put("byTopic", byTopic);
     return summary;
   }

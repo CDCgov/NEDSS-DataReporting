@@ -5,89 +5,79 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
-import java.util.function.LongSupplier;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 
 class LagEndpointTest {
 
-  private static final long NOW = 1_700_000_000_000L;
-  private static final LongSupplier FIXED_CLOCK = () -> NOW;
+  private static final String PIPELINE_GROUP = "pipeline-consumer-app";
+  private static final String SINK_GROUP = "connect-sink";
 
   private static final LagProperties ENABLED =
-      new LagProperties(
-          true, "pipeline-consumer-app", "connect-sink", "nbs_", "nrt_", 10000L, 2000L);
+      new LagProperties(true, PIPELINE_GROUP, SINK_GROUP, 10000L);
 
-  /** Routes the two prefix-scoped lookups to canned results so the decision logic is isolated. */
-  private static TopicLagReader reader(Map<String, TopicLag> nbs, Map<String, TopicLag> nrt) {
-    return (groupId, topicPrefix) -> topicPrefix.equals("nbs_") ? nbs : nrt;
+  /** Routes the two group lookups to canned results so the decision logic is isolated. */
+  private static TopicLagReader reader(Map<String, TopicLag> pipeline, Map<String, TopicLag> sink) {
+    return groupId -> groupId.equals(PIPELINE_GROUP) ? pipeline : sink;
   }
 
   private LagEndpoint endpoint(TopicLagReader reader, LagProperties properties) {
-    return new LagEndpoint(reader, properties, FIXED_CLOCK);
+    return new LagEndpoint(reader, properties);
   }
 
   @Test
   void ready_when_both_groups_caught_up() {
     TopicLagReader reader =
         reader(
-            Map.of("nbs_Person", new TopicLag(1000, 0, null)),
-            Map.of("nrt_patient", new TopicLag(1000, 0, null)));
+            Map.of("nbs_Person", new TopicLag(1000, 0)),
+            Map.of("nrt_patient", new TopicLag(1000, 0)));
 
     Health health = endpoint(reader, ENABLED).lag();
 
     assertEquals(LagEndpoint.READY, health.getStatus());
     assertEquals(true, health.getDetails().get("caughtUp"));
-    assertEquals(0L, nbs(health).get("recordsBehind"));
-    assertEquals(0L, nbs(health).get("timeLagSecs"));
+    assertEquals(0L, pipeline(health).get("messagesQueued"));
   }
 
   @Test
-  void processing_with_record_breakdown_and_time_lag_when_pipeline_lags() {
-    long oldest = NOW - 5_000L; // oldest unconsumed record produced 5s ago
+  void processing_with_record_breakdown_when_pipeline_group_lags() {
     TopicLagReader reader =
         reader(
             Map.of(
-                "nbs_Observation", new TopicLag(1000, 250, oldest),
-                "nbs_Person", new TopicLag(500, 0, null)),
-            Map.of("nrt_patient", new TopicLag(750, 0, null)));
+                "nbs_Observation", new TopicLag(1000, 250),
+                "nbs_Datamart", new TopicLag(500, 0)),
+            Map.of("nrt_patient", new TopicLag(750, 0)));
 
     Health health = endpoint(reader, ENABLED).lag();
 
     assertEquals(LagEndpoint.PROCESSING, health.getStatus());
     assertEquals(false, health.getDetails().get("caughtUp"));
-    assertEquals(250L, nbs(health).get("recordsBehind"));
-    assertEquals(5L, nbs(health).get("timeLagSecs"));
+    assertEquals(250L, pipeline(health).get("messagesQueued"));
 
     @SuppressWarnings("unchecked")
-    Map<String, Long> byTopic = (Map<String, Long>) nbs(health).get("byTopic");
+    Map<String, Long> byTopic = (Map<String, Long>) pipeline(health).get("byTopic");
     assertEquals(250L, byTopic.get("nbs_Observation"));
-    assertFalse(byTopic.containsKey("nbs_Person")); // drained topics omitted from breakdown
+    assertFalse(byTopic.containsKey("nbs_Datamart")); // drained topics omitted from breakdown
   }
 
   @Test
-  void processing_when_sink_has_not_drained_nrt_topics() {
+  void processing_when_sink_group_has_not_drained() {
     TopicLagReader reader =
         reader(
-            Map.of("nbs_Person", new TopicLag(1000, 0, null)),
-            Map.of("nrt_patient", new TopicLag(1000, 40, NOW - 1_000L)));
+            Map.of("nbs_Person", new TopicLag(1000, 0)),
+            Map.of("nrt_patient", new TopicLag(1000, 40)));
 
     Health health = endpoint(reader, ENABLED).lag();
 
     assertEquals(LagEndpoint.PROCESSING, health.getStatus());
-    assertEquals(40L, nrt(health).get("recordsBehind"));
-    assertEquals(1L, nrt(health).get("timeLagSecs"));
+    assertEquals(40L, sink(health).get("messagesQueued"));
   }
 
   @Test
-  void caught_up_with_note_when_no_data_observed_yet() {
-    // No data produced anywhere: there is no backlog, but flag that the snapshot may not have
-    // begun.
-    TopicLagReader reader =
-        reader(
-            Map.of("nbs_Person", new TopicLag(0, 0, null)),
-            Map.of("nrt_patient", new TopicLag(0, 0, null)));
+  void caught_up_with_note_when_pipeline_group_has_consumed_nothing() {
+    // Pipeline group has no data at all: there is no backlog, but flag that nothing has been read.
+    TopicLagReader reader = reader(Map.of(), Map.of("nrt_patient", new TopicLag(0, 0)));
 
     Health health = endpoint(reader, ENABLED).lag();
 
@@ -99,7 +89,7 @@ class LagEndpointTest {
   @Test
   void down_when_offsets_cannot_be_read() {
     TopicLagReader reader =
-        (groupId, topicPrefix) -> {
+        groupId -> {
           throw new LagInspectionException("broker unreachable", new RuntimeException());
         };
 
@@ -110,9 +100,9 @@ class LagEndpointTest {
 
   @Test
   void up_and_disabled_when_report_is_turned_off() {
-    LagProperties disabled = new LagProperties(false, "g", "s", "nbs_", "nrt_", 10000L, 2000L);
+    LagProperties disabled = new LagProperties(false, PIPELINE_GROUP, SINK_GROUP, 10000L);
     TopicLagReader reader =
-        (groupId, topicPrefix) -> {
+        groupId -> {
           throw new AssertionError("reader must not be called when disabled");
         };
 
@@ -124,12 +114,12 @@ class LagEndpointTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static Map<String, Object> nbs(Health health) {
-    return (Map<String, Object>) health.getDetails().get("nbs");
+  private static Map<String, Object> pipeline(Health health) {
+    return (Map<String, Object>) health.getDetails().get("pipeline");
   }
 
   @SuppressWarnings("unchecked")
-  private static Map<String, Object> nrt(Health health) {
-    return (Map<String, Object>) health.getDetails().get("nrt");
+  private static Map<String, Object> sink(Health health) {
+    return (Map<String, Object>) health.getDetails().get("sink");
   }
 }
