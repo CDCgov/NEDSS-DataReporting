@@ -366,12 +366,20 @@ DECLARE @condition_cd_list VARCHAR(MAX)
 
 IF OBJECT_ID('dbo.nrt_srte_Condition_code', 'U') IS NOT NULL
 BEGIN
-    SELECT @condition_cd_list = STRING_AGG(CAST(CONDITION_CD AS VARCHAR), ',')
-    FROM dbo.nrt_srte_Condition_code
+	IF OBJECT_ID('dbo.CONDITION', 'U') IS NOT NULL
+	   AND EXISTS (SELECT 1 FROM dbo.CONDITION WHERE COALESCE(CONDITION_KEY, 0) <> 1)
+	BEGIN
+		PRINT 'Skipping sp_nrt_srte_condition_code_postprocessing: dbo.CONDITION already populated.';
+	END
+	ELSE
+	BEGIN
+		SELECT @condition_cd_list = STRING_AGG(CAST(CONDITION_CD AS VARCHAR), ',')
+		FROM dbo.nrt_srte_Condition_code
 
-    IF @condition_cd_list IS NOT NULL
-    BEGIN
-        EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = @condition_cd_list;
-    END
+		IF @condition_cd_list IS NOT NULL
+		BEGIN
+			EXEC dbo.sp_nrt_srte_condition_code_postprocessing @condition_cd_list = @condition_cd_list;
+		END
+	END
 END
 GO

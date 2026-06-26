@@ -309,7 +309,13 @@ BEGIN
             INNER JOIN dbo.nrt_condition_key k
                 ON COALESCE(k.CONDITION_CD, '') = COALESCE(src.CONDITION_CD, '')
                 AND COALESCE(k.PROGRAM_AREA_CD, '') = COALESCE(src.PROGRAM_AREA_CD, '')
-        WHERE src.CONDITION_KEY IS NULL;
+        WHERE src.CONDITION_KEY IS NULL
+            AND NOT EXISTS (
+                SELECT 1
+                FROM dbo.CONDITION c
+                WHERE COALESCE(c.CONDITION_CD, '') = COALESCE(src.CONDITION_CD, '')
+                    AND COALESCE(c.PROGRAM_AREA_CD, '') = COALESCE(src.PROGRAM_AREA_CD, '')
+            );
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT; 
