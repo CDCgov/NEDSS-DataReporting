@@ -16,12 +16,11 @@ Custom scripts that prepare the SQL Server instance for local development and CI
 | `004-prep-for-masterEtl-trace.sql` | Prepares trace settings for MasterETL |
 | `005-clear-job_flow_log.sql` | Clears the job flow log table |
 
-### 098–099 — User Accounts
+# 099 — User Account
 
-Creates the SQL Server logins and database users required by the application and migrations.
+Creates the SQL Server logins and database users required by the application and testing harnesses.
 
 | File | Purpose |
 | :--- | :--- |
-| `098-rtr-admin.sql` | Creates the `rtr-admin` migration account |
 | `099-rtr-service-user.sql` | Creates the `rtr-service-user` application account |
 
