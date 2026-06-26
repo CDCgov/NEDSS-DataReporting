@@ -1,12 +1,12 @@
 USE [NBS_ODSE];
 
-DECLARE @local_user_id BIGINT = 10007004;
+DECLARE @local_user_id bigint = 10007004;
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid BIGINT = 1000003000;
-DECLARE @dbo_Postal_locator_postal_locator_uid BIGINT = 1000003001;
-DECLARE @dbo_Tele_locator_tele_locator_uid BIGINT = 1000003002;
-DECLARE @dbo_Tele_locator_tele_locator_uid_2 BIGINT = 1000003003;
-DECLARE @dbo_Person_local_id NVARCHAR(40) = N'PSN1000003000GA01';
+DECLARE @dbo_Entity_entity_uid bigint = 1000003000;
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000003001;
+DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000003002;
+DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 1000003003;
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000003000GA01';
 
 -- STEP 1: CreatePatient
 -- dbo.Entity

@@ -33,7 +33,7 @@ BEGIN
     DECLARE @Proc_Step_Name VARCHAR(200) = '';
     DECLARE @Dataflow_Name VARCHAR(200) = 'D_LAB_TEST Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_lab_test_postprocessing';
-    DECLARE @rdb_last_refresh_time datetime; 
+    DECLARE @rdb_last_refresh_time datetime;
 
     BEGIN TRY
 
@@ -408,7 +408,22 @@ BEGIN
                 WHEN tst.LAB_TEST_Type = 'Order' THEN tst.LAB_TEST_pntr
                 ELSE tst.LAB_TEST_pntr
             END AS root_ordered_test_pntr,
-            COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) AS record_status_cd_for_result_drug,
+            -- APP-737: LAB_TEST.RECORD_STATUS_CD = COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
+            -- this column). RECORD_STATUS_CD_MERGE is normalized (PROCESSED/''/NULL/UNPROCESSED* ->
+            -- ACTIVE, LOG_DEL -> INACTIVE) but is NULL when root_ordered_test_pntr does not resolve
+            -- (merge_order join miss). Previously this fallback passed the RAW ancestor
+            -- record_status_cd straight through, so a 'PROCESSED' (or any non-ACTIVE/INACTIVE) value
+            -- leaked into the LAB_TEST insert and violated CHK_LABTEST_RECORD_STATUS (Error 547),
+            -- failing the whole obs batch. Normalize it identically to RECORD_STATUS_CD_MERGE so the
+            -- inserted RECORD_STATUS_CD is always a valid ('ACTIVE'/'INACTIVE') value (or NULL).
+            CASE
+                WHEN v.raw_status IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED')
+                  OR v.raw_status IS NULL
+                    THEN 'ACTIVE'
+                WHEN v.raw_status = 'LOG_DEL'
+                    THEN 'INACTIVE'
+                ELSE v.raw_status
+            END AS record_status_cd_for_result_drug,
             parent_test.report_sprt_uid AS root_thru_srpt,
             parent_test.report_refr_uid AS root_thru_refr
         INTO #hierarchical_data
@@ -418,7 +433,10 @@ BEGIN
         LEFT JOIN dbo.nrt_observation tst3 WITH (NOLOCK) ON parent_test.report_refr_uid = tst3.observation_uid
         LEFT JOIN dbo.nrt_observation tst4 WITH (NOLOCK) ON parent_test.report_observation_uid = tst4.observation_uid
         LEFT JOIN dbo.nrt_observation obs2 WITH (NOLOCK) ON tst.report_refr_uid = obs2.observation_uid
-        LEFT JOIN dbo.nrt_observation obs3 WITH (NOLOCK) ON obs2.report_observation_uid = obs3.observation_uid;
+        LEFT JOIN dbo.nrt_observation obs3 WITH (NOLOCK) ON obs2.report_observation_uid = obs3.observation_uid
+        CROSS APPLY (
+            VALUES (COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd))
+        ) v(raw_status);
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -880,12 +898,12 @@ BEGIN
         BEGIN TRANSACTION
 
             SELECT @rdb_last_refresh_time = GETDATE()
-            
+
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'GENERATING keys for #lab_test_N';
 
             INSERT INTO [dbo].nrt_lab_test_key (LAB_TEST_UID)
-            SELECT LAB_TEST_UID 
+            SELECT LAB_TEST_UID
             FROM #lab_test_N
 
             SELECT @RowCount_no = @@ROWCOUNT;

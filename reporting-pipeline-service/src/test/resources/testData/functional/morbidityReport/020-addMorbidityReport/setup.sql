@@ -1,33 +1,33 @@
-USE [NBS_ODSE]
-DECLARE @superuser_id bigint = 10009282
+USE [NBS_ODSE];
+DECLARE @superuser_id bigint = 10009282;
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid bigint = 1000005001
-DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000005011
-DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000005012
-DECLARE @dbo_Act_act_uid bigint = 1000005013
-DECLARE @dbo_Act_act_uid_2 bigint = 1000005014
-DECLARE @dbo_Act_act_uid_3 bigint = 1000005015
-DECLARE @dbo_Act_act_uid_4 bigint = 1000005016
-DECLARE @dbo_Act_act_uid_5 bigint = 1000005017
-DECLARE @dbo_Act_act_uid_6 bigint = 1000005018
-DECLARE @dbo_Act_act_uid_7 bigint = 1000005019
-DECLARE @dbo_Act_act_uid_8 bigint = 1000005020
-DECLARE @dbo_Act_act_uid_9 bigint = 1000005021
-DECLARE @dbo_Act_act_uid_10 bigint = 1000005022
-DECLARE @dbo_Act_act_uid_11 bigint = 1000005023
-DECLARE @dbo_Act_act_uid_12 bigint = 1000005024
-DECLARE @dbo_Act_act_uid_13 bigint = 1000005025
-DECLARE @dbo_Act_act_uid_14 bigint = 1000005026
-DECLARE @dbo_Act_act_uid_15 bigint = 1000005027
-DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000005000GA01'
+DECLARE @dbo_Entity_entity_uid bigint = 1000005001;
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000005011;
+DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000005012;
+DECLARE @dbo_Act_act_uid bigint = 1000005013;
+DECLARE @dbo_Act_act_uid_2 bigint = 1000005014;
+DECLARE @dbo_Act_act_uid_3 bigint = 1000005015;
+DECLARE @dbo_Act_act_uid_4 bigint = 1000005016;
+DECLARE @dbo_Act_act_uid_5 bigint = 1000005017;
+DECLARE @dbo_Act_act_uid_6 bigint = 1000005018;
+DECLARE @dbo_Act_act_uid_7 bigint = 1000005019;
+DECLARE @dbo_Act_act_uid_8 bigint = 1000005020;
+DECLARE @dbo_Act_act_uid_9 bigint = 1000005021;
+DECLARE @dbo_Act_act_uid_10 bigint = 1000005022;
+DECLARE @dbo_Act_act_uid_11 bigint = 1000005023;
+DECLARE @dbo_Act_act_uid_12 bigint = 1000005024;
+DECLARE @dbo_Act_act_uid_13 bigint = 1000005025;
+DECLARE @dbo_Act_act_uid_14 bigint = 1000005026;
+DECLARE @dbo_Act_act_uid_15 bigint = 1000005027;
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000005000GA01';
 
 -- dbo.Entity
 INSERT INTO [dbo].[entity]
             ([entity_uid],
              [class_cd])
 VALUES      (@dbo_Entity_entity_uid,
-             N'PSN')
+             N'PSN');
 
 -- dbo.Person
 INSERT INTO [dbo].[person]
@@ -82,7 +82,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T00:00:00',
              N'2026-04-10T00:00:00',
              N'N',
-             1000005000)
+             1000005000);
 
 -- dbo.Person_name
 INSERT INTO [dbo].[person_name]
@@ -113,7 +113,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:26:11.673',
              N'A',
              N'2026-04-10T20:26:11.673',
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Person_race
 INSERT INTO [dbo].[person_race]
@@ -126,7 +126,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2106-3',
              N'2106-3',
              N'ACTIVE',
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Entity_id
 INSERT INTO [dbo].[entity_id]
@@ -155,7 +155,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:26:11.673',
              N'DL',
              N'Driver''s license number',
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Postal_locator
 INSERT INTO [dbo].[postal_locator]
@@ -180,7 +180,7 @@ VALUES      (@dbo_Postal_locator_postal_locator_uid,
              N'13',
              N'1313 Pine Way',
              N'',
-             N'30033')
+             N'30033');
 
 -- dbo.Entity_locator_participation
 INSERT INTO [dbo].[entity_locator_participation]
@@ -209,7 +209,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:26:11.783',
              N'H',
              1,
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Tele_locator
 INSERT INTO [dbo].[tele_locator]
@@ -222,7 +222,7 @@ VALUES      (@dbo_Tele_locator_tele_locator_uid,
              N'2026-04-10T20:26:11.673',
              N'',
              N'201-555-1212',
-             N'ACTIVE')
+             N'ACTIVE');
 
 -- dbo.Entity_locator_participation
 INSERT INTO [dbo].[entity_locator_participation]
@@ -251,7 +251,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:26:11.783',
              N'H',
              1,
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -260,12 +260,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -295,14 +295,14 @@ VALUES      (@dbo_Act_act_uid,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid,
-             N'INIT')
+             N'INIT');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -311,12 +311,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_2,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_2 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_2)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_2 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_2)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -346,7 +346,7 @@ VALUES      (@dbo_Act_act_uid_2,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_date
 INSERT INTO [dbo].[obs_value_date]
@@ -355,7 +355,7 @@ INSERT INTO [dbo].[obs_value_date]
              [from_time])
 VALUES      (@dbo_Act_act_uid_2,
              1,
-             N'2026-04-02T00:00:00')
+             N'2026-04-02T00:00:00');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -364,12 +364,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_3,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_3 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_3)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_3 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_3)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -399,7 +399,7 @@ VALUES      (@dbo_Act_act_uid_3,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_date
 INSERT INTO [dbo].[obs_value_date]
@@ -408,7 +408,7 @@ INSERT INTO [dbo].[obs_value_date]
              [from_time])
 VALUES      (@dbo_Act_act_uid_3,
              1,
-             N'2026-04-05T00:00:00')
+             N'2026-04-05T00:00:00');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -417,12 +417,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_4,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_4 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_4)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_4 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_4)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -452,14 +452,14 @@ VALUES      (@dbo_Act_act_uid_4,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_4,
-             N'Y')
+             N'Y');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -468,12 +468,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_5,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_5 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_5)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_5 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_5)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -503,14 +503,14 @@ VALUES      (@dbo_Act_act_uid_5,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_5,
-             N'Y')
+             N'Y');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -519,12 +519,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_6,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_6 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_6)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_6 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_6)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -554,7 +554,7 @@ VALUES      (@dbo_Act_act_uid_6,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_date
 INSERT INTO [dbo].[obs_value_date]
@@ -563,7 +563,7 @@ INSERT INTO [dbo].[obs_value_date]
              [from_time])
 VALUES      (@dbo_Act_act_uid_6,
              1,
-             N'2026-04-03T00:00:00')
+             N'2026-04-03T00:00:00');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -572,12 +572,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_7,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_7 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_7)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_7 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_7)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -607,7 +607,7 @@ VALUES      (@dbo_Act_act_uid_7,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_date
 INSERT INTO [dbo].[obs_value_date]
@@ -616,7 +616,7 @@ INSERT INTO [dbo].[obs_value_date]
              [from_time])
 VALUES      (@dbo_Act_act_uid_7,
              1,
-             N'2026-04-09T00:00:00')
+             N'2026-04-09T00:00:00');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -625,12 +625,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_8,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_8 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_8)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_8 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_8)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -660,14 +660,14 @@ VALUES      (@dbo_Act_act_uid_8,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_8,
-             N'Y')
+             N'Y');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -676,12 +676,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_9,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_9 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_9)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_9 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_9)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -711,14 +711,14 @@ VALUES      (@dbo_Act_act_uid_9,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_9,
-             N'N')
+             N'N');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -727,12 +727,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_10,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_10 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_10)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_10 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_10)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -762,14 +762,14 @@ VALUES      (@dbo_Act_act_uid_10,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_10,
-             N'N')
+             N'N');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -778,12 +778,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_11,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_11 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_11)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_11 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_11)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -813,14 +813,14 @@ VALUES      (@dbo_Act_act_uid_11,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_11,
-             N'Y')
+             N'Y');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -829,12 +829,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_12,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_12 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_12)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_12 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_12)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -864,14 +864,14 @@ VALUES      (@dbo_Act_act_uid_12,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_12,
-             N'UNK')
+             N'UNK');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -880,12 +880,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_13,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_13 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_13)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_13 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_13)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -915,14 +915,14 @@ VALUES      (@dbo_Act_act_uid_13,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_coded
 INSERT INTO [dbo].[obs_value_coded]
             ([observation_uid],
              [code])
 VALUES      (@dbo_Act_act_uid_13,
-             N'N')
+             N'N');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -931,12 +931,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_14,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_14 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_14)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_14 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_14)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -966,7 +966,7 @@ VALUES      (@dbo_Act_act_uid_14,
              4,
              N'T',
              1,
-             N'1.0')
+             N'1.0');
 
 -- dbo.Obs_value_txt
 INSERT INTO [dbo].[obs_value_txt]
@@ -977,7 +977,7 @@ INSERT INTO [dbo].[obs_value_txt]
 VALUES      (@dbo_Act_act_uid_14,
              1,
              N'other something',
-             N'other something')
+             N'other something');
 
 -- dbo.Act
 INSERT INTO [dbo].[act]
@@ -986,12 +986,12 @@ INSERT INTO [dbo].[act]
              [mood_cd])
 VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
-             N'EVN')
+             N'EVN');
 
 -- dbo.Observation
-DECLARE @dbo_Observation_local_id_15 NVARCHAR(40) = N'OBS'
-  + CONVERT(NVARCHAR(20), Abs(CONVERT(BIGINT, @dbo_Act_act_uid_15)))
-  + N'GA01'
+DECLARE @dbo_Observation_local_id_15 nvarchar(40) = N'OBS'
+  + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_15)))
+  + N'GA01';
 
 INSERT INTO [dbo].[observation]
             ([observation_uid],
@@ -1047,7 +1047,7 @@ VALUES      (@dbo_Act_act_uid_15,
              1,
              N'2026-04-10T00:00:00',
              N'1.0',
-             15)
+             15);
 
 -- dbo.Participation
 INSERT INTO [dbo].[participation]
@@ -1074,7 +1074,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'A',
              N'2026-04-10T20:26:11.943',
              N'PSN',
-             N'Subject Of Morbidity Report')
+             N'Subject Of Morbidity Report');
 
 INSERT INTO [dbo].[participation]
             ([subject_entity_uid],
@@ -1100,7 +1100,7 @@ VALUES      (10003013,
              N'A',
              N'2026-04-10T20:26:11.953',
              N'PSN',
-             N'Reporter Of Morbidity Report')
+             N'Reporter Of Morbidity Report');
 
 INSERT INTO [dbo].[participation]
             ([subject_entity_uid],
@@ -1126,7 +1126,7 @@ VALUES      (10003010,
              N'A',
              N'2026-04-10T20:26:11.953',
              N'PSN',
-             N'Physician Of Morbidity Report')
+             N'Physician Of Morbidity Report');
 
 INSERT INTO [dbo].[participation]
             ([subject_entity_uid],
@@ -1152,7 +1152,7 @@ VALUES      (10003001,
              N'A',
              N'2026-04-10T20:26:11.957',
              N'ORG',
-             N'Reporter Of Morbidity Report')
+             N'Reporter Of Morbidity Report');
 
 INSERT INTO [dbo].[participation]
             ([subject_entity_uid],
@@ -1178,7 +1178,7 @@ VALUES      (10003007,
              N'A',
              N'2026-04-10T20:26:11.957',
              N'ORG',
-             N'Hospital Of Morbidity Report')
+             N'Hospital Of Morbidity Report');
 
 -- dbo.Act_relationship
 INSERT INTO [dbo].[act_relationship]
@@ -1205,7 +1205,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.957',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1231,7 +1231,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.963',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1257,7 +1257,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.963',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1283,7 +1283,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.963',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1309,7 +1309,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.963',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1335,7 +1335,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1361,7 +1361,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1387,7 +1387,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1413,7 +1413,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1439,7 +1439,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1465,7 +1465,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1491,7 +1491,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1517,7 +1517,7 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 INSERT INTO [dbo].[act_relationship]
             ([target_act_uid],
@@ -1543,15 +1543,15 @@ VALUES      (@dbo_Act_act_uid_15,
              N'OBS',
              N'A',
              N'2026-04-10T20:26:11.967',
-             N'OBS')
+             N'OBS');
 
 -- dbo.Person
 UPDATE [dbo].[person]
 SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770',
-       [version_ctrl_nbr] = Isnull([version_ctrl_nbr], 0) + 1
-WHERE  [person_uid] = 1000005000
+       [version_ctrl_nbr] = ISNULL([version_ctrl_nbr], 0) + 1
+WHERE  [person_uid] = 1000005000;
 
 -- dbo.Entity_locator_participation
 UPDATE [dbo].[entity_locator_participation]
@@ -1559,18 +1559,18 @@ SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770'
 WHERE  [entity_uid] = 1000005000
-       AND [locator_uid] = 1000005001
+       AND [locator_uid] = 1000005001;
 
 UPDATE [dbo].[entity_locator_participation]
 SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770'
 WHERE  [entity_uid] = 1000005000
-       AND [locator_uid] = 1000005002
+       AND [locator_uid] = 1000005002;
 
 UPDATE [dbo].[entity_locator_participation]
 SET    [last_chg_time] = N'2026-04-10T20:26:11.770',
        [record_status_time] = N'2026-04-10T20:26:11.770',
        [status_time] = N'2026-04-10T20:26:11.770'
 WHERE  [entity_uid] = 1000005000
-       AND [locator_uid] = 1000005003 
+       AND [locator_uid] = 1000005003;

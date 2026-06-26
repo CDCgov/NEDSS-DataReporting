@@ -1,13 +1,14 @@
 USE [NBS_ODSE];
 DECLARE @superuser_id bigint = 10009282;
 
--- Use the same UIDs from step 1
-DECLARE @patient_uid_2 bigint = 1000004002;
-DECLARE @investigation_uid bigint = 1000004004;
-DECLARE @interview_uid bigint = 1000004005;
+-- Adjust the UID declarations below manually so they remain unique across other tests.
+-- These reuse the same UIDs created in step 010.
+DECLARE @dbo_Entity_entity_uid_2 bigint = 1000004002;
+DECLARE @dbo_Act_act_uid bigint = 1000004004;
+DECLARE @dbo_Act_act_uid_2 bigint = 1000004005;
 
 -- Derived local_id
-DECLARE @interview_local_id nvarchar(40) = N'INT' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @interview_uid))) + N'GA01';
+DECLARE @dbo_Interview_local_id nvarchar(40) = N'INT' + CONVERT(nvarchar(20), ABS(CONVERT(bigint, @dbo_Act_act_uid_2))) + N'GA01';
 
 -- =====================================================================================
 -- STEP 2: CREATE INTERVIEW
@@ -15,7 +16,7 @@ DECLARE @interview_local_id nvarchar(40) = N'INT' + CONVERT(nvarchar(20), ABS(CO
 
 -- dbo.Act for interview
 INSERT INTO [dbo].[Act] ([act_uid], [class_cd], [mood_cd])
-VALUES (@interview_uid, N'IXS', N'EVN');
+VALUES (@dbo_Act_act_uid_2, N'IXS', N'EVN');
 
 -- dbo.Interview
 INSERT INTO [dbo].[Interview] (
@@ -25,8 +26,8 @@ INSERT INTO [dbo].[Interview] (
     [last_chg_user_id], [version_ctrl_nbr]
 )
 VALUES (
-    @interview_uid, N'COMPLETE', N'2026-04-18T00:00:00', N'SUBJECT', N'PRESMPTV', N'I',
-    @interview_local_id, N'ACTIVE', N'2026-04-20T04:25:03.323', N'2026-04-20T04:25:03.320',
+    @dbo_Act_act_uid_2, N'COMPLETE', N'2026-04-18T00:00:00', N'SUBJECT', N'PRESMPTV', N'I',
+    @dbo_Interview_local_id, N'ACTIVE', N'2026-04-20T04:25:03.323', N'2026-04-20T04:25:03.320',
     @superuser_id, N'2026-04-20T04:25:03.323', @superuser_id, 1
 );
 
@@ -35,16 +36,16 @@ VALUES (
 -- =====================================================================================
 
 -- dbo.nbs_answer (contacts named indicator)
-DECLARE @nbs_answer_uid bigint;
-DECLARE @nbs_answer_uid_output TABLE ([value] bigint);
+DECLARE @dbo_nbs_answer_nbs_answer_uid bigint;
+DECLARE @dbo_nbs_answer_nbs_answer_uid_output TABLE ([value] bigint);
 
 INSERT INTO [dbo].[nbs_answer] (
     [act_uid], [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
     [seq_nbr], [record_status_cd], [record_status_time], [last_chg_time], [last_chg_user_id]
 )
-OUTPUT INSERTED.[nbs_answer_uid] INTO @nbs_answer_uid_output ([value])
+OUTPUT INSERTED.[nbs_answer_uid] INTO @dbo_nbs_answer_nbs_answer_uid_output ([value])
 VALUES (
-    @interview_uid, N'N', 10001355, 3, 0, N'ACTIVE', N'2026-04-20T04:25:03.323',
+    @dbo_Act_act_uid_2, N'N', 10001355, 3, 0, N'ACTIVE', N'2026-04-20T04:25:03.323',
     N'2026-04-20T04:25:03.323', @superuser_id
 );
 
@@ -54,9 +55,9 @@ INSERT INTO [dbo].[nbs_answer] (
     [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
     [last_chg_time], [last_chg_user_id]
 )
-OUTPUT INSERTED.[nbs_answer_uid] INTO @nbs_answer_uid_output ([value])
+OUTPUT INSERTED.[nbs_answer_uid] INTO @dbo_nbs_answer_nbs_answer_uid_output ([value])
 VALUES (
-    @interview_uid, N'Ariella Kent~04/19/2026 21:24~~This is a note', 10001024, 3, 0, 1,
+    @dbo_Act_act_uid_2, N'Ariella Kent~04/19/2026 21:24~~This is a note', 10001024, 3, 0, 1,
     N'ACTIVE', N'2026-04-20T04:25:03.323', N'2026-04-20T04:25:03.323', @superuser_id
 );
 
@@ -66,9 +67,9 @@ INSERT INTO [dbo].[nbs_answer] (
     [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
     [last_chg_time], [last_chg_user_id]
 )
-OUTPUT INSERTED.[nbs_answer_uid] INTO @nbs_answer_uid_output ([value])
+OUTPUT INSERTED.[nbs_answer_uid] INTO @dbo_nbs_answer_nbs_answer_uid_output ([value])
 VALUES (
-    @interview_uid, N'Ariella Kent~04/19/2026 21:24~~This is another note! ', 10001024, 3, 0, 2,
+    @dbo_Act_act_uid_2, N'Ariella Kent~04/19/2026 21:24~~This is another note! ', 10001024, 3, 0, 2,
     N'ACTIVE', N'2026-04-20T04:25:03.323', N'2026-04-20T04:25:03.323', @superuser_id
 );
 
@@ -78,9 +79,9 @@ INSERT INTO [dbo].[nbs_answer] (
     [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
     [last_chg_time], [last_chg_user_id]
 )
-OUTPUT INSERTED.[nbs_answer_uid] INTO @nbs_answer_uid_output ([value])
+OUTPUT INSERTED.[nbs_answer_uid] INTO @dbo_nbs_answer_nbs_answer_uid_output ([value])
 VALUES (
-    @interview_uid, N'Ariella Kent~04/19/2026 21:24~~Lorem ipsum dolor sit emet', 10001024, 3, 0, 3,
+    @dbo_Act_act_uid_2, N'Ariella Kent~04/19/2026 21:24~~Lorem ipsum dolor sit emet', 10001024, 3, 0, 3,
     N'ACTIVE', N'2026-04-20T04:25:03.323', N'2026-04-20T04:25:03.323', @superuser_id
 );
 
@@ -94,7 +95,7 @@ INSERT INTO [dbo].[NBS_act_entity] (
     [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [type_cd]
 )
 VALUES (
-    @interview_uid, N'2026-04-20T04:25:03.320', @superuser_id, 10003013, 1,
+    @dbo_Act_act_uid_2, N'2026-04-20T04:25:03.320', @superuser_id, 10003013, 1,
     N'2026-04-20T04:25:03.323', @superuser_id, N'ACTIVE', N'2026-04-20T04:25:03.323',
     N'IntrvwerOfInterview'
 );
@@ -105,7 +106,7 @@ INSERT INTO [dbo].[NBS_act_entity] (
     [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [type_cd]
 )
 VALUES (
-    @interview_uid, N'2026-04-20T04:25:03.320', @superuser_id, @patient_uid_2, 1,
+    @dbo_Act_act_uid_2, N'2026-04-20T04:25:03.320', @superuser_id, @dbo_Entity_entity_uid_2, 1,
     N'2026-04-20T04:25:03.323', @superuser_id, N'ACTIVE', N'2026-04-20T04:25:03.323',
     N'IntrvweeOfInterview'
 );
@@ -117,7 +118,7 @@ INSERT INTO [dbo].[Participation] (
     [status_cd], [status_time], [subject_class_cd]
 )
 VALUES (
-    10003013, @interview_uid, N'IntrvwerOfInterview', N'IXS', N'2026-04-20T04:25:03.327',
+    10003013, @dbo_Act_act_uid_2, N'IntrvwerOfInterview', N'IXS', N'2026-04-20T04:25:03.327',
     @superuser_id, N'2026-04-20T04:25:03.327', @superuser_id, N'ACTIVE',
     N'2026-04-20T04:25:03.327', N'A', N'2026-04-20T04:25:03.327', N'PSN'
 );
@@ -129,7 +130,7 @@ INSERT INTO [dbo].[Participation] (
     [status_cd], [status_time], [subject_class_cd]
 )
 VALUES (
-    @patient_uid_2, @interview_uid, N'IntrvweeOfInterview', N'IXS', N'2026-04-20T04:25:03.327',
+    @dbo_Entity_entity_uid_2, @dbo_Act_act_uid_2, N'IntrvweeOfInterview', N'IXS', N'2026-04-20T04:25:03.327',
     @superuser_id, N'2026-04-20T04:25:03.327', @superuser_id, N'ACTIVE',
     N'2026-04-20T04:25:03.327', N'A', N'2026-04-20T04:25:03.327', N'PSN'
 );
@@ -141,7 +142,7 @@ INSERT INTO [dbo].[Act_relationship] (
     [source_class_cd], [status_cd], [status_time], [target_class_cd]
 )
 VALUES (
-    @investigation_uid, @interview_uid, N'IXS', N'because', N'2026-04-20T04:25:03.437',
+    @dbo_Act_act_uid, @dbo_Act_act_uid_2, N'IXS', N'because', N'2026-04-20T04:25:03.437',
     N'2026-04-20T04:25:03.437', @superuser_id, N'ACTIVE', N'2026-04-20T04:25:03.437',
     N'OBS', N'A', N'2026-04-20T04:25:03.437', N'CASE'
 );
