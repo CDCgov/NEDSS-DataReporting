@@ -1,5 +1,6 @@
 services:
   nbs-mssql: !override
+    # update this and republish
     image: ghcr.io/cdcgov/nedss-datareporting-mssql:6.0.18.1
     platform: linux/amd64
     environment:
