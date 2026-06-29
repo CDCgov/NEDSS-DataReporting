@@ -644,37 +644,47 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_name = ' Generating #DM_BMD125, #DM_BMD142 and #DM_BMD144';
 
-        -- Step 1: Create a dataset of all non-sterile sites
-        SELECT
-            distinct bc.INVESTIGATION_KEY,
-                     a.NON_STERILE_SITE AS NON_STERILE_SITE_
+        -- Build the three site lists for the case (non-sterile sites, and the two
+        -- additional-culture site lists). Number the entries 1..N per investigation
+        -- (rn) so that further down the lists can be lined up by position rather than
+        -- matching every value against every other value.
+        -- Step 1: non-sterile sites
+        SELECT INVESTIGATION_KEY, NON_STERILE_SITE_,
+               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY NON_STERILE_SITE_) AS rn
         into #DM_BMD125
-        FROM #BMIRD_PATIENT1 bc
+        FROM (
+            SELECT distinct bc.INVESTIGATION_KEY,
+                     a.NON_STERILE_SITE AS NON_STERILE_SITE_
+            FROM #BMIRD_PATIENT1 bc
                  INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
                             on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
-        WHERE A.NON_STERILE_SITE IS NOT NULL
-        ORDER BY bc.INVESTIGATION_KEY, a.NON_STERILE_SITE;
+            WHERE A.NON_STERILE_SITE IS NOT NULL
+        ) z;
 
         -- Step 2: Create 2 datasets of all additional culture sites
-        SELECT
-            distinct bc.INVESTIGATION_KEY,
-                     a.STREP_PNEUMO_1_CULTURE_SITES AS ADD_CULTURE_1_SITE_
+        SELECT INVESTIGATION_KEY, ADD_CULTURE_1_SITE_,
+               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY ADD_CULTURE_1_SITE_) AS rn
         into #DM_BMD142
-        FROM #BMIRD_PATIENT1 bc
+        FROM (
+            SELECT distinct bc.INVESTIGATION_KEY,
+                     a.STREP_PNEUMO_1_CULTURE_SITES AS ADD_CULTURE_1_SITE_
+            FROM #BMIRD_PATIENT1 bc
                  INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
                             on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
-        WHERE A.STREP_PNEUMO_1_CULTURE_SITES IS NOT NULL
-        ORDER BY bc.INVESTIGATION_KEY, 	a.STREP_PNEUMO_1_CULTURE_SITES;
+            WHERE A.STREP_PNEUMO_1_CULTURE_SITES IS NOT NULL
+        ) z;
 
-        SELECT
-            distinct bc.INVESTIGATION_KEY,
-                     a.STREP_PNEUMO_2_CULTURE_SITES  AS ADD_CULTURE_2_SITE_
+        SELECT INVESTIGATION_KEY, ADD_CULTURE_2_SITE_,
+               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY ADD_CULTURE_2_SITE_) AS rn
         into #DM_BMD144
-        FROM #BMIRD_PATIENT1 bc
+        FROM (
+            SELECT distinct bc.INVESTIGATION_KEY,
+                     a.STREP_PNEUMO_2_CULTURE_SITES  AS ADD_CULTURE_2_SITE_
+            FROM #BMIRD_PATIENT1 bc
                  INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
                             on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
-        WHERE A.STREP_PNEUMO_2_CULTURE_SITES IS NOT NULL
-        ORDER BY bc.INVESTIGATION_KEY, 	a.STREP_PNEUMO_2_CULTURE_SITES;
+            WHERE A.STREP_PNEUMO_2_CULTURE_SITES IS NOT NULL
+        ) z;
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
@@ -690,24 +700,30 @@ BEGIN
         SET @Proc_Step_name = ' Generating #DM_BR7';
 
 
-        -- Step 3: Merge the datasets to create a new table with the columns transposed
-        select d.INVESTIGATION_KEY, a.NON_STERILE_SITE_, b.ADD_CULTURE_1_SITE_, c.ADD_CULTURE_2_SITE_
+        -- Step 3: line the three lists up by position. We join them on the number
+        -- assigned above (rn), so the 1st non-sterile site, 1st culture-1 site and
+        -- 1st culture-2 site share a row (COUNTER = 1), the 2nd of each share the
+        -- next row, and so on. The columns are then spread into _1/_2/_3 below.
+        --
+        -- The previous version joined the three lists on INVESTIGATION_KEY alone,
+        -- which paired every site with every other site (a Cartesian product). When
+        -- a question had more than one answer, the pivot that follows ended up
+        -- copying a single value into all three slots instead of the distinct sites.
+        select k.INVESTIGATION_KEY, k.rn AS COUNTER,
+               a.NON_STERILE_SITE_, b.ADD_CULTURE_1_SITE_, c.ADD_CULTURE_2_SITE_
         into #DM_BR7
-        from #BMIRD_PATIENT1 d
-                 left outer join #DM_BMD125 a on a.INVESTIGATION_KEY = d.INVESTIGATION_KEY
-                 left outer join #DM_BMD142 b on b.INVESTIGATION_KEY = d.INVESTIGATION_KEY
-                 left outer join #DM_BMD144 c on c.INVESTIGATION_KEY = d.INVESTIGATION_KEY
-        where coalesce(a.NON_STERILE_SITE_, b.ADD_CULTURE_1_SITE_, c.ADD_CULTURE_2_SITE_) is not null ;
+        from (
+                 SELECT INVESTIGATION_KEY, rn FROM #DM_BMD125
+                 UNION SELECT INVESTIGATION_KEY, rn FROM #DM_BMD142
+                 UNION SELECT INVESTIGATION_KEY, rn FROM #DM_BMD144
+             ) k
+                 left outer join #DM_BMD125 a on a.INVESTIGATION_KEY = k.INVESTIGATION_KEY and a.rn = k.rn
+                 left outer join #DM_BMD142 b on b.INVESTIGATION_KEY = k.INVESTIGATION_KEY and b.rn = k.rn
+                 left outer join #DM_BMD144 c on c.INVESTIGATION_KEY = k.INVESTIGATION_KEY and c.rn = k.rn;
 
-        with cte1 as  (
-            SELECT *,
-                   ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY
-                       ORDER BY coalesce(NON_STERILE_SITE_, ADD_CULTURE_1_SITE_, ADD_CULTURE_2_SITE_)) AS COUNTER
-            FROM #DM_BR7
-        )
-           , cte2 as (
+        with cte2 as (
             SELECT *
-            FROM cte1 WHERE COUNTER <= 3
+            FROM #DM_BR7 WHERE COUNTER <= 3
         )
         SELECT INVESTIGATION_KEY,
                MAX(CASE WHEN COUNTER = 1 THEN NON_STERILE_SITE_ END) AS NON_STERILE_SITE_1,
