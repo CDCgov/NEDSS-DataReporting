@@ -151,8 +151,7 @@ This convention was reinforced by bug #3
 first fix attempted a two-hop `nbs_odse.dbo.act_relationship`
 traversal; the second-iteration fix uses the staging CSV
 `followup_observation_uid` already projected by NRT. The second
-fix is the one that landed. See
-`bugs/03_morb_rpt_user_comment/pr.md`.
+fix is the one that landed.
 
 Datamart SPs (Hepatitis_Datamart, Std_Hiv_Datamart, dyn_dm_*, etc.) have no
 `_event` partner. They read from already-populated RDB_MODERN dimensions and

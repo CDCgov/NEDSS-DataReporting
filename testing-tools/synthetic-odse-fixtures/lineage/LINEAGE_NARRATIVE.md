@@ -182,8 +182,7 @@ movement.)
   `INFERRED` in the Hepatitis section, not `VERIFIED`.
 - **Bugs cap specific columns** (flagged `BLOCKED:#NN`): #06/#10 LDF chain
   prerequisites; #08 the per-condition LDF `SUBSTRING(@dynamiccolumnUpdate, 1,
-  LEN(...)-1)` family (fires on an empty dynamic-column list; see
-  `bugs/08_ldf_tetanus_substring/`); #11 `aggregate_report_datamart` schema
+  LEN(...)-1)` family (fires on an empty dynamic-column list); #11 `aggregate_report_datamart` schema
   mismatch; #12 `bmird_case_datamart` ROW_NUMBER partition; #13
   `sld_investigation_repeat` TEXT-pivot NULL propagation; #15 `EVENT_METRIC`
   investigation-branch leaves `ADD_USER_NAME` NULL, which violates the
@@ -477,8 +476,7 @@ Hep A acute). The load-bearing gate is the
 `sp_f_page_case_postprocessing`'s `COALESCE(PATIENT.PATIENT_KEY, 1)`
 falls back to the sentinel patient (UID NULL) and the row is deleted,
 yielding 0 datamart rows. This is the bug-5b cascade documented in
-`coverage/coverage_hep_datamart_investigation.md` and
-`bugs/05_tmp_f_page_case_family/`. Notable transforms: numeric-string
+`coverage/coverage_hep_datamart_investigation.md`. Notable transforms: numeric-string
 guarding (`NOT LIKE N'%[^0-9.,-]%' AND ISNUMERIC = 1`) on
 `LAST6PLUSMO_INCAR_*` / sex-partner / STD-year columns; control-char
 stripping on `INV_COMMENTS`; `SUBSTRING` truncation on
@@ -517,9 +515,8 @@ parked under `_quarantine/` (see `BLOCKED.md` and the `_quarantine/`
 README). Restoring it needs an upstream fix to the runaway
 join/spill in those two SPs (or a tempdb MAX_SIZE cap that fails loudly
 on just this fixture). Marked `BLOCKED:tempdb` rather than VERIFIED
-accordingly. (Note: the briefing's "bug #14" label does not have a
-`bugs/14_*` dir (bug dirs run 01–13), so the quarantine is tracked
-via `BLOCKED.md`/`_quarantine/README.md`, not a numbered bug.)
+accordingly. (Note: the briefing's "bug #14" label was never a numbered
+bug, so the quarantine is tracked via `BLOCKED.md`/`_quarantine/README.md`.)
 
 ### HEP100 (185/187 VERIFIED, 2 INFERRED)
 
@@ -587,9 +584,8 @@ the condition, then dynamically INSERTs answer values keyed on
 the catalog represents the whole table as one `dynamiccolumnList`
 entry. Live coverage is **0/7**: the LDF chain is blocked upstream.
 `sp_nrt_ldf_dimensional_data_postprocessing` early-returns producing 0
-rows of `LDF_DIMENSIONAL_DATA` (`bugs/07_ldf_dimensional_data_zero/`),
-and the related LDF truncation issue (`bugs/06_ldf_data_truncation/`,
-fixed on main) sits on the same path. The fixture does tail-EXEC
+rows of `LDF_DIMENSIONAL_DATA`,
+and the related LDF truncation issue (fixed on main) sits on the same path. The fixture does tail-EXEC
 `sp_ldf_hepatitis_datamart_postprocessing` (@phc_uids='22008500') but
 no LDF columns populate. Flagged `DYNAMIC` with the LDF-chain block
 noted (`BLOCKED:#07`).
@@ -799,8 +795,7 @@ Three column groups stand out:
 - **BLOCKED:#12 (13 cols)**: `UNDERLYING_CONDITION_2..8`,
   `NON_STERILE_SITE_2..3`, `ADD_CULTURE_1_SITE_2..3`,
   `ADD_CULTURE_2_SITE_2..3`. These are the `_2`+ slots of the
-  multi-value pivot. Bug #12
-  (`bugs/12_bmird_case_datamart_row_number_partition/findings.md`): SP
+  multi-value pivot. Bug #12: SP
   040's `ROW_NUMBER() OVER (PARTITION BY public_health_case_uid,
   branch_id ...)` includes `branch_id` in the partition, so every branch
   is alone → `row_num` always 1 → `BMIRD_MULTI_VALUE_FIELD` collapses to
@@ -2265,8 +2260,7 @@ fails: **`SR100.ADD_USER_NAME` is NOT NULL while
 `EVENT_METRIC.ADD_USER_NAME` is NULL** (the bug-#15 line-634 branch never
 joined `nrt_auth_user`), raising **Msg 515** which the SP's outer
 `TRY/CATCH` swallows, so the pipeline sees success while SR100 stays
-empty at 0 rows. Per `bugs/15_event_metric_add_user_name_null/findings.md`,
-this is **not** a fixture-fixable gap (seeding `nrt_auth_user` and setting
+empty at 0 rows. This is **not** a fixture-fixable gap (seeding `nrt_auth_user` and setting
 `add_user_id` was verified to leave `EVENT_METRIC.ADD_USER_NAME` NULL); it
 requires an RTR fix (uniformly apply the line-819 `nrt_auth_user` join to
 every `#TMP_EVENT_METRIC` branch, relax the SR100 NOT NULL, or
