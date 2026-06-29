@@ -156,7 +156,7 @@ BEGIN
          N'2.16.840.1.113883.6.1', N'LN',
          '2026-04-10T00:00:00', @superuser_id, N'OBS22022000GA01',
          N'Order', N'Order', N'LabReport',
-         N'PROCESSED', '2026-04-10T00:00:00',
+         N'ACTIVE', '2026-04-10T00:00:00',
          N'A', '2026-04-10T00:00:00', @foundation_patient_uid,
          N'T', 1, N'COV', N'130001',
          22022000, N'Y',
@@ -186,7 +186,7 @@ BEGIN
          N'2.16.840.1.113883.6.1', N'LN',
          '2026-04-10T08:30:00', @superuser_id, N'OBS22022001GA01',
          N'Result', N'Result', N'LabReport',
-         N'PROCESSED', '2026-04-10T08:30:00',
+         N'ACTIVE', '2026-04-10T08:30:00',
          N'A', '2026-04-10T08:30:00', @foundation_patient_uid,
          N'T', 1, N'COV', N'130001',
          22022001, N'Y',
@@ -245,6 +245,12 @@ BEGIN
          '2026-04-10T08:30:00', @superuser_id, N'ACTIVE',
          '2026-04-10T08:30:00', 1, N'OBS', N'CASE', N'A',
          '2026-04-10T08:30:00', N'Lab linked to investigation');
+
+        -- Bump observation change time after adding LabReport edge so CDC emits
+        -- a fresh observation event with the CASE association available.
+        UPDATE dbo.observation
+             SET last_chg_time = DATEADD(SECOND, 1, last_chg_time)
+         WHERE observation_uid = @covid_lab_order_uid;
 END;
 
 -- ODSE: observation_interp + obs_value_coded/numeric/txt on Result

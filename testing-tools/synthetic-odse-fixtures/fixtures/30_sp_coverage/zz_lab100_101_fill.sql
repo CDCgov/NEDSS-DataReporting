@@ -163,7 +163,7 @@ VALUES
      N'L', N'Local',
      '2026-04-20T08:00:00', @superuser_id, N'OBS22053010GA01',
      N'Order', N'Order', N'LabReport',
-     N'PROCESSED', '2026-04-20T08:00:00', N'A', '2026-04-20T08:00:00',
+    N'ACTIVE', '2026-04-20T08:00:00', N'A', '2026-04-20T08:00:00',
      @pat_uid, N'T', 1,
      N'VPD', N'130001', 20053010,
      N'Y', '2026-04-20T08:00:00', '2026-04-19T18:00:00',
@@ -187,7 +187,7 @@ VALUES
      N'2.16.840.1.113883.6.1', N'LN',
      '2026-04-20T09:00:00', @superuser_id, N'OBS22053011GA01',
      N'Result', N'Result', N'LabReport',
-     N'PROCESSED', '2026-04-20T09:00:00', N'A', '2026-04-20T09:00:00',
+    N'ACTIVE', '2026-04-20T09:00:00', N'A', '2026-04-20T09:00:00',
      @pat_uid, N'T', 1,
      N'VPD', N'130001', 20053010,
      N'Y', '2026-04-20T09:00:00', '2026-04-19T18:00:00');
@@ -202,6 +202,24 @@ VALUES
     (@a_result, @a_order, N'COMP', '2026-04-20T09:00:00', @superuser_id,
      '2026-04-20T09:00:00', @superuser_id, N'ACTIVE', '2026-04-20T09:00:00',
      1, N'OBS', N'OBS', N'A', '2026-04-20T09:00:00', N'Component');
+
+-- Lab Order -> Investigation (LabReport cross-subject edge; wires
+-- associated_phc_uids in nrt_observation for RDB_MODERN LAB100)
+INSERT INTO [dbo].[act_relationship]
+    ([source_act_uid],[target_act_uid],[type_cd],[add_time],[add_user_id],
+     [last_chg_time],[last_chg_user_id],[record_status_cd],[record_status_time],
+     [sequence_nbr],[source_class_cd],[target_class_cd],[status_cd],[status_time],
+     [type_desc_txt])
+VALUES
+    (@a_order, 20050010, N'LabReport', '2026-04-20T08:00:00', @superuser_id,
+     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     1, N'OBS', N'CASE', N'A', '2026-04-20T08:00:00', N'Lab Report');
+
+-- Bump observation change time after wiring the LabReport edge so CDC emits
+-- an observation change event that includes the CASE association.
+UPDATE [dbo].[observation]
+     SET [last_chg_time] = DATEADD(SECOND, 1, [last_chg_time])
+ WHERE [observation_uid] = @a_order;
 
 -- act_id for the Order (accession-style local id -> ACCESSION_NBR feed)
 INSERT INTO [dbo].[act_id]
@@ -344,7 +362,7 @@ VALUES
      N'L', N'Local',
      '2026-04-21T08:00:00', @superuser_id, N'OBS22053500GA01',
      N'I_Order', N'I_Order', N'LabReport',
-     N'PROCESSED', '2026-04-21T08:00:00', N'A', '2026-04-21T08:00:00',
+    N'ACTIVE', '2026-04-21T08:00:00', N'A', '2026-04-21T08:00:00',
      @pat_uid, N'T', 1,
      N'ENT', N'130001', 20053500,
      N'Y', N'CULT', N'Culture', N'STOOL', N'Stool specimen');
@@ -364,7 +382,7 @@ VALUES
      N'L', N'Local',
      '2026-04-21T09:00:00', @superuser_id, N'OBS22053500GA01',
      N'I_Result', N'I_Result', N'LabReport',
-     N'PROCESSED', '2026-04-21T09:00:00', N'A', '2026-04-21T09:00:00',
+    N'ACTIVE', '2026-04-21T09:00:00', N'A', '2026-04-21T09:00:00',
      @pat_uid, N'T', 1,
      N'ENT', N'130001', 20053500, N'Y');
 
@@ -385,7 +403,7 @@ VALUES
      N'L', N'Local',
      '2026-04-21T09:30:00', @superuser_id, N'OBS22053500GA01',
      N'Result', N'Result', N'LabReport',
-     N'PROCESSED', '2026-04-21T09:30:00', N'A', '2026-04-21T09:30:00',
+    N'ACTIVE', '2026-04-21T09:30:00', N'A', '2026-04-21T09:30:00',
      @pat_uid, N'T', 1,
      N'ENT', N'130001', 20053500,
      N'Y', N'STOOL', N'Stool specimen', '2026-04-20T18:00:00');
@@ -432,7 +450,7 @@ BEGIN
          N'L', N'Local',
          '2026-04-21T09:15:00', @superuser_id, N'OBS22053500GA01',
          N'I_Result', N'I_Result', N'LabReport',
-         N'PROCESSED', '2026-04-21T09:15:00', N'A', '2026-04-21T09:15:00',
+         N'ACTIVE', '2026-04-21T09:15:00', N'A', '2026-04-21T09:15:00',
          @pat_uid, N'T', 1,
          N'ENT', N'130001', 20053500, N'Y');
 

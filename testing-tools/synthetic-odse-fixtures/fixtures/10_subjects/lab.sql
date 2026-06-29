@@ -19,8 +19,8 @@ GO
 --
 --   Lab observations form a hierarchy: an "Order" parent observation
 --   (obs_domain_cd_st_1='Order') with one or more "Result" child
---   observations (obs_domain_cd_st_1='Result') linked by an
---   `act_relationship` row of type_cd='COMP'. Lab-INTERNAL
+--   observations (obs_domain_cd_st_1='Result') linked by Lab-internal
+--   act_relationship rows (COMP and APND as authored below). Lab-INTERNAL
 --   act_relationships (Lab observation -> Lab observation) are allowed
 --   at Tier 1; cross-subject act_relationships (Lab -> Investigation,
 --   etc.) are Tier 2 only.
@@ -51,8 +51,8 @@ GO
 --      (20070021) — these drive sp_d_lab_test_postprocessing's
 --      LAB_RPT_USER_COMMENT path (which requires the v2 Order's
 --      followup_observation_uid to point at C_Order/C_Result that share
---      a value_txt comment). Linked to v2 Order via internal
---      act_relationship (type_cd='COMP').
+--      a value_txt comment). Linked via APND (C_Order -> Order)
+--      and COMP (C_Result -> C_Order).
 --   5. Synthetic staging rows in RDB_MODERN:
 --        - dbo.nrt_observation (5 rows: foundation Order, v2 Order,
 --          v2 Result, followup C_Order, followup C_Result)
@@ -168,7 +168,7 @@ VALUES
      N'L', N'Local',
      '2026-04-04T00:00:00', @superuser_id, N'OBS20070010GA01',
      N'Order', N'Order', N'LabReport',
-     N'PROCESSED', '2026-04-04T00:00:00',
+    N'ACTIVE', '2026-04-04T00:00:00',
      N'A', '2026-04-04T00:00:00', @foundation_patient_uid,
      N'T', 1, N'STD', N'130001',
      20070010, N'Y',
@@ -198,7 +198,7 @@ VALUES
      N'2.16.840.1.113883.6.1', N'LN',
      '2026-04-04T08:30:00', @superuser_id, N'OBS20070011GA01',
      N'Result', N'Result', N'LabReport',
-     N'PROCESSED', '2026-04-04T08:30:00',
+    N'ACTIVE', '2026-04-04T08:30:00',
      N'A', '2026-04-04T08:30:00', @foundation_patient_uid,
      N'T', 1, N'STD', N'130001',
      20070010, N'Y',
@@ -206,13 +206,13 @@ VALUES
 
 -- =====================================================================
 -- v2 followup C_Order/C_Result observations — drive LAB_RPT_USER_COMMENT.
--- These have ctrl_cd_display_form NULL (NULL is permitted by the SP's
--- WHERE clause at line 219: `OR obs.CTRL_CD_DISPLAY_FORM IS NULL`).
+-- Mirror UI-added lab shape where C_Order carries 'Lab Report' and
+-- C_Result carries 'LabComment'.
 -- =====================================================================
 INSERT INTO [dbo].[observation]
     ([observation_uid], [add_time], [add_user_id], [cd], [cd_desc_txt],
      [last_chg_time], [last_chg_user_id], [local_id],
-     [obs_domain_cd_st_1], [obs_domain_cd],
+    [obs_domain_cd_st_1], [obs_domain_cd], [ctrl_cd_display_form],
      [record_status_cd], [record_status_time],
      [status_cd], [status_time], [subject_person_uid],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
@@ -222,8 +222,8 @@ VALUES
     (@dbo_Act_lab_v2_corder_uid, '2026-04-04T08:00:00', @superuser_id,
      N'NTE', N'Notes Comment Order',
      '2026-04-04T08:00:00', @superuser_id, N'OBS20070020GA01',
-     N'C_Order', N'C_Order',
-     N'PROCESSED', '2026-04-04T08:00:00',
+        N'C_Order', N'C_Order', N'Lab Report',
+    N'ACTIVE', '2026-04-04T08:00:00',
      N'A', '2026-04-04T08:00:00', @foundation_patient_uid,
      N'T', 1, N'STD', N'130001',
      20070010, N'Y',
@@ -231,16 +231,46 @@ VALUES
     (@dbo_Act_lab_v2_cresult_uid, '2026-04-04T08:30:00', @superuser_id,
      N'NTE', N'Notes Comment Result',
      '2026-04-04T08:30:00', @superuser_id, N'OBS20070021GA01',
-     N'C_Result', N'C_Result',
-     N'PROCESSED', '2026-04-04T08:30:00',
+        N'C_Result', N'C_Result', N'LabComment',
+    N'ACTIVE', '2026-04-04T08:30:00',
      N'A', '2026-04-04T08:30:00', @foundation_patient_uid,
      N'T', 1, N'STD', N'130001',
      20070010, N'Y',
      '2026-04-04T08:30:00');
 
+    -- =====================================================================
+    -- v2 Order participations.
+    -- UI-created lab orders include at least patient-subject and author org
+    -- participations. Add them explicitly so ODSE fixture shape matches UI.
+    -- =====================================================================
+    INSERT INTO [dbo].[participation]
+        ([act_uid], [subject_entity_uid], [type_cd],
+        [act_class_cd], [subject_class_cd],
+        [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
+        [record_status_cd], [record_status_time],
+        [status_cd], [status_time], [type_desc_txt])
+    VALUES
+        (@dbo_Act_lab_v2_order_uid,
+        @foundation_patient_uid,
+        N'PATSBJ',
+        N'OBS',
+        N'PSN',
+        '2026-04-04T00:00:00', @superuser_id, '2026-04-04T00:00:00', @superuser_id,
+        N'ACTIVE', '2026-04-04T00:00:00',
+        N'A', '2026-04-04T00:00:00', N'Patient Subject'),
+        (@dbo_Act_lab_v2_order_uid,
+        @foundation_org_uid,
+        N'AUT',
+        N'OBS',
+        N'ORG',
+        '2026-04-04T00:00:00', @superuser_id, '2026-04-04T00:00:00', @superuser_id,
+        N'ACTIVE', '2026-04-04T00:00:00',
+        N'A', '2026-04-04T00:00:00', N'Author');
+
 -- =====================================================================
--- Lab-internal act_relationship rows: Order -> Result and Order -> C_Result.
--- type_cd='COMP' from SRTE AR_TYPE (verified). class_cd 'OBS' for both
+-- Lab-internal act_relationship rows:
+--   Result -> Order (COMP), C_Order -> Order (APND), C_Result -> C_Order (COMP).
+-- class_cd 'OBS' for both
 -- source/target. These are Lab-internal — both endpoints are Lab
 -- observations. Cross-subject act_relationships (Lab -> Investigation)
 -- are Tier 2 territory and NOT authored here.
@@ -266,12 +296,12 @@ VALUES
      '2026-04-04T08:30:00', @superuser_id, N'ACTIVE',
      '2026-04-04T08:30:00', 1, N'OBS', N'OBS', N'A',
      '2026-04-04T08:30:00', N'Component'),
-    -- v2 C_Order -> v2 Order (parent — followup-comment Order child)
-    (@dbo_Act_lab_v2_corder_uid, @dbo_Act_lab_v2_order_uid, N'COMP',
+        -- v2 C_Order -> v2 Order (append relationship, mirrors UI shape)
+        (@dbo_Act_lab_v2_corder_uid, @dbo_Act_lab_v2_order_uid, N'APND',
      '2026-04-04T08:00:00', @superuser_id,
      '2026-04-04T08:00:00', @superuser_id, N'ACTIVE',
-     '2026-04-04T08:00:00', 2, N'OBS', N'OBS', N'A',
-     '2026-04-04T08:00:00', N'Component'),
+         '2026-04-04T08:00:00', 2, N'OBS', N'OBS', N'A',
+         '2026-04-04T08:00:00', N'Append'),
     -- v2 C_Result -> v2 C_Order
     (@dbo_Act_lab_v2_cresult_uid, @dbo_Act_lab_v2_corder_uid, N'COMP',
      '2026-04-04T08:30:00', @superuser_id,
