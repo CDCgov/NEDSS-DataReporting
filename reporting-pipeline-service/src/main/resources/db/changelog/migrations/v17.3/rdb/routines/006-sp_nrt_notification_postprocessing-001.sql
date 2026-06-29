@@ -117,6 +117,34 @@ BEGIN
 
         BEGIN TRANSACTION;
 
+        -- APP-738 (sibling of APP-736): serialize the notification key-gen + dimension inserts and
+        -- refresh the at-SP-start snapshots. #temp_ntf_table / #temp_ntf_event_table captured each
+        -- notification's NOTIFICATION_KEY (the "is this new?" signal) at SP start with (NOLOCK);
+        -- d_notification_key is IDENTITY and nrt_notification_key.notification_uid has no unique index,
+        -- so two concurrent first-time batches for the same notification_uid both saw NULL, both minted
+        -- a key, and both INSERTed the same NOTIFICATION/NOTIFICATION_EVENT PK -> Error 2627. Hold an
+        -- exclusive applock for the rest of this transaction (@LockOwner='Transaction' releases it at
+        -- COMMIT), then re-derive NOTIFICATION_KEY from the now-current key/dimension tables so a uid
+        -- another session just processed is no longer treated as new.
+        DECLARE @applock_rc int;
+        EXEC @applock_rc = sp_getapplock @Resource = 'nrt_notification_key_keygen',
+            @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
+        IF @applock_rc < 0
+            THROW 50026, 'sp_getapplock failed to acquire nrt_notification_key_keygen (serialization lost)', 1;
+
+        UPDATE t
+        SET t.NOTIFICATION_KEY = k.d_notification_key
+        FROM #temp_ntf_table t
+            JOIN dbo.nrt_notification_key k ON t.notification_uid = k.notification_uid
+        WHERE t.NOTIFICATION_KEY IS NULL;
+
+        UPDATE te
+        SET te.NOTIFICATION_KEY = ne.NOTIFICATION_KEY
+        FROM #temp_ntf_event_table te
+            JOIN dbo.nrt_notification_key k ON te.notification_uid = k.notification_uid
+            JOIN dbo.NOTIFICATION_EVENT ne ON ne.NOTIFICATION_KEY = k.d_notification_key
+        WHERE te.NOTIFICATION_KEY IS NULL;
+
         SET @proc_step_name='Update dbo.nrt_notification_key';
         SET @proc_step_no = 2;
 
