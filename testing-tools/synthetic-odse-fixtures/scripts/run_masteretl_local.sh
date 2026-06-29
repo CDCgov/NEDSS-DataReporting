@@ -99,12 +99,26 @@ docker compose exec -u SAS -T sas sh -c \
 bad=$(docker compose exec -u SAS -T sas sh -c "grep -cE 'PASSWORD=${PASS}[^ ;]' '${AUTOEXEC}' || true" 2>/dev/null | tr -d '\r')
 log "autoexec.sas LIBNAME passwords normalized (mangled lines remaining: ${bad:-0})."
 
-log "Running MasterETL..."
-docker compose exec -u SAS -T sas sh -c "${MASTERETL}"
+# MASTERETL_MONOLITH=1 runs the self-contained MasterEtl.sas (which %includes
+# Page_Case.sas + INV_SUMM_DATAMART.sas and their upstream deps) instead of the
+# MasterEtl.sh split (MasterEtl1.sas + MasterEtl2.sas), which omits them and so
+# never builds F_PAGE_CASE / INV_SUMM_DATAMART.
+readonly SAS_BIN="/opt/sas9.4/install/SASHome/SASFoundation/9.4/sasexe/sas"
+readonly SAS_CFG="/opt/sas9.4/install/SASHome/SASFoundation/9.4/sasv9.cfg"
+if [[ -n "${MASTERETL_MONOLITH:-}" ]]; then
+  log "Running monolith MasterEtl.sas (Page_Case + INV_SUMM_DATAMART included)..."
+  docker compose exec -u SAS -T sas sh -c \
+    "${SAS_BIN} -sysin '${REPORT_DIR}/dw/etl/src/MasterEtl.sas' -nosyntaxcheck -print '${LOGDIR}/MasterEtl.lst' -log '${LOGDIR}/MasterEtl.log' -config '${SAS_CFG}' -autoexec '${AUTOEXEC}'" || true
+  readonly ETL_LOGS="MasterEtl"
+else
+  log "Running MasterETL..."
+  docker compose exec -u SAS -T sas sh -c "${MASTERETL}"
+  readonly ETL_LOGS="Drop_Create_Tables MasterETL1 SSIS MasterEtl2 DynamicDatamart"
+fi
 
 log "MasterETL finished. SAS log ERROR counts:"
 total=0
-for f in Drop_Create_Tables MasterETL1 SSIS MasterEtl2 DynamicDatamart; do
+for f in ${ETL_LOGS}; do
   n=$(docker compose exec -u SAS -T sas sh -c "grep -c '^ERROR' '${LOGDIR}/${f}.log' 2>/dev/null || true" 2>/dev/null | tr -d '\r')
   n=${n:-0}
   printf '  %-22s %s ERROR\n' "${f}.log" "$n"
