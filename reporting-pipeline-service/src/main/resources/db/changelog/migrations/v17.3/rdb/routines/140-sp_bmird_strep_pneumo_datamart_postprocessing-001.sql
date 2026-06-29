@@ -644,7 +644,11 @@ BEGIN
         SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_name = ' Generating #DM_BMD125, #DM_BMD142 and #DM_BMD144';
 
-        -- Step 1: Create a dataset of all non-sterile sites
+        -- Build the three site lists for the case (non-sterile sites, and the two
+        -- additional-culture site lists). Number the entries 1..N per investigation
+        -- (rn) so that further down the lists can be lined up by position rather than
+        -- matching every value against every other value.
+        -- Step 1: non-sterile sites
         SELECT INVESTIGATION_KEY, NON_STERILE_SITE_,
                ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY NON_STERILE_SITE_) AS rn
         into #DM_BMD125
@@ -696,11 +700,15 @@ BEGIN
         SET @Proc_Step_name = ' Generating #DM_BR7';
 
 
-        -- Step 3: align the three site datasets by per-investigation rank (rn) so the
-        -- Nth non-sterile site, Nth additional-culture-1 site and Nth culture-2 site
-        -- land on the same COUNTER row, then transpose to _1/_2/_3. Joining only on
-        -- INVESTIGATION_KEY (the prior logic) cross-joined the datasets and repeated
-        -- a single value across all slots whenever any field had more than one value.
+        -- Step 3: line the three lists up by position. We join them on the number
+        -- assigned above (rn), so the 1st non-sterile site, 1st culture-1 site and
+        -- 1st culture-2 site share a row (COUNTER = 1), the 2nd of each share the
+        -- next row, and so on. The columns are then spread into _1/_2/_3 below.
+        --
+        -- The previous version joined the three lists on INVESTIGATION_KEY alone,
+        -- which paired every site with every other site (a Cartesian product). When
+        -- a question had more than one answer, the pivot that follows ended up
+        -- copying a single value into all three slots instead of the distinct sites.
         select k.INVESTIGATION_KEY, k.rn AS COUNTER,
                a.NON_STERILE_SITE_, b.ADD_CULTURE_1_SITE_, c.ADD_CULTURE_2_SITE_
         into #DM_BR7
