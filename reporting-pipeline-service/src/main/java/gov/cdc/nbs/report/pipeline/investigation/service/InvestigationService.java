@@ -39,6 +39,7 @@ import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Setter
@@ -448,9 +449,24 @@ public class InvestigationService {
     reportingModel.setPhysicianId(investigationTransformed.getPhysicianId());
     reportingModel.setPatientId(investigationTransformed.getPatientId());
     reportingModel.setOrganizationId(investigationTransformed.getOrganizationId());
-    reportingModel.setInvStateCaseId(investigationTransformed.getInvStateCaseId());
-    reportingModel.setCityCountyCaseNbr(investigationTransformed.getCityCountyCaseNbr());
-    reportingModel.setLegacyCaseId(investigationTransformed.getLegacyCaseId());
+    reportingModel.setInvStateCaseId(
+        StringUtils.hasText(investigationTransformed.getInvStateCaseId())
+            ? investigationTransformed.getInvStateCaseId()
+            : StringUtils.hasText(reportingModel.getInvStateCaseId())
+                ? reportingModel.getInvStateCaseId()
+                : null);
+    reportingModel.setCityCountyCaseNbr(
+        StringUtils.hasText(investigationTransformed.getCityCountyCaseNbr())
+            ? investigationTransformed.getCityCountyCaseNbr()
+            : StringUtils.hasText(reportingModel.getCityCountyCaseNbr())
+                ? reportingModel.getCityCountyCaseNbr()
+                : null);
+    reportingModel.setLegacyCaseId(
+        StringUtils.hasText(investigationTransformed.getLegacyCaseId())
+            ? investigationTransformed.getLegacyCaseId()
+            : StringUtils.hasText(reportingModel.getLegacyCaseId())
+                ? reportingModel.getLegacyCaseId()
+                : null);
     reportingModel.setPhcInvFormId(investigationTransformed.getPhcInvFormId());
     reportingModel.setRdbTableNameList(investigationTransformed.getRdbTableNameList());
     reportingModel.setCaseCount(investigationTransformed.getCaseCount());

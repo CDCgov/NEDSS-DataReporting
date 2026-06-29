@@ -1,0 +1,6 @@
+{
+  "name": "test-connector",
+  "config": {
+    "connector.class": "x"
+  }
+}

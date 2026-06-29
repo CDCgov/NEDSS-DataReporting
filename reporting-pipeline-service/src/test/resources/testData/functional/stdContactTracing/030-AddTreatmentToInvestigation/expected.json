@@ -262,7 +262,7 @@
   "11": [
     {
       "CLOSED_BY_KEY": 1,
-      "CONDITION_KEY": 217,
+      "CONDITION_CD": "700",
       "DELIVERING_HOSP_KEY": 1,
       "DELIVERING_MD_KEY": 1,
       "DISPOSITIONED_BY_KEY": 1,
@@ -494,7 +494,7 @@
   ],
   "21": [
     {
-      "CONDITION_KEY": 242,
+      "PROGRAM_AREA_CD": "STD",
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -510,7 +510,7 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "CONDITION_KEY": 1,
+      "PROGRAM_AREA_CD": null,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -533,7 +533,6 @@
       "CASE_RPT_MMWR_YR": 2026,
       "COINFECTION_ID": "COIN1000XX01",
       "CONDITION_CD": "700",
-      "CONDITION_KEY": 217,
       "CURR_PROCESS_STATE": "Surveillance Follow-up",
       "EPI_LINK_ID": "1310000026",
       "FACILITY_FLD_FOLLOW_UP_KEY": 1,

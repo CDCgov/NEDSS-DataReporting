@@ -356,7 +356,7 @@ ORDER BY [LAB_TEST_UID]
 -- Identity strategy is fallback_after. review the WHERE clause before using it as a regression assertion.
 -- Logical comparison marked this identity as not comparison-safe.
 SELECT
-    [CONDITION_KEY],
+    CONDITION.PROGRAM_AREA_CD,
     [COPY_TO_PROVIDER_KEY],
     [INVESTIGATION_KEY],
     [LAB_RESULT_VAL_LARGE_TXT_KEY],
@@ -373,6 +373,7 @@ SELECT
     [RESULT_COMMENT_GRP_KEY],
     [SPECIMEN_COLLECTOR_KEY]
 FROM [RDB_MODERN].[dbo].[LAB_TEST_RESULT]
+JOIN [RDB_MODERN].[dbo].[CONDITION] ON CONDITION.CONDITION_KEY = LAB_TEST_RESULT.CONDITION_KEY
 WHERE [LAB_TEST_UID] IN (1000002008, 1000002009, 1000002012)
 ORDER BY [LAB_TEST_UID]
 ;

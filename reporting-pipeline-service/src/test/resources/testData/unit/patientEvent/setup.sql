@@ -226,7 +226,7 @@ VALUES      (@dbo_Entity_entity_uid,
              NULL,
              NULL,
              NULL,
-             NULL);
+             N'D');
 
 --  Person_name
 INSERT INTO [dbo].[person_name]

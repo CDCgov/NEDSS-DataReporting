@@ -304,21 +304,41 @@ public class ProcessInvestigationDataUtil {
     try {
       JsonNode actIdsJsonArray = parseJsonArray(actIds);
 
+      String stateCaseId = null;
+      int stateCaseIdSeq = Integer.MIN_VALUE;
+      String cityCountyCaseNbr = null;
+      int cityCountyCaseNbrSeq = Integer.MIN_VALUE;
+      String legacyCaseId = null;
+      int legacyCaseIdSeq = Integer.MIN_VALUE;
+
       for (JsonNode node : actIdsJsonArray) {
-        int actIdSeq = node.get("act_id_seq").asInt();
         String typeCode = node.path(TYPE_CD).asText();
         String rootExtension = node.path("root_extension_txt").asText();
+        int actIdSeq = node.path("act_id_seq").asInt();
 
-        if (typeCode.equals("STATE") && actIdSeq == 1) {
-          investigationTransformed.setInvStateCaseId(rootExtension);
+        if (rootExtension == null || rootExtension.isBlank()) {
+          continue;
         }
-        if (typeCode.equals("CITY") && actIdSeq == 2) {
-          investigationTransformed.setCityCountyCaseNbr(rootExtension);
+
+        // Match by type_cd (not by fixed positional seq). If multiple rows exist for the same
+        // type, use the latest row by act_id_seq to mirror ODSE TOP 1 ... ORDER BY act_id_seq DESC.
+        if (typeCode.equals("STATE") && actIdSeq >= stateCaseIdSeq) {
+          stateCaseId = rootExtension;
+          stateCaseIdSeq = actIdSeq;
         }
-        if (typeCode.equals("LEGACY") && actIdSeq == 3) {
-          investigationTransformed.setLegacyCaseId(rootExtension);
+        if (typeCode.equals("CITY") && actIdSeq >= cityCountyCaseNbrSeq) {
+          cityCountyCaseNbr = rootExtension;
+          cityCountyCaseNbrSeq = actIdSeq;
+        }
+        if (typeCode.equals("LEGACY") && actIdSeq >= legacyCaseIdSeq) {
+          legacyCaseId = rootExtension;
+          legacyCaseIdSeq = actIdSeq;
         }
       }
+
+      investigationTransformed.setInvStateCaseId(stateCaseId);
+      investigationTransformed.setCityCountyCaseNbr(cityCountyCaseNbr);
+      investigationTransformed.setLegacyCaseId(legacyCaseId);
     } catch (IllegalArgumentException ex) {
       logger.info(ex.getMessage(), "ActIds");
     } catch (Exception e) {

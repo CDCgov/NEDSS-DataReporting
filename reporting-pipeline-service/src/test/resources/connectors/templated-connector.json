@@ -1,0 +1,7 @@
+{
+  "name": "templated-connector",
+  "config": {
+    "connector.class": "x",
+    "connection.url": "${connector.database.url}"
+  }
+}

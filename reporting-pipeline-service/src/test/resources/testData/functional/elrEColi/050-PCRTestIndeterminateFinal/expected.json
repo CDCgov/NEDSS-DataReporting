@@ -1002,7 +1002,7 @@
   ],
   "17": [
       {
-          "CONDITION_KEY": 239,
+          "PROGRAM_AREA_CD": "GCD",
           "COPY_TO_PROVIDER_KEY": 1,
           "LAB_RPT_DT_KEY": 13296,
           "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -1015,7 +1015,7 @@
           "SPECIMEN_COLLECTOR_KEY": 1
       },
       {
-          "CONDITION_KEY": 239,
+          "PROGRAM_AREA_CD": "GCD",
           "COPY_TO_PROVIDER_KEY": 1,
           "LAB_RPT_DT_KEY": 13296,
           "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -1028,7 +1028,7 @@
           "SPECIMEN_COLLECTOR_KEY": 1
       },
       {
-          "CONDITION_KEY": 239,
+          "PROGRAM_AREA_CD": "GCD",
           "COPY_TO_PROVIDER_KEY": 1,
           "LAB_RPT_DT_KEY": 13296,
           "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -1041,7 +1041,7 @@
           "SPECIMEN_COLLECTOR_KEY": 1
       },
       {
-          "CONDITION_KEY": 239,
+          "PROGRAM_AREA_CD": "GCD",
           "COPY_TO_PROVIDER_KEY": 1,
           "LAB_RPT_DT_KEY": 13296,
           "LAB_TEST_TECHNICIAN_KEY": 1,

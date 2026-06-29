@@ -34,7 +34,6 @@ BEGIN
     DECLARE @Dataflow_Name VARCHAR(200) = 'D_LAB_TEST Post-Processing Event';
     DECLARE @Package_Name VARCHAR(200) = 'sp_d_lab_test_postprocessing';
     DECLARE @rdb_last_refresh_time datetime;
-    DECLARE @applock_rc INT;
 
     BEGIN TRY
 
@@ -409,7 +408,7 @@ BEGIN
                 WHEN tst.LAB_TEST_Type = 'Order' THEN tst.LAB_TEST_pntr
                 ELSE tst.LAB_TEST_pntr
             END AS root_ordered_test_pntr,
-            -- Bug #19: LAB_TEST.RECORD_STATUS_CD = COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
+            -- APP-737: LAB_TEST.RECORD_STATUS_CD = COALESCE(#merge_order.RECORD_STATUS_CD_MERGE,
             -- this column). RECORD_STATUS_CD_MERGE is normalized (PROCESSED/''/NULL/UNPROCESSED* ->
             -- ACTIVE, LOG_DEL -> INACTIVE) but is NULL when root_ordered_test_pntr does not resolve
             -- (merge_order join miss). Previously this fallback passed the RAW ancestor
@@ -418,13 +417,12 @@ BEGIN
             -- failing the whole obs batch. Normalize it identically to RECORD_STATUS_CD_MERGE so the
             -- inserted RECORD_STATUS_CD is always a valid ('ACTIVE'/'INACTIVE') value (or NULL).
             CASE
-                WHEN COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd)
-                     IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED')
-                  OR COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) IS NULL
+                WHEN v.raw_status IN ('', 'UNPROCESSED', 'UNPROCESSED_PREV_D', 'PROCESSED')
+                  OR v.raw_status IS NULL
                     THEN 'ACTIVE'
-                WHEN COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd) = 'LOG_DEL'
+                WHEN v.raw_status = 'LOG_DEL'
                     THEN 'INACTIVE'
-                ELSE COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd)
+                ELSE v.raw_status
             END AS record_status_cd_for_result_drug,
             parent_test.report_sprt_uid AS root_thru_srpt,
             parent_test.report_refr_uid AS root_thru_refr
@@ -435,7 +433,10 @@ BEGIN
         LEFT JOIN dbo.nrt_observation tst3 WITH (NOLOCK) ON parent_test.report_refr_uid = tst3.observation_uid
         LEFT JOIN dbo.nrt_observation tst4 WITH (NOLOCK) ON parent_test.report_observation_uid = tst4.observation_uid
         LEFT JOIN dbo.nrt_observation obs2 WITH (NOLOCK) ON tst.report_refr_uid = obs2.observation_uid
-        LEFT JOIN dbo.nrt_observation obs3 WITH (NOLOCK) ON obs2.report_observation_uid = obs3.observation_uid;
+        LEFT JOIN dbo.nrt_observation obs3 WITH (NOLOCK) ON obs2.report_observation_uid = obs3.observation_uid
+        CROSS APPLY (
+            VALUES (COALESCE(tst2.record_status_cd, tst3.record_status_cd, tst4.record_status_cd, obs3.record_status_cd))
+        ) v(raw_status);
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
@@ -895,21 +896,6 @@ BEGIN
         --due to logical errors in catch section.
 
         BEGIN TRANSACTION
-
-            -- Bug #17: serialize allocation of nrt_lab_test_key IDENTITY values across concurrent /
-            -- retried postprocessing sessions. The sibling routine
-            -- (sp_d_labtest_result_postprocessing) races on the analogous
-            -- nrt_lab_test_result_group_key allocation; guard this key-gen the same way with an
-            -- exclusive application lock so concurrent sessions cannot interleave the
-            -- read/RESEED/INSERT and collide (Error 2627), deadlock (Error 1205) or drop inserts.
-            EXEC @applock_rc = sp_getapplock @Resource = 'nrt_lab_test_key_keygen',
-                @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
-
-            -- Bug #17 (residual): sp_getapplock returns < 0 on timeout/deadlock/error. The original
-            -- EXEC ignored the return code, letting a failed acquisition proceed UNSERIALIZED. Fail
-            -- loudly so the caller retries rather than racing on the IDENTITY allocation.
-            IF @applock_rc < 0
-                THROW 50018, 'sp_getapplock failed to acquire nrt_lab_test_key_keygen (serialization lost)', 1;
 
             SELECT @rdb_last_refresh_time = GETDATE()
 

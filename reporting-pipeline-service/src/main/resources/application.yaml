@@ -83,21 +83,49 @@ spring:
     url: ${DB_CONNECTION_URL}
 
   liquibase:
-    enabled: ${ENABLE_AUTO_MIGRATION:true}
+    enabled: ${LIQUIBASE_AUTOMIGRATION_ENABLE:true}
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    user: ${RTR_ADMIN_NAME}
-    password: ${RTR_ADMIN_PASSWORD}
+    user: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+connector:
+  database:
+    url: ${DB_CONNECTION_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER}
+  debezium:
+    enabled: ${DEBEZIUM_AUTOCONFIG_ENABLE:true}
+    url: ${DEBEZIUM_CONNECT_URL}
+    retry-attempts: ${DEBEZIUM_RETRY_ATTEMPTS:20}
+    retry-delay-ms: ${DEBEZIUM_RETRY_DELAY_MS:5000}
+    definitions:
+      - classpath:connectors/debezium/odse_main_connector.json
+      - classpath:connectors/debezium/odse_schema_only_connector.json
+      - classpath:connectors/debezium/odse_meta_connector.json
+      - classpath:connectors/debezium/srte_connector.json
+  kafka-connect:
+    enabled: ${KAFKA_CONNECT_AUTOCONFIG_ENABLE:true}
+    url: ${KAFKA_CONNECT_URL}
+    retry-attempts: ${KAFKA_CONNECT_RETRY_ATTEMPTS:20}
+    retry-delay-ms: ${KAFKA_CONNECT_RETRY_DELAY_MS:5000}
+    definitions:
+      - classpath:connectors/kafka-connect/mssql-connector.json
 
 featureFlag:
   elastic-search-enable: ${FF_ES_ENABLE:false}
-  phc-datamart-enable: ${FF_PHC_DM_ENABLE:false}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
   post-processing-enable: ${FF_POST_PROCESSING_ENABLE:true}
+  phc-datamart-enable: false
 
 management:
   endpoint:
     prometheus:
       access: read_only
+    health:
+      show-details: always
+      show-components: always
   endpoints:
     web:
       exposure:

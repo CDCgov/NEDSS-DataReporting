@@ -2,18 +2,15 @@
 
 These scripts must be run **manually, once** per environment before the RTR pipeline can operate. They are not managed by Liquibase and are not idempotent in the sense that they set up infrastructure (CDC, SQL Agent jobs) that persists independently of application deployments.
 
-## Database Users
+## Database User
 
-Running the RTR pipeline requires SQL Server login accounts for two distinct purposes: running the bootstrap scripts and schema migrations, and running the application services. Depending on your environment, these can be two separate accounts or collapsed into one.
+Running the RTR pipeline requires a SQL Server login account for two distinct purposes: configuring the database and running the application services. 
 
-### Accounts at a Glance (v7.13.0+)
+### Account Permissions (v7.13.0+)
 
 | Account | Purpose | Databases | Key Permissions |
 | :--- | :--- | :--- | :--- |
-| **Admin account** (e.g. `rtr-admin`) | Liquibase migrations | `NBS_ODSE`, `NBS_SRTE`, `RDB / RDB_MODERN`  | All NBS DBs: `db_owner` |
 | **Service account** (e.g. `rtr-service-user`) | Application services reading source data and writing to the reporting database | `NBS_ODSE`, `NBS_SRTE`, `RDB / RDB_MODERN` | ODSE/SRTE: `db_datareader`<br>RDB/RDB_MODERN: `db_owner` |
-
-Two accounts cover everything: `rtr-admin` handles migrations, `rtr-service-user` runs the application. A single account with both sets of permissions also works if your environment doesn't require separation.
 
 ### Account Names Are Flexible
 

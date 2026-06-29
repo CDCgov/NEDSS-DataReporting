@@ -1,19 +1,19 @@
-USE [NBS_ODSE]
-DECLARE @superuser_id bigint = 10009282
+USE [NBS_ODSE];
+DECLARE @superuser_id bigint = 10009282;
 
 -- Adjust the UID declarations below manually so they remain unique across other tests.
-DECLARE @dbo_Entity_entity_uid bigint = 1000005000
-DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000005001
-DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000005002
-DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 1000005003
-DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000005000GA01'
+DECLARE @dbo_Entity_entity_uid bigint = 1000005000;
+DECLARE @dbo_Postal_locator_postal_locator_uid bigint = 1000005001;
+DECLARE @dbo_Tele_locator_tele_locator_uid bigint = 1000005002;
+DECLARE @dbo_Tele_locator_tele_locator_uid_2 bigint = 1000005003;
+DECLARE @dbo_Person_local_id nvarchar(40) = N'PSN1000005000GA01';
 
 -- dbo.Entity
 INSERT INTO [dbo].[entity]
             ([entity_uid],
              [class_cd])
 VALUES      (@dbo_Entity_entity_uid,
-             N'PSN')
+             N'PSN');
 
 -- dbo.Person
 INSERT INTO [dbo].[person]
@@ -72,7 +72,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'N',
              @dbo_Entity_entity_uid,
              N'Y',
-             N'Added as a test')
+             N'Added as a test');
 
 -- dbo.Person_name
 INSERT INTO [dbo].[person_name]
@@ -103,7 +103,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:21:26.690',
              N'A',
              N'2026-04-10T20:21:26.690',
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Person_race
 INSERT INTO [dbo].[person_race]
@@ -118,7 +118,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:21:26.717',
              N'2106-3',
              N'ACTIVE',
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Entity_id
 INSERT INTO [dbo].[entity_id]
@@ -151,7 +151,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'DL',
              N'Driver''s license number',
              N'2026-04-10T00:00:00',
-             N'L')
+             N'L');
 
 -- dbo.Postal_locator
 INSERT INTO [dbo].[postal_locator]
@@ -176,7 +176,7 @@ VALUES      (@dbo_Postal_locator_postal_locator_uid,
              N'13',
              N'1313 Pine Way',
              N'',
-             N'30033')
+             N'30033');
 
 -- dbo.Entity_locator_participation
 INSERT INTO [dbo].[entity_locator_participation]
@@ -205,7 +205,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:21:26.800',
              N'H',
              1,
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Tele_locator
 INSERT INTO [dbo].[tele_locator]
@@ -218,7 +218,7 @@ VALUES      (@dbo_Tele_locator_tele_locator_uid,
              N'2026-04-10T20:21:26.717',
              @superuser_id,
              N'201-555-1212',
-             N'ACTIVE')
+             N'ACTIVE');
 
 -- dbo.Entity_locator_participation
 INSERT INTO [dbo].[entity_locator_participation]
@@ -247,7 +247,7 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:21:26.800',
              N'H',
              1,
-             N'2026-04-10T00:00:00')
+             N'2026-04-10T00:00:00');
 
 -- dbo.Tele_locator
 INSERT INTO [dbo].[tele_locator]
@@ -260,7 +260,7 @@ VALUES      (@dbo_Tele_locator_tele_locator_uid_2,
              N'2026-04-10T20:21:26.717',
              @superuser_id,
              N'Marie@example.com',
-             N'ACTIVE')
+             N'ACTIVE');
 
 -- dbo.Entity_locator_participation
 INSERT INTO [dbo].[entity_locator_participation]
@@ -289,4 +289,4 @@ VALUES      (@dbo_Entity_entity_uid,
              N'2026-04-10T20:21:26.800',
              N'H',
              1,
-             N'2026-04-10T00:00:00') 
+             N'2026-04-10T00:00:00');

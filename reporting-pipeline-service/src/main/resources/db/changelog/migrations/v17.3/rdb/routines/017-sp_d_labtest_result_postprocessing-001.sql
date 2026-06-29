@@ -872,7 +872,7 @@ BEGIN
 
 		BEGIN TRANSACTION
 
-			-- Bug #17: the IDENT_CURRENT + DBCC CHECKIDENT(RESEED) + INSERT pattern below is NOT
+			-- APP-736: the IDENT_CURRENT + DBCC CHECKIDENT(RESEED) + INSERT pattern below is NOT
 			-- atomic. DBCC CHECKIDENT is a non-transactional metadata operation that escapes the
 			-- UPDLOCK/HOLDLOCK taken on the MAX read, so concurrent / retried postprocessing sessions
 			-- interleave here and either collide on the IDENTITY (Error 2627 duplicate PRIMARY KEY),
@@ -882,7 +882,7 @@ BEGIN
 			EXEC @applock_rc = sp_getapplock @Resource = 'nrt_lab_test_result_group_key_keygen',
 				@LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 60000;
 
-			-- Bug #17 (residual): sp_getapplock returns 0/1 on success and -1/-2/-3/-999 on
+			-- APP-736 (residual): sp_getapplock returns 0/1 on success and -1/-2/-3/-999 on
 			-- timeout/deadlock/error/parameter-error. The original EXEC ignored the return code, so a
 			-- timed-out or errored lock acquisition let the session proceed UNSERIALIZED. Fail loudly
 			-- instead so the caller retries rather than racing.
@@ -892,7 +892,7 @@ BEGIN
 			SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
 			SET @PROC_STEP_NAME = 'GENERATING keys for new TEST_RESULT_GROUP ';
 
-			-- Bug #19 / residual #17: allocate group keys EXPLICITLY (MAX + ROW_NUMBER, IDENTITY_INSERT
+			-- APP-737 / residual APP-736: allocate group keys EXPLICITLY (MAX + ROW_NUMBER, IDENTITY_INSERT
 			-- under the exclusive applock) instead of the IDENT_CURRENT + DBCC CHECKIDENT(RESEED) +
 			-- auto-IDENTITY dance. The old dance had a DETERMINISTIC defect independent of concurrency:
 			-- when the key table is empty (e.g. a from-scratch pipeline run before the

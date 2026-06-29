@@ -3232,6 +3232,16 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: onboarding-unknown-member-seeds
+      author: liquibase
+      runOnChange: true
+      runInTransaction: false
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v17.3/rdb/onboarding/003-unknown_member_seeds-001.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
       id: onboarding-indexes
       author: liquibase
       runOnChange: true

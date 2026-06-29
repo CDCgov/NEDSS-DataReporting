@@ -4,11 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,17 +12,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.AfterAll;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.testcontainers.shaded.com.google.common.collect.Lists;
 
 /**
- * Concurrency regression test for bug #17.
+ * Concurrency regression test for APP-736.
  *
  * <p>{@code sp_d_labtest_result_postprocessing} (routine 017) and {@code
  * sp_d_lab_test_postprocessing} (routine 018) allocate IDENTITY keys for new {@code
@@ -51,115 +48,45 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
 
   private static final Logger log = LoggerFactory.getLogger(LabTestKeyGenConcurrencyTest.class);
 
-  // The key tables/routines live in RDB_MODERN; the connection URL targets RDB_MODERN AND every
-  // object reference is fully database-qualified, so the test never depends on the session's
-  // resolved default catalog (which differs between the Testcontainers and reuse code paths).
-  private static final String CATALOG = "RDB_MODERN";
-  private static final String DB = "RDB_MODERN.dbo.";
-
   // Distinct, well out-of-range UID/key base so we never collide with seeded fixture data.
   private static final long UID_BASE = 970_000_000L;
 
   private static final int THREADS = 32;
   private static final int ROUNDS = 30;
 
-  @Autowired private Environment env;
-
   // Admin credentials, but the URL is rewritten to target RDB_MODERN (where the routines/key tables
   // live); the configured admin URL points at NBS_ODSE.
+  @Value("${spring.datasource.admin.url}")
   private String jdbcUrl;
+
+  @Value("${spring.datasource.admin.username}")
   private String jdbcUser;
+
+  @Value("${spring.datasource.admin.password}")
   private String jdbcPassword;
 
   // All UIDs inserted across the whole test, for guaranteed cleanup.
   private final List<Long> insertedUids = new CopyOnWriteArrayList<>();
 
-  /**
-   * The nbs-mssql + liquibase stack is started by {@link UnitTest.Initializer} during Spring
-   * context initialization (single-start, shared across every {@code @Tag("Unit")} class in the
-   * run), so there is no container lifecycle to trigger here.
-   */
-  @BeforeAll
-  void setUp() {
-    // Resolve admin credentials, but force the catalog to RDB_MODERN (the configured admin URL
-    // targets NBS_ODSE; the routines and key tables live in RDB_MODERN).
-    jdbcUser = env.getProperty("spring.datasource.admin.username", "rtr_admin");
-    jdbcPassword = env.getProperty("spring.datasource.admin.password", "rtr_admin");
-    String configured =
-        env.getProperty(
-            "spring.datasource.admin.url",
-            "jdbc:sqlserver://localhost:3433;databaseName=NBS_ODSE;encrypt=true;"
-                + "trustServerCertificate=true;loginTimeout=3;");
-    jdbcUrl = configured.replaceAll("databaseName=[^;]+", "databaseName=" + CATALOG);
-
-    // The parent's Testcontainers readiness gate ("Migrations complete") can fire while later
-    // Liquibase phases (the runOnChange routines + onboarding seeds) are still applying, so the SP
-    // and key tables may not exist yet at this instant. Poll until the routine under test is
-    // present before any thread invokes it.
-    awaitSpReady();
-  }
-
-  private void awaitSpReady() {
-    long deadline = System.currentTimeMillis() + Duration.ofMinutes(5).toMillis();
-    Exception last = null;
-    while (System.currentTimeMillis() < deadline) {
-      try (Connection conn = connection();
-          Statement st = conn.createStatement();
-          var rs =
-              st.executeQuery(
-                  "SELECT OBJECT_ID('" + DB + "sp_d_labtest_result_postprocessing') AS oid")) {
-        if (rs.next() && rs.getObject("oid") != null) {
-          return;
-        }
-        last = null;
-      } catch (Exception e) {
-        last = e;
-      }
-      try {
-        Thread.sleep(2000);
-      } catch (InterruptedException ie) {
-        Thread.currentThread().interrupt();
-        break;
-      }
-    }
-    throw new IllegalStateException(
-        "sp_d_labtest_result_postprocessing not available before timeout", last);
-  }
-
-  @Override
-  @AfterAll
-  void tearDown() {
-    // Intentionally a no-op: never stop the shared nbs-mssql/liquibase stack from this class. The
-    // stack is either an externally-managed one we reused, or a Testcontainers stack that other
-    // Unit test classes (e.g. DataDrivenUnitTests) in the same run also share -- stopping it here
-    // would pull the database out from under them. Ryuk / JVM shutdown reclaims a Testcontainers
-    // stack when the run ends.
-  }
-
   @AfterEach
-  void cleanup() throws SQLException {
-    if (insertedUids.isEmpty()) {
-      return;
-    }
-    try (Connection conn = connection();
-        Statement st = conn.createStatement()) {
-      if (!insertedUids.isEmpty()) {
-        String csv = csv(insertedUids);
-        // Delete in FK-safe order: child result tables -> grouping -> key -> LAB_TEST.
-        st.execute("DELETE FROM " + DB + "LAB_TEST_RESULT WHERE LAB_TEST_UID IN (" + csv + ")");
-        st.execute("DELETE FROM " + DB + "LAB_RESULT_VAL WHERE LAB_TEST_UID IN (" + csv + ")");
-        st.execute(
-            "DELETE FROM " + DB + "TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (" + csv + ")");
-        st.execute(
-            "DELETE FROM "
-                + DB
-                + "nrt_lab_test_result_group_key WHERE LAB_TEST_UID IN ("
-                + csv
-                + ")");
-        st.execute("DELETE FROM " + DB + "LAB_TEST WHERE LAB_TEST_UID IN (" + csv + ")");
-        insertedUids.clear();
-      }
-    }
+  void cleanup() {
+    JdbcClient client = client();
+    // Split into chunks to avoid max of 2100 parameters in a single query.
+    List<List<Long>> chunks = Lists.partition(insertedUids, 400);
+    chunks.forEach(
+        c -> {
+          String sql =
+              """
+              DELETE FROM LAB_TEST_RESULT WHERE LAB_TEST_UID IN (:uidList)
+              DELETE FROM LAB_RESULT_VAL WHERE LAB_TEST_UID IN (:uidList)
+              DELETE FROM TEST_RESULT_GROUPING WHERE LAB_TEST_UID IN (:uidList)
+              DELETE FROM nrt_lab_test_result_group_key WHERE LAB_TEST_UID IN (:uidList)
+              DELETE FROM LAB_TEST WHERE LAB_TEST_UID IN (:uidList)
+              """;
+          client.sql(sql).param("uidList", c).update();
+        });
+
+    insertedUids.clear();
   }
 
   @Test
@@ -195,19 +122,17 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
               // Each thread owns a dedicated connection, opened BEFORE the start latch so that
               // connection acquisition is not part of the timed window and all sessions sustain
               // overlapping pressure on the key-gen critical section across all rounds.
-              try (Connection conn = connection();
-                  Statement st = conn.createStatement()) {
+              try {
+                JdbcClient client = client();
                 ready.countDown();
                 go.await();
                 for (long uid : myUids) {
-                  st.execute(
-                      "EXEC "
-                          + DB
-                          + "sp_d_labtest_result_postprocessing @pLabResultList='"
-                          + uid
-                          + "'");
+                  client
+                      .sql("EXEC sp_d_labtest_result_postprocessing @pLabResultList=:uid")
+                      .param("uid", String.valueOf(uid))
+                      .update();
                 }
-              } catch (SQLException e) {
+              } catch (DataAccessException e) {
                 String msg = e.getMessage();
                 if (msg != null
                     && (msg.contains("2627")
@@ -270,51 +195,52 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
     // still failing hard on the real bug. We also require NO duplicate keys.
     int expected = THREADS * ROUNDS;
     long minRequired = (long) Math.ceil(expected * 0.99);
-    try (Connection conn = connection();
-        Statement st = conn.createStatement()) {
-      try (var rs =
-          st.executeQuery(
-              "SELECT COUNT(*) AS total, COUNT(DISTINCT TEST_RESULT_GRP_KEY) AS distinctKeys, "
-                  + "COUNT(DISTINCT LAB_TEST_UID) AS distinctUids "
-                  + "FROM "
-                  + DB
-                  + "nrt_lab_test_result_group_key "
-                  + "WHERE LAB_TEST_UID IN ("
-                  + csv(insertedUids)
-                  + ")")) {
-        assertTrue(rs.next(), "count query returned no rows");
-        long total = rs.getLong("total");
-        long distinct = rs.getLong("distinctKeys");
-        long distinctUids = rs.getLong("distinctUids");
-        if (distinctUids != expected) {
-          log.warn(
-              "Group-key landing: {}/{} distinct UIDs (total rows={}, distinct keys={})",
-              distinctUids,
-              expected,
-              total,
-              distinct);
-        }
-        // No duplicate keys (the 2627 collision manifestation).
-        assertEquals(
-            total,
-            distinct,
-            "Duplicate TEST_RESULT_GRP_KEY detected: total=" + total + " distinct=" + distinct);
-        // No catastrophic lost-insert race (the silent-drop manifestation).
-        assertTrue(
-            distinctUids >= minRequired,
-            "Lost-insert race: expected "
-                + expected
-                + " new group keys (one per distinct new LAB_TEST_UID) but only "
-                + distinctUids
-                + " landed (require >= "
-                + minRequired
-                + ") -- interleaved RESEED/INSERT dropped rows.");
-      }
+
+    JdbcClient client = client();
+    String query =
+        """
+              SELECT
+                COUNT(*) AS total,
+                COUNT(DISTINCT TEST_RESULT_GRP_KEY) AS distinctKeys,
+                COUNT(DISTINCT LAB_TEST_UID) AS distinctUids
+              FROM
+                nrt_lab_test_result_group_key
+              WHERE
+                LAB_TEST_UID IN (:uidList);
+              """;
+
+    var rs = client.sql(query).param("uidList", insertedUids).query().singleRow();
+    int total = (Integer) rs.get("total");
+    int distinct = (Integer) rs.get("distinctKeys");
+    int distinctUids = (Integer) rs.get("distinctUids");
+
+    if (distinctUids != expected) {
+      log.warn(
+          "Group-key landing: {}/{} distinct UIDs (total rows={}, distinct keys={})",
+          distinctUids,
+          expected,
+          total,
+          distinct);
     }
+    // No duplicate keys (the 2627 collision manifestation).
+    assertEquals(
+        total,
+        distinct,
+        "Duplicate TEST_RESULT_GRP_KEY detected: total=" + total + " distinct=" + distinct);
+    // No catastrophic lost-insert race (the silent-drop manifestation).
+    assertTrue(
+        distinctUids >= minRequired,
+        "Lost-insert race: expected "
+            + expected
+            + " new group keys (one per distinct new LAB_TEST_UID) but only "
+            + distinctUids
+            + " landed (require >= "
+            + minRequired
+            + ") -- interleaved RESEED/INSERT dropped rows.");
   }
 
   /**
-   * Deterministic (single-threaded) regression for the RESIDUAL bug #17 facet that the concurrency
+   * Deterministic (single-threaded) regression for the RESIDUAL APP-736 facet that the concurrency
    * test above could not catch: the sentinel-slot re-assignment on a never-used (empty) key table.
    *
    * <p>{@code nrt_lab_test_result_group_key} carries a default sentinel row {@code
@@ -339,140 +265,115 @@ class LabTestKeyGenConcurrencyTest extends UnitTest {
   void emptyKeyTableDoesNotReassignSentinelSlot() throws Exception {
     long newUid = UID_BASE + 900_000L;
     insertedUids.add(newUid);
+    JdbcClient client = client();
 
-    try (Connection conn = connection();
-        Statement st = conn.createStatement()) {
-      // Snapshot the live key table so we can restore it after the destructive TRUNCATE.
-      st.execute(
-          "IF OBJECT_ID('tempdb..##gk_snapshot') IS NOT NULL DROP TABLE ##gk_snapshot;"
-              + " SELECT TEST_RESULT_GRP_KEY, LAB_TEST_UID INTO ##gk_snapshot FROM "
-              + DB
-              + "nrt_lab_test_result_group_key;");
+    // Snapshot the live key table so we can restore it after the destructive TRUNCATE.
+    String snapshotQuery =
+        """
+          IF OBJECT_ID('tempdb..##gk_snapshot') IS NOT NULL DROP TABLE ##gk_snapshot;
+          SELECT TEST_RESULT_GRP_KEY, LAB_TEST_UID INTO ##gk_snapshot FROM nrt_lab_test_result_group_key;
+          """;
+    client.sql(snapshotQuery).update();
 
+    try {
+      // Reproduce the from-scratch never-used empty-table state: TRUNCATE resets the IDENTITY to
+      // the never-used seed (IDENT_CURRENT=1, LastValue NULL) and clears every row including the
+      // sentinel -- exactly the state that made the old key-gen assign key=1 to a real lab test.
+      client.sql("TRUNCATE TABLE nrt_lab_test_result_group_key").update();
+
+      // One brand-new Result lab test -> the SP must allocate a NEW group key for it.
+      String insertQuery =
+          """
+            INSERT INTO LAB_TEST (LAB_TEST_KEY, LAB_TEST_UID, LAB_TEST_TYPE, RECORD_STATUS_CD)
+            VALUES (:newUid, :newUid, 'Result', 'ACTIVE');
+            """;
+      client.sql(insertQuery).param("newUid", newUid).update();
+
+      // Invoke the SP. Against the pre-fix routine this lands the new test at
+      // TEST_RESULT_GRP_KEY=1.
+      client
+          .sql("EXEC sp_d_labtest_result_postprocessing @pLabResultList=:newUid")
+          .param("newUid", String.valueOf(newUid))
+          .update();
+
+      // Assertion 1: the new lab test must NOT have taken the sentinel slot (key=1); it must be
+      // >=2.
+      int key =
+          client
+              .sql(
+                  "SELECT TEST_RESULT_GRP_KEY FROM nrt_lab_test_result_group_key WHERE LAB_TEST_UID =:newUid")
+              .param("newUid", newUid)
+              .query(Integer.class)
+              .single();
+      assertTrue(
+          key >= 2,
+          "Sentinel slot re-assignment: new lab test was allocated TEST_RESULT_GRP_KEY="
+              + key
+              + " (must be >= 2; key=1 is reserved for the default sentinel).");
+
+      // Assertion 2: the default sentinel (key=1, LAB_TEST_UID NULL) can still be inserted --
+      // i.e.
+      // the slot was preserved -- without a 2627 PRIMARY KEY collision.
       try {
-        // Reproduce the from-scratch never-used empty-table state: TRUNCATE resets the IDENTITY to
-        // the never-used seed (IDENT_CURRENT=1, LastValue NULL) and clears every row including the
-        // sentinel -- exactly the state that made the old key-gen assign key=1 to a real lab test.
-        st.execute("TRUNCATE TABLE " + DB + "nrt_lab_test_result_group_key");
-
-        // One brand-new Result lab test -> the SP must allocate a NEW group key for it.
-        st.execute(
-            "INSERT INTO "
-                + DB
-                + "LAB_TEST (LAB_TEST_KEY, LAB_TEST_UID, LAB_TEST_TYPE, RECORD_STATUS_CD)"
-                + " VALUES ("
-                + newUid
-                + ", "
-                + newUid
-                + ", 'Result', 'ACTIVE')");
-
-        // Invoke the SP. Against the pre-fix routine this lands the new test at
-        // TEST_RESULT_GRP_KEY=1.
-        st.execute(
-            "EXEC " + DB + "sp_d_labtest_result_postprocessing @pLabResultList='" + newUid + "'");
-
-        // Assertion 1: the new lab test must NOT have taken the sentinel slot (key=1); it must be
-        // >=2.
-        try (var rs =
-            st.executeQuery(
-                "SELECT TEST_RESULT_GRP_KEY FROM "
-                    + DB
-                    + "nrt_lab_test_result_group_key WHERE LAB_TEST_UID = "
-                    + newUid)) {
-          assertTrue(rs.next(), "new lab test got no group key allocated");
-          long key = rs.getLong("TEST_RESULT_GRP_KEY");
-          assertTrue(
-              key >= 2,
-              "Sentinel slot re-assignment: new lab test was allocated TEST_RESULT_GRP_KEY="
-                  + key
-                  + " (must be >= 2; key=1 is reserved for the default sentinel).");
+        String insertIdentity =
+            """
+              SET IDENTITY_INSERT nrt_lab_test_result_group_key ON;
+              INSERT INTO nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)
+              VALUES (1, NULL);
+              """;
+        client.sql(insertIdentity).update();
+      } catch (DataAccessException e) {
+        String msg = e.getMessage();
+        if (msg != null && (msg.contains("2627") || msg.contains("PRIMARY KEY"))) {
+          fail(
+              "Sentinel-slot collision: inserting the default sentinel (key=1) threw a duplicate"
+                  + " PRIMARY KEY (2627) because a real lab test already consumed key=1. "
+                  + msg);
         }
-
-        // Assertion 2: the default sentinel (key=1, LAB_TEST_UID NULL) can still be inserted --
-        // i.e.
-        // the slot was preserved -- without a 2627 PRIMARY KEY collision.
-        try {
-          st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key ON");
-          st.execute(
-              "INSERT INTO "
-                  + DB
-                  + "nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)"
-                  + " VALUES (1, NULL)");
-        } catch (SQLException e) {
-          String msg = e.getMessage();
-          if (msg != null && (msg.contains("2627") || msg.contains("PRIMARY KEY"))) {
-            fail(
-                "Sentinel-slot collision: inserting the default sentinel (key=1) threw a duplicate"
-                    + " PRIMARY KEY (2627) because a real lab test already consumed key=1. "
-                    + msg);
-          }
-          throw e;
-        } finally {
-          st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key OFF");
-        }
+        throw e;
       } finally {
-        // Restore: clear our test rows, then re-insert the snapshot under IDENTITY_INSERT, and
-        // realign the IDENTITY seed with the restored MAX so the shared stack is left intact.
-        st.execute("TRUNCATE TABLE " + DB + "nrt_lab_test_result_group_key");
-        st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key ON");
-        st.execute(
-            "INSERT INTO "
-                + DB
-                + "nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)"
-                + " SELECT TEST_RESULT_GRP_KEY, LAB_TEST_UID FROM ##gk_snapshot");
-        st.execute("SET IDENTITY_INSERT " + DB + "nrt_lab_test_result_group_key OFF");
-        st.execute(
-            "DECLARE @m BIGINT = (SELECT ISNULL(MAX(TEST_RESULT_GRP_KEY),1) FROM "
-                + DB
-                + "nrt_lab_test_result_group_key);"
-                + " DBCC CHECKIDENT('"
-                + DB
-                + "nrt_lab_test_result_group_key', RESEED, @m) WITH NO_INFOMSGS;");
-        st.execute("IF OBJECT_ID('tempdb..##gk_snapshot') IS NOT NULL DROP TABLE ##gk_snapshot;");
+        client.sql("SET IDENTITY_INSERT nrt_lab_test_result_group_key OFF").update();
       }
+    } finally {
+      // Restore: clear our test rows, then re-insert the snapshot under IDENTITY_INSERT, and
+      // realign the IDENTITY seed with the restored MAX so the shared stack is left intact.
+      String sql =
+          """
+            TRUNCATE TABLE nrt_lab_test_result_group_key;
+            SET IDENTITY_INSERT nrt_lab_test_result_group_key ON;
+            INSERT INTO nrt_lab_test_result_group_key (TEST_RESULT_GRP_KEY, LAB_TEST_UID)
+            SELECT TEST_RESULT_GRP_KEY, LAB_TEST_UID FROM ##gk_snapshot;
+            SET IDENTITY_INSERT nrt_lab_test_result_group_key OFF;
+            DECLARE @m BIGINT = (SELECT ISNULL(MAX(TEST_RESULT_GRP_KEY),1) FROM nrt_lab_test_result_group_key);
+            DBCC CHECKIDENT('nrt_lab_test_result_group_key', RESEED, @m) WITH NO_INFOMSGS;
+            IF OBJECT_ID('tempdb..##gk_snapshot') IS NOT NULL DROP TABLE ##gk_snapshot;
+            """;
+      client.sql(sql).update();
     }
   }
 
-  private void seedLabTests(List<Long> uids) throws SQLException {
-    try (Connection conn = connection();
-        Statement st = conn.createStatement()) {
-      StringBuilder sb = new StringBuilder("SET NOCOUNT ON; ");
-      for (Long uid : uids) {
-        // LAB_TEST_KEY is the (non-identity) PK; reuse the UID as the key (both far out of range).
-        // LAB_TEST_TYPE='Result' routes the row into #TMP_Result_And_R_Result, and a brand-new
-        // UID (not yet in nrt_lab_test_result_group_key) forces a new group-key allocation.
-        sb.append(
-            "INSERT INTO "
-                + DB
-                + "LAB_TEST (LAB_TEST_KEY, LAB_TEST_UID, LAB_TEST_TYPE, RECORD_STATUS_CD)"
-                + " VALUES ("
-                + uid
-                + ", "
-                + uid
-                + ", 'Result', 'ACTIVE'); ");
-      }
-      st.execute(sb.toString());
-    } catch (SQLException e) {
-      fail("Failed to seed LAB_TEST rows: " + e.getMessage());
+  private void seedLabTests(List<Long> uids) {
+    JdbcClient client = client();
+    // LAB_TEST_KEY is the (non-identity) PK; reuse the UID as the key (both far out of range).
+    // LAB_TEST_TYPE='Result' routes the row into #TMP_Result_And_R_Result, and a brand-new
+    // UID (not yet in nrt_lab_test_result_group_key) forces a new group-key allocation.
+    String sql =
+        """
+        INSERT INTO LAB_TEST
+          (LAB_TEST_KEY, LAB_TEST_UID, LAB_TEST_TYPE, RECORD_STATUS_CD)
+        VALUES
+          (:uid, :uid, 'Result', 'ACTIVE');
+        """;
+    for (Long uid : uids) {
+      client.sql(sql).param("uid", uid).update();
     }
   }
 
-  // Dedicated raw JDBC connection (not pooled) so the test is never throttled by a connection pool
-  // smaller than the thread count -- true simultaneity is required to expose the race.
-  private Connection connection() throws SQLException {
-    Connection conn = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
-    conn.setAutoCommit(true);
-    return conn;
-  }
-
-  private static String csv(List<Long> values) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < values.size(); i++) {
-      if (i > 0) {
-        sb.append(',');
-      }
-      sb.append(values.get(i));
-    }
-    return sb.toString();
+  // Initialize a new datasource for each request to bypass connection pooling limit
+  private JdbcClient client() {
+    String url = jdbcUrl.replaceAll("databaseName=[^;]+", "databaseName=RDB_MODERN");
+    DataSource dataSource =
+        DataSourceBuilder.create().url(url).username(jdbcUser).password(jdbcPassword).build();
+    return JdbcClient.create(dataSource);
   }
 }
