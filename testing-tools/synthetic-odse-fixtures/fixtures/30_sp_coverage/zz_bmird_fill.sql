@@ -219,63 +219,37 @@ BEGIN
 
     -- =================================================================
     -- MULTI-VALUE-FIELD observations (RDB_table='BMIRD_Multi_Value_field')
-    -- Each distinct observation_uid = one multi-value selection (branch_id).
-    -- Routine 040 derives BMIRD_MULTI_VAL_GRP_KEY + one selection per
-    -- branch; routine 140 pivots into _1/_2/_3 (sites/conditions) and
-    -- concatenates the "Other" infection/sterile-site columns.
+    -- ONE observation per question carrying N distinct Obs_value_coded rows
+    -- (one per selection). This is the shape legacy MasterETL (the authority)
+    -- requires: BMIRD_Case.sas roots every answer at the form, so it can only
+    -- separate multi-selects by cd_seq, which increments across the multiple
+    -- coded values WITHIN a single child observation. Authoring each selection
+    -- as its own observation makes them all cd_seq=1 and the SAS transpose
+    -- collides ("Col_nm ... occurs twice in the same BY group"), emptying
+    -- BMIRD_CASE and cascading to F_PAGE_CASE / INV_SUMM_DATAMART. RTR is made
+    -- tolerant of this shape downstream (v_getobscode already yields one row per
+    -- coded value; routine 040 distinguishes selections per coded value).
     -- =================================================================
 
     -- BMD127 UNDERLYING_CONDITION_NM (BM_UNDERL_CAUSE) x3 -> UNDERLYING_CONDITION_1..3
     INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048200, N'OBS', N'EVN');
     INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048200, N'BMD127', N'NBS', N'OBS22048200GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048200, N'19030005');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048201, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048201, N'BMD127', N'NBS', N'OBS22048201GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048201, N'20823009');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048202, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048202, N'BMD127', N'NBS', N'OBS22048202GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048202, N'414915002');
+    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048200, N'19030005'), (22048200, N'20823009'), (22048200, N'414915002');
 
     -- BMD125 NON_STERILE_SITE (BM_ORG_ISO_S2) x3 -> NON_STERILE_SITE_1..3
     INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048203, N'OBS', N'EVN');
     INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048203, N'BMD125', N'NBS', N'OBS22048203GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048203, N'AMNIOTIC');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048204, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048204, N'BMD125', N'NBS', N'OBS22048204GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048204, N'MIDDLEAR');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048205, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048205, N'BMD125', N'NBS', N'OBS22048205GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048205, N'OTH');
+    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048203, N'AMNIOTIC'), (22048203, N'MIDDLEAR'), (22048203, N'OTH');
 
     -- BMD142 STREP_PNEUMO_1_CULTURE_SITES (BM_ORG_ISO_S1) x3 -> ADD_CULTURE_1_SITE_1..3
     INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048206, N'OBS', N'EVN');
     INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048206, N'BMD142', N'NBS', N'OBS22048206GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048206, N'BLOOD');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048207, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048207, N'BMD142', N'NBS', N'OBS22048207GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048207, N'BONE');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048208, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048208, N'BMD142', N'NBS', N'OBS22048208GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048208, N'CSF');
+    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048206, N'BLOOD'), (22048206, N'BONE'), (22048206, N'CSF');
 
     -- BMD144 STREP_PNEUMO_2_CULTURE_SITES (BM_ORG_ISO_S1) x3 -> ADD_CULTURE_2_SITE_1..3
     INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048209, N'OBS', N'EVN');
     INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048209, N'BMD144', N'NBS', N'OBS22048209GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048209, N'BLOOD');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048210, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048210, N'BMD144', N'NBS', N'OBS22048210GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048210, N'BONE');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048211, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048211, N'BMD144', N'NBS', N'OBS22048211GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048211, N'CSF');
+    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048209, N'BLOOD'), (22048209, N'BONE'), (22048209, N'CSF');
 
     -- BMD118 TYPES_OF_INFECTIONS (BM_INFEC_TYPE): one recognized (Pneumonia
     -- -> sets TYPE_INFECTION_PNEUMONIA='Yes') + two non-recognized
@@ -283,25 +257,15 @@ BEGIN
     -- TYPE_INFECTION_OTHERS_CONCAT).
     INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048212, N'OBS', N'EVN');
     INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048212, N'BMD118', N'NBS', N'OBS22048212GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048212, N'PNEU');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048213, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048213, N'BMD118', N'NBS', N'OBS22048213GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048213, N'9826008');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048214, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048214, N'BMD118', N'NBS', N'OBS22048214GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048214, N'56819008');
+    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048212, N'PNEU'), (22048212, N'9826008'), (22048212, N'56819008');
 
     -- BMD122 STERILE_SITE (BM_ORG_ISO_S3) x2 -> STERILE_SITE_OTHERS_CONCAT
-    -- (routine 140 concatenates BMD122 sterile-site multi-values).
+    -- (routine 140 concatenates BMD122 sterile-site multi-values). Two distinct
+    -- sterile sites (the prior fixture repeated 119383005, which can't coexist
+    -- under one observation given the obs_value_coded PK on (observation_uid,code)).
     INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048215, N'OBS', N'EVN');
     INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048215, N'BMD122', N'NBS', N'OBS22048215GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048215, N'119383005');
-
-    INSERT INTO [dbo].[act] ([act_uid],[class_cd],[mood_cd]) VALUES (22048216, N'OBS', N'EVN');
-    INSERT INTO [dbo].[Observation] ([observation_uid],[cd],[cd_system_cd],[local_id],[status_cd],[status_time],[program_jurisdiction_oid],[shared_ind],[version_ctrl_nbr]) VALUES (22048216, N'BMD122', N'NBS', N'OBS22048216GA01', N'A', @ts, @phc_uid, N'T', 1);
-    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048216, N'119383005');
+    INSERT INTO [dbo].[Obs_value_coded] ([observation_uid],[code]) VALUES (22048215, N'119383005'), (22048215, N'258450006');
 
     -- =================================================================
     -- InvFrmQ act_relationships: target=L1 form, source=each question obs.
@@ -321,9 +285,7 @@ BEGIN
         (22048112),(22048113),(22048114),(22048115),(22048116),(22048117),
         (22048118),(22048119),(22048120),(22048121),(22048122),(22048123),
         (22048124),
-        (22048200),(22048201),(22048202),(22048203),(22048204),(22048205),
-        (22048206),(22048207),(22048208),(22048209),(22048210),(22048211),
-        (22048212),(22048213),(22048214),(22048215),(22048216)
+        (22048200),(22048203),(22048206),(22048209),(22048212),(22048215)
     ) AS q(src);
 
     -- PHCInvForm: target=PHC, source=L1 form observation. Wires the form
