@@ -239,10 +239,7 @@ public class ProcessDatamartData {
    *     so INV_SUMM_DATAMART can be refreshed for them afterwards
    */
   private void processDatamart(
-      String dmKey,
-      Map<String, List<Long>> idMap,
-      List<Long> ldfUids,
-      List<Long> caseLabInvUids) {
+      String dmKey, Map<String, List<Long>> idMap, List<Long> ldfUids, List<Long> caseLabInvUids) {
     List<Long> uids = getUids(idMap, INVESTIGATION);
     List<Long> patUids = getUids(idMap, PATIENT);
     List<Long> obsUids = getUids(idMap, OBSERVATION);
