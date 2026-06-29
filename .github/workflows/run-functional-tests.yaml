@@ -8,6 +8,7 @@ on:
       - "gradle/**"
       - "docker-compose.yaml"
       - ".github/workflows/**"
+      - "containers/db/**"
 
 jobs:
   pipeline:
