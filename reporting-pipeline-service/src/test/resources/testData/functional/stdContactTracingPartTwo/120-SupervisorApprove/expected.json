@@ -863,6 +863,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "LAST_CHG_TIME": "2026-05-06T23:27:54.707",
+      "OUTBREAK_IND": "",
       "PATIENT_AGE_AT_ONSET": 41,
       "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_PREGNANT_IND": "Yes",
@@ -890,9 +891,11 @@
       "INV_LOCAL_ID": "CAS1000009024GA01",
       "INV_SHARE_IND": "T",
       "INV_START_DT": "2026-04-25T00:00:00.000",
+      "INV_STATE_CASE_ID": "CAS1000009024GA01",
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "LAST_CHG_TIME": "2026-05-06T22:51:40.267",
+      "OUTBREAK_IND": "",
       "PROGRAM_AREA_DESCRIPTION": "STD",
       "RECORD_STATUS_CD": "ACTIVE",
       "REFERRAL_BASIS": "P1 - Partner, Sex"
@@ -1089,7 +1092,6 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "PROGRAM_AREA_CD": null,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -1190,6 +1192,7 @@
       "JURISDICTION_NM": "Fulton County",
       "MDH_PREV_STD_HIST": "No",
       "ORDERING_FACILITY_KEY": 4,
+      "OUTBREAK_IND": "",
       "PATIENT_AGE_AT_ONSET": 41,
       "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_AGE_REPORTED": "          41 Years",
@@ -1284,6 +1287,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "ORDERING_FACILITY_KEY": 1,
+      "OUTBREAK_IND": "",
       "PATIENT_AGE_REPORTED": "           .",
       "PATIENT_CURRENT_SEX": "Male",
       "PATIENT_DECEASED_INDICATOR": "No",
