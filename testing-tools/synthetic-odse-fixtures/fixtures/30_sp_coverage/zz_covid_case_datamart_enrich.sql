@@ -1,0 +1,113 @@
+-- =====================================================================
+-- Tier 3 — COVID_CASE_DATAMART column-coverage enrichment
+-- =====================================================================
+-- Authored 2026-05-22 by Agent A (parallel enrichment).
+--
+-- Goal: lift dbo.covid_case_datamart populated-column count from 87/383
+-- toward 234/383 by authoring supplemental nrt_page_case_answer rows
+-- (one per currently-empty page-question-driven datamart column) against
+-- the existing COVID Investigation PHC 22003000 authored by
+-- covid_investigation_full_chain.sql.
+--
+-- WHY THIS WORKS
+--   sp_covid_case_datamart_postprocessing discovers every datamart
+--   column via NRT_ODSE_NBS_RDB_METADATA.user_defined_column_nm for
+--   investigation_form_cd='PG_COVID-19_v1.1' (data_location LIKE
+--   '%Answer_txt', component NOT IN (1013,1025), question_group_seq_nbr
+--   IS NULL), then PIVOTs on dbo.nrt_page_case_answer joined by
+--   nbs_question_uid + act_uid. Any answer row whose nbs_question_uid
+--   maps to an unpopulated datamart column will populate that column
+--   in the final INSERT, since the SP uses
+--     replace(ISNULL(code_short_desc_txt, answer_txt), CHAR(13)+CHAR(10), ' ')
+--   for the pivot value (so even when the answer_txt does not match a
+--   nrt_srte_code_value_general code for the codeset, the raw
+--   answer_txt is used and the column becomes non-NULL).
+--
+-- WHAT THIS FIXTURE AUTHORS
+--   147 supplemental nrt_page_case_answer rows on act_uid=22003000.
+--   Each row carries the canonical nbs_question_uid /
+--   question_identifier / code_set_group_id derived live from the
+--   NBS_ODSE metadata for PG_COVID-19_v1.1, with a plausible
+--   answer_txt:
+--     - YNU columns (code_set_group_id=4150): 'Y'
+--     - Date columns (suffix _DT, contains DATE, DueDate):
+--       '2026-04-01'
+--     - Numeric columns (_NBR, _DAYS, _WEEKS, _TRIMESTER): '1'
+--     - All other coded (1007) columns: 'Y' (falls through to
+--       answer_txt in SP since no codeset match — column still
+--       populates non-NULL)
+--     - Freetext (1008/1009 with NULL codeset): 'Other'
+--
+--   Columns targeted (147 distinct):
+--     ABN_CHEST_XRAY_IND, ADENOVIRUS_RSLT, ADULT_CONG_LIVING_EXP,
+--     ANIMAL_TYPE_TXT, ARDS_IND, ATTEND_EVENTS, C_PNEUMONIAE_RSLT,
+--     CASE_REPORT_TO_CDC_DT, CASE_STATUS_REASON, CDC_ASSIGNED_ID,
+--     CHEST_PAIN_IND, CHILD_CARE_FACILITY, CHILLS_IND,
+--     CHINA_HC_HISTORY_IND, CHRONIC_LIVER_DIS_IND, CHRONIC_LUNG_DIS_IND,
+--     CHRONIC_RENAL_DIS_IND, CNTRY_USUAL_RESID, ContactOther,
+--     ContactOthSpecify, CORONAVIRUS_RSLT, CORRECTIONAL_EXP,
+--     CORYZA_RUNNY_NOSE_IND, COUGH_IND, CTT_CONF_CASE_COMM,
+--     CTT_CONF_CASE_HLTHCR, CTT_CONF_CASE_HSHLD, CTT_CONF_CASE_PAT_IND,
+--     CURRENT_SMOKER_IND, CV_DISEASE_IND, CYANOSIS_IND, DGMQ_ID,
+--     DIABETES_MELLITUS_IND, DIFFICULT_BREATH_IND,
+--     DOSES_PRIOR_ONSET_NBR, DueDate, DYSPNEA_IND, EDUCATIONAL_EXP,
+--     EKG_ABNORMAL, EPI_LINKED_CASE_ID2, EPI_LINKED_CASE_ID3,
+--     FEVER_HIGHEST_TMP_NBR, FEVERISH_IND, FIRST_RPT_TO_PHD_DT,
+--     FLU_A_PCR_RSLT, FLU_A_RAPID_AG_RSLT, FLU_B_PCR_RSLT,
+--     FLU_B_RAPID_AG_RSLT, FORMER_SMOKER_IND, FRST_POS_SPEC_CLCT_DT,
+--     H_METAPNEUMOVRS_RSLT, HC_CONTACT_TYPE, HCW_OCCUPATION,
+--     HCW_SETTING, ICU_ADMIT_DT, ICU_DISCHARGE_DT, IMM_NTNL_NTFBL_CNDTN,
+--     IMMEDIATE_NND_DESC, IMMUNO_CONDITION_IND, INABLE_STAY_AWAKE,
+--     INABLE_TO_WAKE, INABLE_WAKE_STAY_AWAK, INNC_NOTIFICATION_DT,
+--     KNOWN_DEATH_DT, LINKED_TO_CASE_ID, LOSS_OF_APPETITE_IND,
+--     LOSS_TASTE_SMELL, LST_DOSE_PRIOR_ILL_DT, M_PNEUMONIAE_RSLT,
+--     MDH_AUTOIMMUNE_DISEASE, NEURO_DISABLITY_IND,
+--     NEURO_DISABLITY_INFO, NEURO_DISABLITY_INFO2,
+--     NEURO_DISABLITY_INFO3, NEW_CONFUSION, NEW_OLFACTORY_DISORDR,
+--     NEW_TASTE_DISORDER, NOTIF_COMMENT, OBESITY_IND,
+--     OTH_CHRONIC_DIS_IND, OTH_CHRONIC_DIS_TXT, OTH_CLNCL_FINDING_IND,
+--     OTH_CLNCL_FINDNG_SPEC, OTH_DIAGNOSIS_IND, OTH_EXPOSURE_IND,
+--     OTH_EXPOSURE_SPECIFY, OTH_PATHOGEN_TEST_IND, OTH_SYMPTOM_IND,
+--     OTHER_SYM_SPEC, OTHER_TREATMENT_SPEC, OTHER_TRTMNT_SPEC_IND,
+--     PARAINFLUENZA1_4_RSLT, PAT_PROCESS_STATUS, PERSIS_PRESSURE_CHEST,
+--     PNEUMONIA, PREEXISTING_COND_IND, PREFERRED_LANGUAGE,
+--     PREGNANT_TRIMESTER, PREGNANT_WEEKS, PREV_INFECT_INDIVID,
+--     PREV_ST_CASE_NUM1, PREV_ST_CASE_NUM2, PREV_ST_CASE_NUM3,
+--     PSYCH_CONDITION_SPEC, PSYCH_CONDITION_SPEC2,
+--     PSYCH_CONDITION_SPEC3, PSYCHIATRIC_CONDITION,
+--     PUI_REPORT_TO_CDC_DT, RECEIVED_ECMO_IND, RECEIVED_MV_IND,
+--     RESIDENT_CONGREGATE, RHINO_ENTERO_RSLT, RIGORS_IND, RPTNG_CNTY,
+--     RSN_NOT_VAC_PER_ACIP, RSV_RSLT, SCHOOL_UNIVERSITY_EXP,
+--     SCNDRY_DIAGNOSIS_DSC1, SCNDRY_DIAGNOSIS_DSC2,
+--     SCNDRY_DIAGNOSIS_DSC3, SEVERE_ARD_EXP_IND, SHIP_NAME,
+--     SORE_THROAT_IND, SOURCE_CASE_ID, SUBSTANCE_ABUSE,
+--     SYMPTOM_NOTES, SYMPTOM_STATUS, TESTING_PERFORMED_IND,
+--     TOTAL_ECMO_DAYS, TOTAL_MV_DAYS, TOTAL_OTH_TRTMNT_DAYS,
+--     TRANSLATOR_REQ_IND, TRIBAL_AFFIL_IND, TRIBAL_ENROLLED_IND,
+--     TRIBE_NAME, TYPE_OF_RESIDENCE, UNDERLYING_COND_OTH,
+--     UNDRLYNG_COND_SPECIFY, UNK_EXPOSURE_SOURCE,
+--     US_COVID_CASE_EXP_IND, VACC_PER_ACIP_REC_IND, Vacc_Rcvd,
+--     VACCINATION_NOTES, VOMITING_INDICATOR, WHEEZING_IND,
+--     WKPLC_CRITICAL_INFRA, WKPLC_SETTING.
+--
+-- UID block: 22007000..22007146 (Agent A allotment 22007000-22007999).
+--
+-- IDEMPOTENCY
+--   Wrapped in an IF NOT EXISTS guard on the first allocated UID
+--   (22007000). Re-applying after a successful insert is a no-op.
+--
+-- TAIL-EXEC
+--   Intentionally none. The orchestrator's merge_and_verify.sh Step 9
+--   already runs sp_covid_case_datamart_postprocessing against
+--   PHC_UIDS (which includes 22003000), and that SP does a
+--   DELETE-then-INSERT per PHC, so re-running is unnecessary.
+--
+-- FILENAME PREFIX
+--   `zz_` so this fixture sorts after covid_investigation_full_chain.sql
+--   in lexical apply order.
+-- =====================================================================
+
+USE [RDB_MODERN];
+GO
+
+GO

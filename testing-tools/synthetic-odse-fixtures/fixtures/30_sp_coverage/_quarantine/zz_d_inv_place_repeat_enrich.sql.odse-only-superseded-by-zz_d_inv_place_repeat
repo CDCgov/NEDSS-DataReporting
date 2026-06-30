@@ -1,0 +1,108 @@
+-- =====================================================================
+-- Tier 3 — D_INV_PLACE_REPEAT column-coverage enrichment
+-- =====================================================================
+-- Authored 2026-05-22.  Sibling of zz_d_investigation_repeat_extra_cols.sql.
+--
+-- Diagnosis (2026-05-22):
+--   D_INV_PLACE_REPEAT was 1 row / 1 populated col (sentinel only)
+--   because two things were both true pre-this-fixture:
+--     (a) sp_repeated_place_postprocessing is NOT invoked anywhere
+--         in testing-tools/synthetic-odse-fixtures/scripts/merge_and_verify.sh
+--         (Steps 5/7/8.5/9 all skip it).  See ORCH_TODO in the
+--         agent-D2 final report — orchestrator wire-up is required
+--         BEFORE this fixture moves the needle in the merge run.
+--     (b) No fixtures author nrt_page_case_answer rows with
+--         part_type_cd IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
+--         and answer_txt pointing to a D_PLACE.PLACE_LOCATOR_UID
+--         (only TRAVEL_BLOCK / EXPOSURE_BLOCK / GENERAL answers exist).
+--
+-- D_PLACE.PLACE_LOCATOR_UID rows observed live (after Tier 1 place chain):
+--   20000030^^           (Foundation Place, minimal)
+--   20040010^^           (v2 Place, minimal)
+--   20000030^20040000^   (Foundation Place + postal locator variant)
+--   20040010^20040011^   (v2 Place + postal locator variant — most cols)
+--   20000030^^20040001   (Foundation Place + tele locator variant)
+-- (PLACE_LOCATOR_UID = place_uid + '^' + postal_uid + '^' + tele_uid;
+--  empty positions collapse to literal '^'.)
+--
+-- SP-side normalization (line 48 of 035-sp_repeated_place_postprocessing):
+--   IF len(answer_txt) - len_no_carets(answer_txt) < 2 THEN
+--       CONCAT(answer_txt, '^')   -- adds one trailing caret
+--   ELSE answer_txt
+-- This means a 1-caret input like '20040010^' becomes '20040010^^'.
+-- To match composite locator UIDs (which already have 2 carets), pass
+-- the answer_txt verbatim (>=2 carets bypasses normalization).
+--
+-- This fixture authors the (b) side: nrt_page_case_answer rows that
+-- the SP picks up via its INNER JOIN to D_PLACE on PLACE_LOCATOR_UID.
+-- When (a) is unblocked (orchestrator wiring), running the merge will
+-- promote D_INV_PLACE_REPEAT from 1/42 toward ~30/42.
+--
+-- SP shape recap (035-sp_repeated_place_postprocessing-001.sql):
+--   #PLACE_INIT_OUT: SELECT FROM nrt_page_case_answer
+--     WHERE PART_TYPE_CD IN ('PlaceAsHangoutOfPHC','PlaceAsSexOfPHC')
+--       AND act_uid IN @phc_id_list
+--   #PLACE_INIT: PIVOT on PART_TYPE_CD → cols
+--     PlaceAsHangoutOfPHC / PlaceAsSexOfPHC,
+--     plus derived PLACE_HANGOUT_OF_PHC / PLACE_AS_SEX_OF_PHC.
+--   #S_INV_PLACE_REPEAT: #PLACE_INIT INNER JOIN D_PLACE
+--     ON D_PLACE.PLACE_LOCATOR_UID = PlaceAsSexOfPHC
+--     OR D_PLACE.PLACE_LOCATOR_UID = PlaceAsHangoutOfPHC.
+--   Final D_INV_PLACE_REPEAT row = PLACE_INIT cols + every D_PLACE col.
+--
+-- So coverage = (PAGE_CASE_UID, answer_group_seq_nbr,
+--                PlaceAsHangoutOfPHC, PlaceAsSexOfPHC,
+--                PLACE_HANGOUT_OF_PHC, PLACE_AS_SEX_OF_PHC) + all D_PLACE
+-- cols populated on the referenced D_PLACE row.
+--
+-- v2 Place (20040010 → PLACE_LOCATOR_UID '20040010^20040011^', authored
+-- by fixtures/10_subjects/place.sql) populates every D_PLACE column.
+-- Foundation Place (20000030 → '20000030^20040000^') populates the
+-- mandatory subset.
+--
+-- Authoring strategy:
+--   Piggyback on Pertussis PHC 22006000 (already used by the sibling
+--   d_investigation_repeat enrichment) plus a second PHC for variety.
+--   Author both PART_TYPE_CD values across multiple answer_group_seq_nbr
+--   so the PIVOT produces both PlaceAsHangoutOfPHC and PlaceAsSexOfPHC
+--   non-NULL rows (which is what makes the CROSS APPLY emit BOTH the
+--   PLACE_HANGOUT_OF_PHC and PLACE_AS_SEX_OF_PHC variants of #PLACE_INIT).
+--
+-- UID block: 22010000-22010999 (agent-D2 reserved).
+-- =====================================================================
+
+USE [RDB_MODERN];
+GO
+
+-- Idempotent: delete any prior rows from this UID block, then re-insert.
+-- (DELETE-then-INSERT is preferred over IF-NOT-EXISTS because we want
+-- subsequent edits to this fixture to take effect on re-run, not be
+-- ignored because some rows from the previous shape are still present.)
+DELETE FROM dbo.nrt_page_case_answer
+ WHERE nbs_case_answer_uid BETWEEN 22010000 AND 22010999;
+
+GO
+
+-- NOTE: This fixture only authors source-side answers.  Without
+-- orchestrator wire-up (see ORCH_TODO in agent-D2 final report and
+-- bugs/12_*), running merge_and_verify.sh will NOT call
+-- sp_repeated_place_postprocessing and D_INV_PLACE_REPEAT will remain
+-- at 1/42 (sentinel only).
+--
+-- VERIFIED 2026-05-22 on live DB (agent-D2):
+-- After applying this fixture and running:
+--   EXEC dbo.sp_repeated_place_postprocessing
+--        @batch_id = 260522,
+--        @phc_id_list = N'22006000',
+--        @debug = 0;
+-- D_INV_PLACE_REPEAT goes from 1/42 → 44/44 populated cols
+-- (42 baseline + 2 dynamically-added: PlaceAsHangoutOfPHC,
+-- PlaceAsSexOfPHC) with 6 net new rows for PHC 22006000.
+--
+-- Quick spot-check:
+--   SELECT TOP 6 PAGE_CASE_UID, answer_group_seq_nbr,
+--          PLACE_LOCATOR_UID, PLACE_NAME, PLACE_PHONE, PLACE_EMAIL
+--   FROM dbo.D_INV_PLACE_REPEAT WHERE PAGE_CASE_UID = 22006000
+--   ORDER BY answer_group_seq_nbr, PLACE_LOCATOR_UID;
+--   -- seq 1+2 hit postal-locator variants (no phone/email)
+--   -- seq 3 hits tele-locator variant (404-555-4010 / variant.place@nbs.test)
