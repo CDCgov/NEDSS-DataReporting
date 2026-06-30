@@ -631,113 +631,64 @@ BEGIN
 
         /*
         Site Data Processing -
-        Retrieve BMD125, BMD142 and BMD144 from BMIRD_MULTI_VALUE_FIELD and pivot into 3 columns
+        Retrieve BMD125, BMD142 and BMD144 from BMIRD_MULTI_VALUE_FIELD and pivot the top 3 entries into distinct columns.
 
-        Step 1: Create a dataset of all non-sterile sites
-        Step 2: Create 2 datasets of all additional culture sites
-        Step 3: Merge the datasets to create a new table with the columns transposed
-        Step 4: Merge the new table with the BMIRD_ANTIMICRO table
+        Step 1: Unpivot the non-sterile and additional culture sites from a single read into a unified row dataset using CROSS APPLY.
+        Step 2: Number the entries (1..N) per investigation and site type to establish their sequential order.
+        Step 3: Filter to the first 3 entries and pivot them directly into their final transposed columns (_1, _2, _3) using conditional aggregation.
+        Step 4: Merge the new table with the BMIRD_ANTIMICRO table.
+
+        Numbering each site type independently and pivoting by (site type, position) keeps the
+        Nth value of each question in its own slot. The previous version built three lists and
+        joined them on INVESTIGATION_KEY alone, a Cartesian product that, for any multi-answer
+        question, copied a single value into all three slots instead of the distinct sites.
         */
 
         BEGIN TRANSACTION;
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_name = ' Generating #DM_BMD125, #DM_BMD142 and #DM_BMD144';
+        SET @Proc_Step_name = ' Generating #DM_BR7_T';
 
-        -- Build the three site lists for the case (non-sterile sites, and the two
-        -- additional-culture site lists). Number the entries 1..N per investigation
-        -- (rn) so that further down the lists can be lined up by position rather than
-        -- matching every value against every other value.
-        -- Step 1: non-sterile sites
-        SELECT INVESTIGATION_KEY, NON_STERILE_SITE_,
-               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY NON_STERILE_SITE_) AS rn
-        into #DM_BMD125
-        FROM (
-            SELECT distinct bc.INVESTIGATION_KEY,
-                     a.NON_STERILE_SITE AS NON_STERILE_SITE_
+        WITH cte_combined AS (
+            SELECT DISTINCT
+                bc.INVESTIGATION_KEY,
+                v.Site_Type,
+                v.Site_Value
             FROM #BMIRD_PATIENT1 bc
-                 INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
-                            on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
-            WHERE A.NON_STERILE_SITE IS NOT NULL
-        ) z;
-
-        -- Step 2: Create 2 datasets of all additional culture sites
-        SELECT INVESTIGATION_KEY, ADD_CULTURE_1_SITE_,
-               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY ADD_CULTURE_1_SITE_) AS rn
-        into #DM_BMD142
-        FROM (
-            SELECT distinct bc.INVESTIGATION_KEY,
-                     a.STREP_PNEUMO_1_CULTURE_SITES AS ADD_CULTURE_1_SITE_
-            FROM #BMIRD_PATIENT1 bc
-                 INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
-                            on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
-            WHERE A.STREP_PNEUMO_1_CULTURE_SITES IS NOT NULL
-        ) z;
-
-        SELECT INVESTIGATION_KEY, ADD_CULTURE_2_SITE_,
-               ROW_NUMBER() OVER (PARTITION BY INVESTIGATION_KEY ORDER BY ADD_CULTURE_2_SITE_) AS rn
-        into #DM_BMD144
-        FROM (
-            SELECT distinct bc.INVESTIGATION_KEY,
-                     a.STREP_PNEUMO_2_CULTURE_SITES  AS ADD_CULTURE_2_SITE_
-            FROM #BMIRD_PATIENT1 bc
-                 INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a with (nolock)
-                            on bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
-            WHERE A.STREP_PNEUMO_2_CULTURE_SITES IS NOT NULL
-        ) z;
-
-
-        SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [DBO].[JOB_FLOW_LOG]
-        (BATCH_ID, [DATAFLOW_NAME], [PACKAGE_NAME], [STATUS_TYPE], [STEP_NUMBER], [STEP_NAME], [ROW_COUNT])
-        VALUES (@BATCH_ID, @Dataflow_Name, @Package_Name, 'START', @PROC_STEP_NO, @PROC_STEP_NAME, @ROWCOUNT_NO);
-
-        COMMIT TRANSACTION;
-
-        BEGIN TRANSACTION;
-
-        SET @Proc_Step_no = @Proc_Step_no + 1;
-        SET @Proc_Step_name = ' Generating #DM_BR7';
-
-
-        -- Step 3: line the three lists up by position. We join them on the number
-        -- assigned above (rn), so the 1st non-sterile site, 1st culture-1 site and
-        -- 1st culture-2 site share a row (COUNTER = 1), the 2nd of each share the
-        -- next row, and so on. The columns are then spread into _1/_2/_3 below.
-        --
-        -- The previous version joined the three lists on INVESTIGATION_KEY alone,
-        -- which paired every site with every other site (a Cartesian product). When
-        -- a question had more than one answer, the pivot that follows ended up
-        -- copying a single value into all three slots instead of the distinct sites.
-        select k.INVESTIGATION_KEY, k.rn AS COUNTER,
-               a.NON_STERILE_SITE_, b.ADD_CULTURE_1_SITE_, c.ADD_CULTURE_2_SITE_
-        into #DM_BR7
-        from (
-                 SELECT INVESTIGATION_KEY, rn FROM #DM_BMD125
-                 UNION SELECT INVESTIGATION_KEY, rn FROM #DM_BMD142
-                 UNION SELECT INVESTIGATION_KEY, rn FROM #DM_BMD144
-             ) k
-                 left outer join #DM_BMD125 a on a.INVESTIGATION_KEY = k.INVESTIGATION_KEY and a.rn = k.rn
-                 left outer join #DM_BMD142 b on b.INVESTIGATION_KEY = k.INVESTIGATION_KEY and b.rn = k.rn
-                 left outer join #DM_BMD144 c on c.INVESTIGATION_KEY = k.INVESTIGATION_KEY and c.rn = k.rn;
-
-        with cte2 as (
-            SELECT *
-            FROM #DM_BR7 WHERE COUNTER <= 3
+            INNER JOIN dbo.BMIRD_MULTI_VALUE_FIELD a WITH (NOLOCK)
+                ON bc.BMIRD_MULTI_VAL_GRP_KEY = a.BMIRD_MULTI_VAL_GRP_KEY
+            CROSS APPLY (VALUES
+                ('NON_STERILE_SITE', a.NON_STERILE_SITE),
+                ('ADD_CULTURE_1_SITE', a.STREP_PNEUMO_1_CULTURE_SITES),
+                ('ADD_CULTURE_2_SITE', a.STREP_PNEUMO_2_CULTURE_SITES)
+            ) v (Site_Type, Site_Value)
+            WHERE v.Site_Value IS NOT NULL
+        ),
+        cte_numbered AS (
+            SELECT
+                INVESTIGATION_KEY,
+                Site_Type,
+                Site_Value,
+                ROW_NUMBER() OVER (
+                    PARTITION BY INVESTIGATION_KEY, Site_Type
+                    ORDER BY Site_Value
+                ) AS COUNTER
+            FROM cte_combined
         )
         SELECT INVESTIGATION_KEY,
-               MAX(CASE WHEN COUNTER = 1 THEN NON_STERILE_SITE_ END) AS NON_STERILE_SITE_1,
-               MAX(CASE WHEN COUNTER = 1 THEN ADD_CULTURE_1_SITE_ END) AS ADD_CULTURE_1_SITE_1,
-               MAX(CASE WHEN COUNTER = 1 THEN ADD_CULTURE_2_SITE_ END) AS ADD_CULTURE_2_SITE_1,
-               MAX(CASE WHEN COUNTER = 2 THEN NON_STERILE_SITE_ END) AS NON_STERILE_SITE_2,
-               MAX(CASE WHEN COUNTER = 2 THEN ADD_CULTURE_1_SITE_ END) AS ADD_CULTURE_1_SITE_2,
-               MAX(CASE WHEN COUNTER = 2 THEN ADD_CULTURE_2_SITE_ END) AS ADD_CULTURE_2_SITE_2,
-               MAX(CASE WHEN COUNTER = 3 THEN NON_STERILE_SITE_ END) AS NON_STERILE_SITE_3,
-               MAX(CASE WHEN COUNTER = 3 THEN ADD_CULTURE_1_SITE_ END) AS ADD_CULTURE_1_SITE_3,
-               MAX(CASE WHEN COUNTER = 3 THEN ADD_CULTURE_2_SITE_ END) AS ADD_CULTURE_2_SITE_3
-        into #DM_BR7_T
-        from cte2
-        group by INVESTIGATION_KEY;
+               MAX(CASE WHEN Site_Type = 'NON_STERILE_SITE'   AND COUNTER = 1 THEN Site_Value END) AS NON_STERILE_SITE_1,
+               MAX(CASE WHEN Site_Type = 'ADD_CULTURE_1_SITE' AND COUNTER = 1 THEN Site_Value END) AS ADD_CULTURE_1_SITE_1,
+               MAX(CASE WHEN Site_Type = 'ADD_CULTURE_2_SITE' AND COUNTER = 1 THEN Site_Value END) AS ADD_CULTURE_2_SITE_1,
+               MAX(CASE WHEN Site_Type = 'NON_STERILE_SITE'   AND COUNTER = 2 THEN Site_Value END) AS NON_STERILE_SITE_2,
+               MAX(CASE WHEN Site_Type = 'ADD_CULTURE_1_SITE' AND COUNTER = 2 THEN Site_Value END) AS ADD_CULTURE_1_SITE_2,
+               MAX(CASE WHEN Site_Type = 'ADD_CULTURE_2_SITE' AND COUNTER = 2 THEN Site_Value END) AS ADD_CULTURE_2_SITE_2,
+               MAX(CASE WHEN Site_Type = 'NON_STERILE_SITE'   AND COUNTER = 3 THEN Site_Value END) AS NON_STERILE_SITE_3,
+               MAX(CASE WHEN Site_Type = 'ADD_CULTURE_1_SITE' AND COUNTER = 3 THEN Site_Value END) AS ADD_CULTURE_1_SITE_3,
+               MAX(CASE WHEN Site_Type = 'ADD_CULTURE_2_SITE' AND COUNTER = 3 THEN Site_Value END) AS ADD_CULTURE_2_SITE_3
+        INTO #DM_BR7_T
+        FROM cte_numbered
+        WHERE COUNTER <= 3
+        GROUP BY INVESTIGATION_KEY;
 
         if @debug = 'true' select @Proc_Step_Name as step, * from #DM_BR7_T;
 
