@@ -1,6 +1,6 @@
 services:
   nbs-mssql: !override
-    image: ghcr.io/cdcent/nedssdb:6.0.18.0-beta-no-seed
+    image: ghcr.io/cdcent/nedssdb:latest
     platform: linux/amd64
     environment:
       - DATABASE_VERSION=6.0.18.1

@@ -1,6 +1,6 @@
 services:
   nbs-mssql:
-    image: ghcr.io/cdcent/nedssdb:6.0.18.0-beta-no-seed
+    image: ghcr.io/cdcent/nedssdb:latest
     platform: linux/amd64
     environment:
       - DATABASE_VERSION=6.0.18.1
@@ -23,7 +23,7 @@ services:
     mem_limit: 2.5G
 
   wildfly:
-    image: ghcr.io/cdcent/nedssdb:6.0.18.0-beta-no-seed
+    image: ghcr.io/cdcent/nedssdev:6.0.18.1
     depends_on:
       nbs-mssql:
         condition: service_healthy
