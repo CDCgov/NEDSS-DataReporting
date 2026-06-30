@@ -1,0 +1,15 @@
+{
+  "0": [
+    {
+      "NON_STERILE_SITE_1": "Amniotic fluid",
+      "NON_STERILE_SITE_2": "Middle ear",
+      "NON_STERILE_SITE_3": "Other",
+      "ADD_CULTURE_1_SITE_1": "Blood",
+      "ADD_CULTURE_1_SITE_2": "Bone",
+      "ADD_CULTURE_1_SITE_3": "Cerebral Spinal Fluid",
+      "ADD_CULTURE_2_SITE_1": "Joint Fluid",
+      "ADD_CULTURE_2_SITE_2": "Lung",
+      "ADD_CULTURE_2_SITE_3": "Sinus"
+    }
+  ]
+}
