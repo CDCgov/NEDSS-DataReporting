@@ -11,7 +11,7 @@
 > *hop* but never the *end-to-end chain*. This document is the synthesis of ~38
 > comparison fixtures and their coverage reports, each of which already
 > reverse-engineered "these ODSE inputs light up these RDB_MODERN columns
-> through this SP." See `LINEAGE.md` for how the work was carried out.
+> through this SP." See `README.md` for how the work was carried out.
 
 ## The pipeline in four layers
 
@@ -1355,7 +1355,7 @@ materialized at runtime by dynamic `ALTER TABLE … ADD` loops and dynamic
 `nrt_page_case_answer` rows (the staging projection of `nbs_page_answer` /
 `nbs_ui_metadata`) for the repeating-block dims, and
 `nrt_odse_state_defined_field_metadata` (the projection of ODSE
-`state_defined_field*`) for the LDF chain. The guardrail in `LINEAGE.md`
+`state_defined_field*`) for the LDF chain. The guardrail in `README.md`
 applies in full: for these columns the appendix records the **driving
 mechanism** and a `DYNAMIC` status rather than forcing a per-column ODSE
 map. Per STRATEGY.md, none of these postprocessing/datamart SPs read
@@ -1587,7 +1587,7 @@ construction and are documented here as a mechanism rather than per-column.
   columns at merge time (#13). Bugs #07 (open) and #09 (fixed) shape the LDF
   and dyn_dm chains respectively.
 
-Note: there is **no bug #14**. The `LINEAGE.md` reference is incorrect;
+Note: there is **no bug #14**. The `README.md` reference is incorrect;
 `aggregate_report` is #11 and the `sld_investigation_repeat` TEXT pivot is
 #13. `bugs/` holds dirs 01–13 and #15 (`event_metric_add_user_name_null`,
 the SR100 blocker, see section G4).
