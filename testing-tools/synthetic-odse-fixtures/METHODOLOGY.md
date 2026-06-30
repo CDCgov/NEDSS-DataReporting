@@ -179,7 +179,7 @@ passes concurrently, each owning one datamart or dimension plus a reserved
 UID block. The UID-range registry (`catalog/uid_ranges.md`) keeps parallel
 passes from colliding, so per-table gains are additive and reconcile cleanly.
 This parallelism drove the bulk of the climb to the current ~80% coverage.
-SP-level defects found along the way were logged as `bugs/<N>_*/findings.md`
+SP-level defects found along the way were logged as separate bug findings
 rather than fixed mid-build.
 
 ## Reproducibility
@@ -220,8 +220,8 @@ The uncovered remainder is also not synonymous with "broken." A substantial
 chunk of those uncovered columns are confirmed `OUT_OF_SCOPE` (the SP
 cannot write them; they exist on the target table for legacy MasterETL
 reasons) or are blocked on external SRTE additions or open RTR bugs
-already filed. `bugs/README.md` and the per-SP `LINK_REQUIRED` /
-`SRTE_GAP` findings carry the breakdown.
+already filed (tracked in the APP Jira tickets). The per-SP
+`LINK_REQUIRED` / `SRTE_GAP` findings carry the breakdown.
 
 Finally, synthetic fixtures do not approximate production
 distributions. They exercise schema shape and SP code paths only.
@@ -235,17 +235,14 @@ Authoring fixtures that exercise every column path inevitably surfaces
 SPs that don't behave the way their column comments suggest. The
 merged-fixture build surfaced fourteen RTR bugs: 3 fixes merged
 upstream, 6 fixed on this branch, 5 documented with repros for
-follow-up. Each is documented in `bugs/<N>_<slug>/findings.md` with a
-minimal repro. They range from trivial (`IF @debug` resetting
+follow-up. They range from trivial (`IF @debug` resetting
 `@@ROWCOUNT` and zeroing job_flow_log row counts; column-name typos;
 SUBSTRING-with-empty-string crashes) to architectural (postprocessing
 SPs that try to traverse ODSE through the NRT staging boundary; dynamic
 UNPIVOTs that assume uniform column types; surrogate-key allocations
-that default to a filtered-out sentinel). See
-[`bugs/README.md`](./bugs/README.md) for the status table.
+that default to a filtered-out sentinel). They are tracked in the APP
+Jira tickets and the bug-fix PRs.
 
 A second, separately-numbered set of RTR bugs (#16 onward) was surfaced
 later by the ODSE-only conversion, when removing the NRT shortcut exposed
-defects the shortcut had masked. Those live in the repo-root
-[`bugs/`](../../bugs) directory and are summarized in
-[`NO_SHORTCUT_FINDINGS.md`](./docs/NO_SHORTCUT_FINDINGS.md).
+defects the shortcut had masked.

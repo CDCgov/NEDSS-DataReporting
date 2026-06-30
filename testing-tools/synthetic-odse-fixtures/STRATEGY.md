@@ -519,5 +519,5 @@ Captured here so they don't get lost as we focus on v1:
 
 The iterative coverage log (Rounds 1-6) and per-session notes were
 removed during PR cleanup as build-process artifacts. The durable outcomes
-are captured in `../../bugs/` (the RTR defects found). Regenerate current
+are the RTR defects found, tracked in the APP Jira tickets. Regenerate current
 coverage with `scripts/coverage_summary.sh`.

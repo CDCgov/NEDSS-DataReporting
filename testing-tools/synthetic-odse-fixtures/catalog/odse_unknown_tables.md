@@ -92,7 +92,7 @@ These populate when the reporting-pipeline-service fires the datamart
 SPs off CDC events during the drain. Several
 condition-specific datamarts were blocked by SP-level defects rather than
 missing fixtures; HEPATITIS_DATAMART in particular by the `#TMP_F_PAGE_CASE`
-chain in bug #5. See [`bugs/README.md`](../bugs/README.md).
+chain in bug #5.
 
 | Table | Writer SP | Notes |
 | ----- | --------- | ----- |
@@ -282,7 +282,7 @@ extend coverage to more conditions.
    light up from a single fixture file. This is the highest yield-per-
    effort opportunity in the catalog.
 2. **Second**: fix the `#TMP_F_PAGE_CASE` chain in the
-   condition-datamart SP family (bug #5; see [`bugs/README.md`](../bugs/README.md)).
+   condition-datamart SP family (bug #5).
    Without this, the affected condition-specific datamarts stay at
    0 rows regardless of fixture authoring. This is an RTR fix, not a
    fixture fix.
