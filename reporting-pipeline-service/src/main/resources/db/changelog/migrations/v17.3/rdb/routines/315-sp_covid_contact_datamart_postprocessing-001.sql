@@ -24,6 +24,14 @@ BEGIN
         SET @conditionCd = '11065'; -- COVID-19 condition code
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
 
+        IF OBJECT_ID('tempdb..#PHCID_LIST', 'U') IS NOT NULL
+            DROP TABLE #PHCID_LIST;
+
+        SELECT DISTINCT TRY_CAST(LTRIM(RTRIM(value)) AS BIGINT) AS public_health_case_uid
+        INTO #PHCID_LIST
+        FROM STRING_SPLIT(@phcid_list, ',')
+        WHERE TRY_CAST(LTRIM(RTRIM(value)) AS BIGINT) IS NOT NULL;
+
         -- Initialize logging
         INSERT INTO [dbo].[job_flow_log] (
             batch_id, [Dataflow_Name], [package_Name], [Status_Type],
@@ -36,6 +44,74 @@ BEGIN
 
         SET @proc_step_name = 'Create COVID_CONTACT_DATAMART Temp table';
         SET @proc_step_no = 1;
+
+        IF OBJECT_ID('tempdb..#CT_CONTACT_HIST_PREV', 'U') IS NOT NULL
+            DROP TABLE #CT_CONTACT_HIST_PREV;
+
+        IF OBJECT_ID('tempdb..#CT_CONTACT_CURRENT', 'U') IS NOT NULL
+            DROP TABLE #CT_CONTACT_CURRENT;
+
+        SELECT
+            h.ct_contact_uid,
+            h.subject_entity_phc_uid,
+            h.contact_entity_phc_uid,
+            h.contact_entity_uid,
+            h.jurisdiction_cd,
+            h.contact_status,
+            h.priority_cd,
+            h.investigator_assigned_date,
+            h.disposition_cd,
+            h.disposition_date,
+            h.named_on_date,
+            h.relationship_cd,
+            h.health_status_cd,
+            h.symptom_cd,
+            h.symptom_onset_date,
+            h.risk_factor_cd,
+            h.risk_factor_txt,
+            h.evaluation_completed_cd,
+            h.evaluation_date,
+            h.evaluation_txt,
+            h.version_ctrl_nbr
+        INTO #CT_CONTACT_HIST_PREV
+        FROM NBS_ODSE.dbo.CT_contact_hist h WITH (NOLOCK)
+                 INNER JOIN (
+            SELECT
+                ct_contact_uid,
+                MAX(version_ctrl_nbr) AS max_ver
+            FROM NBS_ODSE.dbo.CT_contact_hist WITH (NOLOCK)
+            WHERE subject_entity_phc_uid IN (SELECT public_health_case_uid FROM #PHCID_LIST)
+            GROUP BY ct_contact_uid
+        ) latest
+                            ON latest.ct_contact_uid = h.ct_contact_uid
+                                AND h.version_ctrl_nbr = latest.max_ver - 1;
+
+        SELECT
+            c.ct_contact_uid,
+            c.subject_entity_phc_uid,
+            c.contact_entity_phc_uid,
+            c.contact_entity_uid,
+            c.jurisdiction_cd,
+            c.contact_status,
+            c.priority_cd,
+            c.investigator_assigned_date,
+            c.disposition_cd,
+            c.disposition_date,
+            c.named_on_date,
+            c.relationship_cd,
+            c.health_status_cd,
+            c.symptom_cd,
+            c.symptom_onset_date,
+            c.risk_factor_cd,
+            c.risk_factor_txt,
+            c.evaluation_completed_cd,
+            c.evaluation_date,
+            c.evaluation_txt,
+            c.record_status_cd,
+            c.version_ctrl_nbr
+        INTO #CT_CONTACT_CURRENT
+        FROM NBS_ODSE.dbo.CT_contact c WITH (NOLOCK)
+        WHERE c.subject_entity_phc_uid IN (SELECT public_health_case_uid FROM #PHCID_LIST);
 
         /* Create temporary table for COVID contact data */
         IF OBJECT_ID('tempdb..#COVID_CONTACT_DATAMART', 'U') IS NOT NULL
@@ -377,10 +453,10 @@ BEGIN
                            ON cvg14.CODE_DESC = pd.PATIENT_COUNTRY AND cvg14.cd='DEM126'         --Location.PSL_CNTRY
 
         WHERE inv.cd = @conditionCd
-          AND inv.public_health_case_uid IN (  -- Removed NULL check for @phcid_list
-            SELECT TRY_CAST(value AS BIGINT)
-            FROM STRING_SPLIT(@phcid_list, ',')
-        );
+                    AND inv.public_health_case_uid IN (
+                        SELECT public_health_case_uid
+                        FROM #PHCID_LIST
+                );
 
         /* Logging */
         SET @rowcount = @@ROWCOUNT;
@@ -402,11 +478,107 @@ BEGIN
         /* Start transaction for the delete and insert operations */
         BEGIN TRANSACTION;
 
+        /*
+           Value-based delete by prior CT_contact_hist image for changed contacts.
+           This removes old datamart rows before inserting current values.
+        */
+        DELETE d
+        FROM dbo.COVID_CONTACT_DATAMART d
+                 INNER JOIN #CT_CONTACT_HIST_PREV h
+                            ON h.subject_entity_phc_uid IN (SELECT public_health_case_uid FROM #PHCID_LIST)
+                                AND ISNULL(d.CR_STATUS, '') = ISNULL(h.contact_status, '')
+                                AND ISNULL(d.CR_PRIORITY, '') = ISNULL(h.priority_cd, '')
+                                AND ((d.CR_INV_ASSIGNED_DT = h.investigator_assigned_date)
+                                    OR (d.CR_INV_ASSIGNED_DT IS NULL AND h.investigator_assigned_date IS NULL))
+                                AND ISNULL(d.CR_DISPOSITION, '') = ISNULL(h.disposition_cd, '')
+                                AND ((d.CR_DISPO_DT = h.disposition_date)
+                                    OR (d.CR_DISPO_DT IS NULL AND h.disposition_date IS NULL))
+                                AND ((d.CR_NAMED_ON_DT = h.named_on_date)
+                                    OR (d.CR_NAMED_ON_DT IS NULL AND h.named_on_date IS NULL))
+                                AND ISNULL(d.CR_RELATIONSHIP, '') = ISNULL(h.relationship_cd, '')
+                                AND ISNULL(d.CR_HEALTH_STATUS, '') = ISNULL(h.health_status_cd, '')
+                                AND ISNULL(d.CR_SYMP_IND, '') = ISNULL(h.symptom_cd, '')
+                                AND ((d.CR_SYMP_ONSET_DT = h.symptom_onset_date)
+                                    OR (d.CR_SYMP_ONSET_DT IS NULL AND h.symptom_onset_date IS NULL))
+                                AND ISNULL(d.CR_RISK_IND, '') = ISNULL(h.risk_factor_cd, '')
+                                AND ISNULL(d.CR_RISK_NOTES, '') = ISNULL(REPLACE(h.risk_factor_txt, CHAR(13) + CHAR(10), ' '), '')
+                                AND ISNULL(d.CR_EVAL_COMPLETED, '') = ISNULL(h.evaluation_completed_cd, '')
+                                AND ((d.CR_EVAL_DT = h.evaluation_date)
+                                    OR (d.CR_EVAL_DT IS NULL AND h.evaluation_date IS NULL))
+                                AND ISNULL(d.CR_EVAL_NOTES, '') = ISNULL(REPLACE(h.evaluation_txt, CHAR(13) + CHAR(10), ' '), '');
+
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
+        )
+        VALUES (
+                   @batch_id, @dataflow_name, @package_name, 'PROCESSING',
+                   @proc_step_no + 0.05, @proc_step_name + ' - Delete Old Hist Values', @rowcount,
+                   LEFT(ISNULL(@phcid_list, 'NULL'),500)
+               );
+
+        /*
+           If CT_contact now indicates delete status, remove matching current-value rows too
+           and do not reinsert because source temp excludes LOG_DEL.
+        */
+        DELETE d
+        FROM dbo.COVID_CONTACT_DATAMART d
+                 INNER JOIN #CT_CONTACT_CURRENT c
+                            ON c.subject_entity_phc_uid IN (SELECT public_health_case_uid FROM #PHCID_LIST)
+                                AND c.record_status_cd = 'LOG_DEL'
+                                AND ISNULL(d.CR_STATUS, '') = ISNULL(c.contact_status, '')
+                                AND ISNULL(d.CR_PRIORITY, '') = ISNULL(c.priority_cd, '')
+                                AND ((d.CR_INV_ASSIGNED_DT = c.investigator_assigned_date)
+                                    OR (d.CR_INV_ASSIGNED_DT IS NULL AND c.investigator_assigned_date IS NULL))
+                                AND ISNULL(d.CR_DISPOSITION, '') = ISNULL(c.disposition_cd, '')
+                                AND ((d.CR_DISPO_DT = c.disposition_date)
+                                    OR (d.CR_DISPO_DT IS NULL AND c.disposition_date IS NULL))
+                                AND ((d.CR_NAMED_ON_DT = c.named_on_date)
+                                    OR (d.CR_NAMED_ON_DT IS NULL AND c.named_on_date IS NULL))
+                                AND ISNULL(d.CR_RELATIONSHIP, '') = ISNULL(c.relationship_cd, '')
+                                AND ISNULL(d.CR_HEALTH_STATUS, '') = ISNULL(c.health_status_cd, '')
+                                AND ISNULL(d.CR_SYMP_IND, '') = ISNULL(c.symptom_cd, '')
+                                AND ((d.CR_SYMP_ONSET_DT = c.symptom_onset_date)
+                                    OR (d.CR_SYMP_ONSET_DT IS NULL AND c.symptom_onset_date IS NULL))
+                                AND ISNULL(d.CR_RISK_IND, '') = ISNULL(c.risk_factor_cd, '')
+                                AND ISNULL(d.CR_RISK_NOTES, '') = ISNULL(REPLACE(c.risk_factor_txt, CHAR(13) + CHAR(10), ' '), '')
+                                AND ISNULL(d.CR_EVAL_COMPLETED, '') = ISNULL(c.evaluation_completed_cd, '')
+                                AND ((d.CR_EVAL_DT = c.evaluation_date)
+                                    OR (d.CR_EVAL_DT IS NULL AND c.evaluation_date IS NULL))
+                                AND ISNULL(d.CR_EVAL_NOTES, '') = ISNULL(REPLACE(c.evaluation_txt, CHAR(13) + CHAR(10), ' '), '');
+
+        SET @rowcount = @@ROWCOUNT;
+        INSERT INTO [dbo].[job_flow_log] (
+            batch_id, [Dataflow_Name], [package_Name], [Status_Type],
+            [step_number], [step_name], [row_count], [msg_description1]
+        )
+        VALUES (
+                   @batch_id, @dataflow_name, @package_name, 'PROCESSING',
+                   @proc_step_no + 0.08, @proc_step_name + ' - Delete LOG_DEL Current Values', @rowcount,
+                   LEFT(ISNULL(@phcid_list, 'NULL'),500)
+               );
+
 
         /* Insert updated records */
         INSERT INTO dbo.COVID_CONTACT_DATAMART (SRC_PATIENT_FIRST_NAME, SRC_PATIENT_MIDDLE_NAME, SRC_PATIENT_LAST_NAME, SRC_PATIENT_DOB, SRC_PATIENT_AGE_REPORTED, SRC_PATIENT_AGE_RPTD_UNIT, SRC_PATIENT_CURRENT_SEX, SRC_PATIENT_DECEASED_IND, SRC_PATIENT_DECEASED_DT, SRC_PATIENT_STREET_ADDR_1, SRC_PATIENT_STREET_ADDR_2, SRC_PATIENT_CITY, SRC_PATIENT_STATE, SRC_PATIENT_ZIP, SRC_PATIENT_COUNTY, SRC_PATIENT_COUNTRY, SRC_INV_JURISDICTION_NM, SRC_INV_START_DT, SRC_INV_STATUS, SRC_INV_STATE_CASE_ID, SRC_INV_LEGACY_CASE_ID, SRC_INV_CDC_ASSIGNED_ID, SRC_INV_RPTNG_CNTY, SRC_INV_HSPTLIZD_IND, SRC_INV_DIE_FRM_ILLNESS_IND, SRC_INV_DEATH_DT, SRC_INV_CASE_STATUS, SRC_INV_SYMPTOMATIC, SRC_INV_ILLNESS_ONSET_DT, SRC_INV_ILLNESS_END_DT, SRC_INV_SYMPTOM_STATUS, SRC_CTT_INV_PRIORITY, SRC_CTT_INV_INFECTIOUS_FRM_DT, SRC_CTT_INV_INFECTIOUS_TO_DT, SRC_CTT_INV_STATUS, SRC_CTT_INV_COMMENTS, CR_JURISDICTION_NM, CR_STATUS, CR_PRIORITY, CR_INV_FIRST_NAME, CR_INV_LAST_NAME, CR_INV_ASSIGNED_DT, CR_DISPOSITION, CR_DISPO_DT, CR_NAMED_ON_DT, CR_RELATIONSHIP, CR_HEALTH_STATUS, CR_EXPOSURE_TYPE, CR_EXPOSURE_SITE_TY, CR_FIRST_EXPOSURE_DT, CR_LAST_EXPOSURE_DT, CR_SYMP_IND, CR_SYMP_ONSET_DT, CR_RISK_IND, CR_RISK_NOTES, CR_EVAL_COMPLETED, CR_EVAL_DT, CR_EVAL_NOTES, CTT_PATIENT_FIRST_NAME, CTT_PATIENT_MIDDLE_NAME, CTT_PATIENT_LAST_NAME, CTT_PATIENT_DOB, CTT_PATIENT_AGE_REPORTED, CTT_PATIENT_AGE_RPTD_UNIT, CTT_PATIENT_CURRENT_SEX, CTT_PATIENT_DECEASED_IND, CTT_PATIENT_DECEASED_DT, CTT_PATIENT_STREET_ADDR_1, CTT_PATIENT_STREET_ADDR_2, CTT_PATIENT_CITY, CTT_PATIENT_STATE, CTT_PATIENT_ZIP, CTT_PATIENT_COUNTY, CTT_PATIENT_COUNTRY, CTT_PATIENT_TEL_HOME, CTT_PATIENT_PHONE_WORK, CTT_PATIENT_PHONE_EXT_WORK, CTT_PATIENT_TEL_CELL, CTT_PATIENT_EMAIL, CTT_INV_JURISDICTION_NM, CTT_INV_START_DT, CTT_INV_STATUS, CTT_INV_STATE_CASE_ID, CTT_INV_LEGACY_CASE_ID, CTT_INV_CDC_ASSIGNED_ID, CTT_INV_RPTNG_CNTY, CTT_INV_HSPTLIZD_IND, CTT_INV_DIE_FRM_ILLNESS_IND, CTT_INV_DEATH_DT, CTT_INV_CASE_STATUS, CTT_INV_SYMPTOMATIC, CTT_INV_ILLNESS_ONSET_DT, CTT_INV_ILLNESS_END_DT, CTT_INV_SYMPTOM_STATUS)
         SELECT SRC_PATIENT_FIRST_NAME, SRC_PATIENT_MIDDLE_NAME, SRC_PATIENT_LAST_NAME, SRC_PATIENT_DOB, SRC_PATIENT_AGE_REPORTED, SRC_PATIENT_AGE_RPTD_UNIT, SRC_PATIENT_CURRENT_SEX, SRC_PATIENT_DECEASED_IND, SRC_PATIENT_DECEASED_DT, SRC_PATIENT_STREET_ADDR_1, SRC_PATIENT_STREET_ADDR_2, SRC_PATIENT_CITY, SRC_PATIENT_STATE, SRC_PATIENT_ZIP, SRC_PATIENT_COUNTY, SRC_PATIENT_COUNTRY, SRC_INV_JURISDICTION_NM, SRC_INV_START_DT, SRC_INV_STATUS, SRC_INV_STATE_CASE_ID, SRC_INV_LEGACY_CASE_ID, SRC_INV_CDC_ASSIGNED_ID, SRC_INV_RPTNG_CNTY, SRC_INV_HSPTLIZD_IND, SRC_INV_DIE_FRM_ILLNESS_IND, SRC_INV_DEATH_DT, SRC_INV_CASE_STATUS, SRC_INV_SYMPTOMATIC, SRC_INV_ILLNESS_ONSET_DT, SRC_INV_ILLNESS_END_DT, SRC_INV_SYMPTOM_STATUS, SRC_CTT_INV_PRIORITY, SRC_CTT_INV_INFECTIOUS_FRM_DT, SRC_CTT_INV_INFECTIOUS_TO_DT, SRC_CTT_INV_STATUS, SRC_CTT_INV_COMMENTS, CR_JURISDICTION_NM, CR_STATUS, CR_PRIORITY, CR_INV_FIRST_NAME, CR_INV_LAST_NAME, CR_INV_ASSIGNED_DT, CR_DISPOSITION, CR_DISPO_DT, CR_NAMED_ON_DT, CR_RELATIONSHIP, CR_HEALTH_STATUS, CR_EXPOSURE_TYPE, CR_EXPOSURE_SITE_TY, CR_FIRST_EXPOSURE_DT, CR_LAST_EXPOSURE_DT, CR_SYMP_IND, CR_SYMP_ONSET_DT, CR_RISK_IND, CR_RISK_NOTES, CR_EVAL_COMPLETED, CR_EVAL_DT, CR_EVAL_NOTES, CTT_PATIENT_FIRST_NAME, CTT_PATIENT_MIDDLE_NAME, CTT_PATIENT_LAST_NAME, CTT_PATIENT_DOB, CTT_PATIENT_AGE_REPORTED, CTT_PATIENT_AGE_RPTD_UNIT, CTT_PATIENT_CURRENT_SEX, CTT_PATIENT_DECEASED_IND, CTT_PATIENT_DECEASED_DT, CTT_PATIENT_STREET_ADDR_1, CTT_PATIENT_STREET_ADDR_2, CTT_PATIENT_CITY, CTT_PATIENT_STATE, CTT_PATIENT_ZIP, CTT_PATIENT_COUNTY, CTT_PATIENT_COUNTRY, CTT_PATIENT_TEL_HOME, CTT_PATIENT_PHONE_WORK, CTT_PATIENT_PHONE_EXT_WORK, CTT_PATIENT_TEL_CELL, CTT_PATIENT_EMAIL, CTT_INV_JURISDICTION_NM, CTT_INV_START_DT, CTT_INV_STATUS, CTT_INV_STATE_CASE_ID, CTT_INV_LEGACY_CASE_ID, CTT_INV_CDC_ASSIGNED_ID, CTT_INV_RPTNG_CNTY, CTT_INV_HSPTLIZD_IND, CTT_INV_DIE_FRM_ILLNESS_IND, CTT_INV_DEATH_DT, CTT_INV_CASE_STATUS, CTT_INV_SYMPTOMATIC, CTT_INV_ILLNESS_ONSET_DT, CTT_INV_ILLNESS_END_DT, CTT_INV_SYMPTOM_STATUS
-        FROM #COVID_CONTACT_DATAMART;
+           FROM #COVID_CONTACT_DATAMART src
+           WHERE NOT EXISTS (
+              SELECT 1
+              FROM dbo.COVID_CONTACT_DATAMART tgt
+              WHERE ISNULL(tgt.SRC_INV_STATE_CASE_ID, '') = ISNULL(src.SRC_INV_STATE_CASE_ID, '')
+                AND ISNULL(tgt.SRC_INV_LEGACY_CASE_ID, '') = ISNULL(src.SRC_INV_LEGACY_CASE_ID, '')
+                AND ISNULL(tgt.SRC_INV_CDC_ASSIGNED_ID, '') = ISNULL(src.SRC_INV_CDC_ASSIGNED_ID, '')
+                AND ISNULL(tgt.CTT_PATIENT_FIRST_NAME, '') = ISNULL(src.CTT_PATIENT_FIRST_NAME, '')
+                AND ISNULL(tgt.CTT_PATIENT_LAST_NAME, '') = ISNULL(src.CTT_PATIENT_LAST_NAME, '')
+                AND ((tgt.CTT_PATIENT_DOB = src.CTT_PATIENT_DOB)
+                    OR (tgt.CTT_PATIENT_DOB IS NULL AND src.CTT_PATIENT_DOB IS NULL))
+                AND ISNULL(tgt.CR_RELATIONSHIP, '') = ISNULL(src.CR_RELATIONSHIP, '')
+                AND ISNULL(tgt.CR_STATUS, '') = ISNULL(src.CR_STATUS, '')
+                AND ((tgt.CR_NAMED_ON_DT = src.CR_NAMED_ON_DT)
+                    OR (tgt.CR_NAMED_ON_DT IS NULL AND src.CR_NAMED_ON_DT IS NULL))
+           );
 
         /* Logging for insert operation */
         SET @rowcount = @@ROWCOUNT;
