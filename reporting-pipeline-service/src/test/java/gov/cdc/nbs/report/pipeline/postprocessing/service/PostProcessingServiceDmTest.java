@@ -198,14 +198,11 @@ class PostProcessingServiceDmTest {
   }
 
   static Stream<DatamartTestCase> datamartTestData() {
+    // Note: the Hepatitis_Datamart and Case_Lab_Datamart cases are covered by dedicated tests
+    // (testHepatitisDatamartRefreshesInvSummary / testCaseLabDatamartRefreshesInvSummary) because
+    // they additionally trigger INV_SUMM_DATAMART, so their log output no longer fits this generic
+    // single-stored-proc assertion shape.
     return Stream.of(
-        new DatamartTestCase(
-            "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\","
-                + "\"datamart\":\"Hepatitis_Datamart\",\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}",
-            HEPATITIS_DATAMART.getEntityName(),
-            HEPATITIS_DATAMART.getStoredProcedure(),
-            5,
-            repo -> verify(repo).executeStoredProcForHepDatamart("123")),
         new DatamartTestCase(
             "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10110\","
                 + "\"datamart\":\"Std_Hiv_Datamart\",\"stored_procedure\":\"sp_std_hiv_datamart_postprocessing\"}}",
@@ -311,13 +308,6 @@ class PostProcessingServiceDmTest {
               verify(repo).executeStoredProcForMeaslesCaseDatamart("123");
               verify(repo).executeStoredProcForLdfVacPreventDiseasesDatamart("123");
             }),
-        new DatamartTestCase(
-            "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":null,"
-                + "\"datamart\":\"Case_Lab_Datamart\",\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}",
-            CASE_LAB_DATAMART.getEntityName(),
-            CASE_LAB_DATAMART.getStoredProcedure(),
-            3,
-            repo -> verify(repo).executeStoredProcForCaseLabDatamart("123")),
         new DatamartTestCase(
             "{\"payload\":{\"public_health_case_uid\":123,\"patient_uid\":456,\"condition_cd\":\"10160\","
                 + "\"datamart\":\"BMIRD_Case\",\"stored_procedure\":\"sp_bmird_case_datamart_postprocessing\"}}",
@@ -445,6 +435,50 @@ class PostProcessingServiceDmTest {
         .executeStoredProcForInvSummaryDatamart(any(), any(), any());
     List<ILoggingEvent> logs = listAppender.list;
     assertEquals("No updates to INV_SUMMARY Datamart", logs.get(8).getFormattedMessage());
+  }
+
+  @Test
+  void testCaseLabDatamartRefreshesInvSummary() {
+    // Reproduces the cross-batch race: an investigation's INV_SUMM_DATAMART (multi-id) trigger and
+    // its CASE_LAB_DATAMART trigger can land in different processDatamartIds batches. Here the
+    // batch carries ONLY the Case_Lab_Datamart trigger (the multi-id trigger was processed in an
+    // earlier batch). INV_SUMM_DATAMART must still be rebuilt for the investigation - and only
+    // after CASE_LAB_DATAMART - so its lab-derived columns are not left out of sync. The morbidity
+    // report datamart must NOT be triggered, since it does not depend on CASE_LAB_DATAMART.
+    String topic = "dummy_datamart";
+    String caseLabMsg =
+        "{\"payload\":{\"public_health_case_uid\":126,\"patient_uid\":456,\"condition_cd\":null,"
+            + "\"datamart\":\"Case_Lab_Datamart\","
+            + "\"stored_procedure\":\"sp_case_lab_datamart_postprocessing\"}}";
+
+    postProcessingServiceMock.processDmMessage(topic, caseLabMsg);
+    postProcessingServiceMock.processDatamartIds();
+
+    InOrder inOrder = inOrder(investigationRepositoryMock, postProcRepositoryMock);
+    inOrder.verify(investigationRepositoryMock).executeStoredProcForCaseLabDatamart("126");
+    inOrder.verify(postProcRepositoryMock).executeStoredProcForInvSummaryDatamart("126", "", "");
+
+    verify(postProcRepositoryMock, never())
+        .executeStoredProcForMorbidityReportDatamart(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  void testHepatitisDatamartRefreshesInvSummary() {
+    // Hepatitis_Datamart processing also (re)builds CASE_LAB_DATAMART, so INV_SUMM_DATAMART must be
+    // refreshed for the investigation afterwards, with the same CASE_LAB-before-INV_SUMM ordering.
+    String topic = "dummy_datamart";
+    String hepMsg =
+        "{\"payload\":{\"public_health_case_uid\":126,\"patient_uid\":456,\"condition_cd\":\"10110\","
+            + "\"datamart\":\"Hepatitis_Datamart\","
+            + "\"stored_procedure\":\"sp_hepatitis_datamart_postprocessing\"}}";
+
+    postProcessingServiceMock.processDmMessage(topic, hepMsg);
+    postProcessingServiceMock.processDatamartIds();
+
+    InOrder inOrder = inOrder(investigationRepositoryMock, postProcRepositoryMock);
+    inOrder.verify(investigationRepositoryMock).executeStoredProcForCaseLabDatamart("126");
+    inOrder.verify(investigationRepositoryMock).executeStoredProcForHepDatamart("126");
+    inOrder.verify(postProcRepositoryMock).executeStoredProcForInvSummaryDatamart("126", "", "");
   }
 
   @Test
