@@ -13,18 +13,33 @@ If you don't already have a local application config create one using the existi
 cp src/main/resources/application.yaml src/main/resources/application-local.yaml
 ```
 
-Update `src/main/resources/application-local.yaml` with the following values:
+Create a `src/main/resources/application-local.yaml` file. Sample below:
 
 ```yaml
 spring:
   datasource:
-    password: reporting_pipeline_service
-    username: reporting_pipeline_service_rdb
+    password: PizzaIsGood33!
+    username: sa
     url: jdbc:sqlserver://localhost:3433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+  kafka-connect:
+    url: http://localhost:8083
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    user: sa
+    password: PizzaIsGood33!
+
+  featureFlag:
+    person-service-direct-write: true
 ```
 
+Stop the container if it is running:
+```shell
+docker stop nedss-datareporting-pipeline-service-1
+```
 Run `reporting-pipeline-service` using the following Gradle command:
 
 ```shell

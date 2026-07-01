@@ -45,6 +45,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service class for processing Person-related change events in the Real Time Reporting (RTR)
@@ -105,6 +106,9 @@ public class PersonService {
 
   @Value("${featureFlag.thread-pool-size:1}")
   private int threadPoolSize;
+
+  @Value("${featureFlag.person-service-direct-write}")
+  private boolean directWrite;
 
   private ExecutorService rtrExecutor;
   private ExecutorService prsExecutor;
@@ -289,6 +293,7 @@ public class PersonService {
         });
   }
 
+  @Transactional
   private void processUser(String message, String topic) {
     String userUid = "";
     try {
@@ -296,21 +301,29 @@ public class PersonService {
       log.info(topicDebugLog, "User", userUid, topic);
       Optional<List<AuthUser>> userData = userRepository.computeAuthUsers(userUid);
 
-      if (userData.isPresent() && !userData.get().isEmpty()) {
-        userData
-            .get()
-            .forEach(
-                authUser -> {
-                  String jsonKey = transformer.buildUserKey(authUser);
-                  String jsonValue = transformer.processData(authUser);
-                  kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
-                  log.info(
-                      "User data (uid={}) sent to {}",
-                      authUser.getAuthUserUid(),
-                      userReportingOutputTopic);
-                });
+      List<AuthUser> authUsers = new ArrayList<>();
+
+      if (userData.isPresent()) {
+        authUsers = userData.get();
       } else {
         throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUid);
+      }
+
+      if (directWrite) {
+        // write directly to the database
+        authUsers.stream().forEach(authUser -> userRepository.save(authUser));
+      } else {
+        // publish events in kafka
+        authUsers.forEach(
+            authUser -> {
+              String jsonKey = transformer.buildUserKey(authUser);
+              String jsonValue = transformer.processData(authUser);
+              kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
+              log.info(
+                  "User data (uid={}) sent to {}",
+                  authUser.getAuthUserUid(),
+                  userReportingOutputTopic);
+            });
       }
     } catch (EntityNotFoundException ex) {
       throw new NoDataException(ex.getMessage(), ex);
