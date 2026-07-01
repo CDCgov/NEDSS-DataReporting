@@ -9,10 +9,10 @@ IF
     (
         SELECT COMPATIBILITY_LEVEL FROM SYS.DATABASES
         WHERE NAME = @CURRENT_DB
-    ) < 140
+    ) < 150
     BEGIN
         EXEC (
-            'ALTER DATABASE ' + @CURRENT_DB + ' SET COMPATIBILITY_LEVEL = 140'
+            'ALTER DATABASE ' + @CURRENT_DB + ' SET COMPATIBILITY_LEVEL = 150'
         );
-        PRINT 'Updated ' + @CURRENT_DB + ' to compatibility level 140.'
+        PRINT 'Updated ' + @CURRENT_DB + ' to compatibility level 150.'
     END
