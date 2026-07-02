@@ -843,7 +843,7 @@
       "INVESTIGATION_STATUS": "Open",
       "CONFIRMATION_METHOD": "Laboratory confirmed",
       "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
-      "TREATMENT_DATE": "2026-04-20T00:00:00.000",
+      "TREATMENT_DATE": "2026-04-20",
       "PATIENT_FIRST_NAME": "Taylor",
       "PATIENT_LAST_NAME": "Swift_fake77gg",
       "PATIENT_DOB": "1985-03-17T00:00:00.000",
