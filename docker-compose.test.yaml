@@ -1,6 +1,6 @@
 services:
   nbs-mssql: !override
-    image: ghcr.io/cdcent/nedssdb:latest
+    image: ghcr.io/cdcgov/nedss-datareporting-mssql:6.0.18.1
     platform: linux/amd64
     environment:
       - DATABASE_VERSION=6.0.18.1
