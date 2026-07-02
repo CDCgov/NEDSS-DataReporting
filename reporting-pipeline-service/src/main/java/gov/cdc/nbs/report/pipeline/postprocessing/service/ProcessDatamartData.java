@@ -159,6 +159,9 @@ public class ProcessDatamartData {
 
   protected boolean processDmCache(Map<String, Map<String, List<Long>>> dmCache, Long batchId) {
     List<Long> ldfUids = new ArrayList<>();
+    // investigation uids whose CASE_LAB_DATAMART was (re)built in this batch; INV_SUMM_DATAMART
+    // must be refreshed for them afterwards (see processMultiIdDatamart call below).
+    List<Long> caseLabInvUids = new ArrayList<>();
     BatchProcessingState state = new BatchProcessingState(batchId);
 
     Timer.Sample sample = metrics.startSample();
@@ -184,7 +187,7 @@ public class ProcessDatamartData {
       }
 
       try {
-        processDatamart(dmKey, dmValues, ldfUids);
+        processDatamart(dmKey, dmValues, ldfUids, caseLabInvUids);
         incrementIf(ppDmSuccess, !state.isRetry);
       } catch (Exception e) {
         incrementIf(ppDmFailure, !state.isRetry);
@@ -197,8 +200,19 @@ public class ProcessDatamartData {
 
     processLdfVaccinePreventDm(state, ldfUids);
 
-    if (dmCache.containsKey(MULTI_ID_DATAMART)) {
-      processMultiIdDatamart(state, dmCache.get(MULTI_ID_DATAMART));
+    // INV_SUMM_DATAMART (a multi-id datamart) derives its lab columns (LABORATORY_INFORMATION,
+    // EVENT_DATE, EVENT_DATE_TYPE, EARLIEST_SPECIMEN_COLLECT_DATE) from CASE_LAB_DATAMART, so it
+    // must be built after CASE_LAB_DATAMART. Within a batch that ordering already holds
+    // because multi-id datamarts are processed here, last.
+    // However, there is a cross-batch race: when an investigation's multi-id trigger
+    // is cached synchronously while its Case_Lab_Datamart trigger
+    // round-trips through Kafka, so the two can land in different batches and INV_SUMM can run
+    // first, leaving those columns NULL. Passing the CASE_LAB investigation uids here guarantees
+    // INV_SUMM is built in the same batch as (and after) CASE_LAB_DATAMART.
+    // https://cdc-nbs.atlassian.net/browse/APP-775
+    Map<String, List<Long>> multiId = dmCache.get(MULTI_ID_DATAMART);
+    if (multiId != null || !caseLabInvUids.isEmpty()) {
+      processMultiIdDatamart(state, multiId, caseLabInvUids);
     }
 
     metrics.stopSample(sample, processTimer);
@@ -221,8 +235,11 @@ public class ProcessDatamartData {
    * @param dmKey the datamart key, optionally with an LDF type after a comma
    * @param idMap a map of entity names to lists of IDs
    * @param ldfUids a list to store case IDs for LDF-related datamarts
+   * @param caseLabInvUids a list to collect investigation IDs whose CASE_LAB_DATAMART is processed,
+   *     so INV_SUMM_DATAMART can be refreshed for them afterwards
    */
-  private void processDatamart(String dmKey, Map<String, List<Long>> idMap, List<Long> ldfUids) {
+  private void processDatamart(
+      String dmKey, Map<String, List<Long>> idMap, List<Long> ldfUids, List<Long> caseLabInvUids) {
     List<Long> uids = getUids(idMap, INVESTIGATION);
     List<Long> patUids = getUids(idMap, PATIENT);
     List<Long> obsUids = getUids(idMap, OBSERVATION);
@@ -249,6 +266,7 @@ public class ProcessDatamartData {
             invRepository::executeStoredProcForCaseLabDatamart,
             cases,
             this::checkResult);
+        caseLabInvUids.addAll(uids);
         executeDmProc(
             HEPATITIS_DATAMART,
             invRepository::executeStoredProcForHepDatamart,
@@ -294,6 +312,7 @@ public class ProcessDatamartData {
             invRepository::executeStoredProcForCaseLabDatamart,
             cases,
             this::checkResult);
+        caseLabInvUids.addAll(uids);
         break;
       case BMIRD_CASE:
         executeDmProc(
@@ -456,17 +475,34 @@ public class ProcessDatamartData {
   /**
    * Processes cached IDs for multi-ID datamarts by executing the appropriate stored procedures.
    *
-   * @param dmMulti
+   * @param state the batch processing state used for retry/failure bookkeeping
+   * @param dmMulti the multi-id datamart id map for this batch, or {@code null} when the batch only
+   *     carries CASE_LAB_DATAMART triggers (see {@code caseLabInvUids})
+   * @param caseLabInvUids investigation uids whose CASE_LAB_DATAMART was (re)built in this batch;
+   *     INV_SUMM_DATAMART is refreshed for them in addition to any multi-id investigation trigger,
+   *     so its lab-derived columns are not left out of sync. These uids are intentionally NOT fed
+   *     to the morbidity report datamart, which does not depend on CASE_LAB_DATAMART.
    */
-  private void processMultiIdDatamart(BatchProcessingState state, Map<String, List<Long>> dmMulti) {
-    String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-    String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-    String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-    String patString = listToParameterString(dmMulti.get(PATIENT.getEntityName()));
-    String provString = listToParameterString(dmMulti.get(PROVIDER.getEntityName()));
-    String orgString = listToParameterString(dmMulti.get(ORGANIZATION.getEntityName()));
+  private void processMultiIdDatamart(
+      BatchProcessingState state, Map<String, List<Long>> dmMulti, List<Long> caseLabInvUids) {
+    Map<String, List<Long>> multi = (dmMulti == null) ? Map.of() : dmMulti;
 
-    int totalLengthInvSummary = invString.length() + notifString.length() + obsString.length();
+    String invString = listToParameterString(multi.get(INVESTIGATION.getEntityName()));
+    String obsString = listToParameterString(multi.get(OBSERVATION.getEntityName()));
+    String notifString = listToParameterString(multi.get(NOTIFICATION.getEntityName()));
+    String patString = listToParameterString(multi.get(PATIENT.getEntityName()));
+    String provString = listToParameterString(multi.get(PROVIDER.getEntityName()));
+    String orgString = listToParameterString(multi.get(ORGANIZATION.getEntityName()));
+
+    // INV_SUMM additionally covers investigations whose CASE_LAB_DATAMART was rebuilt this batch.
+    List<Long> invSummaryUids =
+        new ArrayList<>(
+            Optional.ofNullable(multi.get(INVESTIGATION.getEntityName())).orElseGet(List::of));
+    invSummaryUids.addAll(caseLabInvUids);
+    String invSummaryInvString = listToParameterString(invSummaryUids);
+
+    int totalLengthInvSummary =
+        invSummaryInvString.length() + notifString.length() + obsString.length();
     int totalLengthMorbReportDM =
         obsString.length()
             + patString.length()
@@ -479,12 +515,12 @@ public class ProcessDatamartData {
         // reusing the same DTO class for Dynamic Marts
         logger.info(
             "Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'",
-            invString,
+            invSummaryInvString,
             notifString,
             obsString);
         List<DatamartData> dmDataList =
             procRepository.executeStoredProcForInvSummaryDatamart(
-                invString, notifString, obsString);
+                invSummaryInvString, notifString, obsString);
         logExecutionCompleted("sp_inv_summary_datamart_postprocessing");
         processDynDatamart(state, dmDataList);
         incrementIf(ppDmSuccess, !state.isRetry);
@@ -511,8 +547,13 @@ public class ProcessDatamartData {
     } catch (Exception e) {
       incrementIf(ppDmFailure, !state.isRetry);
       logger.error(
-          errorMessage(MULTI_ID_DATAMART, invString, new Exception(e.getClass().getSimpleName())));
-      state.registerFailure(MULTI_ID_DATAMART, dmMulti, e);
+          errorMessage(
+              MULTI_ID_DATAMART, invSummaryInvString, new Exception(e.getClass().getSimpleName())));
+      // Preserve any multi-id ids for retry and ensure the CASE_LAB-driven INV_SUMM uids are
+      // retried too (dmMulti may be null when the batch only carried CASE_LAB_DATAMART triggers).
+      Map<String, List<Long>> retryMap = new HashMap<>(multi);
+      retryMap.put(INVESTIGATION.getEntityName(), invSummaryUids);
+      state.registerFailure(MULTI_ID_DATAMART, retryMap, e);
     }
   }
 
