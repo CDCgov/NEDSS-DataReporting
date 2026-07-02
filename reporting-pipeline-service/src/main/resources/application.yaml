@@ -142,7 +142,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,liquibase,lag
+        include: health,metrics,prometheus,liquibase,lag
   prometheus:
     metrics:
       export:
