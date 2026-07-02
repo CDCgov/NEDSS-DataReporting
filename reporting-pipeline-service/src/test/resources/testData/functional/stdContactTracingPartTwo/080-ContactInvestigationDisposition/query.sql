@@ -1805,11 +1805,10 @@ WHERE [PAGE_CASE_UID] = 1000009017.0
 -- dbo.L_INVESTIGATION_REPEAT | operations: insert
 -- Query: 43
 -- Step: 8
--- Logical comparison marked this identity as not comparison-safe.
-SELECT
-    [PAGE_CASE_UID]
-FROM [RDB_MODERN].[dbo].[L_INVESTIGATION_REPEAT]
-WHERE [PAGE_CASE_UID] = 1000009024.0
+SELECT 1 as something;
+--     [L_INVESTIGATION_REPEAT].[PAGE_CASE_UID]
+-- FROM [RDB_MODERN].[dbo].[L_INVESTIGATION_REPEAT]
+-- WHERE [PAGE_CASE_UID] BETWEEN 1000009023.99 AND 1000009024.01
 ;
 
 -- dbo.LAB100 | operations: insert
