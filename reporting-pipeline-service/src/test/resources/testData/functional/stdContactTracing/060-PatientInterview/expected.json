@@ -830,5 +830,31 @@
       "RECORD_STATUS_CD": "ACTIVE",
       "TREATMENT_COUNT": 1
     }
+  ],
+  "42": [
+    {
+      "INV_LOCAL_ID": "CAS1000007017GA01",
+      "PATIENT_LOCAL_ID": "PSN1000007000GA01",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "PROGRAM_AREA": "STD",
+      "JURISDICTION_NM": "Fulton County",
+      "INV_CASE_STATUS": "Confirmed",
+      "INVESTIGATION_STATUS": "Open",
+      "CONFIRMATION_METHOD": "Laboratory confirmed",
+      "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
+      "TREATMENT_DATE": "2026-04-20",
+      "PATIENT_FIRST_NAME": "Taylor",
+      "PATIENT_LAST_NAME": "Swift_fake77gg",
+      "PATIENT_DOB": "1985-03-17T00:00:00.000",
+      "PATIENT_CURRENT_SEX": "Female",
+      "PATIENT_COUNTY": "Fulton County",
+      "CA_PATIENT_INTV_STAT": "I - Interviewed",
+      "FL_FUP_DISPOSITION_CD": "C",
+      "FL_FUP_NOT_PLAN_CD": "3",
+      "SURV_PAT_FOLL_UP_STAT": "Field Follow-up",
+      "REFERRAL_BASIS": "T1 - Positive Test",
+      "TRANSMISSION_MODE": "Sexually Transmitted"
+    }
   ]
 }
