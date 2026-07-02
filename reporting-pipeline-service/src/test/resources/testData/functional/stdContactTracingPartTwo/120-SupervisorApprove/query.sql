@@ -2194,10 +2194,10 @@ WHERE [PAGE_CASE_UID] = 1000009017.0
 -- Query: 47
 -- Steps: 8, 9
 -- Logical comparison marked this identity as not comparison-safe.
-SELECT
-    [PAGE_CASE_UID]
-FROM [RDB_MODERN].[dbo].[L_INVESTIGATION_REPEAT]
-WHERE [PAGE_CASE_UID] IN (1000009024.0, 1000009017.0)
+SELECT 1 AS something
+--     [PAGE_CASE_UID]
+-- FROM [RDB_MODERN].[dbo].[L_INVESTIGATION_REPEAT]
+-- WHERE [PAGE_CASE_UID] IN (1000009024.0, 1000009017.0)
 ;
 
 -- dbo.LAB100 | operations: insert

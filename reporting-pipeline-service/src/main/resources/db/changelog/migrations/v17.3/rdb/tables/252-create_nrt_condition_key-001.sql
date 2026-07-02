@@ -23,3 +23,28 @@ IF NOT EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_condition_key' and xty
 
 	END
 
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_condition_key' and xtype = 'U')
+	AND NOT EXISTS (
+		SELECT 1
+		FROM sys.key_constraints
+		WHERE [type] = 'PK'
+			AND [name] = 'pk_nrt_condition_key'
+			AND [parent_object_id] = OBJECT_ID('[dbo].nrt_condition_key')
+	)
+	BEGIN
+		ALTER TABLE [dbo].nrt_condition_key
+		ADD CONSTRAINT pk_nrt_condition_key PRIMARY KEY (CONDITION_KEY);
+	END
+
+IF EXISTS (SELECT 1 FROM sysobjects WHERE name = 'nrt_condition_key' and xtype = 'U')
+	AND NOT EXISTS (
+		SELECT 1
+		FROM sys.indexes
+		WHERE [name] = 'ux_nrt_condition_key_cd_prog_area'
+			AND [object_id] = OBJECT_ID('[dbo].nrt_condition_key')
+	)
+	BEGIN
+		CREATE UNIQUE INDEX ux_nrt_condition_key_cd_prog_area
+			ON [dbo].nrt_condition_key (condition_cd, program_area_cd);
+	END
+
