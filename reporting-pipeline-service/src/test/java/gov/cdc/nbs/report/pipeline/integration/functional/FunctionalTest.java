@@ -1,5 +1,6 @@
 package gov.cdc.nbs.report.pipeline.integration.functional;
 
+import gov.cdc.nbs.report.pipeline.coverage.StoredProcCoverageRecorder;
 import gov.cdc.nbs.report.pipeline.integration.support.config.DataSourceConfig;
 import java.io.File;
 import java.time.Duration;
@@ -9,12 +10,14 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.ComposeContainer;
@@ -35,6 +38,8 @@ public abstract class FunctionalTest {
   private static final File base = new File("../docker-compose.yaml");
 
   private static boolean started = false;
+
+  @Autowired private JdbcClient jdbcClient;
 
   @SuppressWarnings("resource")
   private static final ComposeContainer environment =
@@ -57,6 +62,8 @@ public abstract class FunctionalTest {
 
   @AfterAll
   void tearDown() {
+    // Capture stored-proc coverage from job_flow_log while the database is still up.
+    StoredProcCoverageRecorder.record(jdbcClient);
     synchronized (FunctionalTest.class) {
       if (started) {
         environment.stop();
