@@ -404,6 +404,8 @@ BEGIN
             @LockMode = 'Exclusive',
             @LockOwner = 'Transaction',
             @LockTimeout = 0;
+                -- 0 means: Exit immediately if already running.
+                -- Change to -1 if you want 2nd proc to wait in queue.
 
         IF @LockResult < 0
         BEGIN
