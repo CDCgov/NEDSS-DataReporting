@@ -1224,7 +1224,6 @@ WHERE TREATMENT_KEY = (SELECT TREATMENT_KEY FROM [RDB_MODERN].[dbo].[TREATMENT] 
   AND [TREATMENT_PROVIDING_ORG_KEY] = 3
 ;
 
--- dbo.DM_INV_STD | operations: unchanged (treatment does not affect DM_INV_STD; guard that it stays in the step-02 state)
 -- Query: 26
 -- Step: 3
 SELECT

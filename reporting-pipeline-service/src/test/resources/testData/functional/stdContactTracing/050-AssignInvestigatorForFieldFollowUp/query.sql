@@ -1462,7 +1462,6 @@ WHERE TREATMENT_KEY = (SELECT TREATMENT_KEY FROM [RDB_MODERN].[dbo].[TREATMENT] 
   AND [TREATMENT_PROVIDING_ORG_KEY] = 3
 ;
 
--- dbo.DM_INV_STD | operations: update (field follow-up / case management assigned; process state -> Awaiting Interview)
 -- Query: 31
 -- Step: 5
 SELECT
