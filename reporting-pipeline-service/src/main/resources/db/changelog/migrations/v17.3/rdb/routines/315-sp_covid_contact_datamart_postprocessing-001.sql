@@ -408,7 +408,7 @@ BEGIN
         IF @LockResult < 0
         BEGIN
             ROLLBACK TRANSACTION;
-            RAISERROR ('COVID_CONTACT_DATAMART post-processing is already running in another session.', 16, 1);
+            THROW 50000, 'COVID_CONTACT_DATAMART post-processing is already running in another session.', 1;
             RETURN;
         END
 
