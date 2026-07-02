@@ -47,6 +47,7 @@ DELETE FROM [dbo].[nrt_observation_edx];
 DELETE FROM [dbo].[nrt_observation];
 DELETE FROM [dbo].[EVENT_METRIC];
 DELETE FROM [dbo].[EVENT_METRIC_INC];
+DELETE FROM [dbo].[CASE_COUNT];
 DELETE FROM [dbo].[D_PATIENT];
 DELETE FROM [dbo].[nrt_patient_key];
 DELETE FROM [dbo].[nrt_patient];
