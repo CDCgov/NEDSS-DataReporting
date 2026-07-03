@@ -499,6 +499,26 @@ VALUES
 -- is the production patient-subject participation type for observations.)
 -- Composite PK is (act_uid, subject_entity_uid, type_cd) — no surrogate
 -- UID needed.
+--
+-- TWO participation rows, same act + same patient, different type_cd, one
+-- for each consumer of this morb report:
+--   1. PATSBJ           — the RTR (RDB_MODERN) path. The reporting service
+--                         accepts PATSBJ or SubjOfMorbReport for setPatientId.
+--   2. SubjOfMorbReport — the legacy MasterETL path. Its D_Morbidity_Report
+--                         proc (SQLETL/Generic/41_SP_D_MORBIDITY_REPORT.SQL)
+--                         resolves PATIENT_KEY by joining participation on
+--                         type_cd='SubjOfMorbReport' (subject_class_cd='PSN',
+--                         act_class_cd='OBS', ACTIVE) -> d_patient. It does
+--                         NOT recognize PATSBJ, and the final insert does NOT
+--                         COALESCE PATIENT_KEY (every other key defaults to 1;
+--                         the SAS original guarded it with
+--                         `if patient_key=. then patient_key=1`). Without this
+--                         row the join returns NULL and MasterETL aborts with
+--                         "Cannot insert the value NULL into column
+--                         'PATIENT_KEY'" (job_flow_log D_Morbidity_Report
+--                         step 25). Real production ODSE carries
+--                         SubjOfMorbReport, so this keeps the seed faithful to
+--                         both pipelines rather than tuned to RTR alone.
 -- =====================================================================
 INSERT INTO [dbo].[participation]
     ([act_uid], [subject_entity_uid], [type_cd],
@@ -510,7 +530,7 @@ INSERT INTO [dbo].[participation]
 VALUES
     (@dbo_Act_morb_v2_order_uid,      -- act_uid (OBS; v2 Morb Order)
      @foundation_patient_uid,         -- subject_entity_uid (PSN; foundation Patient 20000000)
-     N'PATSBJ',                       -- type_cd (patient-subject of observation)
+     N'PATSBJ',                       -- type_cd (patient-subject of observation; RTR path)
      N'OBS',                          -- act_class_cd
      N'PSN',                          -- subject_class_cd (PERSON; required for setPatientId)
      '2026-04-04T00:00:00',           -- add_time
@@ -521,7 +541,21 @@ VALUES
      '2026-04-04T00:00:00',           -- record_status_time
      'A',                             -- status_cd
      '2026-04-04T00:00:00',           -- status_time
-     N'Patient Subject');
+     N'Patient Subject'),
+    (@dbo_Act_morb_v2_order_uid,      -- act_uid (same v2 Morb Order)
+     @foundation_patient_uid,         -- subject_entity_uid (same foundation Patient 20000000)
+     N'SubjOfMorbReport',             -- type_cd (legacy MasterETL patient-key join)
+     N'OBS',                          -- act_class_cd (join requires 'OBS')
+     N'PSN',                          -- subject_class_cd (join requires 'PSN')
+     '2026-04-04T00:00:00',           -- add_time
+     @superuser_id,                   -- add_user_id
+     '2026-04-04T00:00:00',           -- last_chg_time
+     @superuser_id,                   -- last_chg_user_id
+     N'ACTIVE',                       -- record_status_cd (join requires 'ACTIVE')
+     '2026-04-04T00:00:00',           -- record_status_time
+     'A',                             -- status_cd
+     '2026-04-04T00:00:00',           -- status_time
+     N'Subject of Morbidity Report');
 
 -- =====================================================================
 -- v2 Morb Order act_id row.

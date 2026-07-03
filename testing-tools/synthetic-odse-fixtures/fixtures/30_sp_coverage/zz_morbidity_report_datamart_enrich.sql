@@ -608,6 +608,11 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
     VALUES
         (@morb_order, @patient, N'PATSBJ',              N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
+        -- SubjOfMorbReport: legacy MasterETL's sp_D_Morbidity_Report resolves
+        -- PATIENT_KEY off this type_cd only (it doesn't recognize PATSBJ) and
+        -- doesn't COALESCE the key, so without this row the morb-event insert
+        -- fails with NULL PATIENT_KEY. See morbidity.sql for the full note.
+        (@morb_order, @patient, N'SubjOfMorbReport',    N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Morbidity Report'),
         (@morb_order, @phys,    N'PhysicianOfMorb',     N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Physician of Morb'),
         (@morb_order, @rptr,    N'ReporterOfMorbReport',N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Morb (person)'),
         (@morb_order, @repfac,  N'HCFAC',               N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Health Care Facility'),
