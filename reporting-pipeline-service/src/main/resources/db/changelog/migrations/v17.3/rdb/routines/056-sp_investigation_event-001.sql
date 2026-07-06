@@ -1011,17 +1011,20 @@ BEGIN
               GROUP BY act_uid) AS investigation_act_entity
              ON investigation_act_entity.nac_page_case_uid = results.public_health_case_uid
                  LEFT JOIN nbs_srte.dbo.condition_code con on results.cd = con.condition_cd
-                 LEFT JOIN  (SELECT
-                                 note_parent_uid,
-                                 STUFF(
-                                         (
-                                             SELECT '; ' + CAST(add_time AS VARCHAR(20)) + '^' + replace(replace(replace(note, CHAR(0x0002), ''), CHAR(0x0001), ''), CHAR(0x0000), '')
-                                             FROM nbs_odse.dbo.NBS_Note nbsNote
-                                             WHERE note_parent_uid in (SELECT value FROM STRING_SPLIT(@phc_id_list, ','))
-                                               and nbsNote.note_parent_uid = NBS_NOTE.note_parent_uid FOR XML PATH, TYPE, BINARY BASE64
-                                         ).value('.[1]', 'varchar(max)'), 1, 2, '') PHC_NOTES
-                             FROM nbs_odse.dbo.NBS_NOTE WITH(NOLOCK)
-                             GROUP BY note_parent_uid
+                 LEFT JOIN  (
+                              SELECT
+                                note_parent_uid,
+                                String_agg(CONVERT(VARCHAR(20), add_time) + '^' + note, '; ') AS PHC_NOTES
+                              FROM
+                                nbs_odse.dbo.nbs_note WITH (nolock)
+                              WHERE
+                                note_parent_uid IN (
+                                                      SELECT
+                                                        value
+                                                      FROM
+                                                        String_split(@phc_id_list, ',')
+                                                    )
+                              GROUP BY note_parent_uid
         ) nt on nt.note_parent_uid = results.public_health_case_uid;
 
         -- select * from dbo.Investigation_Dim_Event;
