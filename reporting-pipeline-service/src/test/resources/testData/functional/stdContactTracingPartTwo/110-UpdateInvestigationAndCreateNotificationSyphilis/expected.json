@@ -1326,5 +1326,42 @@
       "RECORD_STATUS_CD": "ACTIVE",
       "TREATMENT_COUNT": 1
     }
+  ],
+  "60": [
+    {
+      "INV_LOCAL_ID": "CAS1000009017GA01",
+      "PATIENT_LOCAL_ID": "PSN1000009000GA01",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "INV_CASE_STATUS": "Confirmed",
+      "INVESTIGATION_STATUS": "Closed",
+      "CURR_PROCESS_STATE": "Closed Case",
+      "INV_CLOSE_DT": "2026-04-27T00:00:00.000",
+      "NOTIFICATION_STATUS": "APPROVED",
+      "NOTIFICATION_LOCAL_ID": "NOT1000009028GA01",
+      "CONFIRMATION_METHOD": "Laboratory confirmed",
+      "TREATMENT_DATE": "2026-04-20",
+      "CA_PATIENT_INTV_STAT": "I - Interviewed",
+      "FL_FUP_NOT_PLAN_CD": "3",
+      "REFERRAL_BASIS": "T1 - Positive Test",
+      "TRANSMISSION_MODE": "Sexually Transmitted"
+    }
+  ],
+  "61": [
+    {
+      "INV_LOCAL_ID": "CAS1000009024GA01",
+      "PATIENT_LOCAL_ID": "PSN1000009020GA01",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "REFERRAL_BASIS": "P1 - Partner, Sex",
+      "PATIENT_FIRST_NAME": "FredContact",
+      "INVESTIGATION_STATUS": "Closed",
+      "CURR_PROCESS_STATE": "Field Follow-up",
+      "FL_FUP_DISPOSITION_CD": "H",
+      "FL_FUP_DISPO_DT": "2026-04-27",
+      "INV_CLOSE_DT": "2026-04-27T00:00:00.000",
+      "FL_FUP_NOTE_1": "Ariella Kent~05/06/2026 18:51~~he wasn't in the park anymore. we don't know where he is.",
+      "FL_FUP_SPRVSR_RV_NOTE_1": "Ariella Kent~05/06/2026 22:51~~the neighbors think he left the country"
+    }
   ]
 }
