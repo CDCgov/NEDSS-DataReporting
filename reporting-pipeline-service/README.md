@@ -1,12 +1,6 @@
 # Reporting Pipeline Service
 
 ## Local Dev Setup
-Before running `reporting-pipeline-service` ensure both the database and Kafka containers are up and running:
-
-```shell
-docker compose up kafka liquibase nbs-mssql -d
-```
-
 If you don't already have a local application config create one using the existing `application.yaml`:
 
 ```shell
@@ -38,3 +32,75 @@ If you would like to debug with your IDE, use the following:
 ```
 
 and you can attach your debugger on port `5005`.
+
+## Actuator Endpoints
+
+The service exposes Spring Boot Actuator on port `8095` under `/actuator`. The following endpoints are enabled:
+
+| Endpoint | URL | Purpose |
+|---|---|---|
+| `health` | `/actuator/health` | Overall service health including database, connectors, and Kafka |
+| `lag` | `/actuator/lag` | Kafka consumer-group backlog — how many messages each group is behind |
+| `metrics` | `/actuator/metrics` | Micrometer metric names; append `/{name}` for a specific metric |
+| `prometheus` | `/actuator/prometheus` | Prometheus-format metrics scrape target |
+| `liquibase` | `/actuator/liquibase` | Applied Liquibase changesets and their status |
+
+### `/actuator/health`
+
+Aggregates several health indicators under `components`:
+
+- **`db`** — JDBC connectivity to `RDB_MODERN`.
+- **`connectors`** — checks that each Debezium source connector and each Kafka Connect JDBC sink connector is in `RUNNING` state by calling the respective Connect REST APIs.
+
+`ping`, `diskSpace`, and `ssl` are disabled. Full component detail is always shown (`show-details: always`).
+
+### `/actuator/lag`
+
+A dedicated on-demand endpoint (not aggregated into `/actuator/health`) that reports how far behind the pipeline's consumer groups are from the topics they consume. Useful for verifying a seeding or migration has fully drained before running downstream queries.
+
+Two groups are reported:
+
+- **`pipeline`** — the application's own consumer group (`pipeline-consumer-app` by default), which processes `nbs_*` Debezium events.
+- **`sink`** — the Kafka Connect JDBC sink group (`connect-Kafka-Connect-SqlServer-Sink` by default), which drains `nrt_*` topics into `RDB_MODERN`.
+
+**Status values:**
+
+| Status | Meaning |
+|---|---|
+| `READY` | Both groups are fully caught up — no backlog. |
+| `PROCESSING` | At least one group has unconsumed messages. |
+| `UP` + `"status": "DISABLED"` | Lag reporting is turned off (`LAG_REPORT_ENABLED=false`). |
+| `DOWN` | Kafka offsets could not be read. |
+
+Example response when caught up:
+
+```json
+{
+  "status": "READY",
+  "details": {
+    "caughtUp": true,
+    "pipeline": { "messagesQueued": 0, "byTopic": {} },
+    "sink":     { "messagesQueued": 0, "byTopic": {} }
+  }
+}
+```
+
+Example response when the sink is still draining:
+
+```json
+{
+  "status": "PROCESSING",
+  "details": {
+    "caughtUp": false,
+    "pipeline": { "messagesQueued": 0, "byTopic": {} },
+    "sink": {
+      "messagesQueued": 42,
+      "byTopic": { "nrt_investigation": 42 }
+    }
+  }
+}
+```
+
+### `/actuator/prometheus`
+
+Standard Prometheus scrape endpoint. Excludes actuator URIs from HTTP-server-request histograms (see the Grafana dashboards under `src/main/resources/grafana-dashboard/` for pre-built panels).

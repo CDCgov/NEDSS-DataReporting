@@ -321,6 +321,7 @@ def run_test(
     shift_id: Optional[int] = None,
     on_query: Optional[Callable[["QueryResult"], None]] = None,
     on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
+    on_step_complete: Optional[Callable[["StepResult"], None]] = None,
 ) -> TestResult:
     result = TestResult(name=test_dir.name)
     try:
@@ -356,6 +357,9 @@ def run_test(
             db, step_dir, max_retry, retry_delay, on_event, remapper, on_query, on_poll
         )
         result.steps.append(step_result)
+        # Give callers a chance to pause/inspect after each step (e.g. --pause).
+        if on_step_complete:
+            on_step_complete(step_result)
         # Later steps depend on this one; stop the test at the first failure.
         if not step_result.passed:
             break

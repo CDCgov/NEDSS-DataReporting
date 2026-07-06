@@ -379,6 +379,7 @@
   ],
   "21": [
     {
+      "ADD_DATE_KEY": 13276,
       "CLOSED_BY_KEY": 1,
       "CONDITION_CD": "10312",
       "DELIVERING_HOSP_KEY": 1,
@@ -393,6 +394,7 @@
       "INTERVIEWER_ASSIGNED_KEY": 2,
       "INVESTIGATOR_KEY": 2,
       "INVSTGTR_FLD_FOLLOW_UP_KEY": 4,
+      "LAST_CHG_DATE_KEY": 13276,
       "MOTHER_OB_GYN_KEY": 1,
       "ORDERING_FACILITY_KEY": 4,
       "ORG_AS_REPORTER_KEY": 4,
@@ -483,6 +485,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "LAST_CHG_TIME": "2026-05-06T22:36:22.750",
+      "OUTBREAK_IND": "",
       "PATIENT_AGE_AT_ONSET": 41,
       "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_PREGNANT_IND": "Yes",
@@ -675,7 +678,6 @@
       "SPECIMEN_COLLECTOR_KEY": 1
     },
     {
-      "PROGRAM_AREA_CD": null,
       "COPY_TO_PROVIDER_KEY": 1,
       "LAB_RPT_DT_KEY": 13276,
       "LAB_TEST_TECHNICIAN_KEY": 1,
@@ -756,6 +758,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "MDH_PREV_STD_HIST": "No",
+      "OUTBREAK_IND": "",
       "ORDERING_FACILITY_KEY": 4,
       "PATIENT_AGE_AT_ONSET": 41,
       "PATIENT_AGE_AT_ONSET_UNIT": "Years",
@@ -828,6 +831,58 @@
     {
       "RECORD_STATUS_CD": "ACTIVE",
       "TREATMENT_COUNT": 1
+    }
+  ],
+  "42": [
+    {
+      "INV_LOCAL_ID": "CAS1000009017GA01",
+      "PATIENT_LOCAL_ID": "PSN1000009000GA01",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "PROGRAM_AREA": "STD",
+      "JURISDICTION_NM": "Fulton County",
+      "INV_CASE_STATUS": "Confirmed",
+      "INVESTIGATION_STATUS": "Open",
+      "CONFIRMATION_METHOD": "Laboratory confirmed",
+      "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
+      "TREATMENT_DATE": "2026-04-20",
+      "PATIENT_FIRST_NAME": "Taylor",
+      "PATIENT_LAST_NAME": "Swift_fake77gg",
+      "PATIENT_DOB": "1985-03-17T00:00:00.000",
+      "PATIENT_CURRENT_SEX": "Female",
+      "PATIENT_COUNTY": "Fulton County",
+      "CA_PATIENT_INTV_STAT": "I - Interviewed",
+      "FL_FUP_DISPOSITION_CD": "C",
+      "FL_FUP_NOT_PLAN_CD": "3",
+      "SURV_PAT_FOLL_UP_STAT": "Field Follow-up",
+      "REFERRAL_BASIS": "T1 - Positive Test",
+      "TRANSMISSION_MODE": "Sexually Transmitted",
+      "CURR_PROCESS_STATE": "Open Case",
+      "ENROLL_PRTR_SRVCS_IND": "Accepted",
+      "HIV_TEST_IND": "No",
+      "HIV_TEST_REFERRAL_DT": "2026-04-24",
+      "PREVIOUS_HIV_TEST_IND": "No",
+      "REFER_FOR_HIV_TEST": "Yes",
+      "RFR_FOR_HIV_CARE_IND": "No",
+      "PRE_EXP_PROPHY_IND": "No",
+      "PRE_EXP_PROPHY_REFER": "Yes",
+      "PREV_STD_HIST": "No",
+      "NUM_SEX_PARTNER_12MO": "7",
+      "UNK_SEX_PARTNERS": "No",
+      "SEX_PRTR_ANSR_REFUSED": "No",
+      "SEX_PRTRS_NET_12M_IND": "Yes",
+      "MALE_PRTNRS_12MO_IND": "Yes",
+      "MALE_PRTRS_12M_TOTAL": "5",
+      "FEMALE_PRTRS_12M_IND": "Yes",
+      "FEMALE_PRTRS_12M_TTL": "2",
+      "TRANS_PRTRS_12M_IND": "No",
+      "PRTNRS_PRD_MALE_IND": "Yes",
+      "PRTNRS_PRD_MALE_TTL": "2",
+      "PRTNRS_PRD_FML_IND": "Yes",
+      "PRTNRS_PRD_FML_TTL": "1",
+      "PRTRS_PRD_TRANS_IND": "No",
+      "PLACES_TO_HAVE_SEX": "Refused to answer",
+      "PLACES_TO_MEET_PRTR": "No"
     }
   ]
 }
