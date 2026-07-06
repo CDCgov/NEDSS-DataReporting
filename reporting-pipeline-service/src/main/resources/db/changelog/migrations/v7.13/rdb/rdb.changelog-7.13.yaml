@@ -5,7 +5,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/000-rdbmodern-db-general-001.sql
+            path: db/changelog/migrations/v7.13/rdb/000-rdbmodern-db-general-001.sql
             splitStatements: false
   - changeSet:
       id: 1
@@ -13,7 +13,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/001-create_nrt_organization-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/001-create_nrt_organization-001.sql
             splitStatements: false
   - changeSet:
       id: 2
@@ -21,7 +21,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/002-create_nrt_organization_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/002-create_nrt_organization_key-001.sql
             splitStatements: false
   - changeSet:
       id: 3
@@ -29,7 +29,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/003-create_nrt_provider-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/003-create_nrt_provider-001.sql
             splitStatements: false
   - changeSet:
       id: 4
@@ -37,7 +37,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/004-create_nrt_provider_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/004-create_nrt_provider_key-001.sql
             splitStatements: false
   - changeSet:
       id: 5
@@ -45,7 +45,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/005-create_nrt_patient-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/005-create_nrt_patient-001.sql
             splitStatements: false
   - changeSet:
       id: 6
@@ -53,7 +53,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/006-create_nrt_patient_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/006-create_nrt_patient_key-001.sql
             splitStatements: false
   - changeSet:
       id: 7
@@ -61,7 +61,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/007-create_nrt_investigation-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/007-create_nrt_investigation-001.sql
             splitStatements: false
   - changeSet:
       id: 8
@@ -69,7 +69,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/008-create_nrt_investigation_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/008-create_nrt_investigation_key-001.sql
             splitStatements: false
   - changeSet:
       id: 9
@@ -77,7 +77,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/009-create_nrt_investigation_confirmation-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/009-create_nrt_investigation_confirmation-001.sql
             splitStatements: false
   - changeSet:
       id: 10
@@ -85,7 +85,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/010-create_nrt_confirmation_method_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/010-create_nrt_confirmation_method_key-001.sql
             splitStatements: false
   - changeSet:
       id: 11
@@ -93,7 +93,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/011-create_nrt_investigation_observation-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/011-create_nrt_investigation_observation-001.sql
             splitStatements: false
   - changeSet:
       id: 12
@@ -101,7 +101,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/012-create_nrt_investigation_notification-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/012-create_nrt_investigation_notification-001.sql
             splitStatements: false
   - changeSet:
       id: 14
@@ -109,7 +109,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/013-create_nrt_notification_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/013-create_nrt_notification_key-001.sql
             splitStatements: false
   - changeSet:
       id: 15
@@ -117,7 +117,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/014-create_nrt_page_case_answer-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/014-create_nrt_page_case_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 15.01
@@ -125,7 +125,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/226-create_ldf_data-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/226-create_ldf_data-001.sql
             splitStatements: false
   - changeSet:
       id: 15.02
@@ -133,7 +133,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/227-create_ldf_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/227-create_ldf_group-001.sql
             splitStatements: false
   - changeSet:
       id: 15.03
@@ -141,7 +141,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/228-create_patient_ldf_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/228-create_patient_ldf_group-001.sql
             splitStatements: false
   - changeSet:
       id: 15.04
@@ -149,7 +149,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/229-create_provider_ldf_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/229-create_provider_ldf_group-001.sql
             splitStatements: false
   - changeSet:
       id: 15.05
@@ -157,7 +157,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/230-create_organization_ldf_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/230-create_organization_ldf_group-001.sql
             splitStatements: false
   - changeSet:
       id: 15.06
@@ -165,7 +165,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/246-create_nrt_odse_state_defined_field_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/246-create_nrt_odse_state_defined_field_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 16
@@ -173,7 +173,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/015-create_nrt_ldf_data_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/015-create_nrt_ldf_data_key-001.sql
             splitStatements: false
   - changeSet:
       id: 17
@@ -181,7 +181,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/016-create_nrt_ldf_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/016-create_nrt_ldf_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 18
@@ -189,7 +189,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation-001.sql
             splitStatements: false
   - changeSet:
       id: 20
@@ -197,7 +197,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/001-fn_get_record_status-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/001-fn_get_record_status-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -206,7 +206,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/028-create_nrt_srte_Condition_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/028-create_nrt_srte_Condition_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.02
@@ -214,7 +214,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/027-create_nrt_srte_Program_area_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/027-create_nrt_srte_Program_area_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.04
@@ -222,7 +222,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/194-create_nrt_srte_XSS_Filter_Pattern-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/194-create_nrt_srte_XSS_Filter_Pattern-001.sql
             splitStatements: false
   - changeSet:
       id: 20.05
@@ -230,7 +230,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/195-create_nrt_srte_Lab_coding_system-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/195-create_nrt_srte_Lab_coding_system-001.sql
             splitStatements: false
   - changeSet:
       id: 20.06
@@ -238,7 +238,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/196-create_nrt_srte_Language_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/196-create_nrt_srte_Language_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.07
@@ -246,7 +246,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/197-create_nrt_srte_LOINC_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/197-create_nrt_srte_LOINC_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.08
@@ -254,7 +254,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/198-create_nrt_srte_State_code_backup-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/198-create_nrt_srte_State_code_backup-001.sql
             splitStatements: false
   - changeSet:
       id: 20.09
@@ -262,7 +262,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/199-create_nrt_srte_Snomed_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/199-create_nrt_srte_Snomed_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.10
@@ -270,7 +270,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/200-create_nrt_srte_Cntycity_code_value-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/200-create_nrt_srte_Cntycity_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 20.11
@@ -278,7 +278,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/201-create_nrt_srte_Country_Code_ISO-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/201-create_nrt_srte_Country_Code_ISO-001.sql
             splitStatements: false
   - changeSet:
       id: 20.12
@@ -286,7 +286,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/202-create_nrt_srte_Lab_test-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/202-create_nrt_srte_Lab_test-001.sql
             splitStatements: false
   - changeSet:
       id: 20.13
@@ -294,7 +294,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/203-create_nrt_srte_Specimen_source_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/203-create_nrt_srte_Specimen_source_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.14
@@ -302,7 +302,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/204-create_nrt_srte_Investigation_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/204-create_nrt_srte_Investigation_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.15
@@ -310,7 +310,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/205-create_nrt_srte_NAICS_Industry_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/205-create_nrt_srte_NAICS_Industry_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.16
@@ -318,7 +318,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/206-create_nrt_srte_Occupation_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/206-create_nrt_srte_Occupation_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.17
@@ -326,7 +326,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/207-create_nrt_srte_Participation_type-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/207-create_nrt_srte_Participation_type-001.sql
             splitStatements: false
   - changeSet:
       id: 20.18
@@ -334,7 +334,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/208-create_nrt_srte_Lab_result-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/208-create_nrt_srte_Lab_result-001.sql
             splitStatements: false
   - changeSet:
       id: 20.19
@@ -342,7 +342,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/209-create_nrt_srte_Labtest_loinc-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/209-create_nrt_srte_Labtest_loinc-001.sql
             splitStatements: false
   - changeSet:
       id: 20.20
@@ -350,7 +350,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/210-create_nrt_srte_Loinc_condition-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/210-create_nrt_srte_Loinc_condition-001.sql
             splitStatements: false
   - changeSet:
       id: 20.21
@@ -358,7 +358,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/211-create_nrt_srte_Snomed_condition-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/211-create_nrt_srte_Snomed_condition-001.sql
             splitStatements: false
   - changeSet:
       id: 20.22
@@ -366,7 +366,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/212-create_nrt_srte_Country_XREF-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/212-create_nrt_srte_Country_XREF-001.sql
             splitStatements: false
   - changeSet:
       id: 20.23
@@ -374,7 +374,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/213-create_nrt_srte_Lab_result_Snomed-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/213-create_nrt_srte_Lab_result_Snomed-001.sql
             splitStatements: false
   - changeSet:
       id: 20.24
@@ -382,7 +382,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/214-create_nrt_srte_Loinc_snomed_condition-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/214-create_nrt_srte_Loinc_snomed_condition-001.sql
             splitStatements: false
   - changeSet:
       id: 20.25
@@ -390,7 +390,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/215-create_nrt_srte_ELR_XREF-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/215-create_nrt_srte_ELR_XREF-001.sql
             splitStatements: false
   - changeSet:
       id: 20.26
@@ -398,7 +398,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/216-create_nrt_srte_Labtest_Progarea_Mapping-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/216-create_nrt_srte_Labtest_Progarea_Mapping-001.sql
             splitStatements: false
   - changeSet:
       id: 20.27
@@ -406,7 +406,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/217-create_nrt_srte_Standard_XREF-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/217-create_nrt_srte_Standard_XREF-001.sql
             splitStatements: false
   - changeSet:
       id: 20.28
@@ -414,7 +414,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/218-create_nrt_srte_Jurisdiction_participation-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/218-create_nrt_srte_Jurisdiction_participation-001.sql
             splitStatements: false
   - changeSet:
       id: 20.29
@@ -422,7 +422,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/219-create_nrt_srte_State_model-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/219-create_nrt_srte_State_model-001.sql
             splitStatements: false
   - changeSet:
       id: 20.30
@@ -430,7 +430,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/220-create_nrt_srte_Treatment_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/220-create_nrt_srte_Treatment_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.31
@@ -438,7 +438,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/221-create_nrt_srte_Unit_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/221-create_nrt_srte_Unit_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.32
@@ -446,7 +446,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/222-create_nrt_srte_LDF_page_set-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/222-create_nrt_srte_LDF_page_set-001.sql
             splitStatements: false
   - changeSet:
       id: 20.33
@@ -454,7 +454,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/223-create_nrt_srte_Zip_code_value-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/223-create_nrt_srte_Zip_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 20.34
@@ -462,7 +462,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/224-create_nrt_srte_Zipcnty_code_value-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/224-create_nrt_srte_Zipcnty_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 20.35
@@ -470,7 +470,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/225-create_nrt_srte_Race_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/225-create_nrt_srte_Race_code-001.sql
             splitStatements: false
   - changeSet:
       id: 20.40
@@ -478,7 +478,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/255-create_nrt_backfill-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/255-create_nrt_backfill-001.sql
             splitStatements: false
   - changeSet:
       id: 20.41
@@ -486,7 +486,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/355-sp_nrt_backfill_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/355-sp_nrt_backfill_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -495,7 +495,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/019-create_nrt_datamart_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/019-create_nrt_datamart_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 20.55
@@ -503,7 +503,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/365-sp_patient_dim_columns_update_to_datamart.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/365-sp_patient_dim_columns_update_to_datamart.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -512,7 +512,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/370-sp_provider_dim_columns_update_to_datamart.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/370-sp_provider_dim_columns_update_to_datamart.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -521,7 +521,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/051-create_nrt_vaccination-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/051-create_nrt_vaccination-001.sql
             splitStatements: false
   - changeSet:
       id: 22.02
@@ -529,7 +529,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/052-create_nrt_vaccination_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/052-create_nrt_vaccination_key-001.sql
             splitStatements: false
   - changeSet:
       id: 22.03
@@ -537,7 +537,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/053-create_nrt_vaccination_answer-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/053-create_nrt_vaccination_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 24
@@ -545,7 +545,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/005-sp_nrt_investigation_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/005-sp_nrt_investigation_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -554,7 +554,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/006-sp_nrt_notification_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/006-sp_nrt_notification_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -563,7 +563,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/029-create_nrt_srte_Codeset-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/029-create_nrt_srte_Codeset-001.sql
             splitStatements: false
   - changeSet:
       id: 26.01
@@ -571,7 +571,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/030-create_nrt_srte_Code_value_general-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/030-create_nrt_srte_Code_value_general-001.sql
             splitStatements: false
   - changeSet:
       id: 26.02
@@ -579,7 +579,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/192-create_nrt_odse_nbs_ui_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/192-create_nrt_odse_nbs_ui_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 26.03
@@ -587,7 +587,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/025-create_nrt_srte_totalidm-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/025-create_nrt_srte_totalidm-001.sql
             splitStatements: false
   - changeSet:
       id: 26.04
@@ -595,7 +595,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/024-v_nrt_ref_formcode_translation-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/024-v_nrt_ref_formcode_translation-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -604,7 +604,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/007-sp_s_pagebuilder_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/007-sp_s_pagebuilder_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -613,7 +613,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/008-sp_l_pagebuilder_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/008-sp_l_pagebuilder_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -622,7 +622,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/009-sp_d_pagebuilder_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/009-sp_d_pagebuilder_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -631,7 +631,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/010-sp_sld_investigation_repeat_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/010-sp_sld_investigation_repeat_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -640,7 +640,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/011-sp_page_builder_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/011-sp_page_builder_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -649,7 +649,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/012-sp_f_page_case_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/012-sp_f_page_case_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -658,7 +658,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/013-sp_hepatitis_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/013-sp_hepatitis_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -667,7 +667,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/014-sp_get_date_dim-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/014-sp_get_date_dim-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -676,7 +676,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/018-create_nrt_ldf_data-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/018-create_nrt_ldf_data-001.sql
             splitStatements: false
   - changeSet:
       id: 36
@@ -684,7 +684,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/015-sp_nrt_ldf_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/015-sp_nrt_ldf_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -693,7 +693,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_coded-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_coded-001.sql
             splitStatements: false
   - changeSet:
       id: 42
@@ -701,7 +701,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_date-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_date-001.sql
             splitStatements: false
   - changeSet:
       id: 43
@@ -709,7 +709,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_edx-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_edx-001.sql
             splitStatements: false
   - changeSet:
       id: 44
@@ -717,7 +717,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_material-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_material-001.sql
             splitStatements: false
   - changeSet:
       id: 45
@@ -725,7 +725,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_numeric-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_numeric-001.sql
             splitStatements: false
   - changeSet:
       id: 46
@@ -733,7 +733,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_reason-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_reason-001.sql
             splitStatements: false
   - changeSet:
       id: 47
@@ -741,7 +741,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/017-create_nrt_observation_txt-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_txt-001.sql
             splitStatements: false
   - changeSet:
       id: 49
@@ -749,7 +749,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/016-sp_nrt_morbidity_report_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/016-sp_nrt_morbidity_report_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -758,7 +758,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/250-create_nrt_lab_result_comment_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/250-create_nrt_lab_result_comment_key-001.sql
             splitStatements: false
   - changeSet:
       id: 50.01
@@ -766,7 +766,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/251-create_nrt_lab_test_result_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/251-create_nrt_lab_test_result_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 50.02
@@ -774,7 +774,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/017-sp_d_labtest_result_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/017-sp_d_labtest_result_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -783,7 +783,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/248-create_nrt_lab_test_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/248-create_nrt_lab_test_key-001.sql
             splitStatements: false
   - changeSet:
       id: 55.01
@@ -791,7 +791,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/249-create_nrt_lab_rpt_user_comment_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/249-create_nrt_lab_rpt_user_comment_key-001.sql
             splitStatements: false
   - changeSet:
       id: 55.02
@@ -799,7 +799,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/018-sp_d_lab_test_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/018-sp_d_lab_test_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -808,7 +808,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/019-sp_lab100_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/019-sp_lab100_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -817,7 +817,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/020-sp_lab101_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/020-sp_lab101_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -826,7 +826,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/021-sp_nrt_case_count_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/021-sp_nrt_case_count_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -835,7 +835,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/020-create_nrt_investigation_case_management-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/020-create_nrt_investigation_case_management-001.sql
             splitStatements: false
   - changeSet:
       id: 63
@@ -843,7 +843,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/021-create_nrt_case_management_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/021-create_nrt_case_management_key-001.sql
             splitStatements: false
   - changeSet:
       id: 64
@@ -851,7 +851,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/022-sp_nrt_case_management_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/022-sp_nrt_case_management_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -860,7 +860,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/022-create_nrt_interview-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview-001.sql
             splitStatements: false
   - changeSet:
       id: 68
@@ -868,7 +868,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/022-create_nrt_metadata_columns-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_metadata_columns-001.sql
             splitStatements: false
   - changeSet:
       id: 69
@@ -876,7 +876,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/022-create_nrt_interview_note-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_note-001.sql
             splitStatements: false
   - changeSet:
       id: 70
@@ -884,7 +884,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/022-create_nrt_interview_answer-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 70.2
@@ -892,7 +892,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/026-create_nrt_srte_IMRDBMapping-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/026-create_nrt_srte_IMRDBMapping-001.sql
             splitStatements: false
   - changeSet:
       id: 70.3
@@ -900,7 +900,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/187-create_nrt_srte_State_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/187-create_nrt_srte_State_code-001.sql
             splitStatements: false
   - changeSet:
       id: 70.4
@@ -908,7 +908,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/095-create_nrt_srte_State_county_code_value-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/095-create_nrt_srte_State_county_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 70.5
@@ -916,7 +916,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/096-create_nrt_srte_Country_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/096-create_nrt_srte_Country_code-001.sql
             splitStatements: false
   - changeSet:
       id: 70.6
@@ -924,7 +924,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/097-create_nrt_srte_jurisdiction_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/097-create_nrt_srte_jurisdiction_code-001.sql
             splitStatements: false
   - changeSet:
       id: 71
@@ -932,7 +932,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/001-v_codeset-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/001-v_codeset-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -941,7 +941,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/002-v_getobscode-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/002-v_getobscode-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -950,7 +950,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/003-v_getobsdate-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/003-v_getobsdate-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -959,7 +959,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/004-v_getobsnum-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/004-v_getobsnum-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -968,7 +968,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/005-v_getobstxt-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/005-v_getobstxt-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -977,7 +977,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/023-sp_d_interview_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/023-sp_d_interview_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -986,7 +986,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/022-create_nrt_interview_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_key-001.sql
             splitStatements: false
   - changeSet:
       id: 77
@@ -994,7 +994,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/022-create_nrt_interview_note_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_note_key-001.sql
             splitStatements: false
   - changeSet:
       id: 79
@@ -1002,7 +1002,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/024-sp_f_interview_case_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/024-sp_f_interview_case_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1011,7 +1011,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/025-sp_f_std_page_case_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/025-sp_f_std_page_case_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1020,7 +1020,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/023-create_std_hiv_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/023-create_std_hiv_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 82
@@ -1028,7 +1028,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/024-create_inv_hiv-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/024-create_inv_hiv-001.sql
             splitStatements: false
   - changeSet:
       id: 83
@@ -1036,7 +1036,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/026-sp_std_hiv_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/026-sp_std_hiv_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1045,7 +1045,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/092-create_nrt_srte_Anatomic_site_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/092-create_nrt_srte_Anatomic_site_code-001.sql
             splitStatements: false
   - changeSet:
       id: 89.2
@@ -1053,7 +1053,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/093-create_nrt_srte_City_code_value-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/093-create_nrt_srte_City_code_value-001.sql
             splitStatements: false
   - changeSet:
       id: 89.3
@@ -1061,7 +1061,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/094-create_nrt_srte_Codeset_Group_Metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/094-create_nrt_srte_Codeset_Group_Metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 90
@@ -1069,7 +1069,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/006-v_nrt_srte_totalidm-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/006-v_nrt_srte_totalidm-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1078,7 +1078,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/007-v_code_value_general-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/007-v_code_value_general-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1087,7 +1087,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/031-create_nrt_auth_user-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/031-create_nrt_auth_user-001.sql
             splitStatements: false
   - changeSet:
       id: 98
@@ -1095,7 +1095,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/027-sp_user_profile_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/027-sp_user_profile_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1104,7 +1104,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/032-alter_lab_test-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/032-alter_lab_test-001.sql
             splitStatements: false
   - changeSet:
       id: 100
@@ -1112,7 +1112,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/033-create_nrt_place-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/033-create_nrt_place-001.sql
             splitStatements: false
   - changeSet:
       id: 101
@@ -1120,7 +1120,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/034-create_nrt_place_tele_001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/034-create_nrt_place_tele_001.sql
             splitStatements: false
   - changeSet:
       id: 102
@@ -1128,7 +1128,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/035-create_nrt_place_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/035-create_nrt_place_key-001.sql
             splitStatements: false
   - changeSet:
       id: 103
@@ -1136,7 +1136,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/028-sp_nrt_place_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/028-sp_nrt_place_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1145,7 +1145,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/009-v_nrt_inv_keys_attrs_mapping-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/009-v_nrt_inv_keys_attrs_mapping-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1154,7 +1154,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/010-v_rdb_obs_mapping-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/010-v_rdb_obs_mapping-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1163,7 +1163,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/029-sp_alter_datamart_schema_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/029-sp_alter_datamart_schema_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1172,7 +1172,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/030-sp_generic_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/030-sp_generic_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1181,7 +1181,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/031-sp_rubella_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/031-sp_rubella_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1190,7 +1190,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/032-sp_crs_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/032-sp_crs_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1199,7 +1199,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/033-sp_measles_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/033-sp_measles_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1208,7 +1208,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/242-create_case_lab_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/242-create_case_lab_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 111
@@ -1216,7 +1216,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/034-sp_case_lab_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/034-sp_case_lab_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1225,7 +1225,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/035-sp_repeated_place_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/035-sp_repeated_place_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1234,7 +1234,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/036-create_nrt_contact-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/036-create_nrt_contact-001.sql
             splitStatements: false
   - changeSet:
       id: 114
@@ -1242,7 +1242,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/037-create_nrt_contact_answer-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/037-create_nrt_contact_answer-001.sql
             splitStatements: false
   - changeSet:
       id: 115
@@ -1250,7 +1250,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/038-create_nrt_contact_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/038-create_nrt_contact_key-001.sql
             splitStatements: false
   - changeSet:
       id: 116
@@ -1258,7 +1258,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/036-sp_d_contact_record_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/036-sp_d_contact_record_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1267,7 +1267,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/253-create_nrt_odse_NBS_configuration-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/253-create_nrt_odse_NBS_configuration-001.sql
             splitStatements: false
   - changeSet:
       id: 117.1
@@ -1275,7 +1275,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/037-sp_event_metric_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/037-sp_event_metric_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1284,7 +1284,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/038-sp_f_contact_record_case_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/038-sp_f_contact_record_case_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1293,7 +1293,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/040-create_nrt_hepatitis_case_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/040-create_nrt_hepatitis_case_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 121
@@ -1301,7 +1301,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/041-create_nrt_hepatitis_case_multi_val_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/041-create_nrt_hepatitis_case_multi_val_key-001.sql
             splitStatements: false
   - changeSet:
       id: 122
@@ -1309,7 +1309,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/039-sp_hepatitis_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/039-sp_hepatitis_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1318,7 +1318,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/042-create_nrt_treatment-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/042-create_nrt_treatment-001.sql
             splitStatements: false
   - changeSet:
       id: 124
@@ -1326,7 +1326,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/043-create_nrt_antimicrobial_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/043-create_nrt_antimicrobial_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 125
@@ -1334,7 +1334,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/044-create_nrt_antimicrobial_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/044-create_nrt_antimicrobial_key-001.sql
             splitStatements: false
   - changeSet:
       id: 126
@@ -1342,7 +1342,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/045-create_nrt_bmird_multi_val_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/045-create_nrt_bmird_multi_val_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 127
@@ -1350,7 +1350,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/046-create_nrt_bmird_multi_val_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/046-create_nrt_bmird_multi_val_key-001.sql
             splitStatements: false
   - changeSet:
       id: 128
@@ -1358,7 +1358,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/040-sp_bmird_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/040-sp_bmird_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1367,7 +1367,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/002-fn_get_proper_case-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/002-fn_get_proper_case-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1376,7 +1376,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/042-sp_hep100_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/042-sp_hep100_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1385,7 +1385,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/047-create_nrt_pertussis_source_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/047-create_nrt_pertussis_source_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 132
@@ -1393,7 +1393,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/048-create_nrt_pertussis_source_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/048-create_nrt_pertussis_source_key-001.sql
             splitStatements: false
   - changeSet:
       id: 133
@@ -1401,7 +1401,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/049-create_nrt_pertussis_treatment_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/049-create_nrt_pertussis_treatment_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 134
@@ -1409,7 +1409,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/050-create_nrt_pertussis_treatment_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/050-create_nrt_pertussis_treatment_key-001.sql
             splitStatements: false
   - changeSet:
       id: 135
@@ -1417,7 +1417,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/043-sp_pertussis_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/043-sp_pertussis_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1426,7 +1426,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/044-sp_d_vaccination_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/044-sp_d_vaccination_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1435,7 +1435,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/075-create_d_disease_site_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/075-create_d_disease_site_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.02
@@ -1443,7 +1443,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/063-create_d_tb_pam-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/063-create_d_tb_pam-001.sql
             splitStatements: false
   - changeSet:
       id: 139.03
@@ -1451,7 +1451,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/081-create_d_addl_risk_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/081-create_d_addl_risk_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.04
@@ -1459,7 +1459,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/098-create_d_move_cntry_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/098-create_d_move_cntry_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.05
@@ -1467,7 +1467,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/105-create_d_gt_12_reas_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/105-create_d_gt_12_reas_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.06
@@ -1475,7 +1475,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/113-create_d_move_cnty_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/113-create_d_move_cnty_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.07
@@ -1483,7 +1483,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/121-create_d_hc_prov_ty_3_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/121-create_d_hc_prov_ty_3_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.08
@@ -1491,7 +1491,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/129-create_d_move_state_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/129-create_d_move_state_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.09
@@ -1499,7 +1499,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/137-create_d_out_of_cntry_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/137-create_d_out_of_cntry_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.10
@@ -1507,7 +1507,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/145-create_d_moved_where_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/145-create_d_moved_where_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.11
@@ -1515,7 +1515,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/153-create_d_smr_exam_ty_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/153-create_d_smr_exam_ty_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.12
@@ -1523,7 +1523,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/165-create_d_var_pam-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/165-create_d_var_pam-001.sql
             splitStatements: false
   - changeSet:
       id: 139.13
@@ -1531,7 +1531,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/175-create_d_rash_loc_gen_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/175-create_d_rash_loc_gen_group-001.sql
             splitStatements: false
   - changeSet:
       id: 139.14
@@ -1539,7 +1539,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/183-create_d_pcr_source_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/183-create_d_pcr_source_group-001.sql
             splitStatements: false
   - changeSet:
       id: 140
@@ -1547,7 +1547,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/054-create_f_var_pam-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/054-create_f_var_pam-001.sql
             splitStatements: false
   - changeSet:
       id: 141
@@ -1555,7 +1555,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/055-create-f_tb_pam-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/055-create-f_tb_pam-001.sql
             splitStatements: false
   - changeSet:
       id: 142
@@ -1563,7 +1563,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/045-sp_inv_summary_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/045-sp_inv_summary_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1572,7 +1572,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/046-sp_f_vaccination_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/046-sp_f_vaccination_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1581,7 +1581,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/056-create_treatment-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/056-create_treatment-001.sql
             splitStatements: false
   - changeSet:
       id: 145
@@ -1589,7 +1589,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/057-create_treatment_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/057-create_treatment_event-001.sql
             splitStatements: false
   - changeSet:
       id: 146
@@ -1597,7 +1597,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/058-create_nrt_treatment_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/058-create_nrt_treatment_key-001.sql
             splitStatements: false
   - changeSet:
       id: 147
@@ -1605,7 +1605,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/059-create_summary_report_group-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/059-create_summary_report_group-001.sql
             splitStatements: false
   - changeSet:
       id: 148
@@ -1613,7 +1613,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/060-create-summary-report-case-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/060-create-summary-report-case-001.sql
             splitStatements: false
   - changeSet:
       id: 149
@@ -1621,7 +1621,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/190-create_nrt_odse_page_cond_mapping-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/190-create_nrt_odse_page_cond_mapping-001.sql
             splitStatements: false
   - changeSet:
       id: 150
@@ -1629,7 +1629,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/191-create_nrt_odse_nbs_page-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/191-create_nrt_odse_nbs_page-001.sql
             splitStatements: false
   - changeSet:
       id: 151
@@ -1637,7 +1637,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/193-create_nrt_odse_nbs_rdb_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/193-create_nrt_odse_nbs_rdb_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 152
@@ -1645,7 +1645,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/011-v_nrt_nbs_page-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/011-v_nrt_nbs_page-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1654,7 +1654,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/012-v_nrt_odse_NBS_rdb_metadata_recent-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/012-v_nrt_odse_NBS_rdb_metadata_recent-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1663,7 +1663,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/013-v_nrt_nbs_investigation_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/013-v_nrt_nbs_investigation_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1672,7 +1672,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/014-v_nrt_nbs_d_case_mgmt_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/014-v_nrt_nbs_d_case_mgmt_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1681,7 +1681,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/015-v_nrt_d_inv_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/015-v_nrt_d_inv_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1690,7 +1690,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/016-v_nrt_d_provider_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/016-v_nrt_d_provider_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1699,7 +1699,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/017-v_nrt_nbs_d_organization_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/017-v_nrt_nbs_d_organization_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1708,7 +1708,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/115-sp_dyn_dm_invest_form_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/115-sp_dyn_dm_invest_form_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1717,7 +1717,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/018-v_nrt_nbs_d_patient_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/018-v_nrt_nbs_d_patient_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1726,7 +1726,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/130-sp_dyn_dm_case_management_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/130-sp_dyn_dm_case_management_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1735,7 +1735,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/125-sp_dyn_dm_page_builder_d_inv_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/125-sp_dyn_dm_page_builder_d_inv_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1744,7 +1744,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/120-sp_dyn_dm_provider_data_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/120-sp_dyn_dm_provider_data_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1753,7 +1753,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/135-sp_dyn_dm_org_data_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/135-sp_dyn_dm_org_data_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1763,7 +1763,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/047-sp_nrt_treatment_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/047-sp_nrt_treatment_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1772,7 +1772,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/061-create-bmird_strep_pneumo_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/061-create-bmird_strep_pneumo_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 190
@@ -1780,7 +1780,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/140-sp_bmird_strep_pneumo_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1789,7 +1789,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/080-create_d_disease_site-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/080-create_d_disease_site-001.sql
             splitStatements: false
   - changeSet:
       id: 205
@@ -1797,7 +1797,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/065-create_nrt_disease_site_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/065-create_nrt_disease_site_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 210
@@ -1805,7 +1805,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/070-create_nrt_disease_site_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/070-create_nrt_disease_site_key-001.sql
             splitStatements: false
   - changeSet:
       id: 215
@@ -1813,7 +1813,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/145-sp_nrt_d_disease_site_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/145-sp_nrt_d_disease_site_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1822,7 +1822,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/062-create_morbidity_report_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/062-create_morbidity_report_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 225
@@ -1830,7 +1830,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/048-sp_morbidity_report_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/048-sp_morbidity_report_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1839,7 +1839,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/085-create_nrt_summary_case_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/085-create_nrt_summary_case_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 235
@@ -1847,7 +1847,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/150-sp_summary_report_case_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/150-sp_summary_report_case_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1856,7 +1856,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/090-create_sr100-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/090-create_sr100-001.sql
             splitStatements: false
   - changeSet:
       id: 245
@@ -1864,7 +1864,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/155-sp_sr100_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/155-sp_sr100_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1873,7 +1873,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/064-create_nrt_d_tb_pam_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/064-create_nrt_d_tb_pam_key-001.sql
             splitStatements: false
   - changeSet:
       id: 260
@@ -1881,7 +1881,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/147-sp_nrt_d_tb_pam_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/147-sp_nrt_d_tb_pam_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1890,7 +1890,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/082-create_d_addl_risk-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/082-create_d_addl_risk-001.sql
             splitStatements: false
   - changeSet:
       id: 275
@@ -1898,7 +1898,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/083-create_nrt_addl_risk_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/083-create_nrt_addl_risk_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 280
@@ -1906,7 +1906,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/084-create_nrt_addl_risk_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/084-create_nrt_addl_risk_key-001.sql
             splitStatements: false
   - changeSet:
       id: 285
@@ -1914,7 +1914,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/146-sp_nrt_d_addl_risk_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/146-sp_nrt_d_addl_risk_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1923,7 +1923,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/086-create_d_tb_hiv-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/086-create_d_tb_hiv-001.sql
             splitStatements: false
   - changeSet:
       id: 295
@@ -1931,7 +1931,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/087-create_nrt_d_tb_hiv_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/087-create_nrt_d_tb_hiv_key-001.sql
             splitStatements: false
   - changeSet:
       id: 300
@@ -1939,7 +1939,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/160-sp_nrt_d_tb_hiv_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/160-sp_nrt_d_tb_hiv_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1948,7 +1948,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/088-create_nrt_investigation_aggregate-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/088-create_nrt_investigation_aggregate-001.sql
             splitStatements: false
   - changeSet:
       id: 310
@@ -1956,7 +1956,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/091-create_aggregate_report_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/091-create_aggregate_report_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 315
@@ -1964,7 +1964,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/050-sp_aggregate_report_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/050-sp_aggregate_report_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -1973,7 +1973,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/099-create_d_move_cntry-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/099-create_d_move_cntry-001.sql
             splitStatements: false
   - changeSet:
       id: 360
@@ -1981,7 +1981,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/100-create_nrt_move_cntry_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/100-create_nrt_move_cntry_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 365
@@ -1989,7 +1989,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/101-create_nrt_move_cntry_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/101-create_nrt_move_cntry_key-001.sql
             splitStatements: false
   - changeSet:
       id: 370
@@ -1997,7 +1997,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/156-sp_nrt_d_move_cntry_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/156-sp_nrt_d_move_cntry_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2006,7 +2006,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/106-create_d_gt_12_reas-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/106-create_d_gt_12_reas-001.sql
             splitStatements: false
   - changeSet:
       id: 385
@@ -2014,7 +2014,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/107-create_nrt_d_gt_12_reas_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/107-create_nrt_d_gt_12_reas_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 390
@@ -2022,7 +2022,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/108-create_nrt_d_gt_12_reas_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/108-create_nrt_d_gt_12_reas_key-001.sql
             splitStatements: false
   - changeSet:
       id: 395
@@ -2030,7 +2030,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/170-sp_nrt_d_gt_12_reas_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/170-sp_nrt_d_gt_12_reas_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2039,7 +2039,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/114-create_d_move_cnty-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/114-create_d_move_cnty-001.sql
             splitStatements: false
   - changeSet:
       id: 410
@@ -2047,7 +2047,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/115-create_nrt_move_cnty_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/115-create_nrt_move_cnty_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 415
@@ -2055,7 +2055,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/116-create_nrt_move_cnty_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/116-create_nrt_move_cnty_key-001.sql
             splitStatements: false
   - changeSet:
       id: 420
@@ -2063,7 +2063,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/175-sp_nrt_d_move_cnty_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/175-sp_nrt_d_move_cnty_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2072,7 +2072,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/122-create_d_hc_prov_ty_3-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/122-create_d_hc_prov_ty_3-001.sql
             splitStatements: false
   - changeSet:
       id: 435
@@ -2080,7 +2080,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/123-create_nrt_d_hc_prov_ty_3_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/123-create_nrt_d_hc_prov_ty_3_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 440
@@ -2088,7 +2088,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/124-create_nrt_d_hc_prov_ty_3_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/124-create_nrt_d_hc_prov_ty_3_key-001.sql
             splitStatements: false
   - changeSet:
       id: 445
@@ -2096,7 +2096,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/180-sp_nrt_d_hc_prov_ty_3_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/180-sp_nrt_d_hc_prov_ty_3_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2105,7 +2105,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/130-create_d_move_state-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/130-create_d_move_state-001.sql
             splitStatements: false
   - changeSet:
       id: 460
@@ -2113,7 +2113,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/131-create_nrt_move_state_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/131-create_nrt_move_state_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 465
@@ -2121,7 +2121,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/132-create_nrt_move_state_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/132-create_nrt_move_state_key-001.sql
             splitStatements: false
   - changeSet:
       id: 470
@@ -2129,7 +2129,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/185-sp_nrt_d_move_state_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/185-sp_nrt_d_move_state_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2138,7 +2138,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/138-create_d_out_of_cntry-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/138-create_d_out_of_cntry-001.sql
             splitStatements: false
   - changeSet:
       id: 485
@@ -2146,7 +2146,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/139-create_nrt_d_out_of_cntry_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/139-create_nrt_d_out_of_cntry_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 490
@@ -2154,7 +2154,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/140-create_nrt_d_out_of_cntry_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/140-create_nrt_d_out_of_cntry_key-001.sql
             splitStatements: false
   - changeSet:
       id: 495
@@ -2162,7 +2162,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/190-sp_nrt_d_out_of_cntry_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/190-sp_nrt_d_out_of_cntry_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2171,7 +2171,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/146-create_d_moved_where-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/146-create_d_moved_where-001.sql
             splitStatements: false
   - changeSet:
       id: 510
@@ -2179,7 +2179,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/147-create_nrt_moved_where_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/147-create_nrt_moved_where_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 515
@@ -2187,7 +2187,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/148-create_nrt_moved_where_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/148-create_nrt_moved_where_key-001.sql
             splitStatements: false
   - changeSet:
       id: 520
@@ -2195,7 +2195,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/195-sp_nrt_d_moved_where_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/195-sp_nrt_d_moved_where_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2204,7 +2204,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/154-create_d_smr_exam_ty-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/154-create_d_smr_exam_ty-001.sql
             splitStatements: false
   - changeSet:
       id: 535
@@ -2212,7 +2212,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/155-create_nrt_d_smr_exam_ty_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/155-create_nrt_d_smr_exam_ty_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 540
@@ -2220,7 +2220,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/156-create_nrt_d_smr_exam_ty_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/156-create_nrt_d_smr_exam_ty_key-001.sql
             splitStatements: false
   - changeSet:
       id: 545
@@ -2228,7 +2228,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/200-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/200-sp_nrt_d_smr_exam_ty_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2237,7 +2237,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/019-v_nrt_nbs_repeatvarch_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/019-v_nrt_nbs_repeatvarch_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2246,7 +2246,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/021-v_nrt_d_inv_repeat_blockdata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/021-v_nrt_d_inv_repeat_blockdata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2255,7 +2255,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/205-sp_dyn_dm_repeatvarch_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2264,7 +2264,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/206-sp_f_tb_pam_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/206-sp_f_tb_pam_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2273,7 +2273,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/166-create_nrt_var_pam_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/166-create_nrt_var_pam_key-001.sql
             splitStatements: false
   - changeSet:
       id: 575
@@ -2281,7 +2281,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/215-sp_nrt_d_var_pam_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/215-sp_nrt_d_var_pam_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2290,7 +2290,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/022-v_nrt_d_inv_repeat_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/022-v_nrt_d_inv_repeat_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2299,7 +2299,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/210-sp_dyn_dm_repeatdate_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/210-sp_dyn_dm_repeatdate_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2308,7 +2308,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/020-v_nrt_srte_state_code-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/020-v_nrt_srte_state_code-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2317,7 +2317,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/171-create_tb_pam_ldf-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/171-create_tb_pam_ldf-001.sql
             splitStatements: false
   - changeSet:
       id: 586
@@ -2325,7 +2325,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/220-sp_nrt_tb_pam_ldf_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2334,7 +2334,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/172-create_nrt_srte_code_value_clinical-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/172-create_nrt_srte_code_value_clinical-001.sql
             splitStatements: false
   - changeSet:
       id: 595
@@ -2342,7 +2342,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/225-sp_dyn_dm_main_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/225-sp_dyn_dm_main_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2351,7 +2351,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/176-create_d_rash_loc_gen-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/176-create_d_rash_loc_gen-001.sql
             splitStatements: false
   - changeSet:
       id: 605
@@ -2359,7 +2359,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/177-create_nrt_rash_loc_gen_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/177-create_nrt_rash_loc_gen_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 610
@@ -2367,7 +2367,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/178-create_nrt_rash_loc_gen_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/178-create_nrt_rash_loc_gen_key-001.sql
             splitStatements: false
   - changeSet:
       id: 615
@@ -2375,7 +2375,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/225-sp_nrt_d_rash_loc_gen_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/225-sp_nrt_d_rash_loc_gen_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2384,7 +2384,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/184-create_d_pcr_source-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/184-create_d_pcr_source-001.sql
             splitStatements: false
   - changeSet:
       id: 625
@@ -2392,7 +2392,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/185-create_nrt_d_pcr_source_group_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/185-create_nrt_d_pcr_source_group_key-001.sql
             splitStatements: false
   - changeSet:
       id: 630
@@ -2400,7 +2400,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/186-create_nrt_d_pcr_source_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/186-create_nrt_d_pcr_source_key-001.sql
             splitStatements: false
   - changeSet:
       id: 635
@@ -2408,7 +2408,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/230-sp_nrt_d_pcr_source_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/230-sp_nrt_d_pcr_source_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2417,7 +2417,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/023-v_nrt_nbs_repeatnumeric_rdb_table_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/023-v_nrt_nbs_repeatnumeric_rdb_table_metadata-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2426,7 +2426,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/235-sp_dyn_dm_repeatnumeric_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/235-sp_dyn_dm_repeatnumeric_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2435,7 +2435,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/240-sp_f_var_pam_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/240-sp_f_var_pam_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
 
@@ -2445,7 +2445,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/245-sp_dyn_dm_createdm_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/245-sp_dyn_dm_createdm_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2454,7 +2454,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/189-create_var_pam_ldf-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/189-create_var_pam_ldf-001.sql
             splitStatements: false
   - changeSet:
       id: 680
@@ -2462,7 +2462,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/235-sp_nrt_var_pam_ldf_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/235-sp_nrt_var_pam_ldf_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2471,7 +2471,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/250-sp_var_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/250-sp_var_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2480,7 +2480,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/195-create_tb_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/195-create_tb_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 700
@@ -2488,7 +2488,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/255-sp_tb_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/255-sp_tb_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2497,7 +2497,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/196-create_tb_hiv_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/196-create_tb_hiv_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 710
@@ -2505,7 +2505,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/260-sp_tb_hiv_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/260-sp_tb_hiv_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2514,7 +2514,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/250-sp_dyn_dm_invest_clear_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/250-sp_dyn_dm_invest_clear_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2523,7 +2523,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/232-create_ldf_datamart_column_ref-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/232-create_ldf_datamart_column_ref-001.sql
             splitStatements: false
   - changeSet:
       id: 730
@@ -2531,7 +2531,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/233-create_d_ldf_meta_data-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/233-create_d_ldf_meta_data-001.sql
             splitStatements: false
   - changeSet:
       id: 735
@@ -2539,7 +2539,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/234-create_ldf_dimensional_data-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/234-create_ldf_dimensional_data-001.sql
             splitStatements: false
   - changeSet:
       id: 740
@@ -2547,7 +2547,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/265-sp_nrt_ldf_dimensional_data_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2556,7 +2556,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/235-create_ldf_generic-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/235-create_ldf_generic-001.sql
             splitStatements: false
   - changeSet:
       id: 755
@@ -2564,7 +2564,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/236-create_ldf_generic1-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/236-create_ldf_generic1-001.sql
             splitStatements: false
   - changeSet:
       id: 760
@@ -2572,7 +2572,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/237-create_ldf_generic2-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/237-create_ldf_generic2-001.sql
             splitStatements: false
   - changeSet:
       id: 765
@@ -2580,7 +2580,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/270-sp_merge_tables-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/270-sp_merge_tables-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2589,7 +2589,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/275-sp_execute_ldf_generic-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/275-sp_execute_ldf_generic-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2598,7 +2598,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/280-sp_ldf_generic_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/280-sp_ldf_generic_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2607,7 +2607,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/238-create_ldf_bmird-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/238-create_ldf_bmird-001.sql
             splitStatements: false
   - changeSet:
       id: 785
@@ -2615,7 +2615,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/285-sp_ldf_bmird_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/285-sp_ldf_bmird_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2624,7 +2624,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/239-create_ldf_foodborne-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/239-create_ldf_foodborne-001.sql
             splitStatements: false
   - changeSet:
       id: 795
@@ -2632,7 +2632,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/290-sp_ldf_foodborne_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/290-sp_ldf_foodborne_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2641,7 +2641,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/240-create_ldf_mumps-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/240-create_ldf_mumps-001.sql
             splitStatements: false
   - changeSet:
       id: 805
@@ -2649,7 +2649,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/295-sp_ldf_mumps_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/295-sp_ldf_mumps_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2658,7 +2658,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/241-create_ldf_tetanus-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/241-create_ldf_tetanus-001.sql
             splitStatements: false
   - changeSet:
       id: 815
@@ -2666,7 +2666,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/300-sp_ldf_tetanus_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/300-sp_ldf_tetanus_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2675,7 +2675,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/242-create_ldf_vaccine_prevent_diseases-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/242-create_ldf_vaccine_prevent_diseases-001.sql
             splitStatements: false
   - changeSet:
       id: 825
@@ -2683,7 +2683,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/305-sp_ldf_vaccine_prevent_diseases_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2692,7 +2692,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/310-sp_covid_case_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/310-sp_covid_case_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2701,7 +2701,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/244-create_covid_contact_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/244-create_covid_contact_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 840
@@ -2709,7 +2709,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/315-sp_covid_contact_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/315-sp_covid_contact_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2718,7 +2718,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/320-sp_covid_vaccination_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/320-sp_covid_vaccination_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2727,7 +2727,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/245-create_ldf_hepatitis-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/245-create_ldf_hepatitis-001.sql
             splitStatements: false
   - changeSet:
       id: 855
@@ -2735,7 +2735,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/320-sp_ldf_hepatitis_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/320-sp_ldf_hepatitis_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2744,7 +2744,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/246-create_covid_lab_celr_datamart-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/246-create_covid_lab_celr_datamart-001.sql
             splitStatements: false
   - changeSet:
       id: 865
@@ -2752,7 +2752,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/325-sp_covid_lab_celr_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/325-sp_covid_lab_celr_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2761,7 +2761,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/256-create_nrt_odse_lookup_question-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/256-create_nrt_odse_lookup_question-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2770,7 +2770,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/330-sp_covid_lab_datamart_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/330-sp_covid_lab_datamart_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2779,7 +2779,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/247-create_nrt_dyn_dm_column_metadata-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/247-create_nrt_dyn_dm_column_metadata-001.sql
             splitStatements: false
   - changeSet:
       id: 875
@@ -2787,7 +2787,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/335-sp_nrt_odse_nbs_page_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/335-sp_nrt_odse_nbs_page_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2796,7 +2796,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/252-create_nrt_condition_key-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/252-create_nrt_condition_key-001.sql
             splitStatements: true
   - changeSet:
       id: 885
@@ -2804,7 +2804,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/340-sp_nrt_srte_condition_code_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/340-sp_nrt_srte_condition_code_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2813,7 +2813,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/345-sp_event_metric_cleanup_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/345-sp_event_metric_cleanup_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2822,7 +2822,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/254-create_nrt_delete_job_log-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/254-create_nrt_delete_job_log-001.sql
             splitStatements: false
   - changeSet:
       id: 900
@@ -2830,7 +2830,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/350-sp_batch_id_cleanup_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/350-sp_batch_id_cleanup_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2839,7 +2839,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/360-sp_nrt_backfill_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/360-sp_nrt_backfill_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2848,7 +2848,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/365-sp_dyn_dm_dimension_update-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/365-sp_dyn_dm_dimension_update-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2857,7 +2857,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/002-sp_nrt_organization_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/002-sp_nrt_organization_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2866,7 +2866,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/003-sp_nrt_provider_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/003-sp_nrt_provider_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2875,7 +2875,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/004-sp_nrt_patient_postprocessing-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/004-sp_nrt_patient_postprocessing-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2884,7 +2884,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/257-create_nrt_dead_letter_log-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/257-create_nrt_dead_letter_log-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2893,7 +2893,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/051-sp_organization_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/051-sp_organization_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2902,7 +2902,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/052-sp_provider_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/052-sp_provider_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2911,7 +2911,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/053-sp_patient_race_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/053-sp_patient_race_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2920,7 +2920,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/054-sp_patient_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/054-sp_patient_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2929,7 +2929,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/055-sp_observation_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/055-sp_observation_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2938,7 +2938,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/056-sp_investigation_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/056-sp_investigation_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2947,7 +2947,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/057-sp_ldf_provider_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/057-sp_ldf_provider_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2956,7 +2956,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/058-sp_ldf_organization_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/058-sp_ldf_organization_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2965,7 +2965,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/059-sp_ldf_patient_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/059-sp_ldf_patient_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2974,7 +2974,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/060-sp_ldf_observation_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/060-sp_ldf_observation_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2983,7 +2983,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/061-sp_ldf_phc_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/061-sp_ldf_phc_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -2992,7 +2992,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/062-sp_ldf_intervention_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/062-sp_ldf_intervention_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3001,7 +3001,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/063-sp_ldf_data_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/063-sp_ldf_data_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3010,7 +3010,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/064-sp_notification_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/064-sp_notification_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3019,7 +3019,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/065-sp_interview_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/065-sp_interview_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3028,7 +3028,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/066-sp_user_report_permissions-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/066-sp_user_report_permissions-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3037,7 +3037,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/067-sp_auth_user_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/067-sp_auth_user_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3046,7 +3046,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/068-sp_place_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/068-sp_place_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3055,7 +3055,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/069-sp_contact_record_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/069-sp_contact_record_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3064,7 +3064,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/070-sp_treatment_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/070-sp_treatment_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3073,7 +3073,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/071-sp_vaccination_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/071-sp_vaccination_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3082,7 +3082,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/072-sp_public_health_case_fact_datamart_event-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/072-sp_public_health_case_fact_datamart_event-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3091,7 +3091,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/routines/073-sp_public_health_case_fact_datamart_update-001.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/073-sp_public_health_case_fact_datamart_update-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3100,7 +3100,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/003-fn_get_value_by_cd_ques-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/003-fn_get_value_by_cd_ques-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3109,7 +3109,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/004-fn_get_value_by_cvg-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/004-fn_get_value_by_cvg-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3118,7 +3118,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/005-fn_get_user_name-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/005-fn_get_user_name-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3127,7 +3127,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/006-fn_get_value_by_cd_codeset-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/006-fn_get_value_by_cd_codeset-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3136,7 +3136,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/007-fn_get_record_status-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/007-fn_get_record_status-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3145,7 +3145,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/functions/008-fn_get_value_to_pascal_case-001.sql
+            path: db/changelog/migrations/v7.13/rdb/functions/008-fn_get_value_to_pascal_case-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3154,7 +3154,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/258-create_rdb_date-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/258-create_rdb_date-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3163,7 +3163,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/259-alter_d_vaccination_add_vaccination_administered_cd-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/259-alter_d_vaccination_add_vaccination_administered_cd-001.sql
             splitStatements: false
   - changeSet:
       id: 958
@@ -3171,7 +3171,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/025-v_inv_form_code_data-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/025-v_inv_form_code_data-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3180,7 +3180,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/026-v_rdb_ui_metadata_answers-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/026-v_rdb_ui_metadata_answers-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3189,7 +3189,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/027-v_rdb_ui_metadata_answers_contact-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/027-v_rdb_ui_metadata_answers_contact-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3198,7 +3198,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/views/028-v_rdb_ui_metadata_answers_vaccination-001.sql
+            path: db/changelog/migrations/v7.13/rdb/views/028-v_rdb_ui_metadata_answers_vaccination-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3208,7 +3208,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/onboarding/000-nrt_metadata_load-001.sql
+            path: db/changelog/migrations/v7.13/rdb/onboarding/000-nrt_metadata_load-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3218,7 +3218,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/onboarding/001-nrt_keys_backfill-001.sql
+            path: db/changelog/migrations/v7.13/rdb/onboarding/001-nrt_keys_backfill-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3228,7 +3228,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/onboarding/002-rdb_date_seed-001.sql
+            path: db/changelog/migrations/v7.13/rdb/onboarding/002-rdb_date_seed-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3238,7 +3238,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/onboarding/003-unknown_member_seeds-001.sql
+            path: db/changelog/migrations/v7.13/rdb/onboarding/003-unknown_member_seeds-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3248,7 +3248,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/onboarding/1000-nrt_indexes-001.sql
+            path: db/changelog/migrations/v7.13/rdb/onboarding/1000-nrt_indexes-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3258,7 +3258,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/259-create_lab100-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/259-create_lab100-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3268,7 +3268,7 @@ databaseChangeLog:
       runInTransaction: false
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/260-create_labtest-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/260-create_labtest-001.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
@@ -3277,5 +3277,5 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v17.3/rdb/tables/261-alter_std_hiv_case_management_widths-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/261-alter_std_hiv_case_management_widths-001.sql
             splitStatements: false
