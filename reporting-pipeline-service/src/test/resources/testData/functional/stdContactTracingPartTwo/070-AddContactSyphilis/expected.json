@@ -1172,5 +1172,61 @@
       "RECORD_STATUS_CD": "ACTIVE",
       "TREATMENT_COUNT": 1
     }
+  ],
+  "53": [
+    {
+      "INV_LOCAL_ID": "CAS1000009024GA01",
+      "PATIENT_LOCAL_ID": "PSN1000009020GA01",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "PROGRAM_AREA": "STD",
+      "JURISDICTION_NM": "Fulton County",
+      "INVESTIGATION_STATUS": "Open",
+      "CURR_PROCESS_STATE": "Field Follow-up",
+      "EVENT_DATE": "2026-04-25T00:00:00.000",
+      "EVENT_DATE_TYPE": "Investigation Start Date",
+      "INV_START_DT": "2026-04-25T00:00:00.000",
+      "INV_ASSIGNED_DT": "2026-04-25T00:00:00.000",
+      "REFERRAL_BASIS": "P1 - Partner, Sex",
+      "PATIENT_FIRST_NAME": "FredContact",
+      "PATIENT_CURRENT_SEX": "Male",
+      "PATIENT_RACE_CALC": "White",
+      "PATIENT_DECEASED_IND": "No",
+      "EPI_LINK_ID": "1310000026",
+      "FL_FUP_FIELD_REC_NUM": "1310000126",
+      "FL_FUP_INIT_ASSGN_DT": "2026-04-25",
+      "FL_FUP_INVTGR_ASGN_DT": "2026-04-25",
+      "INIT_FUP_INIT_FUP_ACT": "FF",
+      "INIT_FUP_NOTIFIABLE": "06",
+      "CASE_RPT_MMWR_WK": 16,
+      "CASE_RPT_MMWR_YR": 2026
+    }
+  ],
+  "54": [
+    {
+      "INV_LOCAL_ID": "CAS1000009017GA01",
+      "PATIENT_LOCAL_ID": "PSN1000009000GA01",
+      "DISEASE": "Syphilis, secondary",
+      "DISEASE_CD": "10312",
+      "PROGRAM_AREA": "STD",
+      "JURISDICTION_NM": "Fulton County",
+      "INV_CASE_STATUS": "Confirmed",
+      "INVESTIGATION_STATUS": "Open",
+      "CONFIRMATION_METHOD": "Laboratory confirmed",
+      "DIAGNOSIS_DT": "2026-04-21T00:00:00.000",
+      "TREATMENT_DATE": "2026-04-20",
+      "PATIENT_FIRST_NAME": "Taylor",
+      "PATIENT_LAST_NAME": "Swift_fake77gg",
+      "PATIENT_DOB": "1985-03-17T00:00:00.000",
+      "PATIENT_CURRENT_SEX": "Female",
+      "PATIENT_COUNTY": "Fulton County",
+      "CA_PATIENT_INTV_STAT": "I - Interviewed",
+      "FL_FUP_DISPOSITION_CD": "C",
+      "FL_FUP_NOT_PLAN_CD": "3",
+      "SURV_PAT_FOLL_UP_STAT": "Field Follow-up",
+      "REFERRAL_BASIS": "T1 - Positive Test",
+      "TRANSMISSION_MODE": "Sexually Transmitted",
+      "CURR_PROCESS_STATE": "Open Case"
+    }
   ]
 }
