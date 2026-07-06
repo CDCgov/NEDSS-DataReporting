@@ -14,6 +14,7 @@ from .runner import (
     DEFAULT_RETRY_DELAY,
     Database,
     QueryResult,
+    StepResult,
     TestResult,
     discover_tests,
     parse_address,
@@ -155,6 +156,12 @@ def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentPar
         help="Stop after the first failing test.",
     )
     parser.add_argument(
+        "--pause",
+        action="store_true",
+        help="Pause and wait for Enter after each step completes (Ctrl-C to abort), so "
+        "you can inspect the database between steps.",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Live-print each query's SQL and its expected vs actual results on every poll "
@@ -278,6 +285,16 @@ def main(argv: list[str] | None = None) -> int:
             _print_query_detail(index, query, expected, actual, note)
             sys.stdout.flush()
 
+    def on_step_complete(step: StepResult) -> None:
+        if not args.pause:
+            return
+        try:
+            input(_dim(f"      -- step {step.name} done; press Enter to continue "
+                       "(Ctrl-C to abort) --"))
+        except EOFError:
+            # No interactive stdin (e.g. piped input) — don't block.
+            pass
+
     results: list[TestResult] = []
     try:
         for test_dir in test_dirs:
@@ -293,6 +310,7 @@ def main(argv: list[str] | None = None) -> int:
                 shift_id=args.shift_id,
                 on_query=on_query,
                 on_poll=on_poll,
+                on_step_complete=on_step_complete,
             )
             results.append(result)
             _print_test_result(result)
