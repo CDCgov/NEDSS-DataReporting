@@ -1,0 +1,21 @@
+{
+  "0": [
+    {
+      "auth_user_uid": 1000012000,
+      "user_id": "ada.lovelace",
+      "first_nm": "Ada",
+      "last_nm": "Lovelace",
+      "nedss_entry_id": 1000012000,
+      "record_status_cd": "ACTIVE"
+    }
+  ],
+  "1": [
+    {
+      "FIRST_NM": "Ada",
+      "LAST_NM": "Lovelace",
+      "NEDSS_ENTRY_ID": 1000012000,
+      "PROVIDER_KEY": 1,
+      "USER_NM": "Lovelace, Ada"
+    }
+  ]
+}

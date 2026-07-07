@@ -61,3 +61,13 @@ You were right to push on this — running the actual `test-unit`/`test-function
 All code changes (including the `NrtPatient` fix) are in the working tree, uncommitted, per your earlier instructions.
 
 Separately: that summary turned out to be wrong on point 4 — a follow-up XML parsing bug on my end misidentified which tests were failing. The real 2 failures were stdContactTracing and stdContactTracingPartTwo, and I traced them to a genuine regression (postprocessing stored procs running synchronously on the single-threaded prsExecutor, blocking message throughput). I've applied a fix (dispatching async via rtrExecutor, matching the existing PHC-fact-datamart pattern) and the full test-functional re-run is still in progress in the background — I'll report back once it completes.
+
+## Failing Functional Tests 07/07/2026
+Root cause: direct-write `patient/provider/auth-user` postprocessing called the stored procedures directly and independently (via `PersonService` + `rtrExecutor`), completely decoupled from PostProcessingService's shared, priority-ordered batch pipeline that investigation/case_management processing still runs through unchanged. That shared pipeline is what guaranteed patient-dimension hydration (`D_PATIENT`, priority 5) completes before investigation-side procs like `sp_std_hiv_datamart_postprocessing` (priority 8/11) that `LEFT JOIN` against it. Losing that ordering caused `sp_std_hiv_datamart_postprocessing` to intermittently error out against a not-yet-updated patient dimension, leaving fields like `CA_PATIENT_INTV_STATUS`/`CURR_PROCESS_STATE` stuck stale.
+
+Fix: PersonService now calls `PostProcessingService.processNrtMessage(topic, key, payload)` directly — the same method Kafka delivers to for Kafka-Connect-sourced `nrt.*` messages — instead of calling the postprocessing stored procs itself. This feeds `patient`/`provider`/`auth-user` IDs into the exact same cache, batching, priority-sort, and datamart-routing logic that investigation/case_management already goes through, restoring the ordering guarantee with no Kafka round-trip and no duplicate stored-proc calls. This let me delete the TransactionSynchronization machinery and the direct `PostProcRepository`/`ProcessDatamartData` wiring I'd added earlier — much simpler than my two prior (unsuccessful) attempts.
+
+Verified:
+- Confirmed causally with `PERSON_SERVICE_DIRECT_WRITE=false` (both scenarios pass on the Kafka-Connect path) vs. `=true` (fails) before the fix.
+- Confirmed the failure was present even with my new `auth_user` test excluded (11 original scenarios) — ruling out capacity/load entirely.
+- After the fix: `test-functional` 12/12 pass, `test-unit` 25/25 pass, `PersonServiceTest` all pass.

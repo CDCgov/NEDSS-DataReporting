@@ -22,7 +22,7 @@ import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonType;
-import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
+import gov.cdc.nbs.report.pipeline.postprocessing.service.PostProcessingService;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
@@ -55,8 +55,6 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Service class for processing Person-related change events in the Real Time Reporting (RTR)
@@ -86,7 +84,13 @@ public class PersonService {
   private final NrtPatientRepository nrtPatientRepository;
   private final NrtProviderRepository nrtProviderRepository;
   private final NrtAuthUserRepository nrtAuthUserRepository;
-  private final PostProcRepository postProcRepository;
+
+  // Feeds the same shared, priority-ordered postprocessing pipeline that Kafka-Connect-sourced
+  // nrt_* messages already go through, instead of calling the postprocessing stored procedures
+  // directly. This keeps direct-write patients/providers/auth-users on the same batching/ordering
+  // guarantees relative to investigation/case_management processing (see APP-787).
+  private final PostProcessingService postProcessingService;
+
   private final PersonTransformers transformer;
 
   @Qualifier("personKafkaTemplate")
@@ -131,6 +135,10 @@ public class PersonService {
   private static final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
   private static String topicDebugLog = "Received {} with id: {} from topic: {}";
+
+  // PostProcessingService.processNrtMessage only inspects the payload for investigation/
+  // notification/observation topics; patient/provider/auth-user don't need one.
+  private static final String NO_PAYLOAD = "{}";
 
   private static final String SERVICE_NAME = "person-reporting";
 
@@ -255,6 +263,8 @@ public class PersonService {
             nrtProviderRepository.save(NrtProvider.from(reporting));
             log.info(
                 "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
+            postProcessingService.processNrtMessage(
+                providerReportingOutputTopic, transformer.buildProviderKey(provider), NO_PAYLOAD);
           } else {
             String reportingKey = transformer.buildProviderKey(provider);
             String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
@@ -278,16 +288,6 @@ public class PersonService {
             log.debug("Provider Elastic: {}", elasticData != null ? elasticData : "");
           }
         });
-
-    if (directWrite) {
-      String allUids =
-          providerData.stream()
-              .map(ProviderSp::getPersonUid)
-              .map(String::valueOf)
-              .collect(Collectors.joining(","));
-      CompletableFuture.runAsync(
-          () -> postProcRepository.executeStoredProcForProviderIds(allUids), rtrExecutor);
-    }
   }
 
   private void processPatientData(List<PatientSp> patientData) {
@@ -311,6 +311,8 @@ public class PersonService {
             nrtPatientRepository.save(NrtPatient.from(reporting));
             log.info(
                 "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
+            postProcessingService.processNrtMessage(
+                patientReportingOutputTopic, transformer.buildPatientKey(personData), NO_PAYLOAD);
           } else {
             String reportingKey = transformer.buildPatientKey(personData);
             String reportingData =
@@ -335,16 +337,6 @@ public class PersonService {
             log.debug("Patient Elastic: {}", elasticData != null ? elasticData : "");
           }
         });
-
-    if (directWrite) {
-      String allUids =
-          patientData.stream()
-              .map(PatientSp::getPersonUid)
-              .map(String::valueOf)
-              .collect(Collectors.joining(","));
-      CompletableFuture.runAsync(
-          () -> postProcRepository.executeStoredProcForPatientIds(allUids), rtrExecutor);
-    }
   }
 
   @Transactional
@@ -365,24 +357,12 @@ public class PersonService {
 
       if (directWrite) {
         // write directly to the database
-        authUsers.forEach(authUser -> nrtAuthUserRepository.save(NrtAuthUser.from(authUser)));
-        final String uidsForPostProcessing = userUid;
-        Runnable runPostProcessing =
-            () ->
-                CompletableFuture.runAsync(
-                    () -> postProcRepository.executeStoredProcForUserProfile(uidsForPostProcessing),
-                    rtrExecutor);
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-          TransactionSynchronizationManager.registerSynchronization(
-              new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                  runPostProcessing.run();
-                }
-              });
-        } else {
-          runPostProcessing.run();
-        }
+        authUsers.forEach(
+            authUser -> {
+              nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
+              postProcessingService.processNrtMessage(
+                  userReportingOutputTopic, transformer.buildUserKey(authUser), NO_PAYLOAD);
+            });
       } else {
         // publish events in kafka
         authUsers.forEach(

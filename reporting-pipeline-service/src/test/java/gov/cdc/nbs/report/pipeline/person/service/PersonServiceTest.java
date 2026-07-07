@@ -23,7 +23,7 @@ import gov.cdc.nbs.report.pipeline.person.repository.PatientRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
-import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
+import gov.cdc.nbs.report.pipeline.postprocessing.service.PostProcessingService;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
@@ -59,7 +59,7 @@ class PersonServiceTest {
 
   @Mock NrtAuthUserRepository nrtAuthUserRepository;
 
-  @Mock PostProcRepository postProcRepository;
+  @Mock PostProcessingService postProcessingService;
 
   @Mock private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -96,7 +96,7 @@ class PersonServiceTest {
             nrtPatientRepository,
             nrtProviderRepository,
             nrtAuthUserRepository,
-            postProcRepository,
+            postProcessingService,
             transformer,
             kafkaTemplate,
             new CustomMetrics(new SimpleMeterRegistry()));
