@@ -6,14 +6,23 @@ import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientReporting;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
+import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderReporting;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
+import gov.cdc.nbs.report.pipeline.person.model.entity.NrtAuthUser;
+import gov.cdc.nbs.report.pipeline.person.model.entity.NrtPatient;
+import gov.cdc.nbs.report.pipeline.person.model.entity.NrtProvider;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtAuthUserRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtPatientRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.PatientRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonType;
+import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
@@ -46,6 +55,8 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Service class for processing Person-related change events in the Real Time Reporting (RTR)
@@ -72,6 +83,10 @@ public class PersonService {
   private final PatientRepository patientRepository;
   private final ProviderRepository providerRepository;
   private final UserRepository userRepository;
+  private final NrtPatientRepository nrtPatientRepository;
+  private final NrtProviderRepository nrtProviderRepository;
+  private final NrtAuthUserRepository nrtAuthUserRepository;
+  private final PostProcRepository postProcRepository;
   private final PersonTransformers transformer;
 
   @Qualifier("personKafkaTemplate")
@@ -233,14 +248,23 @@ public class PersonService {
 
     providerData.forEach(
         provider -> {
-          String reportingKey = transformer.buildProviderKey(provider);
-          String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
-          kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
-          log.info(
-              "Provider data (uid={}) sent to {}",
-              provider.getPersonUid(),
-              providerReportingOutputTopic);
-          log.debug("Provider Reporting: {}", reportingData);
+          if (directWrite) {
+            ProviderReporting reporting =
+                (ProviderReporting)
+                    transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
+            nrtProviderRepository.save(NrtProvider.from(reporting));
+            log.info(
+                "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
+          } else {
+            String reportingKey = transformer.buildProviderKey(provider);
+            String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
+            kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
+            log.info(
+                "Provider data (uid={}) sent to {}",
+                provider.getPersonUid(),
+                providerReportingOutputTopic);
+            log.debug("Provider Reporting: {}", reportingData);
+          }
 
           if (elasticSearchEnable) {
             String elasticKey = transformer.buildProviderKey(provider);
@@ -254,6 +278,16 @@ public class PersonService {
             log.debug("Provider Elastic: {}", elasticData != null ? elasticData : "");
           }
         });
+
+    if (directWrite) {
+      String allUids =
+          providerData.stream()
+              .map(ProviderSp::getPersonUid)
+              .map(String::valueOf)
+              .collect(Collectors.joining(","));
+      CompletableFuture.runAsync(
+          () -> postProcRepository.executeStoredProcForProviderIds(allUids), rtrExecutor);
+    }
   }
 
   private void processPatientData(List<PatientSp> patientData) {
@@ -270,14 +304,24 @@ public class PersonService {
 
     patientData.forEach(
         personData -> {
-          String reportingKey = transformer.buildPatientKey(personData);
-          String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
-          kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
-          log.info(
-              "Patient data (uid={}) sent to {}",
-              personData.getPersonUid(),
-              patientReportingOutputTopic);
-          log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
+          if (directWrite) {
+            PatientReporting reporting =
+                (PatientReporting)
+                    transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
+            nrtPatientRepository.save(NrtPatient.from(reporting));
+            log.info(
+                "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
+          } else {
+            String reportingKey = transformer.buildPatientKey(personData);
+            String reportingData =
+                transformer.processData(personData, PersonType.PATIENT_REPORTING);
+            kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
+            log.info(
+                "Patient data (uid={}) sent to {}",
+                personData.getPersonUid(),
+                patientReportingOutputTopic);
+            log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
+          }
 
           if (elasticSearchEnable) {
             String elasticKey = transformer.buildPatientKey(personData);
@@ -291,6 +335,16 @@ public class PersonService {
             log.debug("Patient Elastic: {}", elasticData != null ? elasticData : "");
           }
         });
+
+    if (directWrite) {
+      String allUids =
+          patientData.stream()
+              .map(PatientSp::getPersonUid)
+              .map(String::valueOf)
+              .collect(Collectors.joining(","));
+      CompletableFuture.runAsync(
+          () -> postProcRepository.executeStoredProcForPatientIds(allUids), rtrExecutor);
+    }
   }
 
   @Transactional
@@ -303,7 +357,7 @@ public class PersonService {
 
       List<AuthUser> authUsers = new ArrayList<>();
 
-      if (userData.isPresent()) {
+      if (userData.isPresent() && !userData.get().isEmpty()) {
         authUsers = userData.get();
       } else {
         throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUid);
@@ -311,7 +365,24 @@ public class PersonService {
 
       if (directWrite) {
         // write directly to the database
-        authUsers.stream().forEach(authUser -> userRepository.save(authUser));
+        authUsers.forEach(authUser -> nrtAuthUserRepository.save(NrtAuthUser.from(authUser)));
+        final String uidsForPostProcessing = userUid;
+        Runnable runPostProcessing =
+            () ->
+                CompletableFuture.runAsync(
+                    () -> postProcRepository.executeStoredProcForUserProfile(uidsForPostProcessing),
+                    rtrExecutor);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+          TransactionSynchronizationManager.registerSynchronization(
+              new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                  runPostProcessing.run();
+                }
+              });
+        } else {
+          runPostProcessing.run();
+        }
       } else {
         // publish events in kafka
         authUsers.forEach(

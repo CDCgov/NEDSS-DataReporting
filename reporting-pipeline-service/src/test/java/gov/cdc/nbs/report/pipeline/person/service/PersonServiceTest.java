@@ -16,10 +16,14 @@ import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUserKey;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtAuthUserRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtPatientRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.PatientRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
+import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
@@ -48,6 +52,14 @@ class PersonServiceTest {
   @Mock ProviderRepository providerRepository;
 
   @Mock UserRepository userRepository;
+
+  @Mock NrtPatientRepository nrtPatientRepository;
+
+  @Mock NrtProviderRepository nrtProviderRepository;
+
+  @Mock NrtAuthUserRepository nrtAuthUserRepository;
+
+  @Mock PostProcRepository postProcRepository;
 
   @Mock private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -81,6 +93,10 @@ class PersonServiceTest {
             patientRepository,
             providerRepository,
             userRepository,
+            nrtPatientRepository,
+            nrtProviderRepository,
+            nrtAuthUserRepository,
+            postProcRepository,
             transformer,
             kafkaTemplate,
             new CustomMetrics(new SimpleMeterRegistry()));
