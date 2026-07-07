@@ -1,0 +1,92 @@
+-- =====================================================================
+-- Tier 3 - More BLOCK_NM x SEQ variants for D_INVESTIGATION_REPEAT
+-- =====================================================================
+-- Authored 2026-05-24 (second-round parallel agent H).
+--
+-- Goal: lift D_INVESTIGATION_REPEAT row count and populated column
+-- count.  Existing state (pre-this-fixture):
+--   * 8 dim rows (1 NULL-block sentinel + TRAVEL_BLOCK x 3 + EXPOSURE_BLOCK x 3)
+--   * 256 total columns
+--
+-- KEY GOTCHA / ORCH_TODO discovered while authoring:
+--   The TEXT pivot in sp_sld_investigation_repeat_postprocessing is
+--   FRAGILE: the column-list builder at SP line 212 uses
+--     SELECT @cols += N', p.' + QUOTENAME(RDB_COLUMN_NM) FROM ... GROUP BY RDB_COLUMN_NM
+--   If ANY row in #text_data_REPT has a NULL rdb_column_nm, @cols
+--   becomes NULL via SQL Server's NULL-propagation in row-by-row
+--   string concatenation, the dynamic pivot SQL becomes NULL, and
+--   the EXEC silently no-ops -- ZERO TEXT columns get populated for
+--   the entire PHC.
+--
+--   The agent-D2 fixture (zz_d_inv_place_repeat_enrich.sql, UID block
+--   22010xxx) authors nrt_page_case_answer rows on PHC 22006000 with
+--   data_type='TEXT' AND rdb_column_nm=NULL (intentional -- those
+--   rows target the *different* SP sp_repeated_place_postprocessing
+--   via part_type_cd).  Those rows live in the same table the
+--   investigation_repeat SP scans, so the TEXT pivot for PHC 22006000
+--   silently fails whenever the D2 fixture is loaded.
+--
+--   ORCH_TODO bug: sp_sld_investigation_repeat_postprocessing should
+--   filter out rows with NULL rdb_column_nm before building the pivot
+--   column list (or COALESCE @cols to '' / use the FOR XML PATH idiom).
+--
+--   WORKAROUND adopted by this fixture: emphasise DATE, NUMERIC, and
+--   CODED rows for every new BLOCK_NM x ANSWER_GROUP_SEQ_NBR combo.
+--   Those pivots are unaffected by the D2 pollution.  TEXT rows are
+--   still authored (they'd populate cols once the bug is fixed) but
+--   we DO NOT rely on them for dim-row materialization.
+--
+-- This fixture adds 5 new BLOCK_NM values, each with 3
+-- ANSWER_GROUP_SEQ_NBR values, expecting 15 new dim rows on top of
+-- the existing 8.  Each new (block, seq) has at least one DATE,
+-- NUMERIC, and CODED row (so the dim row materializes regardless of
+-- TEXT pivot status) PLUS several TEXT rows targeting baseline
+-- columns (which will populate once bug is fixed).
+--
+-- UID block: 22014000 - 22014999 (reserved in catalog/uid_ranges.md
+-- row 1240).
+-- Sort prefix: zz_ -- runs AFTER d_investigation_repeat.sql and
+-- zz_d_investigation_repeat_extra_cols.sql.
+-- =====================================================================
+
+USE [RDB_MODERN];
+GO
+
+-- ---------------------------------------------------------------------
+-- Idempotency guard: skip the INSERT if any of our authored
+-- nbs_case_answer_uids are already present (re-run safety).
+-- ---------------------------------------------------------------------
+GO
+
+-- =====================================================================
+-- TAIL-EXEC: re-run sp_sld_investigation_repeat_postprocessing for PHC
+-- 22006000 to pick up:
+--   - the original 24 answers from d_investigation_repeat.sql
+--   - the 30 baseline-col-targeting answers from
+--     zz_d_investigation_repeat_extra_cols.sql
+--   - this fixture's ~130 additional answers
+--
+-- WHY THIS IS NEEDED (ORCH_TODO finding):
+--   orchestrator merge_and_verify.sh Step 8.5 runs the SP for
+--   @phc_id_list = N'$PHC_UIDS' where $PHC_UIDS DOES NOT include
+--   22006000 (verified live 2026-05-24).  Without a tail-EXEC here,
+--   only the answers loaded *before* d_investigation_repeat.sql's
+--   own tail-EXEC make it into the dim; both zz_*_extra_cols.sql
+--   and this fixture's answers would be invisible to the SP at
+--   merge_and_verify.sh runtime.
+--
+--   FIX OPTIONS (pick one):
+--     a) Add '22006000' to PHC_UIDS in scripts/merge_and_verify.sh
+--        (so Step 8.5 picks up the Pertussis full-chain PHC across
+--        all D_INVESTIGATION_REPEAT-related fixtures).
+--     b) Keep this tail-EXEC (acceptable pattern -- matches the tail
+--        in d_investigation_repeat.sql).
+--   This fixture takes option (b) for safety.  Recommended long-term
+--   is (a) -- delete this tail-EXEC and the one in
+--   d_investigation_repeat.sql once PHC_UIDS includes 22006000.
+--
+-- @batch_id: a per-run bigint for job_flow_log correlation; we use
+-- 22014000 to disambiguate from the d_investigation_repeat.sql tail
+-- (which uses 22006000).
+-- =====================================================================
+
