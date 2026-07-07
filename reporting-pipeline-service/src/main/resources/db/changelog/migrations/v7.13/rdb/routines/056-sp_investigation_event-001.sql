@@ -1020,9 +1020,9 @@ BEGIN
                               WHERE
                                 note_parent_uid IN (
                                                       SELECT
-                                                        value
+                                                        CONVERT(bigint, value)
                                                       FROM
-                                                        String_split(@phc_id_list, ',')
+                                                        STRING_SPLIT(@phc_id_list, ',')
                                                     )
                               GROUP BY note_parent_uid
         ) nt on nt.note_parent_uid = results.public_health_case_uid;
