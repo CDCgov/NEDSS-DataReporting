@@ -475,24 +475,68 @@ Every coverage report is markdown with these sections, in order:
 
 ## Follow-on / phase-2
 
-Captured here so they don't get lost as we focus on v1:
+Captured here so they don't get lost as we focus on v1. Two themes: widening
+what the fixtures cover, and turning this one-shot seed into a test asset that
+runs and maintains itself.
+
+### Coverage breadth
 
 - **Multi-condition variants per disease family.** v1 uses one canonical
   condition per family (e.g., one Hepatitis condition). Datamart columns
-  whose logic branches on specific condition codes will be partially covered.
-  Phase 2 adds one investigation per condition code.
+  whose logic branches on specific condition codes are only partially covered.
+  Add one investigation per condition code.
 - **Subject catalog expansion.** v1 catalog includes the 12 subjects listed
   in Tier 0. Add: Death Record, Aggregate Report, Document, Employer/Insurer
   variants of Organization, Specimen-only observations, additional Place
   types.
-- **MasterETL-side coverage.** v1 measures only RTR coverage. After v1,
-  re-run analysis against MasterETL SPs in `NEDSSDB/src/migrations/*/RDB/`
-  and identify columns MasterETL writes that v1 doesn't exercise.
-- **LDF coverage breadth.** v1 seeds one LDF per LDF-type per data-type. Phase
-  2 expands to multiple LDFs per type and exercises edge cases like
-  multi-select coded LDFs.
-- **Repeating-block cardinality > 3.** v1 uses N=3. Phase 2 tests N=1, N=10
-  to flush off-by-one logic in `sp_dyn_dm_repeat*`.
+- **LDF coverage breadth.** v1 seeds one LDF per LDF-type per data-type. Expand
+  to multiple LDFs per type and exercise edge cases like multi-select coded
+  LDFs.
+- **Repeating-block cardinality > 3.** v1 uses N=3. Test N=1 and N=10 to flush
+  off-by-one logic in `sp_dyn_dm_repeat*`.
+
+### Turn the seed into a maintained test asset
+
+- **Wrap it as a CI functional test.** Today `merge_and_verify.sh` plus
+  `rdb-compare` is a manual local run. Turn it into a CI job that stands up the
+  stack, seeds, runs both pipelines, and asserts (a) coverage hasn't regressed
+  below a floor and (b) `rdb-compare` surfaces no un-cataloged `NEW` diffs. That
+  makes the fixtures a regression gate on RTR, not just a one-time coverage
+  exercise.
+- **Volume / load generation.** v1 seeds one instance per subject with fixed
+  UIDs. Parameterize the fixtures (a UID offset plus a row multiplier) so the
+  same patterns can emit N patients / investigations / labs with unique keys,
+  producing production-scale ODSE data for performance and load testing of both
+  pipelines.
+- **Fixture correctness validation.** "Correct" today means the seed produces
+  the RDB_MODERN rows we expect by inspection. Formalize it: pin an
+  expected-row assertion per fixture (the DataDrivenUnitTest harness in
+  `reporting-pipeline-service` is the natural mechanism) so a fixture that
+  silently stops populating its target columns fails loudly instead of quietly
+  dropping coverage.
+- **Upkeep as NBS / ODSE evolves.** When NBS adds ODSE columns or RDB targets,
+  the catalog and fixtures drift. Add a drift check that diffs the live schema
+  against `catalog/rtr_target_columns.md` and flags new or removed targets, so
+  refreshing the fixtures is a prompted step rather than a periodic
+  rediscovery.
+- **Resolve the quarantine.** `fixtures/30_sp_coverage/_quarantine/` holds
+  fixtures gated on a documented bug; each is pinned to an APP ticket. As those
+  fixes land, un-quarantine the fixture and fold its columns back into coverage.
+  The quarantine should trend toward empty.
+
+### MasterETL-side coverage (the inverse measurement)
+
+v1 measures one direction: of the columns RTR *can* write, what fraction does
+the seed actually exercise (~80%). It says nothing about the columns MasterETL
+writes that RTR never does, and that inverse is the real coverage-gap question
+for the migration. After a full MasterETL + RTR build, run `rdb-compare` and
+count the columns/tables where RDB has data and RDB_MODERN is empty. Each is a
+candidate RTR coverage gap (or an intentional design drop), not a fixture bug.
+Cross-reference the MasterETL SPs in `NEDSSDB/src/migrations/*/RDB/` to confirm
+the column is genuinely MasterETL-authored rather than just unexercised by the
+seed, and reconcile against `coverage/coverage_merged.md`'s "Empty" category.
+
+The largest known chunk of that gap:
 
 - **TODO: ~80 RDB tables nobody on the team currently knows how to populate
   via ODSE inputs.** Per a teammate's note (2026-05): a substantial set of
