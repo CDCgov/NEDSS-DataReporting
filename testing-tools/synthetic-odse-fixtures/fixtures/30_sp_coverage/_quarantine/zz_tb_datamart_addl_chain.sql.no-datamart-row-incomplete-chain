@@ -1,0 +1,486 @@
+-- =====================================================================
+-- Tier 3 ENRICHMENT R3-G — NEW, fully-attributed TB Investigation
+-- =====================================================================
+-- Agent: R3-G. Block: 22029000-22029999, sub-range 22029020-22029129
+-- (the rest of 22029xxx is owned by zz_lab101_unblock.sql — its UIDs are
+--  22029000, 22029300-302, 22029400-402, 22029500, 22029600-634,
+--  22029699-734, 22029800-801, 22029999; this fixture stays clear of all
+--  of them by living in 22029020-22029129, verified unused 2026-06-02).
+--
+-- GOAL
+--   Raise dbo.tb_datamart column coverage (currently ~277/318) by adding
+--   a BRAND-NEW TB investigation that natively carries the ~41 columns
+--   the existing TB anchor (PHC 22001000) leaves NULL. This is PURELY
+--   ADDITIVE: every row is keyed to NEW UIDs in this agent's sub-range.
+--   Nothing shared is UPDATEd or DELETEd.
+--
+-- WHY ADDITIVE-NEW, NOT AN ENRICH-IN-PLACE (hard lesson)
+--   A prior attempt (_quarantine/zz_tb_datamart_enrich_r3.sql.generated-
+--   always-violation) tried to fill the same 41 columns by UPDATE-ing the
+--   shared D_PATIENT key 3, repointing the shared F_TB_PAM keys, and
+--   INSERT-ing nrt_investigation_notification WITH the GENERATED ALWAYS
+--   columns refresh_datetime/max_datetime (Msg 13536). It regressed
+--   coverage and threw on apply. This fixture does the opposite:
+--     * Authors its OWN Patient / Provider(s) / Organization(s) so the
+--       dim-key resolution in F_TB_PAM / sp_tb_datamart happens NATURALLY
+--       (no F_TB_PAM repoint, no D_PATIENT UPDATE).
+--     * Lets sp_nrt_investigation_postprocessing create the
+--       confirmation_method[_group] rows from an nrt_investigation_
+--       confirmation staging row (correct runtime INVESTIGATION_KEY) —
+--       no hand-authored confirmation_method_group with a guessed key.
+--     * OMITS refresh_datetime / max_datetime from EVERY nrt_* INSERT.
+--
+-- COLUMN MAP — how each previously-NULL tb_datamart column gets populated
+-- (verified against routine 255-sp_tb_datamart_postprocessing-001.sql):
+--   Provider/org names (11): INVESTIGATOR_FIRST/LAST_NAME,
+--     INVESTIGATOR_PHONE_NUMBER, PHYSICIAN_FIRST/LAST_NAME,
+--     PHYSICIAN_PHONE_NUMBER, REPORTER_FIRST/LAST_NAME,
+--     REPORTER_PHONE_NUMBER, REPORTING_SOURCE_NAME, HOSPITAL_NAME
+--       <- F_TB_PAM resolves PROVIDER/PHYSICIAN/PERSON_AS_REPORTER/
+--          ORG_AS_REPORTER/HOSPITAL keys by joining nrt_investigation's
+--          investigator_id / physician_id / person_as_reporter_uid /
+--          org_as_reporter_uid / hospital_uid to D_PROVIDER.PROVIDER_UID
+--          and D_ORGANIZATION.ORGANIZATION_UID (206 SP steps 14-19).
+--          255 then reads the names off those dims (steps 2-6).
+--   Patient attrs (16): PATIENT_SSN, PATIENT_NAME_SUFFIX,
+--     PATIENT_GENERAL_COMMENTS, PATIENT_PHONE_EXT_HOME/WORK,
+--     PATIENT_WITHIN_CITY_LIMITS, RACE_ASIAN_1/2/3/ALL/GT3_IND,
+--     RACE_NAT_HI_1/2/3/ALL/GT3_IND
+--       <- 255 #PATIENT reads these straight off D_PATIENT keyed by
+--          F_TB_PAM.PERSON_KEY (= our new D_PATIENT).
+--   Confirmation (5): CONFIRMATION_DATE, CONFIRMATION_METHOD_1/2/3/ALL
+--       <- nrt_investigation_confirmation -> (005 SP) confirmation_method
+--          + confirmation_method_group keyed to our runtime INVESTIGATION
+--          _KEY -> 255 #CONFIRMATION_METHOD_OUT (DESC len>2 to survive
+--          255 line 1391).
+--   Notification (1): NOTIFICATION_SENT_DATE
+--       <- nrt_investigation_notification.last_notification_send_date on
+--          our public_health_case_uid (255 line 1514/1528).
+--   Notification submitter (1): NOTIFICATION_SUBMITTER
+--       <- notification.notification_submitted_by -> user_profile
+--          (255 lines 1530-1531, 1649-1655). Reached because our
+--          notification_event.patient_key = our PERSON_KEY.
+--   User names (2): INVESTIGATION_CREATED_BY, INVESTIGATION_LAST_UPDTD_BY
+--       <- nrt_investigation.add_user_id / last_chg_user_id ->
+--          user_profile (255 lines 1532-1535, 1656-1669). We point these
+--          at our NEW user_profile row (NEW NEDSS_ENTRY_ID), so the shared
+--          superuser user_profile is never created/edited.
+--   Investigation attrs (4): GENERAL_COMMENTS, ILLNESS_DURATION,
+--     ILLNESS_DURATION_UNIT, PROGRAM_AREA_DESCRIPTION
+--       <- GENERAL_COMMENTS/ILLNESS_DURATION* come off the INVESTIGATION
+--          dim (populated from nrt_investigation by 005 SP); we set the
+--          nrt_investigation source columns. PROGRAM_AREA_DESCRIPTION off
+--          nrt_investigation.program_area_description.
+--   Outbreak (1): OUTBREAK_NAME
+--       <- 255 joins nrt_srte_Code_value_general (CODE_SET_NM='OUTBREAK_NM')
+--          on INVESTIGATION.OUTBREAK_NAME. We set OUTBREAK_NAME on the
+--          nrt_investigation row to an existing OUTBREAK_NM code (looked up
+--          at tail-exec; falls back to NULL if none — additive, never an
+--          UPDATE to a shared code table).
+--
+-- TAIL-EXEC chain (bottom of file):
+--   sp_nrt_investigation_postprocessing (flows our nrt_investigation ->
+--     INVESTIGATION + confirmation_method[_group]); the 12 d_topic SPs +
+--     sp_nrt_d_tb_pam_postprocessing + sp_nrt_tb_pam_ldf_postprocessing
+--     + sp_f_tb_pam_postprocessing; then sp_tb_datamart_postprocessing
+--     and sp_tb_hiv_datamart_postprocessing.
+--   NEW PHC uid to add to the orchestrator PHC_UIDS list: 22029100.
+-- =====================================================================
+
+USE [NBS_ODSE];
+GO
+
+DECLARE @new_user_id   bigint = 22029020;   -- NEW user_profile NEDSS_ENTRY_ID (add/edit/notif submitter)
+DECLARE @phc_uid       bigint = 22029100;   -- NEW TB PHC / act_uid / public_health_case_uid
+DECLARE @case_mgmt_uid bigint = 22029101;   -- case_management_uid
+
+-- =====================================================================
+-- ODSE: act parent row
+-- =====================================================================
+INSERT INTO [dbo].[act] ([act_uid], [class_cd], [mood_cd]) VALUES
+    (@phc_uid, N'CASE', N'EVN');
+
+-- =====================================================================
+-- ODSE: public_health_case (TB / RVCT). Codes mirror the template
+-- (condition 10220 Tuberculosis, prog_area TB, jurisdiction 130001).
+-- add_user_id / last_chg_user_id point at the NEW user (22029020).
+-- =====================================================================
+INSERT INTO [dbo].[public_health_case]
+    ([public_health_case_uid], [add_time], [add_user_id], [case_type_cd],
+     [case_class_cd], [cd], [cd_desc_txt], [cd_system_cd], [cd_system_desc_txt],
+     [investigation_status_cd], [last_chg_time], [last_chg_user_id], [local_id],
+     [record_status_cd], [record_status_time], [status_cd], [status_time],
+     [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
+     [program_jurisdiction_oid], [outbreak_ind], [outbreak_name],
+     [mmwr_week], [mmwr_year])
+VALUES
+    (@phc_uid, '2026-04-01T00:00:00', @new_user_id, N'I',
+     N'C', N'10220', N'Tuberculosis', N'NND', N'NND',
+     N'O', '2026-04-15T00:00:00', @new_user_id, N'CAS22029100GA01',
+     N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+     N'T', 1, N'TB', N'130001',
+     22029100, N'N', NULL,
+     N'14', N'2026');
+
+-- =====================================================================
+-- ODSE: act_id (PHC_LOCAL_ID)
+-- =====================================================================
+INSERT INTO [dbo].[act_id]
+    ([act_uid], [act_id_seq], [add_time], [add_user_id],
+     [assigning_authority_cd], [assigning_authority_desc_txt],
+     [last_chg_time], [last_chg_user_id], [record_status_cd],
+     [record_status_time], [root_extension_txt], [type_cd],
+     [type_desc_txt], [status_cd], [status_time])
+VALUES
+    (@phc_uid, 1, '2026-04-01T00:00:00', @new_user_id,
+     N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
+     '2026-04-01T00:00:00', @new_user_id, N'ACTIVE',
+     '2026-04-01T00:00:00', N'CAS22029100GA01', N'PHC_LOCAL_ID',
+     N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
+
+-- =====================================================================
+-- ODSE: case_management
+-- =====================================================================
+SET IDENTITY_INSERT [dbo].[case_management] ON;
+INSERT INTO [dbo].[case_management]
+    ([case_management_uid], [public_health_case_uid], [status_900],
+     [field_record_number], [surv_assigned_date],
+     [surv_closed_date], [case_closed_date])
+VALUES
+    (@case_mgmt_uid, @phc_uid, N'C',
+     N'FRN-TB-R3G-01', '2026-04-02T00:00:00',
+     '2026-04-30T00:00:00', '2026-04-30T00:00:00');
+SET IDENTITY_INSERT [dbo].[case_management] OFF;
+
+GO
+
+-- =====================================================================
+-- ODSE: nbs_case_answer — RVCT-form TUB* answers (mirror of the template
+-- so the 12 d_topic SPs + the D_TB_PAM pivot all produce a row for our
+-- new PHC; F_TB_PAM INNER JOINs every d_topic group table, so all must
+-- resolve). nbs_question_uid / code_set_group_id values were verified
+-- live in the template fixture (tb_investigation_full_chain.sql).
+-- =====================================================================
+DECLARE @new_user_id_2 bigint = 22029020;
+DECLARE @phc_uid_2     bigint = 22029100;
+
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] ON;
+INSERT INTO [dbo].[nbs_case_answer]
+    ([nbs_case_answer_uid], [act_uid], [add_time], [add_user_id],
+     [answer_txt], [nbs_question_uid], [nbs_question_version_ctrl_nbr],
+     [last_chg_time], [last_chg_user_id],
+     [record_status_cd], [record_status_time], [seq_nbr])
+VALUES
+    (22029110, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'39607008', 1079, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029111, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'73211009', 1230, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029112, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'260385009', 1273, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029113, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'HIV-STATE-R3G-01', 1323, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029114, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'HIV-CITY-R3G-01', 1034, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029115, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'13', 1248, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029116, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'13121', 1055, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029117, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'840', 1243, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029118, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'C1512888', 1256, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029119, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'258143003', 1318, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029120, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'310174000', 1071, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029121, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'108257001', 1174, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (22029122, @phc_uid_2, '2026-04-01T00:00:00', @new_user_id_2, N'PHC2', 1080, 1, '2026-04-01T00:00:00', @new_user_id_2, N'ACTIVE', '2026-04-01T00:00:00', 0);
+SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;
+
+GO
+
+-- =====================================================================
+-- RDB_MODERN staging + dimension rows
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+
+DECLARE @new_user_id   bigint = 22029020;
+DECLARE @phc_uid       bigint = 22029100;
+
+-- --- entity UIDs (referenced from nrt_investigation) ---
+DECLARE @patient_uid   bigint = 22029040;   -- D_PATIENT.PATIENT_UID + nrt_investigation.patient_id
+DECLARE @invtgr_uid    bigint = 22029031;   -- investigator provider UID
+DECLARE @physcn_uid    bigint = 22029032;   -- physician provider UID
+DECLARE @reporter_uid  bigint = 22029033;   -- person-as-reporter provider UID
+DECLARE @org_rep_uid   bigint = 22029034;   -- org-as-reporter organization UID
+DECLARE @hosp_uid      bigint = 22029035;   -- hospital organization UID
+
+-- --- surrogate dim keys (all far above current max keys) ---
+DECLARE @patient_key   bigint = 22029026;
+DECLARE @invtgr_key    bigint = 22029021;
+DECLARE @physcn_key    bigint = 22029022;
+DECLARE @reporter_key  bigint = 22029023;
+DECLARE @org_rep_key   bigint = 22029024;
+DECLARE @hosp_key      bigint = 22029025;
+
+-- =====================================================================
+-- user_profile — NEW row. Drives INVESTIGATION_CREATED_BY,
+-- INVESTIGATION_LAST_UPDTD_BY, NOTIFICATION_SUBMITTER. NEDSS_ENTRY_ID and
+-- PROVIDER_KEY are NOT NULL.
+-- =====================================================================
+INSERT INTO [dbo].[user_profile]
+    (NEDSS_ENTRY_ID, PROVIDER_KEY, FIRST_NM, LAST_NM, USER_NM, LAST_UPD_TIME)
+VALUES
+    (@new_user_id, @invtgr_key, N'Tessa', N'Reportwright', N'treportwright', '2026-04-01T00:00:00');
+
+-- =====================================================================
+-- D_PATIENT — NEW dim row, full demographics so 255 #PATIENT picks up
+-- the SSN / suffix / comments / phone-ext / within-city / race families.
+-- =====================================================================
+INSERT INTO [dbo].[D_PATIENT]
+    (PATIENT_KEY, PATIENT_UID,
+     PATIENT_FIRST_NAME, PATIENT_LAST_NAME, PATIENT_MIDDLE_NAME, PATIENT_NAME_SUFFIX,
+     PATIENT_SSN, PATIENT_GENERAL_COMMENTS,
+     PATIENT_PHONE_HOME, PATIENT_PHONE_EXT_HOME,
+     PATIENT_PHONE_WORK, PATIENT_PHONE_EXT_WORK,
+     PATIENT_WITHIN_CITY_LIMITS,
+     PATIENT_STREET_ADDRESS_1, PATIENT_CITY, PATIENT_STATE, PATIENT_ZIP,
+     PATIENT_DOB, PATIENT_CURRENT_SEX, PATIENT_BIRTH_SEX,
+     PATIENT_RACE_ASIAN_1, PATIENT_RACE_ASIAN_2, PATIENT_RACE_ASIAN_3,
+     PATIENT_RACE_ASIAN_ALL, PATIENT_RACE_ASIAN_GT3_IND,
+     PATIENT_RACE_NAT_HI_1, PATIENT_RACE_NAT_HI_2, PATIENT_RACE_NAT_HI_3,
+     PATIENT_RACE_NAT_HI_ALL, PATIENT_RACE_NAT_HI_GT3_IND)
+VALUES
+    (@patient_key, @patient_uid,
+     N'Terrence', N'Bacillus', N'M', N'Jr.',
+     N'444-55-6666', N'TB patient general comments (R3-G new chain).',
+     N'404-555-0140', N'301',
+     N'404-555-0199', N'402',
+     N'Y',
+     N'742 Mycobacterium Way', N'Atlanta', N'13', N'30303',
+     '1986-07-14T00:00:00', N'M', N'M',
+     N'Chinese', N'Filipino', N'Japanese',
+     N'Chinese | Filipino | Japanese', N'FALSE',
+     N'Native Hawaiian', N'Guamanian', N'Samoan',
+     N'Native Hawaiian | Guamanian | Samoan', N'FALSE');
+
+-- =====================================================================
+-- D_PROVIDER — investigator / physician / person-as-reporter NEW dims.
+-- PROVIDER_UID matches the UID we put on nrt_investigation so F_TB_PAM's
+-- keystore LEFT JOINs (206 SP steps 17-19, plus #PAT_prov_keystore step)
+-- resolve to these keys instead of sentinel 1.
+-- =====================================================================
+INSERT INTO [dbo].[D_PROVIDER]
+    (PROVIDER_KEY, PROVIDER_UID, PROVIDER_FIRST_NAME, PROVIDER_LAST_NAME, PROVIDER_PHONE_WORK)
+VALUES
+    (@invtgr_key,   @invtgr_uid,   N'Inez',  N'Investigator', N'404-555-0101'),
+    (@physcn_key,   @physcn_uid,   N'Phil',  N'Physician',    N'404-555-0102'),
+    (@reporter_key, @reporter_uid, N'Roger', N'Reporter',     N'404-555-0103');
+
+-- =====================================================================
+-- D_ORGANIZATION — org-as-reporter (REPORTING_SOURCE_NAME) + hospital
+-- (HOSPITAL_NAME). ORGANIZATION_UID matches the UIDs on nrt_investigation.
+-- =====================================================================
+INSERT INTO [dbo].[D_ORGANIZATION]
+    (ORGANIZATION_KEY, ORGANIZATION_UID, ORGANIZATION_NAME)
+VALUES
+    (@org_rep_key, @org_rep_uid, N'R3-G Reporting Clinic'),
+    (@hosp_key,    @hosp_uid,    N'R3-G General Hospital');
+
+-- =====================================================================
+-- nrt_investigation — the new RVCT investigation staging row.
+--   investigation_form_cd = 'INV_FORM_RVCT' (TB-PAM filter).
+--   patient_id / investigator_id / physician_id / person_as_reporter_uid
+--   / org_as_reporter_uid / hospital_uid carry our NEW entity UIDs so
+--   F_TB_PAM resolves every dim key natively.
+--   nac_page_case_uid = @phc_uid so F_TB_PAM's MAX(nac_page_case_uid)
+--   grouping yields a TB_PAM_UID row.
+--   add_user_id / last_chg_user_id = @new_user_id -> user_profile.
+--   illness_duration / illness_duration_unit / inv_comments /
+--   program_area_description set so those flow to INVESTIGATION/dim.
+--   outbreak_ind/name left as in ODSE; OUTBREAK_NAME code on
+--   nrt_investigation set in the tail (lookup) so 255's cvg join resolves.
+--   GENERATED ALWAYS columns refresh_datetime/max_datetime are OMITTED.
+-- =====================================================================
+INSERT INTO [dbo].[nrt_investigation]
+    ([public_health_case_uid], [patient_id], [program_jurisdiction_oid],
+     [local_id], [shared_ind], [case_type_cd],
+     [jurisdiction_cd], [record_status_cd], [mood_cd], [class_cd],
+     [case_class_cd], [cd], [cd_desc_txt], [prog_area_cd],
+     [program_area_description],
+     [investigation_form_cd], [case_management_uid],
+     [investigation_status_cd], [investigation_status],
+     [inv_case_status],
+     [status_time], [record_status_time], [raw_record_status_cd],
+     [add_user_id], [add_user_name], [add_time],
+     [last_chg_user_id], [last_chg_user_name], [last_chg_time],
+     [mmwr_week], [mmwr_year],
+     [nac_page_case_uid], [nac_last_chg_time],
+     [investigator_id], [physician_id], [person_as_reporter_uid],
+     [org_as_reporter_uid], [hospital_uid],
+     [effective_duration_amt], [illness_duration_unit],
+     [txt],
+     [outbreak_ind])
+VALUES
+    (@phc_uid,                               -- public_health_case_uid
+     @patient_uid,                           -- patient_id (NEW Patient)
+     22029100,                               -- program_jurisdiction_oid
+     N'CAS22029100GA01',                     -- local_id
+     N'T',                                   -- shared_ind
+     N'I',                                   -- case_type_cd
+     N'130001',                              -- jurisdiction_cd (Fulton)
+     N'ACTIVE',                              -- record_status_cd
+     N'EVN', N'CASE',                        -- mood_cd, class_cd
+     N'C', N'10220', N'Tuberculosis', N'TB', -- case_class_cd, cd, cd_desc, prog
+     N'Tuberculosis',                        -- program_area_description
+     N'INV_FORM_RVCT',                       -- investigation_form_cd
+     22029101,                               -- case_management_uid
+     N'O', N'Open',
+     N'Confirmed',
+     '2026-04-01T00:00:00', '2026-04-01T00:00:00', N'ACTIVE',
+     @new_user_id, N'Reportwright, Tessa', '2026-04-01T00:00:00',
+     @new_user_id, N'Reportwright, Tessa', '2026-04-15T00:00:00',
+     N'14', N'2026',
+     @phc_uid, '2026-04-15T00:00:00',        -- nac_page_case_uid, nac_last_chg_time
+     @invtgr_uid, @physcn_uid, @reporter_uid,-- investigator/physician/reporter UIDs
+     @org_rep_uid, @hosp_uid,                -- org-as-reporter / hospital UIDs
+     N'21', N'day(s)',                       -- effective_duration_amt (varchar) / illness_duration_unit
+     N'TB investigation general comments (R3-G new chain).',
+     N'N');                                  -- outbreak_ind
+
+-- =====================================================================
+-- nrt_page_case_answer — mirror of the template's full TUB set, keyed to
+-- our new PHC. Feeds the 12 d_topic SPs + the main D_TB_PAM pivot.
+-- GENERATED ALWAYS: nrt_page_case_answer has none (verified) — but we
+-- still author only the columns the SPs read.
+-- =====================================================================
+INSERT INTO [dbo].[nrt_page_case_answer]
+    ([act_uid], [nbs_case_answer_uid], [nbs_ui_metadata_uid],
+     [nbs_question_uid],
+     [rdb_table_nm], [rdb_column_nm], [answer_txt], [answer_group_seq_nbr],
+     [investigation_form_cd], [question_identifier], [data_location],
+     [code_set_group_id], [last_chg_time], [record_status_cd],
+     [datamart_column_nm], [ldf_status_cd], [seq_nbr], [batch_id])
+VALUES
+    -- d_topic questions
+    (@phc_uid, 22029110, 1, 1079, N'TB_PAM', N'DISEASE_SITE',   N'39607008',  N'1', N'INV_FORM_RVCT', N'TUB119', N'NBS_Case_Answer.answer_txt', 2470, '2026-04-01T00:00:00', N'ACTIVE', N'DISEASE_SITE',   NULL, 1, NULL),
+    (@phc_uid, 22029111, 1, 1230, N'TB_PAM', N'ADDL_RISK',      N'73211009',  N'1', N'INV_FORM_RVCT', N'TUB167', N'NBS_Case_Answer.answer_txt', 2600, '2026-04-01T00:00:00', N'ACTIVE', N'ADDL_RISK',      NULL, 1, NULL),
+    (@phc_uid, 22029112, 1, 1273, N'TB_PAM', N'HIV_STATUS',     N'260385009', N'1', N'INV_FORM_RVCT', N'TUB154', N'NBS_Case_Answer.answer_txt', 2380, '2026-04-01T00:00:00', N'ACTIVE', N'HIV_STATUS',     NULL, 1, NULL),
+    (@phc_uid, 22029113, 1, 1323, N'TB_PAM', N'HIV_STATE_PATIENT_NUM',     N'HIV-STATE-R3G-01', N'1', N'INV_FORM_RVCT', N'TUB155', N'NBS_Case_Answer.answer_txt', NULL, '2026-04-01T00:00:00', N'ACTIVE', N'HIV_STATE_PATIENT_NUM',     NULL, 1, NULL),
+    (@phc_uid, 22029114, 1, 1034, N'TB_PAM', N'HIV_CITY_CNTY_PATIENT_NUM', N'HIV-CITY-R3G-01',  N'1', N'INV_FORM_RVCT', N'TUB156', N'NBS_Case_Answer.answer_txt', NULL, '2026-04-01T00:00:00', N'ACTIVE', N'HIV_CITY_CNTY_PATIENT_NUM', NULL, 1, NULL),
+    (@phc_uid, 22029115, 1, 1248, N'TB_PAM', N'MOVE_STATE',     N'13',        N'1', N'INV_FORM_RVCT', N'TUB229', N'NBS_Case_Answer.answer_txt', 3920, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_STATE',     NULL, 1, NULL),
+    (@phc_uid, 22029116, 1, 1055, N'TB_PAM', N'MOVE_CNTY',      N'13121',     N'1', N'INV_FORM_RVCT', N'TUB228', N'NBS_Case_Answer.answer_txt', 560,  '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_CNTY',      NULL, 1, NULL),
+    (@phc_uid, 22029117, 1, 1243, N'TB_PAM', N'MOVE_CNTRY',     N'840',       N'1', N'INV_FORM_RVCT', N'TUB230', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'MOVE_CNTRY',     NULL, 1, NULL),
+    (@phc_uid, 22029118, 1, 1256, N'TB_PAM', N'MOVED_WHERE',    N'C1512888',  N'1', N'INV_FORM_RVCT', N'TUB225', N'NBS_Case_Answer.answer_txt', 4180, '2026-04-01T00:00:00', N'ACTIVE', N'MOVED_WHERE',    NULL, 1, NULL),
+    (@phc_uid, 22029119, 1, 1318, N'TB_PAM', N'GT_12_REAS',     N'258143003', N'1', N'INV_FORM_RVCT', N'TUB235', N'NBS_Case_Answer.answer_txt', 2520, '2026-04-01T00:00:00', N'ACTIVE', N'GT_12_REAS',     NULL, 1, NULL),
+    (@phc_uid, 22029120, 1, 1071, N'TB_PAM', N'HC_PROV_TY',     N'310174000', N'1', N'INV_FORM_RVCT', N'TUB237', N'NBS_Case_Answer.answer_txt', 2530, '2026-04-01T00:00:00', N'ACTIVE', N'HC_PROV_TY',     NULL, 1, NULL),
+    (@phc_uid, 22029121, 1, 1174, N'TB_PAM', N'SMR_EXAM_TY',    N'108257001', N'1', N'INV_FORM_RVCT', N'TUB129', N'NBS_Case_Answer.answer_txt', 2560, '2026-04-01T00:00:00', N'ACTIVE', N'SMR_EXAM_TY',    NULL, 1, NULL),
+    (@phc_uid, 22029122, 1, 1080, N'TB_PAM', N'OUT_OF_CNTRY',   N'PHC2',      N'1', N'INV_FORM_RVCT', N'TUB114', N'NBS_Case_Answer.answer_txt', 4260, '2026-04-01T00:00:00', N'ACTIVE', N'OUT_OF_CNTRY',   NULL, 1, NULL);
+
+-- =====================================================================
+-- nrt_investigation_confirmation — 3 confirmation methods. 005 SP turns
+-- these into confirmation_method + confirmation_method_group keyed to our
+-- runtime INVESTIGATION_KEY. DESC len > 2 to survive 255 line 1391.
+-- GENERATED ALWAYS refresh_datetime/max_datetime OMITTED.
+-- =====================================================================
+INSERT INTO [dbo].[nrt_investigation_confirmation]
+    (public_health_case_uid, confirmation_method_cd, confirmation_method_desc_txt,
+     confirmation_method_time, batch_id)
+VALUES
+    (@phc_uid, N'LAB',  N'Laboratory confirmed',         '2026-04-05T00:00:00', NULL),
+    (@phc_uid, N'CLI',  N'Clinical confirmation',        '2026-04-05T00:00:00', NULL),
+    (@phc_uid, N'EPILINK', N'Epidemiologically linked',  '2026-04-05T00:00:00', NULL);
+
+-- =====================================================================
+-- nrt_investigation_notification — NOTIFICATION_SENT_DATE source.
+-- GENERATED ALWAYS refresh_datetime/max_datetime OMITTED (this is the
+-- exact column set that threw Msg 13536 in the quarantined fixture).
+-- =====================================================================
+INSERT INTO [dbo].[nrt_investigation_notification]
+    (source_act_uid, public_health_case_uid, notification_uid,
+     notif_status, notif_local_id,
+     last_notification_send_date, first_notification_send_date,
+     last_notification_date, first_notification_date,
+     last_notification_submitted_by, first_notification_submitted_by,
+     notif_sent_count, notif_created_count)
+VALUES
+    (22029060, @phc_uid, 22029060,
+     N'COMPLETED', N'NOT-TB-R3G-22029060',
+     '2026-04-10T00:00:00', '2026-04-10T00:00:00',
+     '2026-04-10T00:00:00', '2026-04-10T00:00:00',
+     @new_user_id, @new_user_id,
+     1, 1);
+
+-- =====================================================================
+-- notification + notification_event — NOTIFICATION_SUBMITTER source.
+-- 255 joins notification_event on patient_key = tdi.person_key, then
+-- notification on notification_key, then user_profile on
+-- notification.notification_submitted_by. We point submitted_by at our
+-- NEW user_profile so the shared user_profile is untouched.
+-- notification_event has NOT NULL FKs to: D_PATIENT (PATIENT_KEY -> our new
+-- patient_key, inserted above), NOTIFICATION (NOTIFICATION_KEY -> 22029050,
+-- inserted just above), RDB_DATE (sent/submit dt keys -> 13250 = 2026-04-10,
+-- verified present), CONDITION (CONDITION_KEY) and INVESTIGATION
+-- (INVESTIGATION_KEY). 255 reads neither CONDITION_KEY nor INVESTIGATION_KEY
+-- off notification_event (it joins on patient_key only, line 1525), so any
+-- valid FK value satisfies the constraint. We resolve both from existing rows
+-- so the INSERT is robust on a fresh baseline (CONDITION is populated at
+-- runtime; we take the lowest existing key; INVESTIGATION_KEY 1 is the
+-- baseline sentinel row).
+-- =====================================================================
+INSERT INTO [dbo].[notification]
+    (NOTIFICATION_KEY, NOTIFICATION_SUBMITTED_BY, NOTIFICATION_STATUS, NOTIFICATION_LOCAL_ID)
+VALUES
+    (22029050, @new_user_id, N'COMPLETED', N'NOT-TB-R3G-22029060');
+
+DECLARE @cond_key bigint = (SELECT MIN(CONDITION_KEY) FROM [dbo].[CONDITION]);
+DECLARE @inv_sentinel_key bigint =
+    COALESCE((SELECT MIN(INVESTIGATION_KEY) FROM [dbo].[INVESTIGATION] WHERE INVESTIGATION_KEY = 1),
+             (SELECT MIN(INVESTIGATION_KEY) FROM [dbo].[INVESTIGATION]));
+
+INSERT INTO [dbo].[notification_event]
+    (PATIENT_KEY, NOTIFICATION_KEY, INVESTIGATION_KEY, CONDITION_KEY,
+     NOTIFICATION_SENT_DT_KEY, NOTIFICATION_SUBMIT_DT_KEY)
+VALUES
+    (@patient_key, 22029050, @inv_sentinel_key, @cond_key, 13250, 13250);
+
+GO
+
+-- =====================================================================
+-- TAIL-EXEC — flow the new chain through to TB_DATAMART / TB_HIV_DATAMART.
+-- =====================================================================
+
+-- Step A: nrt_investigation -> INVESTIGATION (+ confirmation_method[_group]).
+EXEC dbo.sp_nrt_investigation_postprocessing
+    @id_list = N'22029100',
+    @debug = 0;
+
+-- Set OUTBREAK_NAME on the new INVESTIGATION dim row to an OUTBREAK_NM code
+-- that exists in nrt_srte_Code_value_general, so 255's cvg join resolves
+-- OUTBREAK_NAME. Additive UPDATE of OUR new INVESTIGATION row only (keyed
+-- by our CASE_UID); never touches a shared row or a shared code table.
+DECLARE @ob_code varchar(50) =
+    (SELECT TOP 1 CODE FROM [dbo].[nrt_srte_Code_value_general]
+     WHERE CODE_SET_NM = 'OUTBREAK_NM' ORDER BY CODE);
+IF @ob_code IS NOT NULL
+    UPDATE [dbo].[INVESTIGATION]
+    SET OUTBREAK_NAME = @ob_code
+    WHERE CASE_UID = 22029100;
+GO
+
+-- Step B: D_TB_PAM root pivot.
+EXEC dbo.sp_nrt_d_tb_pam_postprocessing @phc_id_list = N'22029100', @debug = 0;
+
+-- Step C: the 12 d_topic SPs (param names vary; see template header).
+EXEC dbo.sp_nrt_d_disease_site_postprocessing @phc_uids = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_addl_risk_postprocessing    @phc_uids = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_move_cntry_postprocessing   @phc_uids = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_move_cnty_postprocessing    @phc_uids = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_move_state_postprocessing   @phc_uids = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_moved_where_postprocessing  @phc_uids = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_tb_hiv_postprocessing       @phc_id_list = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_gt_12_reas_postprocessing   @phc_id_list = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_hc_prov_ty_3_postprocessing @phc_id_list = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_out_of_cntry_postprocessing @phc_id_list = N'22029100', @debug = 0;
+EXEC dbo.sp_nrt_d_smr_exam_ty_postprocessing  @phc_id_list = N'22029100', @debug = 0;
+
+-- Step D: tb_pam_ldf.
+EXEC dbo.sp_nrt_tb_pam_ldf_postprocessing @phc_id_list = N'22029100', @debug = 0;
+
+-- Step E: F_TB_PAM (resolves all dim keys for our PHC).
+EXEC dbo.sp_f_tb_pam_postprocessing @phc_id_list = N'22029100', @debug = 0;
+
+-- Step F: TB datamarts.
+EXEC dbo.sp_tb_datamart_postprocessing     @phc_id_list = N'22029100', @debug = 0;
+EXEC dbo.sp_tb_hiv_datamart_postprocessing @phc_id_list = N'22029100', @debug = 0;
+GO

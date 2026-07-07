@@ -1,0 +1,50 @@
+-- =====================================================================
+-- Tier 3 — multi-condition Investigation variants
+-- =====================================================================
+-- Goal: populate condition-gated datamart fact tables (TB_DATAMART,
+-- VAR_DATAMART, COVID_*_DATAMART, sp_pertussis/measles/rubella_case
+-- datamarts, BMIRD_STREP_PNEUMO_DATAMART, STD_HIV_DATAMART).
+--
+-- v1 originally used a single condition (Hep A acute, condition_cd
+-- '10110') for all Investigation variants. The condition-specific
+-- datamart SPs filter on condition_cd or investigation_form_cd; with
+-- only Hep A in the merged state, none of them populate.
+--
+-- This Tier 3 fixture authors 10 additional Investigation variants —
+-- one per condition family — as nrt_investigation rows directly. The
+-- datamart SPs read from nrt_investigation + INVESTIGATION + condition
+-- without traversing back to ODSE, so we skip authoring full
+-- act/public_health_case ODSE rows for these variants. After applying,
+-- sp_nrt_investigation_postprocessing flows them into INVESTIGATION;
+-- then the datamart SPs at Step 9 pick them up.
+--
+-- UIDs allocated from Tier 3 block 22000000-22099999:
+--   22000010 — TB (10220, INV_FORM_RVCT)
+--   22000020 — Varicella (10030, INV_FORM_VAR)
+--   22000030 — Mumps (10180, PG_Mumps_Investigation)
+--   22000040 — Pertussis (10190, PG_Pertussis_Investigation)
+--   22000050 — Measles (10140, PG_Measles_(PB))
+--   22000060 — Rubella (10200, INV_FORM_RUB)
+--   22000070 — COVID-19 (11065, PG_COVID-19_v1.1)
+--   22000080 — Syphilis primary (10311, PG_STD_Investigation)
+--   22000090 — HIV pediatric (10561, INV_FORM_GEN)
+--   22000100 — Strep pneumoniae invasive (11717, INV_FORM_BMDSP)
+--
+-- INSERTs use the same column set as v2 Investigation, with NULL for
+-- most columns and only the condition-defining columns populated. The
+-- conditions referenced are seeded by sp_nrt_srte_condition_code_postprocessing
+-- with a multi-condition list (extended in merge_and_verify.sh).
+--
+-- After this fixture applies, the orchestrator re-runs
+-- sp_nrt_investigation_postprocessing to flow these into INVESTIGATION.
+-- =====================================================================
+
+USE [RDB_MODERN];
+
+-- patient_id = 20000000 (foundation Patient) on every variant so the
+-- HEPATITIS_DATAMART chain's COALESCE(PATIENT.PATIENT_KEY, 1) → sentinel
+-- → DELETE WHERE PATIENT_UID IS NULL path doesn't drop the row pre-INSERT.
+-- See fixtures/10_subjects/investigation.sql for the same convention on
+-- Tier 1.
+
+-- Run sp_nrt_investigation_postprocessing to flow these into INVESTIGATION.
