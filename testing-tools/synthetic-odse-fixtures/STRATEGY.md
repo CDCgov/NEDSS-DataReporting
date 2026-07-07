@@ -3,10 +3,13 @@
 ## Goal
 
 Produce a synthetic but referentially-valid set of NBS_ODSE INSERTs that, after
-RTR's full transformation chain runs against them, exercises every RDB_MODERN
-table and column RTR is capable of populating from the post-baseline state.
-Output is consumed by a yet-to-be-built comparison tool (modeled on
-NEDSS-DataCompare) that diffs RDB (MasterETL) against RDB_MODERN (RTR).
+RTR's full transformation chain runs against them, exercises as much of
+RDB_MODERN as RTR can populate from the post-baseline state. v1 reaches roughly
+80% column coverage (see the README and `coverage/coverage_merged.md`); the
+remaining gap is tracked in the follow-on section below and in the documented
+bugs. Output is consumed by the comparison tool in `testing-tools/rdb-compare/`
+(modeled on NEDSS-DataCompare), which diffs RDB (MasterETL) against RDB_MODERN
+(RTR).
 
 This effort is in scope only for step (1) of the comparison pipeline:
 
