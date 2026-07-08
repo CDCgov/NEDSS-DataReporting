@@ -1,0 +1,145 @@
+-- =====================================================================
+-- Round 6 tick 8 (NO-SHORTCUT, NON-OBS-HEAVY) — D_INVESTIGATION_REPEAT
+-- 3rd repeating-group investigation-answer fill on an EXISTING
+-- page-builder PHC. COMPANION to zz_d_investigation_repeat_forms.sql (#1,
+-- group 4) and zz_d_investigation_repeat_forms_2.sql (#2, group 5) —
+-- targets a DIFFERENT set of still-NULL columns, a DIFFERENT PHC+block,
+-- and a NON-COLLIDING answer_group_seq_nbr (=6), so it never touches
+-- #1's group-4 or #2's group-5 rows.
+-- =====================================================================
+-- Branch: aw/remove-nrt-shortcut. This fixture authors ONLY NBS_ODSE
+-- nbs_case_answer rows (+ a closing last_chg_time CDC re-trigger bump on
+-- the affected public_health_case row). It adds NO observations
+-- (no observation/observation_reason/act-of-class-OBS, no lab/result
+-- chains) — bug #20 obs fail-fast makes obs-heavy fixtures corrupt
+-- lower-priority coverage, so this round stays investigation/answer-only.
+-- NO nrt_* INSERTs, NO EXEC sp_*, NO liquibase/seed/SRTE edits.
+--
+-- TARGET TABLE / COLUMNS
+--   dbo.D_INVESTIGATION_REPEAT (RDB_MODERN). Targets these still-NULL
+--   columns (verified live: COUNT(col)=0 over the whole dim before this
+--   fixture):
+--     VAC_VaccinationDate  (parent q 10001153, DATE)
+--     VAC_VaccineDoseNum   (parent q 10001152, plain NUMERIC, no unit)
+--   These are DISJOINT from the _OTH columns filled by #1/#2 (which used
+--   the CODED OTHER_VALUE_IND_CD='T' "OTH^" branch). Unlike #1/#2 these
+--   are NOT other-value columns:
+--     * VAC_VaccinationDate is data_type=DATE  -> routine 010's DATE branch
+--       (#DATE_DATA_REPT -> ##date_data_INV_out_*).
+--     * VAC_VaccineDoseNum  is data_type=NUMERIC with unit_type_cd NULL
+--       and other_value_ind_cd NULL -> routine 010's PLAIN-NUMERIC branch
+--       (#NUMERIC_BASE_DATA_REPT, the `UNIT_TYPE_CD IS NULL` arm ~line 775
+--       -> ##numeric_DATA_REPT_out_*).
+--   NEITHER is the "systemic coded-numeric non-landing" the prior agents
+--   flagged: that hazard is NUMERIC+unit_type_cd='CODED' questions (e.g.
+--   CLN_ADVERSE_EVNT_ONSET / EPI_SUSPECTED_SOURCE_AGE / TRV_DURATION_*),
+--   which we deliberately AVOID. VAC_VaccineDoseNum carries NO coded unit,
+--   so it lands via the plain-numeric arm, not the coded-numeric one.
+--
+--   WHY ONLY 2 COLS (the answer-reachable remainder is now nearly tapped):
+--   Of the 48 columns still NULL in D_INVESTIGATION_REPEAT, the survey
+--   (live NBS_ODSE nbs_ui_metadata join nbs_rdb_metadata) shows:
+--     - all 33 *_OTH columns are now POPULATED by #1/#2 (none remain),
+--     - LAB_*/SUS_*/MTH_LAB_* (~34 cols) have NO page-builder question
+--       metadata for D_INVESTIGATION_REPEAT — they are lab/observation-
+--       derived (ELR/result-group), NOT answer-reachable. Skip.
+--     - the NUMERIC+CODED trio (CLN_ADVERSE_EVNT_ONSET,
+--       EPI_SUSPECTED_SOURCE_AGE, TRV_DURATION_OUTSIDE_US) is the systemic
+--       coded-numeric non-landing — don't bet (LOOP_round4/5). Skip.
+--     - LAB_LAB_TST_MODIFIER (q 10002202, CODED) lives ONLY on
+--       PG_Congenital_Syphilis_Investigation, and LAB_TEXT_METHOD_TXT
+--       (q 10010280, TEXT) ONLY on PG_Candida_auris_Investigation —
+--       NEITHER form has a PHC in merge_and_verify $PHC_UIDS, so reaching
+--       them would require authoring a whole new PHC/condition chain
+--       (out of this additive-answer scope). Skip.
+--   => the only columns reachable by adding answers to an EXISTING
+--   page-builder PHC are the two VAC_* columns above, both on the
+--   PG_Hepatitis_B_Perinatal_Investigation form (BLOCK_3), which is
+--   carried by PHC 22076100 (cond 10104), already in $PHC_UIDS.
+--
+-- HOW THESE COLUMNS POPULATE (routine 010
+-- sp_sld_investigation_repeat_postprocessing, run by the orchestrator at
+-- Step 8.5 over $PHC_UIDS):
+--   DATE answers (data_type DATE) flow through #DATE_DATA_REPT, pivot on
+--   RDB_COLUMN_NM into ##date_data_INV_out_*, then LEFT JOIN into
+--   S_INVESTIGATION_REPEAT keyed on
+--   (PAGE_CASE_UID, BLOCK_NM, ANSWER_GROUP_SEQ_NBR).
+--   Plain-NUMERIC answers (data_type NUMERIC, unit_type_cd NULL) flow
+--   through #NUMERIC_BASE_DATA_REPT -> ##numeric_DATA_REPT_out_*, joined
+--   the same way. Both branches require ANSWER_GROUP_SEQ_NBR IS NOT NULL
+--   and QUESTION_GROUP_SEQ_NBR IS NOT NULL (both true here:
+--   question_group_seq_nbr=3, we supply answer_group_seq_nbr=6). Neither
+--   branch filters by investigation_form_cd, so the answers land for this
+--   page-builder form. The answer value for the DATE question must pass
+--   ISDATE() (we use 'YYYY-MM-DD'); the NUMERIC value must be numeric.
+--
+-- WHY answer_group_seq_nbr = 6 (DISTINGUISHING-GUARD rule, LESSON L10/L11):
+--   The dim rows key on (PAGE_CASE_UID, BLOCK_NM, ANSWER_GROUP_SEQ_NBR).
+--   Adding a NEW repeating group creates an ADDITIONAL dim row carrying
+--   these answers without touching existing rows. On 22076100 the only
+--   existing nbs_case_answer rows (zz_hepatitis_answer_gap2's 7 MOTHER
+--   answers) are at answer_group_seq_nbr = NULL (single/non-repeating),
+--   and questions 10001152/10001153 are NOT answered there at any group
+--   (verified live). Group 4 (#1) and group 5 (#2) do NOT touch 22076100.
+--   So group 6 is UNUSED on this PHC AND globally non-colliding with the
+--   two prior repeat fixtures — a clean DISTINGUISHING guard: the block's
+--   idempotency guard matches ONLY its own rows via
+--   (act_uid, first parent q, group=6) and never collides with the
+--   group-NULL hepatitis answers or the auto-IDENTITY page-answer flood.
+--   nbs_case_answer is IDENTITY -> we LET IT AUTO-ASSIGN (no
+--   IDENTITY_INSERT; L10) and guard on the natural key.
+--
+-- TARGET FORM / EXISTING PHC (already in merge_and_verify.sh $PHC_UIDS;
+-- a page-builder form NOT in routine 010's line-91 legacy INV_FORM_*
+-- exclusion list; carries BLOCK_3 live):
+--   22076100  PG_Hepatitis_B_Perinatal_Investigation (cond 10104)
+--             block BLOCK_3  (VAC vaccination repeating block)
+--
+-- VALUE FIDELITY: realistic perinatal Hep B birth-dose values — first
+--   dose given on the birth date.
+--
+-- UID block reserved 22078000-22078999 (catalog/uid_ranges.md): UNUSED
+--   here by design — nbs_case_answer surrogate UID is auto-IDENTITY (L10),
+--   and the pipeline keys page answers on (act_uid, nbs_question_uid,
+--   seq/group), so no hardcoded UID is needed or consumed. The block
+--   remains reserved/available.
+--
+-- Foundation deps (read-only): superuser 10009282.
+-- =====================================================================
+
+USE [NBS_ODSE];
+GO
+
+DECLARE @su bigint   = 10009282;
+DECLARE @t  datetime = '2026-06-04T00:00:00';
+
+-- ===== 22076100 PG_Hepatitis_B_Perinatal — BLOCK_3 (VAC vaccination) =====
+IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_case_answer]
+               WHERE act_uid = 22076100 AND nbs_question_uid = 10001153 AND answer_group_seq_nbr = 6)
+BEGIN
+    INSERT INTO [dbo].[nbs_case_answer]
+        ([act_uid],[add_time],[add_user_id],[answer_txt],
+         [nbs_question_uid],[nbs_question_version_ctrl_nbr],[last_chg_time],
+         [last_chg_user_id],[record_status_cd],[record_status_time],[seq_nbr],
+         [answer_group_seq_nbr])
+    VALUES
+        -- VAC_VaccinationDate (q 10001153, DATE) -> DATE branch
+        (22076100,@t,@su,N'2026-02-10',10001153,1,@t,@su,N'ACTIVE',@t,1,6),
+        -- VAC_VaccineDoseNum (q 10001152, plain NUMERIC) -> NUMERIC branch
+        (22076100,@t,@su,N'1',10001152,1,@t,@su,N'ACTIVE',@t,2,6);
+END
+GO
+
+-- =====================================================================
+-- Closing CDC re-trigger: bump last_chg_time on the affected PHC so the
+-- real pipeline (CDC/Debezium -> kafka-connect -> reporting-pipeline-
+-- service investigation event + page-builder) re-emits the investigation
+-- and re-projects NRT_PAGE_CASE_ANSWER, after which the orchestrator's
+-- Step-8.5 sp_sld_investigation_repeat_postprocessing pivots these new
+-- group-6 DATE/NUMERIC answers into VAC_VaccinationDate / VAC_VaccineDoseNum.
+-- (Per-investigation PHC row — NOT a shared dim.)
+-- =====================================================================
+UPDATE [dbo].[public_health_case]
+   SET last_chg_time = GETDATE()
+ WHERE public_health_case_uid = 22076100;
+GO

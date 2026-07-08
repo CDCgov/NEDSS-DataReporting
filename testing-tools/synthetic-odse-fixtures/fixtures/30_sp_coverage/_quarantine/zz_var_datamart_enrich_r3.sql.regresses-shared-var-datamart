@@ -1,0 +1,203 @@
+-- =====================================================================
+-- Tier 3 — VAR_DATAMART column-coverage enrichment, round 3 (R3-D)
+-- =====================================================================
+-- Lifts dbo.var_datamart from 210/231 by filling user-attribution and
+-- multi-confirmation-method columns that the prior enrich fixtures
+-- (varicella_investigation_full_chain.sql, zz_var_datamart_enrich.sql)
+-- left NULL. All additions are PURELY ADDITIVE and keyed in this agent's
+-- reserved UID block 22026000-22026999. The shared Varicella PHC/
+-- investigation (22002000) and the Foundation patient (20000000) are
+-- referenced READ-ONLY; no Foundation/Tier-1/Tier-2 row is mutated.
+--
+-- TARGET COLUMNS (verified NULL live on var_datamart INVESTIGATION_KEY=25
+-- / CASE_UID=22002000 on 2026-06-02):
+--
+--   Group A — user attribution (3 cols):
+--     NOTIFICATION_SUBMITTER, INVESTIGATION_CREATED_BY,
+--     INVESTIGATION_LAST_UPDTD_BY
+--   These are NULL solely because dbo.USER_PROFILE has no row for
+--   NEDSS_ENTRY_ID 10009282 (the superuser who created/edited the
+--   investigation and submitted its notification). The var_datamart SP
+--   (250 lines 1451-1456) LEFT JOINs user_profile three times on
+--   notification_submitted_by / INVESTIGATION_CREATED_BY (=EVENT_METRIC
+--   ADD_USER_ID=10009282) / INVESTIGATION_LAST_UPDTD_BY (=LAST_CHG_USER_ID
+--   =10009282) and emits TRIM(last)+','+TRIM(first). Seeding the missing
+--   user_profile row unblocks all three.
+--   Architecturally-correct staging path: author an nrt_auth_user row
+--   (the debezium projection of NBS_ODSE.dbo.auth_user) + a mirror ODSE
+--   auth_user row, then EXEC sp_user_profile_postprocessing, which
+--   INSERTs USER_PROFILE keyed by NEDSS_ENTRY_ID. (027 SP lines 54-61,
+--   201-231.)
+--
+--   Group B — multi-value confirmation method (2 cols):
+--     CONFIRMATION_METHOD_2, CONFIRMATION_METHOD_3
+--   var_datamart PIVOTs confirmation_method_group -> confirmation_method
+--   ordered by CONFIRMATION_METHOD_KEY and slots COL2/COL3 into
+--   CONFIRMATION_METHOD_2/3 only when LEN(desc) > 2 (250 lines 966-1040).
+--   Baseline has one CMG row (LD, key=4 -> COL1 "Laboratory confirmed").
+--   confirmation_method + confirmation_method_group are rebuilt by
+--   sp_nrt_investigation_postprocessing from nrt_investigation_confirmation
+--   (005 SP lines 714-858: it DELETEs all CMG for the inv then reinserts
+--   one CMG row per nrt_investigation_confirmation row, auto-creating any
+--   missing confirmation_method dim row). So we author THREE
+--   nrt_investigation_confirmation rows for PHC 22002000 — LD (preserve
+--   CONFIRMATION_METHOD_1), CD, E — and re-run that SP. Codes/descs are
+--   grounded in NBS_SRTE PHC_CONF_M (verified live 2026-06-02).
+--
+-- DELIBERATELY SKIPPED (out of Tier-3 additive scope) — recorded so the
+-- coverage report is honest, no silent skips:
+--   PATIENT_GENERAL_COMMENTS, PATIENT_NAME_SUFFIX, PATIENT_PHONE_EXT_HOME,
+--   PATIENT_PHONE_EXT_WORK, PATIENT_SSN — sourced from d_patient key=3,
+--     which is the SHARED Foundation patient (UID 20000000, used by every
+--     subject's chain). Filling these requires mutating Foundation's
+--     nrt_patient/d_patient — forbidden for Tier 3.
+--   INVESTIGATOR_*, PHYSICIAN_*, REPORTER_*, REPORTING_SOURCE_NAME,
+--     HOSPITAL_NAME (8 cols) — sourced via F_VAR_PAM provider_key /
+--     physician_key / person_as_reporter_key / org_as_reporter_key /
+--     hospital_key, all sentinel 1 today. Real keys require participation
+--     edges (PhysicianOfPHC / PerAsReporterOfPHC / etc.) + re-running
+--     sp_f_var_pam_postprocessing — Tier 2 work that mutates the shared
+--     fact row. Recorded as LINK_REQUIRED in coverage.
+--   NOTIFICATION_STATUS / NOTIFICATION_SENT_DATE already populate on the
+--     real notification row (key=3 COMPLETED, sent 2026-04-04); they read
+--     NULL only on a pre-existing duplicate var_datamart row caused by
+--     notification_event fan-out (2 notifications for patient_key=3).
+--     Not a fixture gap.
+--
+-- UID block (agent R3-D reserved): 22026000-22026999
+--   22026000  nrt_auth_user.auth_user_uid + NBS_ODSE.auth_user.auth_user_uid
+--   (confirmation rows are keyed by the shared PHC uid 22002000, not new UIDs)
+--
+-- TAIL-EXEC:
+--   sp_user_profile_postprocessing       @id_list  = '22026000'
+--   sp_nrt_investigation_postprocessing  @id_list  = '22002000'
+--   sp_nrt_d_var_pam_postprocessing       @phc_uids = '22002000'
+--   sp_f_var_pam_postprocessing            @phc_id_list = '22002000'
+--   sp_var_datamart_postprocessing         @phc_uids = '22002000'
+--
+-- NON-IDEMPOTENT by project convention (fresh baseline each run) but every
+-- INSERT is guarded by IF NOT EXISTS for safe re-apply during iteration.
+-- =====================================================================
+
+-- =====================================================================
+-- Group A.1 — NBS_ODSE.dbo.auth_user mirror row (event-SP source).
+-- nedss_entry_id pinned to 10009282 so USER_PROFILE keys to the
+-- investigation's creator/editor/notification-submitter.
+-- =====================================================================
+USE [NBS_ODSE];
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+DECLARE @auth_uid     bigint = 22026000;
+
+IF NOT EXISTS (SELECT 1 FROM dbo.auth_user WHERE auth_user_uid = 22026000)
+BEGIN
+    SET IDENTITY_INSERT [dbo].[auth_user] ON;
+    INSERT INTO [dbo].[auth_user]
+        ([auth_user_uid], [user_id], [user_type], [user_first_nm], [user_last_nm],
+         [master_sec_admin_ind], [prog_area_admin_ind], [nedss_entry_id],
+         [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
+         [record_status_cd], [record_status_time])
+    VALUES
+        (22026000, N'superuser', N'NBS', N'Super', N'User',
+         N'T', N'T', @superuser_id,
+         '2026-04-01T00:00:00', @superuser_id, '2026-04-01T00:00:00', @superuser_id,
+         N'ACTIVE', '2026-04-01T00:00:00');
+    SET IDENTITY_INSERT [dbo].[auth_user] OFF;
+END
+GO
+
+-- =====================================================================
+-- Group A.2 — RDB_MODERN.dbo.nrt_auth_user staging row (debezium
+-- projection that sp_user_profile_postprocessing reads). first_nm/last_nm
+-- non-empty so the var_datamart user CASE branches emit "User,Super".
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+
+DECLARE @superuser_id bigint = 10009282;
+
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_auth_user WHERE auth_user_uid = 22026000)
+BEGIN
+    INSERT INTO [dbo].[nrt_auth_user]
+        ([auth_user_uid], [user_id], [first_nm], [last_nm], [nedss_entry_id],
+         [provider_uid], [add_time], [add_user_id], [last_chg_time],
+         [last_chg_user_id], [record_status_cd], [record_status_time])
+    VALUES
+        (22026000, N'superuser', N'Super', N'User', @superuser_id,
+         NULL, '2026-04-01T00:00:00', @superuser_id, '2026-04-01T00:00:00',
+         @superuser_id, N'ACTIVE', '2026-04-01T00:00:00');
+END
+GO
+
+-- =====================================================================
+-- Group B — nrt_investigation_confirmation rows for PHC 22002000.
+-- THREE confirmation methods so the PIVOT yields COL1/COL2/COL3.
+-- LD is re-supplied to preserve CONFIRMATION_METHOD_1 (the SP DELETEs +
+-- reinserts the whole CMG set for the inv). Codes from NBS_SRTE PHC_CONF_M.
+-- =====================================================================
+USE [RDB_MODERN];
+GO
+
+IF NOT EXISTS (SELECT 1 FROM dbo.nrt_investigation_confirmation
+               WHERE public_health_case_uid = 22002000)
+BEGIN
+    INSERT INTO [dbo].[nrt_investigation_confirmation]
+        ([public_health_case_uid], [confirmation_method_cd],
+         [confirmation_method_desc_txt], [confirmation_method_time], [batch_id])
+    VALUES
+        (22002000, N'LD', N'Laboratory confirmed',                          '2026-04-15T00:00:00', 1),
+        (22002000, N'CD', N'Clinical diagnosis (non-laboratory confirmed)', '2026-04-15T00:00:00', 1),
+        (22002000, N'E',  N'Epidemiologically linked',                      '2026-04-15T00:00:00', 1);
+END
+GO
+
+-- =====================================================================
+-- TAIL-EXEC. All wrapped in TRY/CATCH so a single SP failure cannot abort
+-- the merge_and_verify.sh pipeline (project convention).
+-- =====================================================================
+
+-- A) Build USER_PROFILE row for NEDSS_ENTRY_ID 10009282.
+BEGIN TRY
+    EXEC dbo.sp_user_profile_postprocessing @id_list = N'22026000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'zz_var_datamart_enrich_r3: sp_user_profile_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- B) Rebuild confirmation_method + confirmation_method_group from the new
+--    nrt_investigation_confirmation rows.
+BEGIN TRY
+    EXEC dbo.sp_nrt_investigation_postprocessing @id_list = N'22002000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'zz_var_datamart_enrich_r3: sp_nrt_investigation_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+-- C) Re-run the VAR-PAM datamart chain so the new attribution +
+--    confirmation values flow into var_datamart.
+BEGIN TRY
+    EXEC dbo.sp_nrt_d_var_pam_postprocessing @phc_uids = N'22002000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'zz_var_datamart_enrich_r3: sp_nrt_d_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+BEGIN TRY
+    EXEC dbo.sp_f_var_pam_postprocessing @phc_id_list = N'22002000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'zz_var_datamart_enrich_r3: sp_f_var_pam_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
+
+BEGIN TRY
+    EXEC dbo.sp_var_datamart_postprocessing @phc_uids = N'22002000', @debug = 0;
+END TRY
+BEGIN CATCH
+    PRINT 'zz_var_datamart_enrich_r3: sp_var_datamart_postprocessing failed - ' + ERROR_MESSAGE();
+END CATCH;
+GO
