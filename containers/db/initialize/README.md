@@ -11,7 +11,7 @@ Custom scripts that prepare the SQL Server instance for local development and CI
 | File | Purpose |
 | :--- | :--- |
 | `001-restore-modern.sql` | Restores the RDB_MODERN database |
-| `002-fix-database-ownership.sql` | Corrects database ownership settings |
+| `002-fix-database-ownership.sql` | Grants `sa` sysadmin and corrects database ownership |
 | `003-fix-lab-test.sql` | Fixes lab test data |
 | `004-prep-for-masterEtl-trace.sql` | Prepares trace settings for MasterETL |
 | `005-clear-job_flow_log.sql` | Clears the job flow log table |
