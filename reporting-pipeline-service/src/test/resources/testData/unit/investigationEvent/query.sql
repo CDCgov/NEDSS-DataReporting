@@ -1,0 +1,1 @@
+exec rdb_modern..sp_investigation_event '200001008';
