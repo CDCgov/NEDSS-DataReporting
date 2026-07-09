@@ -19,7 +19,7 @@ ext['commons-lang3.version'] = '3.20.0'
 
 // Override the Spring Boot managed Jackson version to address CVE-2026-54513.
 // jackson-bom.version controls all Jackson modules (databind, core, annotations, dataformats)
-ext['jackson-bom.version'] = '2.21.4'
+ext['jackson-bom.version'] = '2.21.5'
 
 group = 'gov.cdc.etldatapipeline'
 version = '0.0.1-SNAPSHOT'
