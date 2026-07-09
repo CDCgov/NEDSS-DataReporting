@@ -136,10 +136,6 @@ public class PersonService {
       new ObjectMapper().registerModule(new JavaTimeModule());
   private static String topicDebugLog = "Received {} with id: {} from topic: {}";
 
-  // PostProcessingService.processNrtMessage only inspects the payload for investigation/
-  // notification/observation topics; patient/provider/auth-user don't need one.
-  private static final String NO_PAYLOAD = "{}";
-
   private static final String SERVICE_NAME = "person-reporting";
 
   private final CustomMetrics metrics;
@@ -263,8 +259,7 @@ public class PersonService {
             nrtProviderRepository.save(NrtProvider.from(reporting));
             log.info(
                 "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
-            postProcessingService.processNrtMessage(
-                providerReportingOutputTopic, transformer.buildProviderKey(provider), NO_PAYLOAD);
+            postProcessingService.enqueue(providerReportingOutputTopic, provider.getPersonUid());
           } else {
             String reportingKey = transformer.buildProviderKey(provider);
             String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
@@ -311,8 +306,7 @@ public class PersonService {
             nrtPatientRepository.save(NrtPatient.from(reporting));
             log.info(
                 "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
-            postProcessingService.processNrtMessage(
-                patientReportingOutputTopic, transformer.buildPatientKey(personData), NO_PAYLOAD);
+            postProcessingService.enqueue(patientReportingOutputTopic, personData.getPersonUid());
           } else {
             String reportingKey = transformer.buildPatientKey(personData);
             String reportingData =
@@ -360,8 +354,7 @@ public class PersonService {
         authUsers.forEach(
             authUser -> {
               nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-              postProcessingService.processNrtMessage(
-                  userReportingOutputTopic, transformer.buildUserKey(authUser), NO_PAYLOAD);
+              postProcessingService.enqueue(userReportingOutputTopic, authUser.getAuthUserUid());
             });
       } else {
         // publish events in kafka
