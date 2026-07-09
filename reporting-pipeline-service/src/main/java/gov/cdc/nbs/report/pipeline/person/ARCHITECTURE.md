@@ -46,11 +46,12 @@ flowchart TD
     ComputeProvider --> DW
     ComputeAuthUser --> DW
 
-    JpaSave --> PPCall["PostProcessingService.processNrtMessage()<br/>(direct in-process call — no Kafka round-trip)"]
-    PPListener --> PPCall
+    JpaSave --> Enqueue["PostProcessingService.enqueue(topic, uid)<br/>(direct in-process call — no Kafka round-trip)"]
+    PPListener --> ProcessNrt["processNrtMessage()<br/>parses Kafka payload"]
+    ProcessNrt --> Enqueue
 
     subgraph POSTPROC["Shared postprocessing pipeline (priority-ordered batch)"]
-        PPCall --> IdCache[("idCache<br/>keyed by topic")]
+        Enqueue --> IdCache[("idCache<br/>keyed by topic<br/>producer adds + drain snapshot/clear both under cacheLock")]
         IdCache -->|"@Scheduled processCachedIds()<br/>sorted by Entity.priority"| Drain["Priority-ordered SP execution"]
         Drain --> PatientSP["sp_nrt_patient_postprocessing<br/>→ D_PATIENT"]
         Drain --> ProviderSP["sp_nrt_provider_postprocessing<br/>→ D_PROVIDER"]
@@ -71,7 +72,7 @@ flowchart TD
     classDef highlight fill:#3a2a12,stroke:#e7a53d,color:#f4dcae,stroke-width:2px;
     classDef muted fill:#16273d,stroke:#48607e,color:#6c839c,stroke-dasharray: 3 3;
     class DW,JpaSave highlight;
-    class KafkaPublish,KafkaConnect,PPListener muted;
+    class KafkaPublish,KafkaConnect,PPListener,ProcessNrt muted;
 ```
 
 🟧 amber = `person-service-direct-write` (active path) · ⬜ dashed = Kafka-Connect (legacy, feature-flagged off)
@@ -81,12 +82,18 @@ flowchart TD
 - **`cd` field** routes `nbs_Person` events to patient vs. provider stored procs.
 - **`person-service-direct-write` flag** is the main fork: JPA save (direct-write) vs. Kafka
   publish → Kafka-Connect (legacy). Both paths converge on the same
-  `PostProcessingService.processNrtMessage()` call — direct-write invokes it in-process, the
-  legacy path via its existing `@KafkaListener`.
+  `PostProcessingService.enqueue()` call into the shared `idCache` — direct-write calls it
+  in-process, the legacy path via its existing `@KafkaListener` → `processNrtMessage()`, which
+  itself now delegates to `enqueue()` for id-caching.
 - **Priority-ordered batch drain** is what keeps `D_PATIENT` hydration ahead of
   investigation/case_management processing within the same cycle. Direct-write must go through
   this same shared pipeline rather than calling postprocessing stored procedures itself —
   bypassing it breaks that ordering guarantee (see APP-787).
+- **`cacheLock`** guards every producer-side cache write (`enqueue()` and the legacy path's
+  payload-enrichment writes) against the scheduled drain's snapshot-then-clear. Without it, an
+  add landing between the drain's snapshot and its `clear()` was silently and permanently
+  dropped rather than merely delayed — this affected every entity type processed by this shared
+  service, not just Patient/Provider/AuthUser (see APP-787 concurrency follow-up).
 - **Datamart routing** only actually carries rows in the happy path for Patient (Covid
   datamarts); Provider/AuthUser postprocessing stored procedures return empty result sets there.
 
