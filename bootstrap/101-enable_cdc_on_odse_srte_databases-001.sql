@@ -42,9 +42,9 @@ GO
 USE nbs_odse;
 GO
 
-DECLARE @tablesToEnable TABLE (tablename NVARCHAR(128));
+DECLARE @odseTablesToEnable TABLE (tablename NVARCHAR(128));
 
-INSERT INTO @tablesToEnable (tablename)
+INSERT INTO @odseTablesToEnable (tablename)
 SELECT tablename
 FROM (
     VALUES
@@ -74,33 +74,33 @@ SELECT name
 FROM sys.tables
 WHERE is_tracked_by_cdc = 1;
 
-DECLARE @tableName NVARCHAR(128);
-DECLARE cur CURSOR FOR SELECT tablename FROM @tablesToEnable;
+DECLARE @odseTableName NVARCHAR(128);
+DECLARE odseCur CURSOR FOR SELECT tablename FROM @odseTablesToEnable;
 
-OPEN cur;
-FETCH NEXT FROM cur INTO @tableName;
+OPEN odseCur;
+FETCH NEXT FROM odseCur INTO @odseTableName;
 
 WHILE @@FETCH_STATUS = 0
     BEGIN
-        PRINT 'Enabling CDC for table: ' + @tableName;
+        PRINT 'Enabling CDC for table: ' + @odseTableName;
         BEGIN TRY
             EXEC sys.sp_cdc_enable_table
                 @source_schema = N'dbo',
-                @source_name = @tableName,
+                @source_name = @odseTableName,
                 @role_name = NULL;
         END TRY
         BEGIN CATCH
             PRINT 'ERROR: Could not enable CDC for table '
-            + @tableName
+            + @odseTableName
             + '. Error: '
             + ERROR_MESSAGE();
         END CATCH
 
-        FETCH NEXT FROM cur INTO @tableName;
+        FETCH NEXT FROM odseCur INTO @odseTableName;
     END
 
-CLOSE cur;
-DEALLOCATE cur;
+CLOSE odseCur;
+DEALLOCATE odseCur;
 GO
 
 -- ------------------------------------------
@@ -139,9 +139,9 @@ GO
 USE nbs_srte;
 GO
 
-DECLARE @tablesToEnable TABLE (tablename NVARCHAR(128));
+DECLARE @srteTablesToEnable TABLE (tablename NVARCHAR(128));
 
-INSERT INTO @tablesToEnable (tablename)
+INSERT INTO @srteTablesToEnable (tablename)
 SELECT tablename
 FROM (
     VALUES
@@ -194,31 +194,31 @@ SELECT name
 FROM sys.tables
 WHERE is_tracked_by_cdc = 1;
 
-DECLARE @tableName NVARCHAR(128);
-DECLARE cur CURSOR FOR SELECT tablename FROM @tablesToEnable;
+DECLARE @srteTableName NVARCHAR(128);
+DECLARE srteCur CURSOR FOR SELECT tablename FROM @srteTablesToEnable;
 
-OPEN cur;
-FETCH NEXT FROM cur INTO @tableName;
+OPEN srteCur;
+FETCH NEXT FROM srteCur INTO @srteTableName;
 
 WHILE @@FETCH_STATUS = 0
     BEGIN
-        PRINT 'Enabling CDC for table: ' + @tableName;
+        PRINT 'Enabling CDC for table: ' + @srteTableName;
         BEGIN TRY
             EXEC sys.sp_cdc_enable_table
                 @source_schema = N'dbo',
-                @source_name = @tableName,
+                @source_name = @srteTableName,
                 @role_name = NULL;
         END TRY
         BEGIN CATCH
             PRINT 'ERROR: Could not enable CDC for table '
-            + @tableName
+            + @srteTableName
             + '. Error: '
             + ERROR_MESSAGE();
         END CATCH
 
-        FETCH NEXT FROM cur INTO @tableName;
+        FETCH NEXT FROM srteCur INTO @srteTableName;
     END
 
-CLOSE cur;
-DEALLOCATE cur;
+CLOSE srteCur;
+DEALLOCATE srteCur;
 GO
