@@ -154,7 +154,7 @@ BEGIN
         (@covid_lab_order_uid, '2026-04-10T00:00:00', @superuser_id,
          N'94309-2', N'SARS coronavirus 2 RNA [Presence] in Respiratory specimen by NAA with probe detection',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-10T00:00:00', @superuser_id, N'OBS22022000GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22022000GA01',
          N'Order', N'Order', N'LabReport',
          N'ACTIVE', '2026-04-10T00:00:00',
          N'A', '2026-04-10T00:00:00', @foundation_patient_uid,
@@ -184,7 +184,7 @@ BEGIN
         (@covid_lab_result_uid, '2026-04-10T08:30:00', @superuser_id,
          N'94309-2', N'SARS coronavirus 2 RNA [Presence] in Respiratory specimen by NAA with probe detection',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-10T08:30:00', @superuser_id, N'OBS22022001GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22022001GA01',
          N'Result', N'Result', N'LabReport',
          N'ACTIVE', '2026-04-10T08:30:00',
          N'A', '2026-04-10T08:30:00', @foundation_patient_uid,
@@ -206,7 +206,7 @@ BEGIN
     VALUES
         (@covid_lab_order_uid, 1, '2026-04-10T00:00:00', @superuser_id,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-10T00:00:00', @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          '2026-04-10T00:00:00', N'ACC-COVID-22022000', N'OBS_LOCAL_ID',
          N'Local Observation Identifier', N'A', '2026-04-10T00:00:00');
 END;
@@ -224,7 +224,7 @@ BEGIN
     VALUES
         (@covid_lab_result_uid, @covid_lab_order_uid, N'COMP',
          '2026-04-10T08:30:00', @superuser_id,
-         '2026-04-10T08:30:00', @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          '2026-04-10T08:30:00', 1, N'OBS', N'OBS', N'A',
          '2026-04-10T08:30:00', N'Component');
 END;
@@ -242,7 +242,7 @@ BEGIN
     VALUES
         (@covid_lab_order_uid, @covid_phc_uid, N'LabReport',
          '2026-04-10T08:30:00', @superuser_id,
-         '2026-04-10T08:30:00', @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          '2026-04-10T08:30:00', 1, N'OBS', N'CASE', N'A',
          '2026-04-10T08:30:00', N'Lab linked to investigation');
 

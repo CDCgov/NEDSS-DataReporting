@@ -43,12 +43,12 @@ DECLARE @c1oid bigint = (SELECT program_jurisdiction_oid FROM dbo.public_health_
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@c1 AND nbs_question_uid=10001378)
 INSERT INTO dbo.nbs_case_answer (act_uid,add_time,add_user_id,answer_txt,nbs_question_uid,nbs_question_version_ctrl_nbr,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,seq_nbr) VALUES
-    (@c1,'2026-04-10',@su,N'Y',10001378,1,'2026-04-10',@su,N'ACTIVE','2026-04-10',0), -- FEVER
-    (@c1,'2026-04-10',@su,N'Y',10001379,1,'2026-04-10',@su,N'ACTIVE','2026-04-10',0), -- CHILLS/RIGORS
-    (@c1,'2026-04-10',@su,N'Y',10001380,1,'2026-04-10',@su,N'ACTIVE','2026-04-10',0), -- FATIGUE/MALAISE
-    (@c1,'2026-04-10',@su,N'Y',10001382,1,'2026-04-10',@su,N'ACTIVE','2026-04-10',0), -- HEADACHE
-    (@c1,'2026-04-10',@su,N'Y',10001383,1,'2026-04-10',@su,N'ACTIVE','2026-04-10',0), -- MYALGIA
-    (@c1,'2026-04-10',@su,N'N',10001390,1,'2026-04-10',@su,N'ACTIVE','2026-04-10',0); -- ALT_MENTAL_STATUS
+    (@c1,'2026-04-10',@su,N'Y',10001378,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',0), -- FEVER
+    (@c1,'2026-04-10',@su,N'Y',10001379,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',0), -- CHILLS/RIGORS
+    (@c1,'2026-04-10',@su,N'Y',10001380,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',0), -- FATIGUE/MALAISE
+    (@c1,'2026-04-10',@su,N'Y',10001382,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',0), -- HEADACHE
+    (@c1,'2026-04-10',@su,N'Y',10001383,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',0), -- MYALGIA
+    (@c1,'2026-04-10',@su,N'N',10001390,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',0); -- ALT_MENTAL_STATUS
 
 IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=@c1lab)
     INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (@c1lab,N'OBS',N'EVN');
@@ -62,16 +62,16 @@ BEGIN
          activity_to_time,effective_from_time,target_site_cd,target_site_desc_txt)
     VALUES
         (@c1lab,'2026-04-10T08:00:00',@su,N'94500-6',N'SARS-CoV-2 (COVID-19) RNA [Presence] by NAA',N'2.16.840.1.113883.6.1',N'LN',
-         '2026-04-10T10:00:00',@su,N'OBS22063190GA01',N'Order_rslt',N'Order_rslt',N'LabReport',
+         CAST(GETDATE() AS DATE),@su,N'OBS22063190GA01',N'Order_rslt',N'Order_rslt',N'LabReport',
          N'PROCESSED','2026-04-10T10:00:00',N'A','2026-04-10T10:00:00',@c1pat,
          N'T',1,N'130001',@c1oid,N'Y',
          '2026-04-10T08:00:00','2026-04-09T18:00:00',N'NASOPH',N'Nasopharyngeal swab');
     INSERT INTO dbo.obs_value_coded (observation_uid,code,code_system_cd,code_system_desc_txt,display_name)
         VALUES (@c1lab,N'260373001',N'2.16.840.1.113883.6.96',N'SCT',N'Detected');
     INSERT INTO dbo.participation (act_uid,subject_entity_uid,type_cd,act_class_cd,subject_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time,type_desc_txt)
-        VALUES (@c1lab,@c1pat,N'PATSBJ',N'OBS',N'PSN','2026-04-10',@su,'2026-04-10',@su,N'ACTIVE','2026-04-10',N'A','2026-04-10',N'Patient Subject');
+        VALUES (@c1lab,@c1pat,N'PATSBJ',N'OBS',N'PSN','2026-04-10',@su,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',N'A','2026-04-10',N'Patient Subject');
     INSERT INTO dbo.act_relationship (target_act_uid,source_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,from_time,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,sequence_nbr,status_cd,status_time)
-        VALUES (@c1,@c1lab,N'LabReport',N'OBS',N'CASE','2026-04-10',@su,'2026-04-10','2026-04-10',@su,N'ACTIVE','2026-04-10',1,N'A','2026-04-10');
+        VALUES (@c1,@c1lab,N'LabReport',N'OBS',N'CASE','2026-04-10',@su,'2026-04-10',CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-10',1,N'A','2026-04-10');
 END
 GO
 
@@ -85,11 +85,11 @@ DECLARE @c2oid bigint = (SELECT program_jurisdiction_oid FROM dbo.public_health_
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@c2 AND nbs_question_uid=10001378)
 INSERT INTO dbo.nbs_case_answer (act_uid,add_time,add_user_id,answer_txt,nbs_question_uid,nbs_question_version_ctrl_nbr,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,seq_nbr) VALUES
-    (@c2,'2026-04-12',@su,N'Y',10001378,1,'2026-04-12',@su,N'ACTIVE','2026-04-12',0), -- FEVER
-    (@c2,'2026-04-12',@su,N'N',10001379,1,'2026-04-12',@su,N'ACTIVE','2026-04-12',0), -- CHILLS/RIGORS
-    (@c2,'2026-04-12',@su,N'Y',10001380,1,'2026-04-12',@su,N'ACTIVE','2026-04-12',0), -- FATIGUE/MALAISE
-    (@c2,'2026-04-12',@su,N'Y',10001382,1,'2026-04-12',@su,N'ACTIVE','2026-04-12',0), -- HEADACHE
-    (@c2,'2026-04-12',@su,N'N',10001383,1,'2026-04-12',@su,N'ACTIVE','2026-04-12',0); -- MYALGIA
+    (@c2,'2026-04-12',@su,N'Y',10001378,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',0), -- FEVER
+    (@c2,'2026-04-12',@su,N'N',10001379,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',0), -- CHILLS/RIGORS
+    (@c2,'2026-04-12',@su,N'Y',10001380,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',0), -- FATIGUE/MALAISE
+    (@c2,'2026-04-12',@su,N'Y',10001382,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',0), -- HEADACHE
+    (@c2,'2026-04-12',@su,N'N',10001383,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',0); -- MYALGIA
 
 IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=@c2lab)
     INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (@c2lab,N'OBS',N'EVN');
@@ -103,16 +103,16 @@ BEGIN
          activity_to_time,effective_from_time,target_site_cd,target_site_desc_txt)
     VALUES
         (@c2lab,'2026-04-12T08:00:00',@su,N'94500-6',N'SARS-CoV-2 (COVID-19) RNA [Presence] by NAA',N'2.16.840.1.113883.6.1',N'LN',
-         '2026-04-12T10:00:00',@su,N'OBS22071090GA01',N'Order_rslt',N'Order_rslt',N'LabReport',
+         CAST(GETDATE() AS DATE),@su,N'OBS22071090GA01',N'Order_rslt',N'Order_rslt',N'LabReport',
          N'PROCESSED','2026-04-12T10:00:00',N'A','2026-04-12T10:00:00',@c2pat,
          N'T',1,N'130001',@c2oid,N'Y',
          '2026-04-12T08:00:00','2026-04-11T18:00:00',N'NASOPH',N'Nasopharyngeal swab');
     INSERT INTO dbo.obs_value_coded (observation_uid,code,code_system_cd,code_system_desc_txt,display_name)
         VALUES (@c2lab,N'260373001',N'2.16.840.1.113883.6.96',N'SCT',N'Detected');
     INSERT INTO dbo.participation (act_uid,subject_entity_uid,type_cd,act_class_cd,subject_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time,type_desc_txt)
-        VALUES (@c2lab,@c2pat,N'PATSBJ',N'OBS',N'PSN','2026-04-12',@su,'2026-04-12',@su,N'ACTIVE','2026-04-12',N'A','2026-04-12',N'Patient Subject');
+        VALUES (@c2lab,@c2pat,N'PATSBJ',N'OBS',N'PSN','2026-04-12',@su,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',N'A','2026-04-12',N'Patient Subject');
     INSERT INTO dbo.act_relationship (target_act_uid,source_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,from_time,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,sequence_nbr,status_cd,status_time)
-        VALUES (@c2,@c2lab,N'LabReport',N'OBS',N'CASE','2026-04-12',@su,'2026-04-12','2026-04-12',@su,N'ACTIVE','2026-04-12',1,N'A','2026-04-12');
+        VALUES (@c2,@c2lab,N'LabReport',N'OBS',N'CASE','2026-04-12',@su,'2026-04-12',CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-12',1,N'A','2026-04-12');
 END
 GO
 
@@ -126,9 +126,9 @@ DECLARE @h1oid bigint = (SELECT program_jurisdiction_oid FROM dbo.public_health_
 
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@h1 AND nbs_question_uid=10001141)
 INSERT INTO dbo.nbs_case_answer (act_uid,add_time,add_user_id,answer_txt,nbs_question_uid,nbs_question_version_ctrl_nbr,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,seq_nbr) VALUES
-    (@h1,'2026-04-11',@su,N'Y',10001141,1,'2026-04-11',@su,N'ACTIVE','2026-04-11',0), -- HepContactEver
-    (@h1,'2026-04-11',@su,N'N',10001142,1,'2026-04-11',@su,N'ACTIVE','2026-04-11',0), -- BloodWorkerEver
-    (@h1,'2026-04-11',@su,N'N',10001136,1,'2026-04-11',@su,N'ACTIVE','2026-04-11',0); -- ClottingPrior87
+    (@h1,'2026-04-11',@su,N'Y',10001141,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-11',0), -- HepContactEver
+    (@h1,'2026-04-11',@su,N'N',10001142,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-11',0), -- BloodWorkerEver
+    (@h1,'2026-04-11',@su,N'N',10001136,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-11',0); -- ClottingPrior87
 
 IF NOT EXISTS (SELECT 1 FROM dbo.act WHERE act_uid=@h1lab)
     INSERT INTO dbo.act (act_uid,class_cd,mood_cd) VALUES (@h1lab,N'OBS',N'EVN');
@@ -142,15 +142,15 @@ BEGIN
          activity_to_time,effective_from_time,target_site_cd,target_site_desc_txt)
     VALUES
         (@h1lab,'2026-04-11T08:00:00',@su,N'80375-5',N'Hepatitis A virus IgM Ab',N'2.16.840.1.113883.6.1',N'LN',
-         '2026-04-11T10:30:00',@su,N'OBS22065090GA01',N'Order_rslt',N'Order_rslt',N'LabReport',
+         CAST(GETDATE() AS DATE),@su,N'OBS22065090GA01',N'Order_rslt',N'Order_rslt',N'LabReport',
          N'PROCESSED','2026-04-11T10:30:00',N'A','2026-04-11T10:30:00',@h1pat,
          N'T',1,N'130001',@h1oid,N'Y',
          '2026-04-11T08:00:00','2026-04-10T18:00:00',N'SER',N'Serum');
     INSERT INTO dbo.obs_value_coded (observation_uid,code,code_system_cd,code_system_desc_txt,display_name)
         VALUES (@h1lab,N'10828004',N'2.16.840.1.113883.6.96',N'SCT',N'Positive');
     INSERT INTO dbo.participation (act_uid,subject_entity_uid,type_cd,act_class_cd,subject_class_cd,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,status_cd,status_time,type_desc_txt)
-        VALUES (@h1lab,@h1pat,N'PATSBJ',N'OBS',N'PSN','2026-04-11',@su,'2026-04-11',@su,N'ACTIVE','2026-04-11',N'A','2026-04-11',N'Patient Subject');
+        VALUES (@h1lab,@h1pat,N'PATSBJ',N'OBS',N'PSN','2026-04-11',@su,CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-11',N'A','2026-04-11',N'Patient Subject');
     INSERT INTO dbo.act_relationship (target_act_uid,source_act_uid,type_cd,source_class_cd,target_class_cd,add_time,add_user_id,from_time,last_chg_time,last_chg_user_id,record_status_cd,record_status_time,sequence_nbr,status_cd,status_time)
-        VALUES (@h1,@h1lab,N'LabReport',N'OBS',N'CASE','2026-04-11',@su,'2026-04-11','2026-04-11',@su,N'ACTIVE','2026-04-11',1,N'A','2026-04-11');
+        VALUES (@h1,@h1lab,N'LabReport',N'OBS',N'CASE','2026-04-11',@su,'2026-04-11',CAST(GETDATE() AS DATE),@su,N'ACTIVE','2026-04-11',1,N'A','2026-04-11');
 END
 GO

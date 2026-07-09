@@ -120,7 +120,7 @@ VALUES
      '2026-04-01T00:00:00',          -- add_time
      @superuser_id,                  -- add_user_id
      '2026-04-01T00:00:00',          -- from_time
-     '2026-04-01T00:00:00',          -- last_chg_time
+     CAST(GETDATE() AS DATE),          -- last_chg_time
      @superuser_id,                  -- last_chg_user_id
      N'ACTIVE',                      -- record_status_cd
      '2026-04-01T00:00:00',          -- record_status_time
@@ -136,7 +136,7 @@ VALUES
      '2026-04-04T00:00:00',          -- add_time
      @superuser_id,                  -- add_user_id
      '2026-04-04T00:00:00',          -- from_time
-     '2026-04-04T00:00:00',          -- last_chg_time
+     CAST(GETDATE() AS DATE),          -- last_chg_time
      @superuser_id,                  -- last_chg_user_id
      N'ACTIVE',                      -- record_status_cd
      '2026-04-04T00:00:00',          -- record_status_time
@@ -152,7 +152,7 @@ VALUES
      '2026-04-04T00:00:00',          -- add_time
      @superuser_id,                  -- add_user_id
      '2026-04-04T00:00:00',          -- from_time
-     '2026-04-04T00:00:00',          -- last_chg_time
+     CAST(GETDATE() AS DATE),          -- last_chg_time
      @superuser_id,                  -- last_chg_user_id
      N'ACTIVE',                      -- record_status_cd
      '2026-04-04T00:00:00',          -- record_status_time
@@ -171,7 +171,7 @@ VALUES
      '2026-04-01T00:00:00',          -- add_time
      @superuser_id,                  -- add_user_id
      '2026-04-01T00:00:00',          -- from_time
-     '2026-04-01T00:00:00',          -- last_chg_time
+     CAST(GETDATE() AS DATE),          -- last_chg_time
      @superuser_id,                  -- last_chg_user_id
      N'ACTIVE',                      -- record_status_cd
      '2026-04-01T00:00:00',          -- record_status_time
@@ -187,7 +187,7 @@ VALUES
      '2026-04-04T00:00:00',          -- add_time
      @superuser_id,                  -- add_user_id
      '2026-04-04T00:00:00',          -- from_time
-     '2026-04-04T00:00:00',          -- last_chg_time
+     CAST(GETDATE() AS DATE),          -- last_chg_time
      @superuser_id,                  -- last_chg_user_id
      N'ACTIVE',                      -- record_status_cd
      '2026-04-04T00:00:00',          -- record_status_time
@@ -203,7 +203,7 @@ VALUES
      '2026-04-04T00:00:00',          -- add_time
      @superuser_id,                  -- add_user_id
      '2026-04-04T00:00:00',          -- from_time
-     '2026-04-04T00:00:00',          -- last_chg_time
+     CAST(GETDATE() AS DATE),          -- last_chg_time
      @superuser_id,                  -- last_chg_user_id
      N'ACTIVE',                      -- record_status_cd
      '2026-04-04T00:00:00',          -- record_status_time

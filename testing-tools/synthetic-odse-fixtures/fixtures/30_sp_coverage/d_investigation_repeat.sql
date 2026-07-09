@@ -136,7 +136,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@inv_rept_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10190', N'Pertussis', N'NND', N'NND',
-     N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22006000GA01',
+     N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22006000GA01',
      N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'VAC', N'130001',
      22006000, N'N', NULL,
@@ -154,7 +154,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@inv_rept_phc_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'CAS22006000GA01', N'PHC_LOCAL_ID',
      N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
 

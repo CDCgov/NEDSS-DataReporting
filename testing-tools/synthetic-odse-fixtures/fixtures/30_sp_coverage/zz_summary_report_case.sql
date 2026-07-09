@@ -99,7 +99,7 @@ BEGIN
     VALUES
         (@phc_uid, @ts, @superuser_id, N'S',          -- case_type_cd 'S' = Summary
          N'C', N'10110', N'Hepatitis A, acute', N'NND', N'NND',
-         N'O', @ts, @superuser_id, N'CAS22065000GA01',
+         N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22065000GA01',
          N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_uid, N'N', NULL,
@@ -114,7 +114,7 @@ BEGIN
     VALUES
         (@phc_uid, 1, @ts, @superuser_id,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @ts, @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          @ts, N'CAS22065000GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @ts);
 
@@ -125,7 +125,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @phc_uid, N'SubjOfPHC', N'CASE', @ts, @superuser_id,
-         @ts, @superuser_id, N'ACTIVE', @ts, N'A', @ts, N'PSN',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', @ts, N'A', @ts, N'PSN',
          N'Subject of Public Health Case');
 
     -- ----- SummaryNotification: act (NOTF) + notification -----
@@ -140,7 +140,7 @@ BEGIN
          [mmwr_week],[mmwr_year],[rpt_sent_time],[txt])
     VALUES
         (@notif_uid, @ts, @superuser_id, N'NOTF', N'Summary Notification (NOTF)',
-         '2026-04-04T00:00:00', @superuser_id, N'NOT22065010GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'NOT22065010GA01',
          N'COMPLETED', '2026-04-04T00:00:00', N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @notif_uid, N'C', N'10110',
@@ -159,7 +159,7 @@ BEGIN
     VALUES
         (@phc_uid, @notif_uid, N'SummaryNotification', N'NOTF',
          N'CASE', @ts, @superuser_id, @ts,
-         @ts, @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          @ts, 1, N'A', @ts, N'Summary Notification');
 
     -- ----- BRANCH edge: makes root_uid resolve to the notification_uid -----
@@ -179,7 +179,7 @@ BEGIN
     VALUES
         (@notif_uid, @phc_uid, N'SummaryRow', N'CASE',
          N'NOTF', @ts, @superuser_id, @ts,
-         @ts, @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          @ts, 1, N'A', @ts, N'Summary Row');
 END;
 GO
