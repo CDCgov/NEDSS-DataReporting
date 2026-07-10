@@ -130,7 +130,7 @@ BEGIN
     VALUES
         (@phc_chronic, @ts, @su, N'I',
          N'C', N'10105', N'Hepatitis B virus infection, Chronic', N'NND', N'NND',
-         N'O', @ts, @su, N'CAS22076000GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22076000GA01',
          N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_chronic, N'N', NULL,
@@ -145,7 +145,7 @@ BEGIN
     VALUES
         (@phc_chronic, 1, @ts, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @ts, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @ts, N'CAS22076000GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @ts);
 
@@ -155,7 +155,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @phc_chronic, N'SubjOfPHC', N'CASE', @ts, @su,
-         @ts, @su, N'ACTIVE', @ts, N'A', @ts, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @ts, N'A', @ts, N'PSN',
          N'Subject of Public Health Case');
 END;
 GO
@@ -165,23 +165,23 @@ GO
 DECLARE @phc_chronic bigint = 22076000;
 DECLARE @su bigint = 10009282;
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001141 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001141,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_HepContactEver -> HEP_CONTACT_EVER_IND (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001141,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_HepContactEver -> HEP_CONTACT_EVER_IND (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001142 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001142,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_BloodWorkerEver -> MED_DEN_EMP_EVER_IND (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001142,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_BloodWorkerEver -> MED_DEN_EMP_EVER_IND (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001136 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001136,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_ClottingPrior87 -> CLOTFACTOR_PRIOR_1987 (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001136,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_ClottingPrior87 -> CLOTFACTOR_PRIOR_1987 (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001137 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001137,1,'N',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_HemodialysisLongTerm -> LT_HEMODIALYSIS_IND (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001137,1,'N',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_HemodialysisLongTerm -> LT_HEMODIALYSIS_IND (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001138 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001138,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_IDU -> EVER_INJCT_NOPRSC_DRG (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001138,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_IDU -> EVER_INJCT_NOPRSC_DRG (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001140 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001140,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_IncarceratedEver -> EVER_INCAR_IND (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001140,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_IncarceratedEver -> EVER_INCAR_IND (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001139 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001139,1,'3',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_NumSexPrtners -> LIFE_SEX_PRTNR_NBR (NUMERIC)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001139,1,'3',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_NumSexPrtners -> LIFE_SEX_PRTNR_NBR (NUMERIC)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001134 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001134,1,'N',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_TransfusionPrior92 -> BLD_TRANSF_PRIOR_1992 (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001134,1,'N',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_TransfusionPrior92 -> BLD_TRANSF_PRIOR_1992 (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_chronic AND nbs_question_uid=10001135 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001135,1,'N',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- RSK_TransplantPrior92 -> ORGN_TRNSP_PRIOR_1992 (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_chronic,10001135,1,'N',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- RSK_TransplantPrior92 -> ORGN_TRNSP_PRIOR_1992 (CSG 4150)
 GO
 
 -- =====================================================================
@@ -205,7 +205,7 @@ BEGIN
     VALUES
         (@phc_perinatal, @ts, @su, N'I',
          N'C', N'10104', N'Hepatitis B Viral Infection, Perinatal', N'NND', N'NND',
-         N'O', @ts, @su, N'CAS22076100GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22076100GA01',
          N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_perinatal, N'N', NULL,
@@ -220,7 +220,7 @@ BEGIN
     VALUES
         (@phc_perinatal, 1, @ts, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @ts, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @ts, N'CAS22076100GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @ts);
 
@@ -230,7 +230,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @phc_perinatal, N'SubjOfPHC', N'CASE', @ts, @su,
-         @ts, @su, N'ACTIVE', @ts, N'A', @ts, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @ts, N'A', @ts, N'PSN',
          N'Subject of Public Health Case');
 END;
 GO
@@ -240,19 +240,19 @@ GO
 DECLARE @phc_perinatal bigint = 22076100;
 DECLARE @su bigint = 10009282;
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001148 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001148,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MotherBornOutsideUS -> MTH_BORN_OUTSIDE_US (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001148,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MotherBornOutsideUS -> MTH_BORN_OUTSIDE_US (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001146 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001146,1,'2186-5',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MotherEthnicity -> MTH_ETHNICITY (CSG 102950 '2186-5'=Not Hispanic or Latino)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001146,1,'2186-5',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MotherEthnicity -> MTH_ETHNICITY (CSG 102950 '2186-5'=Not Hispanic or Latino)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001149 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001149,1,'Y',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MotherHBsAgPosPrior -> MTH_HBS_AG_PRIOR_POS (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001149,1,'Y',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MotherHBsAgPosPrior -> MTH_HBS_AG_PRIOR_POS (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001150 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001150,1,'N',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MotherPositiveAfter -> MTH_POS_AFTER (CSG 4150)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001150,1,'N',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MotherPositiveAfter -> MTH_POS_AFTER (CSG 4150)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001151 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001151,1,'2026-02-15',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MotherPosTestDate -> MTH_POS_TEST_DT (DATE)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001151,1,'2026-02-15',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MotherPosTestDate -> MTH_POS_TEST_DT (DATE)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001144 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001144,1,'2',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MotherRace -> MTH_RACE (CSG 104890 '2'=Asian)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001144,1,'2',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MotherRace -> MTH_RACE (CSG 104890 '2'=Asian)
 IF NOT EXISTS (SELECT 1 FROM dbo.nbs_case_answer WHERE act_uid=@phc_perinatal AND nbs_question_uid=10001143 AND answer_group_seq_nbr IS NULL)
-    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001143,1,'124',1,NULL,GETDATE(),@su,GETDATE(),@su,'ACTIVE',GETDATE()); -- MTH_MothersBirthCountry -> MTH_BIRTH_COUNTRY (CSG 102960 '124'=CANADA)
+    INSERT INTO dbo.nbs_case_answer (act_uid,nbs_question_uid,nbs_question_version_ctrl_nbr,answer_txt,seq_nbr,answer_group_seq_nbr,add_time,add_user_id,last_chg_time,last_chg_user_id,record_status_cd,record_status_time) VALUES (@phc_perinatal,10001143,1,'124',1,NULL,GETDATE(),@su,CAST(GETDATE() AS DATE),@su,'ACTIVE',GETDATE()); -- MTH_MothersBirthCountry -> MTH_BIRTH_COUNTRY (CSG 102960 '124'=CANADA)
 GO
 
 -- Bump last_chg_time so CDC re-emits both PHCs -> sp_investigation_event

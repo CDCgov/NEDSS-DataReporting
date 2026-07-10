@@ -122,7 +122,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@foundation_act_lab_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'OBS20000120GA01', N'OBS_LOCAL_ID',
      N'Local Observation Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -166,7 +166,7 @@ VALUES
      N'2.16.840.1.113883.6.1', N'LN',
      N'HAVAB-IGM', N'Hepatitis A IgM Ab',
      N'L', N'Local',
-     '2026-04-04T00:00:00', @superuser_id, N'OBS20070010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS20070010GA01',
      N'Order', N'Order', N'LabReport',
     N'ACTIVE', '2026-04-04T00:00:00',
      N'A', '2026-04-04T00:00:00', @foundation_patient_uid,
@@ -196,7 +196,7 @@ VALUES
     (@dbo_Act_lab_v2_result_uid, '2026-04-04T08:30:00', @superuser_id,
      N'13950-1', N'Hepatitis A virus IgM Ab [Presence] in Serum',
      N'2.16.840.1.113883.6.1', N'LN',
-     '2026-04-04T08:30:00', @superuser_id, N'OBS20070011GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS20070011GA01',
      N'Result', N'Result', N'LabReport',
     N'ACTIVE', '2026-04-04T08:30:00',
      N'A', '2026-04-04T08:30:00', @foundation_patient_uid,
@@ -221,7 +221,7 @@ INSERT INTO [dbo].[observation]
 VALUES
     (@dbo_Act_lab_v2_corder_uid, '2026-04-04T08:00:00', @superuser_id,
      N'NTE', N'Notes Comment Order',
-     '2026-04-04T08:00:00', @superuser_id, N'OBS20070020GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS20070020GA01',
         N'C_Order', N'C_Order', N'Lab Report',
     N'ACTIVE', '2026-04-04T08:00:00',
      N'A', '2026-04-04T08:00:00', @foundation_patient_uid,
@@ -230,7 +230,7 @@ VALUES
      '2026-04-04T08:00:00'),
     (@dbo_Act_lab_v2_cresult_uid, '2026-04-04T08:30:00', @superuser_id,
      N'NTE', N'Notes Comment Result',
-     '2026-04-04T08:30:00', @superuser_id, N'OBS20070021GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS20070021GA01',
         N'C_Result', N'C_Result', N'LabComment',
     N'ACTIVE', '2026-04-04T08:30:00',
      N'A', '2026-04-04T08:30:00', @foundation_patient_uid,
@@ -255,7 +255,7 @@ VALUES
         N'PATSBJ',
         N'OBS',
         N'PSN',
-        '2026-04-04T00:00:00', @superuser_id, '2026-04-04T00:00:00', @superuser_id,
+        '2026-04-04T00:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
         N'ACTIVE', '2026-04-04T00:00:00',
         N'A', '2026-04-04T00:00:00', N'Patient Subject'),
         (@dbo_Act_lab_v2_order_uid,
@@ -263,7 +263,7 @@ VALUES
         N'AUT',
         N'OBS',
         N'ORG',
-        '2026-04-04T00:00:00', @superuser_id, '2026-04-04T00:00:00', @superuser_id,
+        '2026-04-04T00:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
         N'ACTIVE', '2026-04-04T00:00:00',
         N'A', '2026-04-04T00:00:00', N'Author');
 
@@ -293,19 +293,19 @@ VALUES
     -- v2 Result -> v2 Order (parent)
     (@dbo_Act_lab_v2_result_uid, @dbo_Act_lab_v2_order_uid, N'COMP',
      '2026-04-04T08:30:00', @superuser_id,
-     '2026-04-04T08:30:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-04T08:30:00', 1, N'OBS', N'OBS', N'A',
      '2026-04-04T08:30:00', N'Component'),
         -- v2 C_Order -> v2 Order (append relationship, mirrors UI shape)
         (@dbo_Act_lab_v2_corder_uid, @dbo_Act_lab_v2_order_uid, N'APND',
      '2026-04-04T08:00:00', @superuser_id,
-     '2026-04-04T08:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          '2026-04-04T08:00:00', 2, N'OBS', N'OBS', N'A',
          '2026-04-04T08:00:00', N'Append'),
     -- v2 C_Result -> v2 C_Order
     (@dbo_Act_lab_v2_cresult_uid, @dbo_Act_lab_v2_corder_uid, N'COMP',
      '2026-04-04T08:30:00', @superuser_id,
-     '2026-04-04T08:30:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-04T08:30:00', 1, N'OBS', N'OBS', N'A',
      '2026-04-04T08:30:00', N'Component');
 
@@ -321,12 +321,12 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@dbo_Act_lab_v2_order_uid, 1, '2026-04-04T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-04T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-04T00:00:00', N'OBS20070010GA01', N'OBS_LOCAL_ID',
      N'Local Observation Identifier', N'A', '2026-04-04T00:00:00'),
     (@dbo_Act_lab_v2_order_uid, 2, '2026-04-04T00:00:00', @superuser_id,
      N'2.16.840.1.113883.4.6', N'NPI Filler',
-     '2026-04-04T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-04T00:00:00', N'ACC-V2-20070010', N'FILLER',
      N'Filler Order Number', N'A', '2026-04-04T00:00:00');
 

@@ -124,7 +124,7 @@ INSERT INTO [dbo].[person]
      [electronic_ind], [person_parent_uid], [edx_ind])
 VALUES
     (@contact_party_uid, '2026-04-15T10:00:00', @superuser_id, N'PAT',
-     '2026-04-15T10:00:00', @superuser_id, N'PSN22051000GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'PSN22051000GA01',
      N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
      N'COVID Contact', N'Person', 1,
      N'N', @contact_party_uid, N'Y');
@@ -172,7 +172,7 @@ VALUES
      @covid_phc_uid, NULL,
      NULL, NULL,
      N'ACTIVE', '2026-04-15T10:00:00',
-     @superuser_id, '2026-04-15T10:00:00', '2026-04-15T10:00:00', @superuser_id,
+     @superuser_id, '2026-04-15T10:00:00', CAST(GETDATE() AS DATE), @superuser_id,
      1,
      N'COV', N'130001', 9999999,
      N'Y', N'Y',

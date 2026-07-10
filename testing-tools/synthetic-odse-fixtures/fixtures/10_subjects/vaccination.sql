@@ -186,7 +186,7 @@ INSERT INTO [dbo].[intervention]
 VALUES
     (@dbo_Act_vaccination_v2_uid, '2026-04-15T10:00:00', @superuser_id,
      N'52', N'Hep A, adult',
-     N'INTV', '2026-04-15T10:00:00', @superuser_id, N'VAC20110010GA01',
+     N'INTV', CAST(GETDATE() AS DATE), @superuser_id, N'VAC20110010GA01',
      N'IMM', N'130001', 20110010,
      N'ACTIVE', '2026-04-15T10:00:00', N'T',
      N'A', '2026-04-15T10:00:00', 1,
