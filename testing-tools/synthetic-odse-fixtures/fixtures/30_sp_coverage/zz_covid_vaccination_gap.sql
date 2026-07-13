@@ -125,7 +125,7 @@ BEGIN
          [electronic_ind], [person_parent_uid], [edx_ind], [description])
     VALUES
         (@prov_uid, '2026-04-15T10:00:00', @superuser_id, N'PRV',
-         '2026-04-15T10:00:00', @superuser_id, N'PSN22072020GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'PSN22072020GA01',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
          N'Victor', N'A', N'Vaxgiver', N'DR',
          1, '2026-04-15T10:00:00', N'N', @prov_uid, N'Y',
@@ -180,7 +180,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[intervention] WHERE intervention_uid = @vac_
     VALUES
         (@vac_uid, '2026-04-15T10:00:00', @superuser_id,
          N'208', N'SARS-COV-2 (COVID-19) vaccine, mRNA',
-         N'INTV', '2026-04-15T10:00:00', @superuser_id, N'VAC22072000GA01',
+         N'INTV', CAST(GETDATE() AS DATE), @superuser_id, N'VAC22072000GA01',
          N'IMM', N'130001', 22072000,
          N'ACTIVE', '2026-04-15T10:00:00', N'T',
          N'A', '2026-04-15T10:00:00', 1,
@@ -217,15 +217,15 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_act_entity] WHERE nbs_act_entity_uid = 2
     VALUES
         -- SubOfVacc: COVID vaccination -> COVID dedicated patient
         (22072100, @vac_uid, @pat_uid, N'SubOfVacc', 1,
-         '2026-04-15T10:00:00', @superuser_id, '2026-04-15T10:00:00', @superuser_id,
+         '2026-04-15T10:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00'),
         -- PerformerOfVacc (Person): COVID vaccination -> dedicated provider (degree)
         (22072101, @vac_uid, @prov_uid, N'PerformerOfVacc', 1,
-         '2026-04-15T10:00:00', @superuser_id, '2026-04-15T10:00:00', @superuser_id,
+         '2026-04-15T10:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00'),
         -- PerformerOfVacc (Organization): COVID vaccination -> COVID dedicated org
         (22072102, @vac_uid, @org_uid, N'PerformerOfVacc', 1,
-         '2026-04-15T10:00:00', @superuser_id, '2026-04-15T10:00:00', @superuser_id,
+         '2026-04-15T10:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00');
 
 SET IDENTITY_INSERT [dbo].[nbs_act_entity] OFF;
@@ -254,7 +254,7 @@ IF NOT EXISTS (
     VALUES
         (@vac_uid, @covid_phc_uid, N'1180', N'Vaccination of Public Health Case',
          N'INTV', N'CASE', 1,
-         '2026-04-15T10:00:00', @superuser_id, '2026-04-15T10:00:00', @superuser_id,
+         '2026-04-15T10:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00');
 GO
 

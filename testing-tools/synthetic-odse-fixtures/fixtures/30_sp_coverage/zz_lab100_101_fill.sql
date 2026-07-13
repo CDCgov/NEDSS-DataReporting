@@ -161,7 +161,7 @@ VALUES
      N'13950-1', N'Hepatitis A virus IgM Ab [Presence] in Serum',
      N'2.16.840.1.113883.6.1', N'LN', N'HAVAB-IGM', N'Hepatitis A IgM Ab',
      N'L', N'Local',
-     '2026-04-20T08:00:00', @superuser_id, N'OBS22053010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS22053010GA01',
      N'Order', N'Order', N'LabReport',
     N'ACTIVE', '2026-04-20T08:00:00', N'A', '2026-04-20T08:00:00',
      @pat_uid, N'T', 1,
@@ -185,7 +185,7 @@ VALUES
     (@a_result, '2026-04-20T09:00:00', @superuser_id,
      N'13950-1', N'Hepatitis A virus IgM Ab [Presence] in Serum',
      N'2.16.840.1.113883.6.1', N'LN',
-     '2026-04-20T09:00:00', @superuser_id, N'OBS22053011GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS22053011GA01',
      N'Result', N'Result', N'LabReport',
     N'ACTIVE', '2026-04-20T09:00:00', N'A', '2026-04-20T09:00:00',
      @pat_uid, N'T', 1,
@@ -200,7 +200,7 @@ INSERT INTO [dbo].[act_relationship]
      [type_desc_txt])
 VALUES
     (@a_result, @a_order, N'COMP', '2026-04-20T09:00:00', @superuser_id,
-     '2026-04-20T09:00:00', @superuser_id, N'ACTIVE', '2026-04-20T09:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T09:00:00',
      1, N'OBS', N'OBS', N'A', '2026-04-20T09:00:00', N'Component');
 
 -- Lab Order -> Investigation (LabReport cross-subject edge; wires
@@ -212,7 +212,7 @@ INSERT INTO [dbo].[act_relationship]
      [type_desc_txt])
 VALUES
     (@a_order, 20050010, N'LabReport', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      1, N'OBS', N'CASE', N'A', '2026-04-20T08:00:00', N'Lab Report');
 
 -- Bump observation change time after wiring the LabReport edge so CDC emits
@@ -230,11 +230,11 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@a_order, 1, '2026-04-20T08:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'OBS22053010GA01', N'OBS_LOCAL_ID', N'Local Observation Identifier', N'A', '2026-04-20T08:00:00'),
     (@a_order, 2, '2026-04-20T08:00:00', @superuser_id,
      N'2.16.840.1.113883.4.6', N'NPI Filler',
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'ACC-22053010', N'FILLER', N'Filler Order Number', N'A', '2026-04-20T08:00:00');
 
 -- Result value rows (coded + numeric + txt) -> LAB_RESULT_VAL columns
@@ -264,13 +264,13 @@ INSERT INTO [dbo].[participation]
      [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
 VALUES
     (@pat_uid,  @a_order, N'PATSBJ', N'OBS', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'A', '2026-04-20T08:00:00', N'PSN', N'Patient Subject'),
     (@prov_uid, @a_order, N'ORD',    N'OBS', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'A', '2026-04-20T08:00:00', N'PSN', N'Ordering Provider'),
     (@prov_uid, @a_order, N'VRF',    N'OBS', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'A', '2026-04-20T08:00:00', N'PSN', N'Result Interpreter');
 
 -- Organizations on the ORDER: AUT (reporting lab), ORD (ordering org)
@@ -280,10 +280,10 @@ INSERT INTO [dbo].[participation]
      [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
 VALUES
     (@org_uid, @a_order, N'AUT', N'OBS', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'A', '2026-04-20T08:00:00', N'ORG', N'Author/Reporting Organization'),
     (@org_uid, @a_order, N'ORD', N'OBS', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'A', '2026-04-20T08:00:00', N'ORG', N'Ordering Organization');
 
 -- Organization on the RESULT: PRF (performing org)
@@ -293,7 +293,7 @@ INSERT INTO [dbo].[participation]
      [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
 VALUES
     (@org_uid, @a_result, N'PRF', N'OBS', '2026-04-20T09:00:00', @superuser_id,
-     '2026-04-20T09:00:00', @superuser_id, N'ACTIVE', '2026-04-20T09:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T09:00:00',
      N'A', '2026-04-20T09:00:00', N'ORG', N'Performing Organization');
 
 -- Specimen collector via role SPP (subject PROV, scoping PSN) on the ORDER.
@@ -304,7 +304,7 @@ INSERT INTO [dbo].[participation]
      [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
 VALUES
     (@prov_uid, @a_order, N'SPP', N'OBS', '2026-04-20T08:00:00', @superuser_id,
-     '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
      N'A', '2026-04-20T08:00:00', N'PROV', N'Specimen Collector');
 
 IF NOT EXISTS (SELECT 1 FROM dbo.role WHERE subject_entity_uid = @prov_uid AND cd = N'SPP' AND role_seq = 1)
@@ -314,7 +314,7 @@ IF NOT EXISTS (SELECT 1 FROM dbo.role WHERE subject_entity_uid = @prov_uid AND c
          [scoping_class_cd],[scoping_entity_uid],[status_cd],[status_time],[subject_class_cd])
     VALUES
         (@prov_uid, N'SPP', 1, '2026-04-20T08:00:00', @superuser_id, N'Specimen Collector',
-         '2026-04-20T08:00:00', @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-20T08:00:00',
          N'PSN', @pat_uid, N'A', '2026-04-20T08:00:00', N'PROV');
 GO
 
@@ -360,7 +360,7 @@ VALUES
     (@i_order, '2026-04-21T08:00:00', @superuser_id,
      N'CULT', N'Bacterial culture — isolate tracking',
      N'L', N'Local',
-     '2026-04-21T08:00:00', @superuser_id, N'OBS22053500GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS22053500GA01',
      N'I_Order', N'I_Order', N'LabReport',
     N'ACTIVE', '2026-04-21T08:00:00', N'A', '2026-04-21T08:00:00',
      @pat_uid, N'T', 1,
@@ -380,7 +380,7 @@ VALUES
     (@i_result, '2026-04-21T09:00:00', @superuser_id,
      N'CULT', N'Bacterial culture — isolate tracking',
      N'L', N'Local',
-     '2026-04-21T09:00:00', @superuser_id, N'OBS22053500GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS22053500GA01',
      N'I_Result', N'I_Result', N'LabReport',
     N'ACTIVE', '2026-04-21T09:00:00', N'A', '2026-04-21T09:00:00',
      @pat_uid, N'T', 1,
@@ -401,7 +401,7 @@ VALUES
     (@resulted, '2026-04-21T09:30:00', @superuser_id,
      N'CULT', N'Bacterial culture — Salmonella isolate',
      N'L', N'Local',
-     '2026-04-21T09:30:00', @superuser_id, N'OBS22053500GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS22053500GA01',
      N'Result', N'Result', N'LabReport',
     N'ACTIVE', '2026-04-21T09:30:00', N'A', '2026-04-21T09:30:00',
      @pat_uid, N'T', 1,
@@ -448,7 +448,7 @@ BEGIN
         (@child, '2026-04-21T09:15:00', @superuser_id,
          @cd, N'Isolate-tracking element ' + @cd,
          N'L', N'Local',
-         '2026-04-21T09:15:00', @superuser_id, N'OBS22053500GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22053500GA01',
          N'I_Result', N'I_Result', N'LabReport',
          N'ACTIVE', '2026-04-21T09:15:00', N'A', '2026-04-21T09:15:00',
          @pat_uid, N'T', 1,
@@ -491,7 +491,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@i_order, 1, '2026-04-21T08:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-21T08:00:00', @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
      N'OBS22053500GA01', N'OBS_LOCAL_ID', N'Local Observation Identifier', N'A', '2026-04-21T08:00:00');
 
 -- Lab-internal COMP edges: every child (I_Result, Result, 35 LABxxx) is the
@@ -519,15 +519,15 @@ INSERT INTO [dbo].[participation]
      [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
 VALUES
     (@pat_uid,  @i_order, N'PATSBJ', N'OBS', '2026-04-21T08:00:00', @superuser_id,
-     '2026-04-21T08:00:00', @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
      N'A', '2026-04-21T08:00:00', N'PSN', N'Patient Subject'),
     (@prov_uid, @i_order, N'ORD',    N'OBS', '2026-04-21T08:00:00', @superuser_id,
-     '2026-04-21T08:00:00', @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
      N'A', '2026-04-21T08:00:00', N'PSN', N'Ordering Provider'),
     (@org_uid,  @i_order, N'AUT',    N'OBS', '2026-04-21T08:00:00', @superuser_id,
-     '2026-04-21T08:00:00', @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
      N'A', '2026-04-21T08:00:00', N'ORG', N'Author/Reporting Organization'),
     (@org_uid,  @i_order, N'ORD',    N'OBS', '2026-04-21T08:00:00', @superuser_id,
-     '2026-04-21T08:00:00', @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-21T08:00:00',
      N'A', '2026-04-21T08:00:00', N'ORG', N'Ordering Organization');
 GO

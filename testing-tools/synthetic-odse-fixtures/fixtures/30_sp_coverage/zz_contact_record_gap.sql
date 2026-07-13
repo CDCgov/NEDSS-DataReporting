@@ -175,7 +175,7 @@ BEGIN
     VALUES
         (@ctt_party_uid, '2026-04-15T10:00:00', @superuser_id,
          N'M', '1988-09-22T00:00:00', N'PAT', N'M', N'N',
-         N'2186-5', '2026-04-15T10:00:00', @superuser_id, N'PSN22073000GA01',
+         N'2186-5', CAST(GETDATE() AS DATE), @superuser_id, N'PSN22073000GA01',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
          N'Daniel', N'James', N'Okafor', 1,
          '2026-04-15T10:00:00', '2026-04-15T10:00:00', '2026-04-15T10:00:00',
@@ -201,7 +201,7 @@ BEGIN
     VALUES
         (@ctt_party_uid, N'2054-5', N'2054-5',  -- Black or African American root
          '2026-04-15T10:00:00', @superuser_id,
-         '2026-04-15T10:00:00', @superuser_id, N'ACTIVE', '2026-04-15T10:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-15T10:00:00',
          '2026-04-15T10:00:00');
 
     INSERT INTO [dbo].[postal_locator]
@@ -211,7 +211,7 @@ BEGIN
          [street_addr1], [street_addr2], [zip_cd])
     VALUES
         (@ctt_pst_home, '2026-04-15T10:00:00', @superuser_id, N'Atlanta',
-         N'840', N'13121', '2026-04-15T10:00:00', @superuser_id,
+         N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00', N'13',
          N'47 Tracing Trail', N'Unit 9', N'30303');
 
@@ -221,7 +221,7 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@ctt_tel_home, '2026-04-15T10:00:00', @superuser_id, N'1',
-         '2026-04-15T10:00:00', @superuser_id, N'404-555-7300',
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-7300',
          N'ACTIVE', '2026-04-15T10:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
@@ -231,10 +231,10 @@ BEGIN
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
         (@ctt_party_uid, @ctt_pst_home, '2026-04-15T10:00:00', @superuser_id, N'H',
-         N'PST', '2026-04-15T10:00:00', @superuser_id, N'contact home address',
+         N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'contact home address',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'H', 1, '2026-04-15T10:00:00'),
         (@ctt_party_uid, @ctt_tel_home, '2026-04-15T10:00:00', @superuser_id, N'PH',
-         N'TELE', '2026-04-15T10:00:00', @superuser_id, N'contact home phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'contact home phone',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'H', 1, '2026-04-15T10:00:00');
 END
 GO
@@ -268,7 +268,7 @@ BEGIN
     VALUES
         (@ctt_phc2, '2026-04-15T10:00:00', @superuser_id2, N'I',
          N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
-         N'C', '2026-04-15T10:00:00', @superuser_id2, N'CAS22073100GA01',
+         N'C', CAST(GETDATE() AS DATE), @superuser_id2, N'CAS22073100GA01',
          N'OPEN', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
          N'T', 1, N'COV', N'130001',
          22073100, N'N',
@@ -290,12 +290,12 @@ BEGIN
     VALUES
         (@ctt_phc2, 1, '2026-04-15T10:00:00', @superuser_id2,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-15T10:00:00', @superuser_id2, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'ACTIVE',
          '2026-04-15T10:00:00', N'GA-COV-22073100', N'STATE',
          N'State Case Identifier', N'A', '2026-04-15T10:00:00'),
         (@ctt_phc2, 3, '2026-04-15T10:00:00', @superuser_id2,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-15T10:00:00', @superuser_id2, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'ACTIVE',
          '2026-04-15T10:00:00', N'LEGACY-22073100', N'LEGACY',
          N'Legacy Case Identifier', N'A', '2026-04-15T10:00:00');
 END
@@ -316,7 +316,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@ctt_phc3, @ctt_party3, N'SubjOfPHC', N'CASE', N'PSN',
-     '2026-04-15T10:00:00', @superuser_id3, '2026-04-15T10:00:00', @superuser_id3,
+     '2026-04-15T10:00:00', @superuser_id3, CAST(GETDATE() AS DATE), @superuser_id3,
      N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'Subject of Public Health Case');
 GO
 
@@ -341,16 +341,16 @@ INSERT INTO [dbo].[nbs_case_answer]
 VALUES
     -- NBS547 CDC-Assigned Case ID -> text
     (@page_phc, '2026-04-15T10:00:00', @su4,
-     N'CDC-22073100', 10004135, 1, '2026-04-15T10:00:00', @su4, N'ACTIVE', '2026-04-15T10:00:00', 0),
+     N'CDC-22073100', 10004135, 1, CAST(GETDATE() AS DATE), @su4, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- NOT113 Reporting County -> Fulton (13121)
     (@page_phc, '2026-04-15T10:00:00', @su4,
-     N'13121', 10001005, 1, '2026-04-15T10:00:00', @su4, N'ACTIVE', '2026-04-15T10:00:00', 0),
+     N'13121', 10001005, 1, CAST(GETDATE() AS DATE), @su4, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- INV576 Symptomatic -> Y
     (@page_phc, '2026-04-15T10:00:00', @su4,
-     N'Y', 10001027, 1, '2026-04-15T10:00:00', @su4, N'ACTIVE', '2026-04-15T10:00:00', 0),
+     N'Y', 10001027, 1, CAST(GETDATE() AS DATE), @su4, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- NBS555 Symptom status -> SYMP_RESOLVE
     (@page_phc, '2026-04-15T10:00:00', @su4,
-     N'SYMP_RESOLVE', 10004179, 1, '2026-04-15T10:00:00', @su4, N'ACTIVE', '2026-04-15T10:00:00', 0);
+     N'SYMP_RESOLVE', 10004179, 1, CAST(GETDATE() AS DATE), @su4, N'ACTIVE', '2026-04-15T10:00:00', 0);
 GO
 
 -- =====================================================================
@@ -399,7 +399,7 @@ BEGIN
          @idxpat5, @ctparty5,
          @idxphc5, @cttphc5,
          N'ACTIVE', '2026-04-15T10:00:00',
-         @su5, '2026-04-15T10:00:00', '2026-04-15T10:00:00', @su5,
+         @su5, '2026-04-15T10:00:00', CAST(GETDATE() AS DATE), @su5,
          1,
          N'COV', N'130001', 9999999,
          N'Y', N'Y',
@@ -444,24 +444,24 @@ INSERT INTO [dbo].[ct_contact_answer]
      [record_status_cd], [record_status_time], [seq_nbr])
 VALUES
     -- CODED exposure type/site (codes resolve via NBS_EXPOSURE_TYPE / NBS_EXPOSURE_LOC)
-    (22073300, @ct6, N'HOUSEHLD',   7107,      1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073301, @ct6, N'HOME',       7065,      1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073300, @ct6, N'HOUSEHLD',   7107,      1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073301, @ct6, N'HOME',       7065,      1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- DATE exposure first/last
-    (22073302, @ct6, N'2026-03-28', 7067,      1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073303, @ct6, N'2026-04-01', 7068,      1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073302, @ct6, N'2026-03-28', 7067,      1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073303, @ct6, N'2026-04-01', 7068,      1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- DATE sexual exposure first/last + follow-up initiation
-    (22073304, @ct6, N'2026-03-25', 10001182, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073305, @ct6, N'2026-03-30', 10001184, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073306, @ct6, N'2026-04-04', 10001353, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073304, @ct6, N'2026-03-25', 10001182, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073305, @ct6, N'2026-03-30', 10001184, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073306, @ct6, N'2026-04-04', 10001353, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- CODED relationship-with-patient / source-spread
-    (22073307, @ct6, N'THSPAT',     10001348, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073308, @ct6, N'SO',         10001194, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073307, @ct6, N'THSPAT',     10001348, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073308, @ct6, N'SO',         10001194, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
     -- TEXT physical description
-    (22073309, @ct6, N'5 ft 10 in', 10001169, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073310, @ct6, N'Medium',     10001170, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073311, @ct6, N'Brown',      10001171, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073312, @ct6, N'Fair',       10001172, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
-    (22073313, @ct6, N'Tattoo on left forearm', 10001173, 1, '2026-04-15T10:00:00', @su6, N'ACTIVE', '2026-04-15T10:00:00', 0);
+    (22073309, @ct6, N'5 ft 10 in', 10001169, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073310, @ct6, N'Medium',     10001170, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073311, @ct6, N'Brown',      10001171, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073312, @ct6, N'Fair',       10001172, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0),
+    (22073313, @ct6, N'Tattoo on left forearm', 10001173, 1, CAST(GETDATE() AS DATE), @su6, N'ACTIVE', '2026-04-15T10:00:00', 0);
 
 SET IDENTITY_INSERT [dbo].[ct_contact_answer] OFF;
 GO

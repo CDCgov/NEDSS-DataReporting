@@ -139,7 +139,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@gap_phc2, '2026-04-10T00:00:00', @gap_user2, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
-     N'O', '2026-04-10T00:00:00', @gap_user2, N'CAS22071000GA01',
+     N'O', CAST(GETDATE() AS DATE), @gap_user2, N'CAS22071000GA01',
      N'OPEN', '2026-04-10T00:00:00', N'A', '2026-04-10T00:00:00',
      N'T', 1, N'COV', N'130001',
      @gap_phc2, N'Y', N'GA-COVID-OUTBREAK-2026-04',
@@ -166,7 +166,7 @@ INSERT INTO [dbo].[act_id]
      [record_status_time], [root_extension_txt], [type_cd], [status_cd], [status_time])
 VALUES
     (@gap_phc3, 1, '2026-04-10T00:00:00', @gap_user3,
-     '2026-04-10T00:00:00', @gap_user3, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @gap_user3, N'ACTIVE',
      '2026-04-10T00:00:00', N'GA-2026-STATE-22071000', N'STATE', N'A', '2026-04-10T00:00:00');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[act_id] WHERE act_uid = @gap_phc3 AND act_id_seq = 2)
@@ -176,7 +176,7 @@ INSERT INTO [dbo].[act_id]
      [record_status_time], [root_extension_txt], [type_cd], [status_cd], [status_time])
 VALUES
     (@gap_phc3, 2, '2026-04-10T00:00:00', @gap_user3,
-     '2026-04-10T00:00:00', @gap_user3, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @gap_user3, N'ACTIVE',
      '2026-04-10T00:00:00', N'FULTON-2026-CITY-22071000', N'CITY', N'A', '2026-04-10T00:00:00');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[act_id] WHERE act_uid = @gap_phc3 AND act_id_seq = 3)
@@ -186,7 +186,7 @@ INSERT INTO [dbo].[act_id]
      [record_status_time], [root_extension_txt], [type_cd], [status_cd], [status_time])
 VALUES
     (@gap_phc3, 3, '2026-04-10T00:00:00', @gap_user3,
-     '2026-04-10T00:00:00', @gap_user3, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @gap_user3, N'ACTIVE',
      '2026-04-10T00:00:00', N'LEGACY-22071000', N'LEGACY', N'A', '2026-04-10T00:00:00');
 GO
 
@@ -207,7 +207,7 @@ INSERT INTO [dbo].[NBS_Note]
      [note], [private_ind_cd], [type_cd])
 VALUES
     (@gap_phc4, N'ACTIVE', '2026-04-10T00:00:00',
-     '2026-04-10T00:00:00', @gap_user4, '2026-04-10T00:00:00', @gap_user4,
+     '2026-04-10T00:00:00', @gap_user4, CAST(GETDATE() AS DATE), @gap_user4,
      N'Investigation note: outbreak-associated COVID case; contacts under monitoring.',
      N'F', N'COMMENT');
 GO
@@ -248,7 +248,7 @@ INSERT INTO [dbo].[participation]
      [status_cd], [status_time], [subject_class_cd], [type_desc_txt])
 VALUES
     (@gap_pat6, @gap_phc6, N'SubjOfPHC', N'CASE', '2026-04-10T00:00:00', @gap_user6,
-     '2026-04-10T00:00:00', @gap_user6, N'ACTIVE', '2026-04-10T00:00:00',
+     CAST(GETDATE() AS DATE), @gap_user6, N'ACTIVE', '2026-04-10T00:00:00',
      N'A', '2026-04-10T00:00:00', N'PSN', N'Subject of Public Health Case');
 GO
 

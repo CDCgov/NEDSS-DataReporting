@@ -180,7 +180,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@std_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10311', N'Syphilis, primary', N'NND', N'NND',
-     N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22004000GA01',
+     N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22004000GA01',
      N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'STD', N'130001',
      22004000, N'N', NULL,
@@ -207,7 +207,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@std_full_phc_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'CAS22004000GA01', N'PHC_LOCAL_ID',
      N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -266,59 +266,59 @@ VALUES
     -- ===== D_INV_HIV =====
     -- NBS261 HIV_900_TEST_REFERRAL_DT (DATE)
     (22004200, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'2026-03-15', 10001326, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-03-15', 10001326, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS259 HIV_LAST_900_TEST_DT (DATE)
     (22004201, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'2026-03-15', 10001324, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-03-15', 10001324, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS264 HIV_POST_TEST_900_COUNSELING (CODED YNU 4150) -> 'N'
     (22004202, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001330, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001330, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== D_INV_ADMINISTRATIVE =====
     -- INV177 ADM_FIRST_RPT_TO_PHD_DT (DATE)
     (22004210, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'2026-04-03', 10001004, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-04-03', 10001004, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- INV886 ADM_NOTIF_COMMENT (TEXT)
     (22004211, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Syphilis primary - partner services initiated.', 10001016, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Syphilis primary - partner services initiated.', 10001016, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS137 ADM_DISSEMINATED_IND (CODED YNU 4150) -> 'N'
     (22004212, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001198, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001198, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== D_INV_CLINICAL =====
     -- STD099 CLN_DT_INIT_HLTH_EXM (DATE)
     (22004220, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'2026-04-05', 10001193, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-04-05', 10001193, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS443 CLN_PRE_EXP_PROPHY_IND (CODED YNU 4150) -> 'Y'
     (22004221, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10003230, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10003230, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- STD102 CLN_NEUROSYPHILLIS_IND (CODED 105750) -> 'N' (N/C/P)
     (22004222, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001197, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001197, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== D_INV_EPIDEMIOLOGY =====
     -- NBS135 SOURCE_SPREAD (CODED 105050) -> 'SP' (Spread)
     (22004230, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'SP', 10001194, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'SP', 10001194, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== D_INV_COMPLICATION =====
     -- INV361 CMP_CONJUNCTIVITIS_IND (CODED YNU 4150) -> 'N'
     (22004240, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001199, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001199, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- INV179 CMP_PID_IND (CODED YNU 4150) -> 'N'
     (22004241, @std_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001196, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001196, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
 
 SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;

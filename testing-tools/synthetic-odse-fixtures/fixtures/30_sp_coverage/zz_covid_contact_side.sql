@@ -141,7 +141,7 @@ BEGIN
     VALUES
         (@ctt_pat_uid, '2026-04-15T10:00:00', @superuser_id,
          N'F', '1990-06-11T00:00:00', N'PAT', N'F', N'N',
-         N'2135-2', '2026-04-15T10:00:00', @superuser_id, N'PSN22063000GA01',
+         N'2135-2', CAST(GETDATE() AS DATE), @superuser_id, N'PSN22063000GA01',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
          N'Maria', N'Elena', N'Contreras', NULL, 1,
          '2026-04-15T10:00:00', '2026-04-15T10:00:00', '2026-04-15T10:00:00',
@@ -169,7 +169,7 @@ BEGIN
          [root_extension_txt], [type_cd], [type_desc_txt], [as_of_date])
     VALUES
         (@ctt_pat_uid, 1, '2026-04-15T10:00:00', @superuser_id,
-         '2026-04-15T10:00:00', @superuser_id,
+         CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
          N'555-66-7777', N'SS', N'Social Security', '2026-04-15T10:00:00');
 
@@ -179,7 +179,7 @@ BEGIN
          [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [as_of_date])
     VALUES
         (@ctt_pat_uid, N'2054-5', N'2054-5', '2026-04-15T10:00:00', @superuser_id,
-         '2026-04-15T10:00:00', @superuser_id, N'ACTIVE', '2026-04-15T10:00:00', '2026-04-15T10:00:00');
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-15T10:00:00', '2026-04-15T10:00:00');
 
     -- Locators: home address (CTT_PATIENT_STREET_ADDR_1/2, CITY, STATE, ZIP, COUNTY), birth country.
     INSERT INTO [dbo].[postal_locator]
@@ -189,7 +189,7 @@ BEGIN
          [street_addr1], [street_addr2], [zip_cd], [census_tract], [within_city_limits_ind])
     VALUES
         (@ctt_pst_home, '2026-04-15T10:00:00', @superuser_id, N'Atlanta',
-         N'840', N'13121', '2026-04-15T10:00:00', @superuser_id,
+         N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00', N'13',
          N'88 Quarantine Court', N'Apt 4B', N'30303', N'1210320', N'Y');
 
@@ -199,7 +199,7 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@ctt_pst_bir, '2026-04-15T10:00:00', @superuser_id, N'Atlanta',
-         N'840', '2026-04-15T10:00:00', @superuser_id,
+         N'840', CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-15T10:00:00');
 
     -- Phones: home / work (+ext) / cell, then email.
@@ -209,13 +209,13 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@ctt_tel_home, '2026-04-15T10:00:00', @superuser_id, N'1',
-         '2026-04-15T10:00:00', @superuser_id, N'404-555-6100', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-6100', NULL,
          N'ACTIVE', '2026-04-15T10:00:00'),
         (@ctt_tel_work, '2026-04-15T10:00:00', @superuser_id, N'1',
-         '2026-04-15T10:00:00', @superuser_id, N'404-555-6101', N'4242',
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-6101', N'4242',
          N'ACTIVE', '2026-04-15T10:00:00'),
         (@ctt_tel_cell, '2026-04-15T10:00:00', @superuser_id, N'1',
-         '2026-04-15T10:00:00', @superuser_id, N'404-555-6102', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-6102', NULL,
          N'ACTIVE', '2026-04-15T10:00:00');
 
     INSERT INTO [dbo].[tele_locator]
@@ -224,7 +224,7 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@ctt_tel_email, '2026-04-15T10:00:00', @superuser_id, N'1',
-         '2026-04-15T10:00:00', @superuser_id, N'maria.contreras@nbs.test',
+         CAST(GETDATE() AS DATE), @superuser_id, N'maria.contreras@nbs.test',
          N'ACTIVE', '2026-04-15T10:00:00');
 
     -- home address (PST,H,H); birth country (PST,BIR,BIR); home/work/cell phone; email.
@@ -235,22 +235,22 @@ BEGIN
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
         (@ctt_pat_uid, @ctt_pst_home, '2026-04-15T10:00:00', @superuser_id, N'H',
-         N'PST', '2026-04-15T10:00:00', @superuser_id, N'contact home address',
+         N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'contact home address',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'H', 1, '2026-04-15T10:00:00'),
         (@ctt_pat_uid, @ctt_pst_bir, '2026-04-15T10:00:00', @superuser_id, N'BIR',
-         N'PST', '2026-04-15T10:00:00', @superuser_id, N'contact birth country',
+         N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'contact birth country',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'BIR', 1, '2026-04-15T10:00:00'),
         (@ctt_pat_uid, @ctt_tel_home, '2026-04-15T10:00:00', @superuser_id, N'PH',
-         N'TELE', '2026-04-15T10:00:00', @superuser_id, N'contact home phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'contact home phone',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'H', 1, '2026-04-15T10:00:00'),
         (@ctt_pat_uid, @ctt_tel_work, '2026-04-15T10:00:00', @superuser_id, N'PH',
-         N'TELE', '2026-04-15T10:00:00', @superuser_id, N'contact work phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'contact work phone',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'WP', 1, '2026-04-15T10:00:00'),
         (@ctt_pat_uid, @ctt_tel_cell, '2026-04-15T10:00:00', @superuser_id, N'CP',
-         N'TELE', '2026-04-15T10:00:00', @superuser_id, N'contact cell phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'contact cell phone',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'H', 1, '2026-04-15T10:00:00'),
         (@ctt_pat_uid, @ctt_tel_email, '2026-04-15T10:00:00', @superuser_id, N'NET',
-         N'TELE', '2026-04-15T10:00:00', @superuser_id, N'contact email',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'contact email',
          N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'H', 1, '2026-04-15T10:00:00');
 END
 GO
@@ -282,7 +282,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@ctt_phc, '2026-04-15T10:00:00', @superuser_id2, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
-     N'O', '2026-04-15T10:00:00', @superuser_id2, N'CAS22063100GA01',
+     N'O', CAST(GETDATE() AS DATE), @superuser_id2, N'CAS22063100GA01',
      N'OPEN', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
      N'T', 1, N'COV', N'130001',
      22063100, N'N', NULL,
@@ -300,7 +300,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@ctt_phc, 1, '2026-04-15T10:00:00', @superuser_id2,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-15T10:00:00', @superuser_id2, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id2, N'ACTIVE',
      '2026-04-15T10:00:00', N'CAS22063100GA01', N'PHC_LOCAL_ID',
      N'Local Public Health Case Identifier', N'A', '2026-04-15T10:00:00');
 GO
@@ -323,7 +323,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@ctt_phc3, @ctt_pat3, N'SubjOfPHC', N'CASE', N'PSN',
-     '2026-04-15T10:00:00', @superuser_id3, '2026-04-15T10:00:00', @superuser_id3,
+     '2026-04-15T10:00:00', @superuser_id3, CAST(GETDATE() AS DATE), @superuser_id3,
      N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00', N'Subject of Public Health Case');
 GO
 

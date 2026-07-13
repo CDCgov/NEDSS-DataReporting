@@ -153,9 +153,9 @@ BEGIN
          last_chg_time, ldf_value, version_ctrl_nbr)
     VALUES
         (10002099, 22047500, '2026-06-04T00:00:00', 'PHC',
-         '2026-06-04T00:00:00', 'RTR LDF foodborne answer A', 1),
+         CAST(GETDATE() AS DATE), 'RTR LDF foodborne answer A', 1),
         (10002100, 22047500, '2026-06-04T00:00:00', 'PHC',
-         '2026-06-04T00:00:00', 'RTR LDF foodborne answer B', 1);
+         CAST(GETDATE() AS DATE), 'RTR LDF foodborne answer B', 1);
     PRINT '[zz_ldf_subsystem] inserted 2 PHC LDF answers on 22047500 (cd 10270)';
 END
 GO
@@ -172,7 +172,7 @@ BEGIN
          last_chg_time, ldf_value, version_ctrl_nbr)
     VALUES
         (10002100, 10000008, '2026-06-04T00:00:00', 'PAT',
-         '2026-06-04T00:00:00', 'RTR LDF patient answer', 1);
+         CAST(GETDATE() AS DATE), 'RTR LDF patient answer', 1);
     PRINT '[zz_ldf_subsystem] inserted PAT LDF answer on Person 10000008';
 END
 GO
@@ -189,7 +189,7 @@ BEGIN
          last_chg_time, ldf_value, version_ctrl_nbr)
     VALUES
         (10002105, 10003001, '2026-06-04T00:00:00', 'ORG',
-         '2026-06-04T00:00:00', 'RTR LDF organization answer', 1);
+         CAST(GETDATE() AS DATE), 'RTR LDF organization answer', 1);
     PRINT '[zz_ldf_subsystem] inserted ORG LDF answer on Organization 10003001';
 END
 GO
