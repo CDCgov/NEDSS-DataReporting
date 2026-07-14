@@ -366,13 +366,10 @@ public class PostProcessingService {
 
         JsonNode tblNode = payloadNode.path("rdb_table_name_list");
         if (!tblNode.isMissingNode() && !tblNode.isNull()) {
-          synchronized (cacheLock) {
-            Arrays.stream(tblNode.asText().split(","))
-                .map(String::trim)
-                .forEach(
-                    tbl ->
-                        pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
-          }
+          Arrays.stream(tblNode.asText().split(","))
+              .map(String::trim)
+              .forEach(
+                  tbl -> pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
         }
       } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
         String actTypeCd = payloadNode.path("act_type_cd").asText();
@@ -386,23 +383,21 @@ public class PostProcessingService {
                 .map(JsonNode::asText)
                 .orElse(null);
 
-        synchronized (cacheLock) {
-          if (MORB_REPORT.equals(ctrlCd)) {
-            if ("Order".equals(domainCd)) {
-              obsCache.computeIfAbsent(MORB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
-            }
-          } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null)
-              && assertMatches(
-                  domainCd,
-                  "Order",
-                  "Result",
-                  "R_Order",
-                  "R_Result",
-                  "I_Order",
-                  "I_Result",
-                  "Order_rslt")) {
-            obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
+        if (MORB_REPORT.equals(ctrlCd)) {
+          if ("Order".equals(domainCd)) {
+            obsCache.computeIfAbsent(MORB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
           }
+        } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null)
+            && assertMatches(
+                domainCd,
+                "Order",
+                "Result",
+                "R_Order",
+                "R_Result",
+                "I_Order",
+                "I_Result",
+                "Order_rslt")) {
+          obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
         }
 
         /*
@@ -420,15 +415,11 @@ public class PostProcessingService {
             && domainCd.equalsIgnoreCase("Order")
             && electronicInd.equalsIgnoreCase("Y")) {
           List<String> resUidList = List.of(resUidNode.asText().split(","));
-          synchronized (cacheLock) {
-            resUidList.forEach(
-                resUid -> {
-                  Long ruid = Long.valueOf(resUid);
-                  obsCache
-                      .computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>())
-                      .add(ruid);
-                });
-          }
+          resUidList.forEach(
+              resUid -> {
+                Long ruid = Long.valueOf(resUid);
+                obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(ruid);
+              });
         }
       }
     } catch (Exception ex) {
@@ -437,13 +428,11 @@ public class PostProcessingService {
   }
 
   private void extractSummaryCase(Long uid, String caseType) {
-    synchronized (cacheLock) {
-      if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
-        sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
-      }
-      if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
-        sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
-      }
+    if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
+      sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+    }
+    if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
+      sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
     }
   }
 
@@ -490,30 +479,27 @@ public class PostProcessingService {
         return;
       }
 
-      synchronized (cacheLock) {
-        Map<String, Queue<Long>> dmMap =
-            dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
+      Map<String, Queue<Long>> dmMap =
+          dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
 
-        dmMap
-            .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-            .add(dmData.getPublicHealthCaseUid());
+      dmMap
+          .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+          .add(dmData.getPublicHealthCaseUid());
 
-        Optional.ofNullable(dmData.getPatientUid())
-            .ifPresent(
-                uid ->
-                    dmMap
-                        .computeIfAbsent(
-                            PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                        .add(uid));
+      Optional.ofNullable(dmData.getPatientUid())
+          .ifPresent(
+              uid ->
+                  dmMap
+                      .computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                      .add(uid));
 
-        Optional.ofNullable(dmData.getObservationUid())
-            .ifPresent(
-                uid ->
-                    dmMap
-                        .computeIfAbsent(
-                            OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                        .add(uid));
-      }
+      Optional.ofNullable(dmData.getObservationUid())
+          .ifPresent(
+              uid ->
+                  dmMap
+                      .computeIfAbsent(
+                          OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                      .add(uid));
 
     } catch (Exception e) {
       String msg = "Error processing datamart message: " + e.getMessage();
