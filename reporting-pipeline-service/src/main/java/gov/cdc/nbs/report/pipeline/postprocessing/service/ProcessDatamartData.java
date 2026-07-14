@@ -862,7 +862,7 @@ public class ProcessDatamartData {
         .orElse("");
   }
 
-  public void checkResult(List<DatamartData> dmData) throws DataProcessingException {
+  void checkResult(List<DatamartData> dmData) throws DataProcessingException {
     if (!dmData.isEmpty()) {
       DatamartData dme = dmData.getFirst();
       if ("Error".equals(dme.getDatamart())) {
