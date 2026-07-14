@@ -356,11 +356,17 @@ VALUES
 --   Per edge_types.md, RTR disambiguates Lab vs Morbidity by joining the
 --   source observation's `obs_domain_cd_st_1` ('Order' = lab order root).
 --   subject_person_uid is a soft FK to person; we point at Patient.
+--   ctrl_cd_display_form='LabReport' matches the v2 lab order (20070010).
+--   sp_d_lab_test_postprocessing (018) includes an Order-domain obs when
+--   its display form is in ('LabReport','LabReportMorb') OR IS NULL, so a
+--   NULL here let this land in LAB_TEST as a MODERN-ONLY row (MasterETL
+--   keys on the display form and skipped it). Setting 'LabReport' makes
+--   MasterETL emit the matching row too, so both sides agree.
 -- =====================================================================
 INSERT INTO [dbo].[observation]
     ([observation_uid], [add_time], [add_user_id], [cd], [cd_desc_txt],
      [last_chg_time], [last_chg_user_id], [local_id],
-     [obs_domain_cd_st_1], [record_status_cd], [record_status_time],
+     [obs_domain_cd_st_1], [ctrl_cd_display_form], [record_status_cd], [record_status_time],
      [status_cd], [status_time], [subject_person_uid],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
      [electronic_ind])
@@ -368,18 +374,24 @@ VALUES
     (@dbo_Act_lab_uid, '2026-04-01T00:00:00', @superuser_id,
      N'LAB100', N'Foundation lab report',
      CAST(GETDATE() AS DATE), @superuser_id, N'OBS20000120GA01',
-     N'Order', N'ACTIVE', '2026-04-01T00:00:00',
+     N'Order', N'LabReport', N'ACTIVE', '2026-04-01T00:00:00',
      N'A', '2026-04-01T00:00:00', @dbo_Entity_patient_uid,
      N'F', 1, N'STD', N'1', N'N');
 
 -- =====================================================================
 -- MORBIDITY REPORT — Observation with obs_domain_cd_st_1='Order'
 --   Same shape as Lab; cd / cd_desc_txt distinguish at fixture level.
+--   ctrl_cd_display_form='MorbReport' matches the v2 morb order (20080010).
+--   A NULL display form let this Order-domain morb row fall through the
+--   'IS NULL' branch of sp_d_lab_test_postprocessing (018) and land in
+--   LAB_TEST (MODERN-ONLY) — a morb report is not a lab test. 'MorbReport'
+--   is not in that SP's allow-list, so RTR now excludes it from LAB_TEST,
+--   matching MasterETL (and the v2 morb order, which is absent there too).
 -- =====================================================================
 INSERT INTO [dbo].[observation]
     ([observation_uid], [add_time], [add_user_id], [cd], [cd_desc_txt],
      [last_chg_time], [last_chg_user_id], [local_id],
-     [obs_domain_cd_st_1], [record_status_cd], [record_status_time],
+     [obs_domain_cd_st_1], [ctrl_cd_display_form], [record_status_cd], [record_status_time],
      [status_cd], [status_time], [subject_person_uid],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
      [electronic_ind])
@@ -387,7 +399,7 @@ VALUES
     (@dbo_Act_morbidity_uid, '2026-04-01T00:00:00', @superuser_id,
      N'MOR100', N'Foundation morbidity report',
      CAST(GETDATE() AS DATE), @superuser_id, N'OBS20000130GA01',
-     N'Order', N'ACTIVE', '2026-04-01T00:00:00',
+     N'Order', N'MorbReport', N'ACTIVE', '2026-04-01T00:00:00',
      N'A', '2026-04-01T00:00:00', @dbo_Entity_patient_uid,
      N'F', 1, N'STD', N'1', N'N');
 
