@@ -126,7 +126,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
          [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
          [last_chg_time], [last_chg_user_id])
     VALUES
-        (@v2_interview_uid, N'Y', 10001355, 10, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+        (@v2_interview_uid, N'Y', 10001355, 10, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 -- IX_900_SITE_TYPE (IXS109 / 10001358, ver 8) — CODED NBS_SITE_TYPE_HIV
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
@@ -136,7 +136,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
          [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
          [last_chg_time], [last_chg_user_id])
     VALUES
-        (@v2_interview_uid, N'F03', 10001358, 8, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+        (@v2_interview_uid, N'F03', 10001358, 8, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 -- IX_INTERVENTION (IXS110 / 10001359, ver 8) — CODED NBS_INTERVENTION_HIV
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
@@ -146,7 +146,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
          [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
          [last_chg_time], [last_chg_user_id])
     VALUES
-        (@v2_interview_uid, N'b', 10001359, 8, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+        (@v2_interview_uid, N'b', 10001359, 8, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 -- CLN_CARE_STATUS_IXS (NBS445 / 10003226, ver 4) — CODED NBS_CARE_STATUS
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
@@ -156,7 +156,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
          [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
          [last_chg_time], [last_chg_user_id])
     VALUES
-        (@v2_interview_uid, N'1', 10003226, 4, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+        (@v2_interview_uid, N'1', 10003226, 4, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 -- IX_900_SITE_ID (IXS107 / 10001356, ver 8) — TEXT
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
@@ -166,7 +166,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
          [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
          [last_chg_time], [last_chg_user_id])
     VALUES
-        (@v2_interview_uid, N'SITE-22075', 10001356, 8, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+        (@v2_interview_uid, N'SITE-22075', 10001356, 8, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 -- IX_900_SITE_ZIP (IXS108 / 10001357, ver 8) — TEXT / TXT_ZIP
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
@@ -176,7 +176,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
          [seq_nbr], [answer_group_seq_nbr], [record_status_cd], [record_status_time],
          [last_chg_time], [last_chg_user_id])
     VALUES
-        (@v2_interview_uid, N'30303', 10001357, 8, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+        (@v2_interview_uid, N'30303', 10001357, 8, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 -- IXS111 (10001024, ver 16) — D_INTERVIEW_NOTE source. TEXT answer parsed
 -- as  "<First Last>~<comment_date>~~<comment>"  by event SP 065 step
@@ -193,7 +193,7 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_answer]
     VALUES
         (@v2_interview_uid,
          N'Dana Reyes~2026-04-15 10:30:00~~Re-interview completed; partner services follow-up scheduled.',
-         10001024, 16, 0, NULL, N'ACTIVE', GETDATE(), GETDATE(), @superuser_id);
+         10001024, 16, 0, NULL, N'ACTIVE', GETDATE(), CAST(GETDATE() AS DATE), @superuser_id);
 
 GO
 

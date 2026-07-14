@@ -107,21 +107,21 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- CLN_CHEST_STDY_TYPE_OTH (q 10010264, CHEST_STUDY_INFO)
-        (22047000,@t,@su,N'OTH^Low-dose chest CT',10010264,1,@t,@su,N'ACTIVE',@t,1,4),
+        (22047000,@t,@su,N'OTH^Low-dose chest CT',10010264,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,4),
         -- CMP_ADVERSE_EVENT_OTH (q 10012234, MDR_TB_SIDE_EFCT_TRT)
-        (22047000,@t,@su,N'OTH^Peripheral neuropathy',10012234,1,@t,@su,N'ACTIVE',@t,2,4),
+        (22047000,@t,@su,N'OTH^Peripheral neuropathy',10012234,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,4),
         -- TRT_DRG_USD_TRT_MDR_TB_OTH (q 10012229, MDR_TB_PREV_ADM_DRG)
-        (22047000,@t,@su,N'OTH^Bedaquiline',10012229,1,@t,@su,N'ACTIVE',@t,3,4),
+        (22047000,@t,@su,N'OTH^Bedaquiline',10012229,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,4),
         -- LAB_AST_SPECIMEN_TYPE_OTH (q 10002147, PHENO_DRG_SUSC_TST)
-        (22047000,@t,@su,N'OTH^Bronchoalveolar lavage',10002147,1,@t,@su,N'ACTIVE',@t,4,4),
+        (22047000,@t,@su,N'OTH^Bronchoalveolar lavage',10002147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,4,4),
         -- LAB_AST_TEST_METHOD_OTH (q 10002151, PHENO_DRG_SUSC_TST)
-        (22047000,@t,@su,N'OTH^Agar proportion method',10002151,1,@t,@su,N'ACTIVE',@t,5,4),
+        (22047000,@t,@su,N'OTH^Agar proportion method',10002151,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,5,4),
         -- LAB_AST_TEST_TYPE_OTH (q 10002150, PHENO_DRG_SUSC_TST)
-        (22047000,@t,@su,N'OTH^MIC determination',10002150,1,@t,@su,N'ACTIVE',@t,6,4),
+        (22047000,@t,@su,N'OTH^MIC determination',10002150,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,6,4),
         -- LAB_GENE_IDENTIFIER_OTH (q 10010295, MOLE_DRG_SUSCEP)
-        (22047000,@t,@su,N'OTH^inhA promoter',10010295,1,@t,@su,N'ACTIVE',@t,7,4),
+        (22047000,@t,@su,N'OTH^inhA promoter',10010295,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,7,4),
         -- LAB_TEST_TYPE_OTH (q 10001370, LAB_REPEATING)
-        (22047000,@t,@su,N'OTH^Line probe assay',10001370,1,@t,@su,N'ACTIVE',@t,8,4);
+        (22047000,@t,@su,N'OTH^Line probe assay',10001370,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,8,4);
 END
 GO
 
@@ -138,17 +138,17 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- RSK_SUSPECT_MEAT_TYPE_OTH (q 10009138, FOOD_EXPOSURE_HIST)
-        (22047500,@t,@su,N'OTH^Wild boar sausage',10009138,1,@t,@su,N'ACTIVE',@t,1,4),
+        (22047500,@t,@su,N'OTH^Wild boar sausage',10009138,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,4),
         -- RSK_WHERE_MEAT_OBTAINE_OTH (q 10009141, FOOD_EXPOSURE_HIST)
-        (22047500,@t,@su,N'OTH^Hunted (self-harvested)',10009141,1,@t,@su,N'ACTIVE',@t,2,4),
+        (22047500,@t,@su,N'OTH^Hunted (self-harvested)',10009141,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,4),
         -- RSK_MEAT_PREPARATION_OTH (q 10009142, FOOD_EXPOSURE_HIST)
-        (22047500,@t,@su,N'OTH^Home-cured',10009142,1,@t,@su,N'ACTIVE',@t,3,4),
+        (22047500,@t,@su,N'OTH^Home-cured',10009142,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,4),
         -- RSK_COOKING_METHOD_OTH (q 10009143, FOOD_EXPOSURE_HIST)
-        (22047500,@t,@su,N'OTH^Smoked',10009143,1,@t,@su,N'ACTIVE',@t,4,4),
+        (22047500,@t,@su,N'OTH^Smoked',10009143,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,4,4),
         -- LAB_SUSPECT_MEAT_TESTE_OTH (q 10009145, FOOD_EXPOSURE_HIST)
-        (22047500,@t,@su,N'OTH^Leftover frozen portion',10009145,1,@t,@su,N'ACTIVE',@t,5,4),
+        (22047500,@t,@su,N'OTH^Leftover frozen portion',10009145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,5,4),
         -- LAB_STRAIN_TYPE_OTH (q 10009134, EPIDEMIOLOGY_LAB)
-        (22047500,@t,@su,N'OTH^Trichinella murrelli',10009134,1,@t,@su,N'ACTIVE',@t,6,4);
+        (22047500,@t,@su,N'OTH^Trichinella murrelli',10009134,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,6,4);
 END
 GO
 
@@ -165,15 +165,15 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- CLN_MAL_PREVIOUS_SPECI_OTH (q 10008150, PREV_MALARIA_ILLNESS)
-        (22049500,@t,@su,N'OTH^Plasmodium knowlesi',10008150,1,@t,@su,N'ACTIVE',@t,1,4),
+        (22049500,@t,@su,N'OTH^Plasmodium knowlesi',10008150,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,4),
         -- TRT_MALARIA_INFO_OTH (q 10008151, TREATMENT_THERAPY)
-        (22049500,@t,@su,N'OTH^Tafenoquine',10008151,1,@t,@su,N'ACTIVE',@t,2,4),
+        (22049500,@t,@su,N'OTH^Tafenoquine',10008151,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,4),
         -- LAB_ORGANISM_NAME_OTH (q 10006163, LAB_INTERPRETATIVE)
-        (22049500,@t,@su,N'OTH^Plasmodium ovale curtisi',10006163,1,@t,@su,N'ACTIVE',@t,3,4),
+        (22049500,@t,@su,N'OTH^Plasmodium ovale curtisi',10006163,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,4),
         -- TRV_INTL_DESTINATIONS_OTH (q 10004154, TRAVEL_HISTORY)
-        (22049500,@t,@su,N'OTH^Papua New Guinea',10004154,1,@t,@su,N'ACTIVE',@t,4,4),
+        (22049500,@t,@su,N'OTH^Papua New Guinea',10004154,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,4,4),
         -- TRV_VHF_TRAVEL_REASON_OTH (q 10001082, TRAVEL_HISTORY)
-        (22049500,@t,@su,N'OTH^Missionary work',10001082,1,@t,@su,N'ACTIVE',@t,5,4);
+        (22049500,@t,@su,N'OTH^Missionary work',10001082,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,5,4);
 END
 GO
 
@@ -190,13 +190,13 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- LAB_ORGANISM_NAME_OTH (q 10006163, LAB_INTERPRETATIVE)
-        (22060000,@t,@su,N'OTH^Rickettsia parkeri',10006163,1,@t,@su,N'ACTIVE',@t,1,4),
+        (22060000,@t,@su,N'OTH^Rickettsia parkeri',10006163,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,4),
         -- LAB_SPECIMEN_TYPE_OTH (q 10001372, LAB_INTERPRETATIVE)
-        (22060000,@t,@su,N'OTH^Eschar swab',10001372,1,@t,@su,N'ACTIVE',@t,2,4),
+        (22060000,@t,@su,N'OTH^Eschar swab',10001372,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,4),
         -- LAB_TEST_TYPE_OTH (q 10001370, LAB_INTERPRETATIVE)
-        (22060000,@t,@su,N'OTH^Immunohistochemistry',10001370,1,@t,@su,N'ACTIVE',@t,3,4),
+        (22060000,@t,@su,N'OTH^Immunohistochemistry',10001370,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,4),
         -- TRT_MEDICATION_ADMINIS_OTH (q 10006142, ANTIBIOTICS_INFO)
-        (22060000,@t,@su,N'OTH^Chloramphenicol',10006142,1,@t,@su,N'ACTIVE',@t,4,4);
+        (22060000,@t,@su,N'OTH^Chloramphenicol',10006142,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,4,4);
 END
 GO
 
@@ -213,9 +213,9 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- EPI_PSN_ORG_TKNG_CO_RE_OTH (q 10011156, CO_LEVEL)
-        (22060600,@t,@su,N'OTH^On-scene fire marshal',10011156,1,@t,@su,N'ACTIVE',@t,1,4),
+        (22060600,@t,@su,N'OTH^On-scene fire marshal',10011156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,4),
         -- TRT_MALARIA_INFO_OTH (q 10008151, TREATMENT) -- shared col name
-        (22060600,@t,@su,N'OTH^Hyperbaric oxygen therapy',10008151,1,@t,@su,N'ACTIVE',@t,2,4);
+        (22060600,@t,@su,N'OTH^Hyperbaric oxygen therapy',10008151,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,4);
 END
 GO
 
@@ -232,9 +232,9 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- CMP_COMPLICATION_OTH (q 10006135, BLOCK_14)
-        (22007000,@t,@su,N'OTH^Subconjunctival hemorrhage',10006135,1,@t,@su,N'ACTIVE',@t,1,4),
+        (22007000,@t,@su,N'OTH^Subconjunctival hemorrhage',10006135,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,4),
         -- SYM_SIGNSSYMPTOMS_OTH (q 10001312, BLOCK_13)
-        (22007000,@t,@su,N'OTH^Post-tussive syncope',10001312,1,@t,@su,N'ACTIVE',@t,2,4);
+        (22007000,@t,@su,N'OTH^Post-tussive syncope',10001312,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,4);
 END
 GO
 

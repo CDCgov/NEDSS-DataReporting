@@ -200,7 +200,7 @@ BEGIN
     VALUES
         (@pat_uid, '2026-04-01T00:00:00', @superuser_id,
          N'F', '1979-09-22T00:00:00', N'PAT', N'F', N'N', NULL,
-         N'2186-5', '2026-04-01T00:00:00', @superuser_id, N'PSN22058000GA01',
+         N'2186-5', CAST(GETDATE() AS DATE), @superuser_id, N'PSN22058000GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Priya', N'Anne', N'Ramanathan', N'SR', 1,
          '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00',
@@ -228,7 +228,7 @@ BEGIN
          [root_extension_txt], [type_cd], [type_desc_txt], [as_of_date])
     VALUES
         (@pat_uid, 1, '2026-04-01T00:00:00', @superuser_id,
-         '2026-04-01T00:00:00', @superuser_id,
+         CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'444-55-6666', N'SS', N'Social Security', '2026-04-01T00:00:00');
 
@@ -238,9 +238,9 @@ BEGIN
          [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [as_of_date])
     VALUES
         (@pat_uid, N'2028-9', N'2028-9', '2026-04-01T00:00:00', @superuser_id,
-         '2026-04-01T00:00:00', @superuser_id, N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00'),
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00'),
         (@pat_uid, N'2040-4', N'2028-9', '2026-04-01T00:00:00', @superuser_id,
-         '2026-04-01T00:00:00', @superuser_id, N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00');
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00');
 
     -- Locators.
     INSERT INTO [dbo].[postal_locator]
@@ -250,7 +250,7 @@ BEGIN
          [street_addr1], [street_addr2], [zip_cd], [census_tract], [within_city_limits_ind])
     VALUES
         (@pat_pst_home, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-         N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+         N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'1450 Peachtree Industrial Blvd', N'Unit 12', N'30341', N'1230600', N'Y');
 
@@ -260,7 +260,7 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@pat_pst_bir, '2026-04-01T00:00:00', @superuser_id, N'Chennai',
-         N'356', '2026-04-01T00:00:00', @superuser_id,
+         N'356', CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[tele_locator]
@@ -269,13 +269,13 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@pat_tel_home, '2026-04-01T00:00:00', @superuser_id, N'1',
-         '2026-04-01T00:00:00', @superuser_id, N'404-555-8000', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-8000', NULL,
          N'ACTIVE', '2026-04-01T00:00:00'),
         (@pat_tel_work, '2026-04-01T00:00:00', @superuser_id, N'1',
-         '2026-04-01T00:00:00', @superuser_id, N'404-555-8001', N'5533',
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-8001', N'5533',
          N'ACTIVE', '2026-04-01T00:00:00'),
         (@pat_tel_cell, '2026-04-01T00:00:00', @superuser_id, N'1',
-         '2026-04-01T00:00:00', @superuser_id, N'404-555-8002', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id, N'404-555-8002', NULL,
          N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[tele_locator]
@@ -284,7 +284,7 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (@pat_tel_email, '2026-04-01T00:00:00', @superuser_id, N'1',
-         '2026-04-01T00:00:00', @superuser_id, N'priya.ramanathan@nbs.test',
+         CAST(GETDATE() AS DATE), @superuser_id, N'priya.ramanathan@nbs.test',
          N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
@@ -294,22 +294,22 @@ BEGIN
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
         (@pat_uid, @pat_pst_home, '2026-04-01T00:00:00', @superuser_id, N'H',
-         N'PST', '2026-04-01T00:00:00', @superuser_id, N'patient home address',
+         N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'patient home address',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H', 1, '2026-04-01T00:00:00'),
         (@pat_uid, @pat_pst_bir, '2026-04-01T00:00:00', @superuser_id, N'BIR',
-         N'PST', '2026-04-01T00:00:00', @superuser_id, N'patient birth country',
+         N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'patient birth country',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'BIR', 1, '2026-04-01T00:00:00'),
         (@pat_uid, @pat_tel_home, '2026-04-01T00:00:00', @superuser_id, N'PH',
-         N'TELE', '2026-04-01T00:00:00', @superuser_id, N'patient home phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'patient home phone',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H', 1, '2026-04-01T00:00:00'),
         (@pat_uid, @pat_tel_work, '2026-04-01T00:00:00', @superuser_id, N'PH',
-         N'TELE', '2026-04-01T00:00:00', @superuser_id, N'patient work phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'patient work phone',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (@pat_uid, @pat_tel_cell, '2026-04-01T00:00:00', @superuser_id, N'CP',
-         N'TELE', '2026-04-01T00:00:00', @superuser_id, N'patient cell phone',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'patient cell phone',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H', 1, '2026-04-01T00:00:00'),
         (@pat_uid, @pat_tel_email, '2026-04-01T00:00:00', @superuser_id, N'NET',
-         N'TELE', '2026-04-01T00:00:00', @superuser_id, N'patient email',
+         N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'patient email',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H', 1, '2026-04-01T00:00:00');
 END
 GO
@@ -337,21 +337,21 @@ BEGIN
     VALUES
         -- Investigator
         (22058010, '2026-04-01T00:00:00', @superuser_id2, N'PRV',
-         '2026-04-01T00:00:00', @superuser_id2, N'PSN22058010GA01',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'PSN22058010GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Gail', N'R', N'Investigator', N'MS', NULL,
          1, '2026-04-01T00:00:00', N'N', 22058010, N'Y',
          N'TB dedicated investigator'),
         -- Physician
         (22058020, '2026-04-01T00:00:00', @superuser_id2, N'PRV',
-         '2026-04-01T00:00:00', @superuser_id2, N'PSN22058020GA01',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'PSN22058020GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Harold', N'M', N'Physician', N'DR', NULL,
          1, '2026-04-01T00:00:00', N'N', 22058020, N'Y',
          N'TB dedicated physician'),
         -- Person reporter
         (22058030, '2026-04-01T00:00:00', @superuser_id2, N'PRV',
-         '2026-04-01T00:00:00', @superuser_id2, N'PSN22058030GA01',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'PSN22058030GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Denise', N'K', N'Reporter', N'MS', NULL,
          1, '2026-04-01T00:00:00', N'N', 22058030, N'Y',
@@ -377,13 +377,13 @@ BEGIN
          [street_addr1], [zip_cd])
     VALUES
         (22058011, '2026-04-01T00:00:00', @superuser_id2, N'Atlanta', N'840', N'13121',
-         '2026-04-01T00:00:00', @superuser_id2, N'ACTIVE', '2026-04-01T00:00:00', N'13',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'10 TB Control Program Plaza', N'30303'),
         (22058021, '2026-04-01T00:00:00', @superuser_id2, N'Atlanta', N'840', N'13121',
-         '2026-04-01T00:00:00', @superuser_id2, N'ACTIVE', '2026-04-01T00:00:00', N'13',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'20 Pulmonary Clinic Way', N'30303'),
         (22058031, '2026-04-01T00:00:00', @superuser_id2, N'Atlanta', N'840', N'13121',
-         '2026-04-01T00:00:00', @superuser_id2, N'ACTIVE', '2026-04-01T00:00:00', N'13',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'30 Reporter Row', N'30303');
 
     -- Work phones (TELE,O,WP) WITH extension + cell phones (TELE,CP,*).
@@ -393,22 +393,22 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (22058012, '2026-04-01T00:00:00', @superuser_id2, N'1',
-         '2026-04-01T00:00:00', @superuser_id2, N'404-555-8810', N'1010',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'404-555-8810', N'1010',
          N'ACTIVE', '2026-04-01T00:00:00'),
         (22058013, '2026-04-01T00:00:00', @superuser_id2, N'1',
-         '2026-04-01T00:00:00', @superuser_id2, N'404-555-8811', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id2, N'404-555-8811', NULL,
          N'ACTIVE', '2026-04-01T00:00:00'),
         (22058022, '2026-04-01T00:00:00', @superuser_id2, N'1',
-         '2026-04-01T00:00:00', @superuser_id2, N'404-555-8820', N'2020',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'404-555-8820', N'2020',
          N'ACTIVE', '2026-04-01T00:00:00'),
         (22058023, '2026-04-01T00:00:00', @superuser_id2, N'1',
-         '2026-04-01T00:00:00', @superuser_id2, N'404-555-8821', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id2, N'404-555-8821', NULL,
          N'ACTIVE', '2026-04-01T00:00:00'),
         (22058032, '2026-04-01T00:00:00', @superuser_id2, N'1',
-         '2026-04-01T00:00:00', @superuser_id2, N'404-555-8830', N'3030',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'404-555-8830', N'3030',
          N'ACTIVE', '2026-04-01T00:00:00'),
         (22058033, '2026-04-01T00:00:00', @superuser_id2, N'1',
-         '2026-04-01T00:00:00', @superuser_id2, N'404-555-8831', NULL,
+         CAST(GETDATE() AS DATE), @superuser_id2, N'404-555-8831', NULL,
          N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
@@ -419,33 +419,33 @@ BEGIN
     VALUES
         -- investigator
         (22058010, 22058011, '2026-04-01T00:00:00', @superuser_id2, N'O', N'PST',
-         '2026-04-01T00:00:00', @superuser_id2, N'inv work addr', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'inv work addr', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058010, 22058012, '2026-04-01T00:00:00', @superuser_id2, N'O', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id2, N'inv work phone', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'inv work phone', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058010, 22058013, '2026-04-01T00:00:00', @superuser_id2, N'CP', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id2, N'inv cell', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'inv cell', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         -- physician
         (22058020, 22058021, '2026-04-01T00:00:00', @superuser_id2, N'O', N'PST',
-         '2026-04-01T00:00:00', @superuser_id2, N'phys work addr', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'phys work addr', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058020, 22058022, '2026-04-01T00:00:00', @superuser_id2, N'O', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id2, N'phys work phone', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'phys work phone', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058020, 22058023, '2026-04-01T00:00:00', @superuser_id2, N'CP', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id2, N'phys cell', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'phys cell', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         -- reporter
         (22058030, 22058031, '2026-04-01T00:00:00', @superuser_id2, N'O', N'PST',
-         '2026-04-01T00:00:00', @superuser_id2, N'rpt work addr', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'rpt work addr', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058030, 22058032, '2026-04-01T00:00:00', @superuser_id2, N'O', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id2, N'rpt work phone', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'rpt work phone', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058030, 22058033, '2026-04-01T00:00:00', @superuser_id2, N'CP', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id2, N'rpt cell', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id2, N'rpt cell', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00');
 END
 GO
@@ -470,12 +470,12 @@ BEGIN
          [standard_industry_class_cd], [standard_industry_desc_txt], [edx_ind])
     VALUES
         (22058040, '2026-04-01T00:00:00', @superuser_id3, N'TB dedicated reporting org',
-         '2026-04-01T00:00:00', @superuser_id3, N'ORG22058040GA01',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'ORG22058040GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'DeKalb County TB Surveillance Lab', 1, N'Y',
          N'621511', N'Medical Laboratories', N'Y'),
         (22058050, '2026-04-01T00:00:00', @superuser_id3, N'TB dedicated admitting hospital',
-         '2026-04-01T00:00:00', @superuser_id3, N'ORG22058050GA01',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'ORG22058050GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Emory University Hospital TB Unit', 1, N'Y',
          N'622110', N'General Medical and Surgical Hospitals', N'Y');
@@ -494,10 +494,10 @@ BEGIN
          [street_addr1], [zip_cd])
     VALUES
         (22058041, '2026-04-01T00:00:00', @superuser_id3, N'Decatur', N'840', N'13089',
-         '2026-04-01T00:00:00', @superuser_id3, N'ACTIVE', '2026-04-01T00:00:00', N'13',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'41 Surveillance Lab Blvd', N'30030'),
         (22058051, '2026-04-01T00:00:00', @superuser_id3, N'Atlanta', N'840', N'13121',
-         '2026-04-01T00:00:00', @superuser_id3, N'ACTIVE', '2026-04-01T00:00:00', N'13',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'1364 Clifton Road NE', N'30322');
 
     INSERT INTO [dbo].[tele_locator]
@@ -506,10 +506,10 @@ BEGIN
          [record_status_cd], [record_status_time])
     VALUES
         (22058042, '2026-04-01T00:00:00', @superuser_id3, N'1',
-         '2026-04-01T00:00:00', @superuser_id3, N'404-555-8840', N'4040',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'404-555-8840', N'4040',
          N'ACTIVE', '2026-04-01T00:00:00'),
         (22058052, '2026-04-01T00:00:00', @superuser_id3, N'1',
-         '2026-04-01T00:00:00', @superuser_id3, N'404-555-8850', N'5050',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'404-555-8850', N'5050',
          N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
@@ -519,16 +519,16 @@ BEGIN
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
         (22058040, 22058041, '2026-04-01T00:00:00', @superuser_id3, N'O', N'PST',
-         '2026-04-01T00:00:00', @superuser_id3, N'rpt org addr', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'rpt org addr', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058040, 22058042, '2026-04-01T00:00:00', @superuser_id3, N'PH', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id3, N'rpt org phone', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'rpt org phone', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058050, 22058051, '2026-04-01T00:00:00', @superuser_id3, N'O', N'PST',
-         '2026-04-01T00:00:00', @superuser_id3, N'hosp addr', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'hosp addr', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
         (22058050, 22058052, '2026-04-01T00:00:00', @superuser_id3, N'PH', N'TELE',
-         '2026-04-01T00:00:00', @superuser_id3, N'hosp phone', N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id3, N'hosp phone', N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00');
 END
 GO
@@ -559,7 +559,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@tb_phc, 22058000, N'SubjOfPHC', N'CASE', N'PSN',
-     '2026-04-01T00:00:00', @superuser_id4, '2026-04-01T00:00:00', @superuser_id4,
+     '2026-04-01T00:00:00', @superuser_id4, CAST(GETDATE() AS DATE), @superuser_id4,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'Subject of Public Health Case');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[participation]
@@ -570,7 +570,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@tb_phc, 22058010, N'InvestgrOfPHC', N'CASE', N'PSN',
-     '2026-04-02T00:00:00', '2026-04-02T00:00:00', @superuser_id4, '2026-04-02T00:00:00', @superuser_id4,
+     '2026-04-02T00:00:00', '2026-04-02T00:00:00', @superuser_id4, CAST(GETDATE() AS DATE), @superuser_id4,
      N'ACTIVE', '2026-04-02T00:00:00', N'A', '2026-04-02T00:00:00', N'Investigator');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[participation]
@@ -581,7 +581,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@tb_phc, 22058020, N'PhysicianOfPHC', N'CASE', N'PSN',
-     '2026-04-01T00:00:00', '2026-04-01T00:00:00', @superuser_id4, '2026-04-01T00:00:00', @superuser_id4,
+     '2026-04-01T00:00:00', '2026-04-01T00:00:00', @superuser_id4, CAST(GETDATE() AS DATE), @superuser_id4,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'Physician');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[participation]
@@ -592,7 +592,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@tb_phc, 22058030, N'PerAsReporterOfPHC', N'CASE', N'PSN',
-     '2026-04-01T00:00:00', @superuser_id4, '2026-04-01T00:00:00', @superuser_id4,
+     '2026-04-01T00:00:00', @superuser_id4, CAST(GETDATE() AS DATE), @superuser_id4,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'Person as Reporter');
 GO
 
@@ -612,7 +612,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@tb_phc5, 22058040, N'OrgAsReporterOfPHC', N'CASE', N'ORG',
-     '2026-04-01T00:00:00', @superuser_id5, '2026-04-01T00:00:00', @superuser_id5,
+     '2026-04-01T00:00:00', @superuser_id5, CAST(GETDATE() AS DATE), @superuser_id5,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'Organization as Reporter');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[participation]
@@ -623,7 +623,7 @@ INSERT INTO [dbo].[participation]
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 VALUES
     (@tb_phc5, 22058050, N'HospOfADT', N'CASE', N'ORG',
-     '2026-04-01T00:00:00', @superuser_id5, '2026-04-01T00:00:00', @superuser_id5,
+     '2026-04-01T00:00:00', @superuser_id5, CAST(GETDATE() AS DATE), @superuser_id5,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'Hospital of ADT');
 GO
 
@@ -652,7 +652,7 @@ INSERT INTO [dbo].[nbs_act_entity]
      [record_status_cd], [record_status_time])
 VALUES
     (@tb_phc6, 22058030, N'PerAsReporterOfPHC', 1,
-     '2026-04-01T00:00:00', @superuser_id6, '2026-04-01T00:00:00', @superuser_id6,
+     '2026-04-01T00:00:00', @superuser_id6, CAST(GETDATE() AS DATE), @superuser_id6,
      N'ACTIVE', '2026-04-01T00:00:00');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_act_entity]
@@ -663,7 +663,7 @@ INSERT INTO [dbo].[nbs_act_entity]
      [record_status_cd], [record_status_time])
 VALUES
     (@tb_phc6, 22058040, N'OrgAsReporterOfPHC', 1,
-     '2026-04-01T00:00:00', @superuser_id6, '2026-04-01T00:00:00', @superuser_id6,
+     '2026-04-01T00:00:00', @superuser_id6, CAST(GETDATE() AS DATE), @superuser_id6,
      N'ACTIVE', '2026-04-01T00:00:00');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_act_entity]
@@ -674,7 +674,7 @@ INSERT INTO [dbo].[nbs_act_entity]
      [record_status_cd], [record_status_time])
 VALUES
     (@tb_phc6, 22058050, N'HospOfADT', 1,
-     '2026-04-01T00:00:00', @superuser_id6, '2026-04-01T00:00:00', @superuser_id6,
+     '2026-04-01T00:00:00', @superuser_id6, CAST(GETDATE() AS DATE), @superuser_id6,
      N'ACTIVE', '2026-04-01T00:00:00');
 GO
 

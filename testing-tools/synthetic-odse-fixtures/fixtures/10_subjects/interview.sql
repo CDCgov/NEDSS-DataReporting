@@ -206,7 +206,7 @@ VALUES
     (@dbo_Act_interview_v2_uid, N'COMPLETE', '2026-04-15T10:00:00',
      N'PHYS', N'REINTVW', N'PHCLINIC',
      N'INT20090010GA01', N'ACTIVE', '2026-04-15T10:00:00',
-     '2026-04-15T10:00:00', @superuser_id, '2026-04-15T10:00:00', @superuser_id,
+     '2026-04-15T10:00:00', @superuser_id, CAST(GETDATE() AS DATE), @superuser_id,
      1);
 
 GO

@@ -66,7 +66,7 @@ INSERT INTO [dbo].[person]
 VALUES
     (@dbo_Entity_patient_uid, '2026-04-01T00:00:00', @superuser_id, N'M',
      N'M', '1990-01-15T00:00:00', N'PAT', N'M', N'N',
-     N'2186-5', '2026-04-01T00:00:00', @superuser_id, N'PSN20000000GA01',
+     N'2186-5', CAST(GETDATE() AS DATE), @superuser_id, N'PSN20000000GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'Raymond', N'Foster', 1, '2026-04-01T00:00:00',
      N'N', @dbo_Entity_patient_uid, N'Y');
@@ -89,7 +89,7 @@ INSERT INTO [dbo].[postal_locator]
      [street_addr1], [zip_cd])
 VALUES
     (@dbo_Postal_locator_patient, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-     N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+     N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
      N'742 Mapleview Drive', N'30303');
 
@@ -100,7 +100,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_patient, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-0100',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-0100',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- Patient entity_locator_participation:
@@ -115,12 +115,12 @@ INSERT INTO [dbo].[entity_locator_participation]
 VALUES
     (@dbo_Entity_patient_uid, @dbo_Postal_locator_patient,
      '2026-04-01T00:00:00', @superuser_id, N'H',
-     N'PST', '2026-04-01T00:00:00', @superuser_id, N'Patient home address',
+     N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'Patient home address',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'H', 1, '2026-04-01T00:00:00'),
     (@dbo_Entity_patient_uid, @dbo_Tele_locator_patient,
      '2026-04-01T00:00:00', @superuser_id, N'PH',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'Patient home phone',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'Patient home phone',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'H', 1, '2026-04-01T00:00:00');
 
@@ -136,7 +136,7 @@ INSERT INTO [dbo].[person]
      [electronic_ind], [person_parent_uid], [edx_ind])
 VALUES
     (@dbo_Entity_provider_uid, '2026-04-01T00:00:00', @superuser_id, N'PRV',
-     '2026-04-01T00:00:00', @superuser_id, N'PSN20000010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'PSN20000010GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'Foundation', N'Provider', 1, '2026-04-01T00:00:00',
      N'N', @dbo_Entity_provider_uid, N'Y');
@@ -159,7 +159,7 @@ INSERT INTO [dbo].[postal_locator]
      [street_addr1], [zip_cd])
 VALUES
     (@dbo_Postal_locator_provider, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-     N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+     N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
      N'200 Provider Plaza', N'30303');
 
@@ -170,7 +170,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_provider, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-0200',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-0200',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- Provider entity_locator_participation: WP (work) per RTR provider pivot.
@@ -183,12 +183,12 @@ INSERT INTO [dbo].[entity_locator_participation]
 VALUES
     (@dbo_Entity_provider_uid, @dbo_Postal_locator_provider,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'PST', '2026-04-01T00:00:00', @superuser_id, N'Provider work address',
+     N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'Provider work address',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     (@dbo_Entity_provider_uid, @dbo_Tele_locator_provider,
      '2026-04-01T00:00:00', @superuser_id, N'PH',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'Provider work phone',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'Provider work phone',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00');
 
@@ -203,7 +203,7 @@ INSERT INTO [dbo].[organization]
 VALUES
     (@dbo_Entity_organization_uid, '2026-04-01T00:00:00', @superuser_id,
      N'Foundation organization for fixture comparison',
-     '2026-04-01T00:00:00', @superuser_id, N'ORG20000020GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ORG20000020GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'Foundation Organization', 1, N'N');
 
@@ -223,7 +223,7 @@ INSERT INTO [dbo].[postal_locator]
      [street_addr1], [zip_cd])
 VALUES
     (@dbo_Postal_locator_org, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-     N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+     N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
      N'300 Organization Boulevard', N'30303');
 
@@ -234,7 +234,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_org, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-0300',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-0300',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- Organization entity_locator_participation: WP (work) per RTR org pivot.
@@ -247,12 +247,12 @@ INSERT INTO [dbo].[entity_locator_participation]
 VALUES
     (@dbo_Entity_organization_uid, @dbo_Postal_locator_org,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'PST', '2026-04-01T00:00:00', @superuser_id, N'Organization work address',
+     N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'Organization work address',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     (@dbo_Entity_organization_uid, @dbo_Tele_locator_org,
      '2026-04-01T00:00:00', @superuser_id, N'PH',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'Organization work phone',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'Organization work phone',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00');
 
@@ -268,7 +268,7 @@ INSERT INTO [dbo].[place]
 VALUES
     (@dbo_Entity_place_uid, '2026-04-01T00:00:00', @superuser_id,
      N'Foundation place for fixture comparison',
-     '2026-04-01T00:00:00', @superuser_id, N'PLC20000030GA01', N'Foundation Place',
+     CAST(GETDATE() AS DATE), @superuser_id, N'PLC20000030GA01', N'Foundation Place',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'400 Place Avenue', N'Atlanta', N'13', N'30303',
      N'13121', N'840', 1);
@@ -281,7 +281,7 @@ INSERT INTO [dbo].[postal_locator]
      [street_addr1], [zip_cd])
 VALUES
     (@dbo_Postal_locator_place, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-     N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+     N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
      N'400 Place Avenue', N'30303');
 
@@ -297,7 +297,7 @@ INSERT INTO [dbo].[entity_locator_participation]
 VALUES
     (@dbo_Entity_place_uid, @dbo_Postal_locator_place,
      '2026-04-01T00:00:00', @superuser_id, N'H',
-     N'PST', '2026-04-01T00:00:00', @superuser_id, N'Place address',
+     N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'Place address',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'H', 1, '2026-04-01T00:00:00');
 
@@ -332,7 +332,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@dbo_Act_investigation_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'10110', N'Foundation investigation', N'O',
-     '2026-04-01T00:00:00', @superuser_id, N'CAS20000100GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'CAS20000100GA01',
      N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'F', 1, N'STD', N'1');
 
@@ -347,7 +347,7 @@ INSERT INTO [dbo].[notification]
 VALUES
     (@dbo_Act_notification_uid, '2026-04-01T00:00:00', @superuser_id,
      N'NOT100', N'Foundation notification',
-     '2026-04-01T00:00:00', @superuser_id, N'NOT20000110GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'NOT20000110GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'F', 1, N'STD', N'1');
 
@@ -356,38 +356,50 @@ VALUES
 --   Per edge_types.md, RTR disambiguates Lab vs Morbidity by joining the
 --   source observation's `obs_domain_cd_st_1` ('Order' = lab order root).
 --   subject_person_uid is a soft FK to person; we point at Patient.
+--   ctrl_cd_display_form='LabReport' matches the v2 lab order (20070010).
+--   sp_d_lab_test_postprocessing (018) includes an Order-domain obs when
+--   its display form is in ('LabReport','LabReportMorb') OR IS NULL, so a
+--   NULL here let this land in LAB_TEST as a MODERN-ONLY row (MasterETL
+--   keys on the display form and skipped it). Setting 'LabReport' makes
+--   MasterETL emit the matching row too, so both sides agree.
 -- =====================================================================
 INSERT INTO [dbo].[observation]
     ([observation_uid], [add_time], [add_user_id], [cd], [cd_desc_txt],
      [last_chg_time], [last_chg_user_id], [local_id],
-     [obs_domain_cd_st_1], [record_status_cd], [record_status_time],
+     [obs_domain_cd_st_1], [ctrl_cd_display_form], [record_status_cd], [record_status_time],
      [status_cd], [status_time], [subject_person_uid],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
      [electronic_ind])
 VALUES
     (@dbo_Act_lab_uid, '2026-04-01T00:00:00', @superuser_id,
      N'LAB100', N'Foundation lab report',
-     '2026-04-01T00:00:00', @superuser_id, N'OBS20000120GA01',
-     N'Order', N'ACTIVE', '2026-04-01T00:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS20000120GA01',
+     N'Order', N'LabReport', N'ACTIVE', '2026-04-01T00:00:00',
      N'A', '2026-04-01T00:00:00', @dbo_Entity_patient_uid,
      N'F', 1, N'STD', N'1', N'N');
 
 -- =====================================================================
 -- MORBIDITY REPORT — Observation with obs_domain_cd_st_1='Order'
 --   Same shape as Lab; cd / cd_desc_txt distinguish at fixture level.
+--   ctrl_cd_display_form='MorbReport' matches the v2 morb order (20080010).
+--   A NULL display form let this Order-domain morb row fall through the
+--   'IS NULL' branch of sp_d_lab_test_postprocessing (018) and land in
+--   LAB_TEST (MODERN-ONLY) — a morb report is not a lab test. 'MorbReport'
+--   is not in that SP's allow-list, so RTR now excludes it from LAB_TEST,
+--   matching MasterETL (and the v2 morb order, which is absent there too).
 -- =====================================================================
 INSERT INTO [dbo].[observation]
     ([observation_uid], [add_time], [add_user_id], [cd], [cd_desc_txt],
      [last_chg_time], [last_chg_user_id], [local_id],
-     [obs_domain_cd_st_1], [record_status_cd], [record_status_time],
+     [obs_domain_cd_st_1], [ctrl_cd_display_form], [record_status_cd], [record_status_time],
      [status_cd], [status_time], [subject_person_uid],
      [shared_ind], [version_ctrl_nbr], [prog_area_cd], [jurisdiction_cd],
      [electronic_ind])
 VALUES
     (@dbo_Act_morbidity_uid, '2026-04-01T00:00:00', @superuser_id,
      N'MOR100', N'Foundation morbidity report',
-     '2026-04-01T00:00:00', @superuser_id, N'OBS20000130GA01',
-     N'Order', N'ACTIVE', '2026-04-01T00:00:00',
+     CAST(GETDATE() AS DATE), @superuser_id, N'OBS20000130GA01',
+     N'Order', N'MorbReport', N'ACTIVE', '2026-04-01T00:00:00',
      N'A', '2026-04-01T00:00:00', @dbo_Entity_patient_uid,
      N'F', 1, N'STD', N'1', N'N');
 
@@ -406,7 +418,7 @@ VALUES
     (@dbo_Act_interview_uid, N'C', '2026-04-01T00:00:00',
      N'INITIAL', N'HOSP', N'INT20000140GA01',
      N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00', @superuser_id,
-     '2026-04-01T00:00:00', @superuser_id, 1);
+     CAST(GETDATE() AS DATE), @superuser_id, 1);
 
 -- =====================================================================
 -- TREATMENT
@@ -422,7 +434,7 @@ INSERT INTO [dbo].[treatment]
 VALUES
     (@dbo_Act_treatment_uid, '2026-04-01T00:00:00', @superuser_id,
      N'TRMT100', N'Foundation treatment',
-     N'TRMT', '2026-04-01T00:00:00', @superuser_id, N'TRT20000150GA01',
+     N'TRMT', CAST(GETDATE() AS DATE), @superuser_id, N'TRT20000150GA01',
      N'STD', N'1', N'ACTIVE',
      '2026-04-01T00:00:00', N'F', N'A', '2026-04-01T00:00:00',
      1);
@@ -440,7 +452,7 @@ INSERT INTO [dbo].[intervention]
 VALUES
     (@dbo_Act_vaccination_uid, '2026-04-01T00:00:00', @superuser_id,
      N'VAC100', N'Foundation vaccination',
-     N'INTV', '2026-04-01T00:00:00', @superuser_id, N'VAC20000160GA01',
+     N'INTV', CAST(GETDATE() AS DATE), @superuser_id, N'VAC20000160GA01',
      N'IMM', N'1', N'ACTIVE',
      '2026-04-01T00:00:00', N'F', N'A', '2026-04-01T00:00:00',
      1, N'207', 1, N'N');
@@ -464,6 +476,6 @@ VALUES
     (@dbo_Act_contact_uid, N'CON20000170GA01',
      @dbo_Entity_patient_uid, @dbo_Entity_patient_uid,
      @dbo_Act_investigation_uid, N'ACTIVE', '2026-04-01T00:00:00',
-     @superuser_id, '2026-04-01T00:00:00', '2026-04-01T00:00:00', @superuser_id,
+     @superuser_id, '2026-04-01T00:00:00', CAST(GETDATE() AS DATE), @superuser_id,
      1);
 GO

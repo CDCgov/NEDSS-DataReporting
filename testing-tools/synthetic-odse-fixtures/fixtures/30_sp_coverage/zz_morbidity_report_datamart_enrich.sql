@@ -187,7 +187,7 @@ BEGIN
     VALUES
         (@patient, '2026-04-01T00:00:00', @su,
          N'F', '1990-06-15T00:00:00', N'PAT', N'F', N'Y',
-         '2026-04-15T00:00:00', N'2186-5', '2026-04-01T00:00:00', @su,
+         '2026-04-15T00:00:00', N'2186-5', CAST(GETDATE() AS DATE), @su,
          N'PSN22015300GA01', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Sandra', N'Rose', N'Coleman', N'JR', 1,
          '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00', '2026-04-01T00:00:00',
@@ -209,7 +209,7 @@ BEGIN
          [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time], [as_of_date])
     VALUES
         (@patient, N'2106-3', N'2106-3', '2026-04-01T00:00:00', @su,
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00');
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_id]
         ([entity_uid], [entity_id_seq], [add_time], [add_user_id],
@@ -217,7 +217,7 @@ BEGIN
          [status_cd], [status_time], [root_extension_txt], [type_cd], [type_desc_txt], [as_of_date])
     VALUES
         (@patient, 1, '2026-04-01T00:00:00', @su,
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00',
          N'A', '2026-04-01T00:00:00', N'111-22-3333', N'SS', N'Social Security', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[postal_locator]
@@ -227,7 +227,7 @@ BEGIN
          [street_addr1], [street_addr2], [zip_cd])
     VALUES
         (@pat_home, '2026-04-01T00:00:00', @su, N'Atlanta',
-         N'840', N'13121', '2026-04-01T00:00:00', @su,
+         N'840', N'13121', CAST(GETDATE() AS DATE), @su,
          N'ACTIVE', '2026-04-01T00:00:00', N'13',
          N'500 Coverage Drive Unit A', N'Apartment B-12', N'30303');
     INSERT INTO [dbo].[postal_locator]
@@ -235,21 +235,21 @@ BEGIN
          [cntry_cd], [last_chg_time], [last_chg_user_id], [record_status_cd], [record_status_time])
     VALUES
         (@pat_bir, '2026-04-01T00:00:00', @su, N'Atlanta',
-         N'840', '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00');
+         N'840', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[tele_locator]
         ([tele_locator_uid], [add_time], [add_user_id], [cntry_cd],
          [last_chg_time], [last_chg_user_id], [phone_nbr_txt], [extension_txt],
          [record_status_cd], [record_status_time])
     VALUES
-        (@pat_tphone, '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9000', N'7777', N'ACTIVE', '2026-04-01T00:00:00'),
-        (@pat_twork,  '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9001', N'8888', N'ACTIVE', '2026-04-01T00:00:00'),
-        (@pat_tcell,  '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9002', NULL,   N'ACTIVE', '2026-04-01T00:00:00');
+        (@pat_tphone, '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9000', N'7777', N'ACTIVE', '2026-04-01T00:00:00'),
+        (@pat_twork,  '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9001', N'8888', N'ACTIVE', '2026-04-01T00:00:00'),
+        (@pat_tcell,  '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9002', NULL,   N'ACTIVE', '2026-04-01T00:00:00');
     INSERT INTO [dbo].[tele_locator]
         ([tele_locator_uid], [add_time], [add_user_id], [cntry_cd],
          [last_chg_time], [last_chg_user_id], [email_address], [record_status_cd], [record_status_time])
     VALUES
-        (@pat_temail, '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'coverage.patient@nbs.test', N'ACTIVE', '2026-04-01T00:00:00');
+        (@pat_temail, '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'coverage.patient@nbs.test', N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
         ([entity_uid], [locator_uid], [add_time], [add_user_id], [cd], [class_cd],
@@ -257,12 +257,12 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time],
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
-        (@patient, @pat_home,  '2026-04-01T00:00:00', @su, N'H',   N'PST',  '2026-04-01T00:00:00', @su, N'patient home',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00'),
-        (@patient, @pat_bir,   '2026-04-01T00:00:00', @su, N'BIR', N'PST',  '2026-04-01T00:00:00', @su, N'patient birth', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'BIR',1, '2026-04-01T00:00:00'),
-        (@patient, @pat_tphone,'2026-04-01T00:00:00', @su, N'PH',  N'TELE', '2026-04-01T00:00:00', @su, N'patient home ph', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00'),
-        (@patient, @pat_twork, '2026-04-01T00:00:00', @su, N'PH',  N'TELE', '2026-04-01T00:00:00', @su, N'patient work ph', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@patient, @pat_tcell, '2026-04-01T00:00:00', @su, N'CP',  N'TELE', '2026-04-01T00:00:00', @su, N'patient cell',   N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00'),
-        (@patient, @pat_temail,'2026-04-01T00:00:00', @su, N'NET', N'TELE', '2026-04-01T00:00:00', @su, N'patient email',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00');
+        (@patient, @pat_home,  '2026-04-01T00:00:00', @su, N'H',   N'PST',  CAST(GETDATE() AS DATE), @su, N'patient home',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00'),
+        (@patient, @pat_bir,   '2026-04-01T00:00:00', @su, N'BIR', N'PST',  CAST(GETDATE() AS DATE), @su, N'patient birth', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'BIR',1, '2026-04-01T00:00:00'),
+        (@patient, @pat_tphone,'2026-04-01T00:00:00', @su, N'PH',  N'TELE', CAST(GETDATE() AS DATE), @su, N'patient home ph', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00'),
+        (@patient, @pat_twork, '2026-04-01T00:00:00', @su, N'PH',  N'TELE', CAST(GETDATE() AS DATE), @su, N'patient work ph', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@patient, @pat_tcell, '2026-04-01T00:00:00', @su, N'CP',  N'TELE', CAST(GETDATE() AS DATE), @su, N'patient cell',   N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00'),
+        (@patient, @pat_temail,'2026-04-01T00:00:00', @su, N'NET', N'TELE', CAST(GETDATE() AS DATE), @su, N'patient email',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'H',  1, '2026-04-01T00:00:00');
 
     -- =================================================================
     -- PROVIDERS — physician + reporter.
@@ -277,12 +277,12 @@ BEGIN
          [version_ctrl_nbr], [as_of_date_general], [electronic_ind], [person_parent_uid], [edx_ind])
     VALUES
         (@phys, '2026-04-01T00:00:00', @su, N'PRV',
-         '2026-04-01T00:00:00', @su, N'PSN22015400GA01',
+         CAST(GETDATE() AS DATE), @su, N'PSN22015400GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Phys', N'Q', N'Coverage', N'DR', N'JR',
          1, '2026-04-01T00:00:00', N'Y', @phys, N'Y'),
         (@rptr, '2026-04-01T00:00:00', @su, N'PRV',
-         '2026-04-01T00:00:00', @su, N'PSN22015410GA01',
+         CAST(GETDATE() AS DATE), @su, N'PSN22015410GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Repr', N'R', N'Coverage', N'DR', NULL,
          1, '2026-04-01T00:00:00', N'Y', @rptr, N'Y');
@@ -302,10 +302,10 @@ BEGIN
          [status_cd], [status_time], [root_extension_txt], [type_cd], [type_desc_txt], [as_of_date])
     VALUES
         (@phys, 1, '2026-04-01T00:00:00', @su, N'CMS', N'Centers for Medicare & Medicaid Services',
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'1114015400', N'NPI', N'National provider identifier', '2026-04-01T00:00:00'),
         (@rptr, 1, '2026-04-01T00:00:00', @su, N'CMS', N'Centers for Medicare & Medicaid Services',
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'1114015410', N'NPI', N'National provider identifier', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[postal_locator]
@@ -313,9 +313,9 @@ BEGIN
          [cntry_cd], [cnty_cd], [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [state_cd], [street_addr1], [street_addr2], [zip_cd])
     VALUES
-        (@phys_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', '2026-04-01T00:00:00', @su,
+        (@phys_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', CAST(GETDATE() AS DATE), @su,
          N'ACTIVE', '2026-04-01T00:00:00', N'13', N'600 Physician Plaza Suite 3A', N'Building West Wing', N'30303'),
-        (@rptr_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', '2026-04-01T00:00:00', @su,
+        (@rptr_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', CAST(GETDATE() AS DATE), @su,
          N'ACTIVE', '2026-04-01T00:00:00', N'13', N'700 Reporter Way', N'Floor 5', N'30303');
 
     INSERT INTO [dbo].[tele_locator]
@@ -323,13 +323,13 @@ BEGIN
          [last_chg_time], [last_chg_user_id], [phone_nbr_txt], [extension_txt],
          [record_status_cd], [record_status_time])
     VALUES
-        (@phys_tphone, '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9110', N'1111', N'ACTIVE', '2026-04-01T00:00:00'),
-        (@rptr_tphone, '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9111', N'2222', N'ACTIVE', '2026-04-01T00:00:00');
+        (@phys_tphone, '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9110', N'1111', N'ACTIVE', '2026-04-01T00:00:00'),
+        (@rptr_tphone, '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9111', N'2222', N'ACTIVE', '2026-04-01T00:00:00');
     INSERT INTO [dbo].[tele_locator]
         ([tele_locator_uid], [add_time], [add_user_id], [cntry_cd],
          [last_chg_time], [last_chg_user_id], [email_address], [record_status_cd], [record_status_time])
     VALUES
-        (@phys_temail, '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'phys.coverage@nbs.test', N'ACTIVE', '2026-04-01T00:00:00');
+        (@phys_temail, '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'phys.coverage@nbs.test', N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
         ([entity_uid], [locator_uid], [add_time], [add_user_id], [cd], [class_cd],
@@ -337,11 +337,11 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time],
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
-        (@phys, @phys_postal, '2026-04-01T00:00:00', @su, N'O',  N'PST',  '2026-04-01T00:00:00', @su, N'phys work addr',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@phys, @phys_tphone, '2026-04-01T00:00:00', @su, N'O',  N'TELE', '2026-04-01T00:00:00', @su, N'phys work phone', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@phys, @phys_temail, '2026-04-01T00:00:00', @su, N'O',  N'TELE', '2026-04-01T00:00:00', @su, N'phys work email', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@rptr, @rptr_postal, '2026-04-01T00:00:00', @su, N'O',  N'PST',  '2026-04-01T00:00:00', @su, N'rptr work addr',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@rptr, @rptr_tphone, '2026-04-01T00:00:00', @su, N'O',  N'TELE', '2026-04-01T00:00:00', @su, N'rptr work phone', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00');
+        (@phys, @phys_postal, '2026-04-01T00:00:00', @su, N'O',  N'PST',  CAST(GETDATE() AS DATE), @su, N'phys work addr',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@phys, @phys_tphone, '2026-04-01T00:00:00', @su, N'O',  N'TELE', CAST(GETDATE() AS DATE), @su, N'phys work phone', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@phys, @phys_temail, '2026-04-01T00:00:00', @su, N'O',  N'TELE', CAST(GETDATE() AS DATE), @su, N'phys work email', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@rptr, @rptr_postal, '2026-04-01T00:00:00', @su, N'O',  N'PST',  CAST(GETDATE() AS DATE), @su, N'rptr work addr',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@rptr, @rptr_tphone, '2026-04-01T00:00:00', @su, N'O',  N'TELE', CAST(GETDATE() AS DATE), @su, N'rptr work phone', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00');
 
     -- =================================================================
     -- ORGANIZATIONS — reporting facility + hospital.
@@ -356,12 +356,12 @@ BEGIN
          [standard_industry_class_cd], [standard_industry_desc_txt], [edx_ind])
     VALUES
         (@repfac, '2026-04-01T00:00:00', @su, N'Coverage reporting facility',
-         '2026-04-01T00:00:00', @su, N'ORG22015500GA01',
+         CAST(GETDATE() AS DATE), @su, N'ORG22015500GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Coverage Reporting Facility', 1, N'Y',
          N'622110', N'General Medical and Surgical Hospitals', N'Y'),
         (@hosp, '2026-04-01T00:00:00', @su, N'Coverage hospital',
-         '2026-04-01T00:00:00', @su, N'ORG22015510GA01',
+         CAST(GETDATE() AS DATE), @su, N'ORG22015510GA01',
          N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'Coverage Hospital', 1, N'Y',
          N'622110', N'General Medical and Surgical Hospitals', N'Y');
@@ -379,10 +379,10 @@ BEGIN
          [status_cd], [status_time], [root_extension_txt], [type_cd], [type_desc_txt], [as_of_date])
     VALUES
         (@repfac, 1, '2026-04-01T00:00:00', @su, N'CLIA', N'Clinical Laboratory Improvement Amendments',
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'11D2015500', N'FI', N'Facility identifier', '2026-04-01T00:00:00'),
         (@hosp, 1, '2026-04-01T00:00:00', @su, N'CLIA', N'Clinical Laboratory Improvement Amendments',
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'11D2015510', N'FI', N'Facility identifier', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[postal_locator]
@@ -390,9 +390,9 @@ BEGIN
          [cntry_cd], [cnty_cd], [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [state_cd], [street_addr1], [street_addr2], [zip_cd])
     VALUES
-        (@repfac_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', '2026-04-01T00:00:00', @su,
+        (@repfac_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', CAST(GETDATE() AS DATE), @su,
          N'ACTIVE', '2026-04-01T00:00:00', N'13', N'800 Reporting Facility Blvd', N'Suite 200', N'30303'),
-        (@hosp_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', '2026-04-01T00:00:00', @su,
+        (@hosp_postal, '2026-04-01T00:00:00', @su, N'Atlanta', N'840', N'13121', CAST(GETDATE() AS DATE), @su,
          N'ACTIVE', '2026-04-01T00:00:00', N'13', N'900 Hospital Drive Suite 100', N'East Tower 4F', N'30303');
 
     INSERT INTO [dbo].[tele_locator]
@@ -400,9 +400,9 @@ BEGIN
          [last_chg_time], [last_chg_user_id], [phone_nbr_txt], [extension_txt],
          [record_status_cd], [record_status_time])
     VALUES
-        (@repfac_tphone, '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9120', N'3333', N'ACTIVE', '2026-04-01T00:00:00'),
-        (@repfac_tfax,   '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9129', NULL,   N'ACTIVE', '2026-04-01T00:00:00'),
-        (@hosp_tphone,   '2026-04-01T00:00:00', @su, N'1', '2026-04-01T00:00:00', @su, N'404-555-9121', N'4444', N'ACTIVE', '2026-04-01T00:00:00');
+        (@repfac_tphone, '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9120', N'3333', N'ACTIVE', '2026-04-01T00:00:00'),
+        (@repfac_tfax,   '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9129', NULL,   N'ACTIVE', '2026-04-01T00:00:00'),
+        (@hosp_tphone,   '2026-04-01T00:00:00', @su, N'1', CAST(GETDATE() AS DATE), @su, N'404-555-9121', N'4444', N'ACTIVE', '2026-04-01T00:00:00');
 
     INSERT INTO [dbo].[entity_locator_participation]
         ([entity_uid], [locator_uid], [add_time], [add_user_id], [cd], [class_cd],
@@ -410,11 +410,11 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time],
          [use_cd], [version_ctrl_nbr], [as_of_date])
     VALUES
-        (@repfac, @repfac_postal, '2026-04-01T00:00:00', @su, N'O',   N'PST',  '2026-04-01T00:00:00', @su, N'rep-fac addr',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@repfac, @repfac_tphone, '2026-04-01T00:00:00', @su, N'PH',  N'TELE', '2026-04-01T00:00:00', @su, N'rep-fac phone', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@repfac, @repfac_tfax,   '2026-04-01T00:00:00', @su, N'FAX', N'TELE', '2026-04-01T00:00:00', @su, N'rep-fac fax',   N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@hosp,   @hosp_postal,   '2026-04-01T00:00:00', @su, N'O',   N'PST',  '2026-04-01T00:00:00', @su, N'hospital addr', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
-        (@hosp,   @hosp_tphone,   '2026-04-01T00:00:00', @su, N'PH',  N'TELE', '2026-04-01T00:00:00', @su, N'hospital phone',N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00');
+        (@repfac, @repfac_postal, '2026-04-01T00:00:00', @su, N'O',   N'PST',  CAST(GETDATE() AS DATE), @su, N'rep-fac addr',  N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@repfac, @repfac_tphone, '2026-04-01T00:00:00', @su, N'PH',  N'TELE', CAST(GETDATE() AS DATE), @su, N'rep-fac phone', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@repfac, @repfac_tfax,   '2026-04-01T00:00:00', @su, N'FAX', N'TELE', CAST(GETDATE() AS DATE), @su, N'rep-fac fax',   N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@hosp,   @hosp_postal,   '2026-04-01T00:00:00', @su, N'O',   N'PST',  CAST(GETDATE() AS DATE), @su, N'hospital addr', N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00'),
+        (@hosp,   @hosp_tphone,   '2026-04-01T00:00:00', @su, N'PH',  N'TELE', CAST(GETDATE() AS DATE), @su, N'hospital phone',N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00', N'WP', 1, '2026-04-01T00:00:00');
 
     -- =================================================================
     -- INVESTIGATION — public_health_case (the shared investigation).
@@ -433,7 +433,7 @@ BEGIN
     VALUES
         (@inv, '2026-04-01T00:00:00', @su, N'I',
          N'C', N'10110', N'Hepatitis A, acute', N'NND', N'NND',
-         N'O', '2026-04-01T00:00:00', @su, N'CAS22015200GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22015200GA01',
          N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
          N'T', 1, N'HEP', N'130001',
          @inv, N'Y', N'N',
@@ -448,7 +448,7 @@ BEGIN
          [type_desc_txt], [status_cd], [status_time])
     VALUES
         (@inv, 1, '2026-04-01T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-01T00:00:00', @su, N'ACTIVE', '2026-04-01T00:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-01T00:00:00',
          N'CAS22015200GA01', N'PHC_LOCAL_ID', N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
 
     SET IDENTITY_INSERT [dbo].[case_management] ON;
@@ -474,7 +474,7 @@ BEGIN
     VALUES
         (@morb_order, '2026-04-04T09:00:00', @su, N'10110', N'Hepatitis A, acute',
          N'2.16.840.1.114222.4.5.277', N'PHIN_CONDITION',
-         '2026-04-05T10:30:00', @su, N'OBS22015010GA01',
+         CAST(GETDATE() AS DATE), @su, N'OBS22015010GA01',
          N'Order', N'Order', N'MorbReport',
          N'PROCESSED', '2026-04-05T10:30:00', N'A', '2026-04-05T10:30:00', @patient,
          N'T', 1, N'STD', N'130001',
@@ -493,11 +493,11 @@ BEGIN
          [program_jurisdiction_oid], [electronic_ind], [activity_to_time])
     VALUES
         (@morb_corder, '2026-04-04T09:00:00', @su, N'NTE', N'Notes Comment Order',
-         '2026-04-04T09:00:00', @su, N'OBS22015020GA01', N'C_Order', N'C_Order',
+         CAST(GETDATE() AS DATE), @su, N'OBS22015020GA01', N'C_Order', N'C_Order',
          N'PROCESSED', '2026-04-04T09:00:00', N'A', '2026-04-04T09:00:00', @patient,
          N'T', 1, N'STD', N'130001', @morb_order, N'Y', '2026-04-04T09:00:00'),
         (@morb_crslt, '2026-04-04T09:30:00', @su, N'NTE', N'Notes Comment Result',
-         '2026-04-04T09:30:00', @su, N'OBS22015021GA01', N'C_Result', N'C_Result',
+         CAST(GETDATE() AS DATE), @su, N'OBS22015021GA01', N'C_Result', N'C_Result',
          N'PROCESSED', '2026-04-04T09:30:00', N'A', '2026-04-04T09:30:00', @patient,
          N'T', 1, N'STD', N'130001', @morb_order, N'Y', '2026-04-04T09:30:00');
 
@@ -509,22 +509,22 @@ BEGIN
          [record_status_cd], [record_status_time], [status_cd], [status_time],
          [subject_person_uid], [shared_ind], [version_ctrl_nbr])
     VALUES
-        (@INV128, '2026-04-04T00:00:00', @su, N'INV128', '2026-04-04T00:00:00', @su, N'OBS22015101GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@INV145, '2026-04-04T00:00:00', @su, N'INV145', '2026-04-04T00:00:00', @su, N'OBS22015102GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@INV148, '2026-04-04T00:00:00', @su, N'INV148', '2026-04-04T00:00:00', @su, N'OBS22015103GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@INV149, '2026-04-04T00:00:00', @su, N'INV149', '2026-04-04T00:00:00', @su, N'OBS22015104GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@INV178, '2026-04-04T00:00:00', @su, N'INV178', '2026-04-04T00:00:00', @su, N'OBS22015105GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB100, '2026-04-04T00:00:00', @su, N'MRB100', '2026-04-04T00:00:00', @su, N'OBS22015106GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB102, '2026-04-04T00:00:00', @su, N'MRB102', '2026-04-04T00:00:00', @su, N'OBS22015107GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB122, '2026-04-04T00:00:00', @su, N'MRB122', '2026-04-04T00:00:00', @su, N'OBS22015108GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB129, '2026-04-04T00:00:00', @su, N'MRB129', '2026-04-04T00:00:00', @su, N'OBS22015109GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB130, '2026-04-04T00:00:00', @su, N'MRB130', '2026-04-04T00:00:00', @su, N'OBS22015110GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB161, '2026-04-04T00:00:00', @su, N'MRB161', '2026-04-04T00:00:00', @su, N'OBS22015111GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB165, '2026-04-04T00:00:00', @su, N'MRB165', '2026-04-04T00:00:00', @su, N'OBS22015112GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB166, '2026-04-04T00:00:00', @su, N'MRB166', '2026-04-04T00:00:00', @su, N'OBS22015113GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB167, '2026-04-04T00:00:00', @su, N'MRB167', '2026-04-04T00:00:00', @su, N'OBS22015114GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB168, '2026-04-04T00:00:00', @su, N'MRB168', '2026-04-04T00:00:00', @su, N'OBS22015115GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
-        (@MRB169, '2026-04-04T00:00:00', @su, N'MRB169', '2026-04-04T00:00:00', @su, N'OBS22015116GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1);
+        (@INV128, '2026-04-04T00:00:00', @su, N'INV128', CAST(GETDATE() AS DATE), @su, N'OBS22015101GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@INV145, '2026-04-04T00:00:00', @su, N'INV145', CAST(GETDATE() AS DATE), @su, N'OBS22015102GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@INV148, '2026-04-04T00:00:00', @su, N'INV148', CAST(GETDATE() AS DATE), @su, N'OBS22015103GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@INV149, '2026-04-04T00:00:00', @su, N'INV149', CAST(GETDATE() AS DATE), @su, N'OBS22015104GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@INV178, '2026-04-04T00:00:00', @su, N'INV178', CAST(GETDATE() AS DATE), @su, N'OBS22015105GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB100, '2026-04-04T00:00:00', @su, N'MRB100', CAST(GETDATE() AS DATE), @su, N'OBS22015106GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB102, '2026-04-04T00:00:00', @su, N'MRB102', CAST(GETDATE() AS DATE), @su, N'OBS22015107GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB122, '2026-04-04T00:00:00', @su, N'MRB122', CAST(GETDATE() AS DATE), @su, N'OBS22015108GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB129, '2026-04-04T00:00:00', @su, N'MRB129', CAST(GETDATE() AS DATE), @su, N'OBS22015109GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB130, '2026-04-04T00:00:00', @su, N'MRB130', CAST(GETDATE() AS DATE), @su, N'OBS22015110GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB161, '2026-04-04T00:00:00', @su, N'MRB161', CAST(GETDATE() AS DATE), @su, N'OBS22015111GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB165, '2026-04-04T00:00:00', @su, N'MRB165', CAST(GETDATE() AS DATE), @su, N'OBS22015112GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB166, '2026-04-04T00:00:00', @su, N'MRB166', CAST(GETDATE() AS DATE), @su, N'OBS22015113GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB167, '2026-04-04T00:00:00', @su, N'MRB167', CAST(GETDATE() AS DATE), @su, N'OBS22015114GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB168, '2026-04-04T00:00:00', @su, N'MRB168', CAST(GETDATE() AS DATE), @su, N'OBS22015115GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1),
+        (@MRB169, '2026-04-04T00:00:00', @su, N'MRB169', CAST(GETDATE() AS DATE), @su, N'OBS22015116GA01', N'Result', N'Result', N'PROCESSED', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', @patient, N'T', 1);
 
     -- Morb act_id (local id).
     INSERT INTO [dbo].[act_id]
@@ -535,7 +535,7 @@ BEGIN
          [type_desc_txt], [status_cd], [status_time])
     VALUES
         (@morb_order, 1, '2026-04-04T09:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-04T09:00:00', @su, N'ACTIVE', '2026-04-04T09:00:00',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T09:00:00',
          N'OBS22015010GA01', N'OBS_LOCAL_ID', N'Local Observation Identifier', N'A', '2026-04-04T09:00:00');
 
     -- =================================================================
@@ -579,24 +579,24 @@ BEGIN
          [record_status_time], [sequence_nbr], [source_class_cd],
          [target_class_cd], [status_cd], [status_time], [type_desc_txt])
     VALUES
-        (@morb_corder, @morb_order, N'COMP', '2026-04-04T09:00:00', @su, '2026-04-04T09:00:00', @su, N'ACTIVE', '2026-04-04T09:00:00', 1, N'OBS', N'OBS', N'A', '2026-04-04T09:00:00', N'Component'),
-        (@morb_crslt,  @morb_corder, N'COMP', '2026-04-04T09:30:00', @su, '2026-04-04T09:30:00', @su, N'ACTIVE', '2026-04-04T09:30:00', 1, N'OBS', N'OBS', N'A', '2026-04-04T09:30:00', N'Component'),
-        (@INV128, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@INV145, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 2,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@INV148, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 3,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@INV149, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 4,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@INV178, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 5,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB100, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 6,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB102, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 7,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB122, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 8,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB129, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 9,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB130, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 10, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB161, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 11, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB165, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 12, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB166, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 13, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB167, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 14, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB168, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 15, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
-        (@MRB169, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 16, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component');
+        (@morb_corder, @morb_order, N'COMP', '2026-04-04T09:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T09:00:00', 1, N'OBS', N'OBS', N'A', '2026-04-04T09:00:00', N'Component'),
+        (@morb_crslt,  @morb_corder, N'COMP', '2026-04-04T09:30:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T09:30:00', 1, N'OBS', N'OBS', N'A', '2026-04-04T09:30:00', N'Component'),
+        (@INV128, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@INV145, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 2,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@INV148, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 3,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@INV149, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 4,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@INV178, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 5,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB100, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 6,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB102, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 7,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB122, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 8,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB129, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 9,  N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB130, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 10, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB161, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 11, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB165, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 12, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB166, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 13, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB167, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 14, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB168, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 15, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component'),
+        (@MRB169, @morb_order, N'COMP', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 16, N'OBS', N'OBS', N'A', '2026-04-04T00:00:00', N'Component');
 
     -- =================================================================
     -- Morb Order participations (drive physician/reporter/org/patient keys).
@@ -607,18 +607,18 @@ BEGIN
          [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
     VALUES
-        (@morb_order, @patient, N'PATSBJ',              N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
+        (@morb_order, @patient, N'PATSBJ',              N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
         -- SubjOfMorbReport: legacy MasterETL's sp_D_Morbidity_Report resolves
         -- PATIENT_KEY off this type_cd only (it doesn't recognize PATSBJ) and
         -- doesn't COALESCE the key, so without this row the morb-event insert
         -- fails with NULL PATIENT_KEY. See morbidity.sql for the full note.
-        (@morb_order, @patient, N'SubjOfMorbReport',    N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Morbidity Report'),
-        (@morb_order, @phys,    N'PhysicianOfMorb',     N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Physician of Morb'),
-        (@morb_order, @rptr,    N'ReporterOfMorbReport',N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Morb (person)'),
-        (@morb_order, @repfac,  N'HCFAC',               N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Health Care Facility'),
-        (@morb_order, @repfac,  N'ReporterOfMorbReport',N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Morb (org)'),
-        (@morb_order, @repfac,  N'AUT',                 N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Author Organization'),
-        (@morb_order, @hosp,    N'HospOfMorbObs',       N'OBS', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Hospital of Morb');
+        (@morb_order, @patient, N'SubjOfMorbReport',    N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Morbidity Report'),
+        (@morb_order, @phys,    N'PhysicianOfMorb',     N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Physician of Morb'),
+        (@morb_order, @rptr,    N'ReporterOfMorbReport',N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Morb (person)'),
+        (@morb_order, @repfac,  N'HCFAC',               N'OBS', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Health Care Facility'),
+        (@morb_order, @repfac,  N'ReporterOfMorbReport',N'OBS', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Morb (org)'),
+        (@morb_order, @repfac,  N'AUT',                 N'OBS', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Author Organization'),
+        (@morb_order, @hosp,    N'HospOfMorbObs',       N'OBS', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Hospital of Morb');
 
     -- UI visibility: link the patient as SubjOfPHC of the investigation. Without
     -- this the investigation never renders under the patient in classic NBS
@@ -629,7 +629,7 @@ BEGIN
          [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
     VALUES
-        (@inv, @patient, N'SubjOfPHC', N'CASE', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Public Health Case');
+        (@inv, @patient, N'SubjOfPHC', N'CASE', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Public Health Case');
 
     -- =================================================================
     -- CROSS-SUBJECT edge: Morb Order -> Investigation (MorbReport).
@@ -642,7 +642,7 @@ BEGIN
          [record_status_cd], [record_status_time], [sequence_nbr], [status_cd], [status_time])
     VALUES
         (@inv, @morb_order, N'MorbReport', N'OBS', N'CASE',
-         '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su,
+         '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su,
          N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00');
 
     -- =================================================================
@@ -664,21 +664,21 @@ BEGIN
     VALUES
         (@lab1, '2026-04-04T08:00:00', @su, N'80375-5', N'Hepatitis A virus IgM Ab',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-05T10:30:00', @su, N'OBS22015600GA01',
+         CAST(GETDATE() AS DATE), @su, N'OBS22015600GA01',
          N'Order_rslt', N'Order_rslt', N'LabReportMorb',
          N'PROCESSED', '2026-04-05T10:30:00', N'A', '2026-04-05T10:30:00', @patient,
          N'T', 1, N'STD', N'130001', @lab1, N'Y',
          '2026-04-04T08:00:00', '2026-04-03T18:00:00', '2026-04-04T09:00:00', N'SER', N'Serum'),
         (@lab2, '2026-04-05T09:00:00', @su, N'22314-9', N'Hepatitis A virus IgG Ab',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-05T11:30:00', @su, N'OBS22015601GA01',
+         CAST(GETDATE() AS DATE), @su, N'OBS22015601GA01',
          N'Order_rslt', N'Order_rslt', N'LabReportMorb',
          N'PROCESSED', '2026-04-05T11:30:00', N'A', '2026-04-05T11:30:00', @patient,
          N'T', 1, N'STD', N'130001', @lab2, N'Y',
          '2026-04-05T09:00:00', '2026-04-04T18:00:00', '2026-04-05T11:00:00', N'PLAS', N'Plasma'),
         (@lab3, '2026-04-06T09:00:00', @su, N'1742-6', N'Alanine aminotransferase (ALT)',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-06T11:30:00', @su, N'OBS22015602GA01',
+         CAST(GETDATE() AS DATE), @su, N'OBS22015602GA01',
          N'Order_rslt', N'Order_rslt', N'LabReportMorb',
          N'PROCESSED', '2026-04-06T11:30:00', N'A', '2026-04-06T11:30:00', @patient,
          N'T', 1, N'STD', N'130001', @lab3, N'Y',
@@ -722,9 +722,9 @@ BEGIN
          [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
     VALUES
-        (@lab1, @patient, N'PATSBJ', N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
-        (@lab2, @patient, N'PATSBJ', N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
-        (@lab3, @patient, N'PATSBJ', N'OBS', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject');
+        (@lab1, @patient, N'PATSBJ', N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
+        (@lab2, @patient, N'PATSBJ', N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject'),
+        (@lab3, @patient, N'PATSBJ', N'OBS', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Patient Subject');
 
     INSERT INTO [dbo].[act_relationship]
         ([source_act_uid], [target_act_uid], [type_cd], [source_class_cd], [target_class_cd],
@@ -732,9 +732,9 @@ BEGIN
          [record_status_cd], [record_status_time], [sequence_nbr], [status_cd], [status_time], [type_desc_txt])
     VALUES
         -- lab -> morb Order (COMP) so report_observation_uid resolves to the morb
-        (@lab1, @morb_order, N'COMP', N'OBS', N'OBS', '2026-04-04T08:00:00', @su, '2026-04-04T08:00:00', '2026-04-04T08:00:00', @su, N'ACTIVE', '2026-04-04T08:00:00', 1, N'A', '2026-04-04T08:00:00', N'Component'),
-        (@lab2, @morb_order, N'COMP', N'OBS', N'OBS', '2026-04-05T09:00:00', @su, '2026-04-05T09:00:00', '2026-04-05T09:00:00', @su, N'ACTIVE', '2026-04-05T09:00:00', 2, N'A', '2026-04-05T09:00:00', N'Component'),
-        (@lab3, @morb_order, N'COMP', N'OBS', N'OBS', '2026-04-06T09:00:00', @su, '2026-04-06T09:00:00', '2026-04-06T09:00:00', @su, N'ACTIVE', '2026-04-06T09:00:00', 3, N'A', '2026-04-06T09:00:00', N'Component');
+        (@lab1, @morb_order, N'COMP', N'OBS', N'OBS', '2026-04-04T08:00:00', @su, '2026-04-04T08:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T08:00:00', 1, N'A', '2026-04-04T08:00:00', N'Component'),
+        (@lab2, @morb_order, N'COMP', N'OBS', N'OBS', '2026-04-05T09:00:00', @su, '2026-04-05T09:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-05T09:00:00', 2, N'A', '2026-04-05T09:00:00', N'Component'),
+        (@lab3, @morb_order, N'COMP', N'OBS', N'OBS', '2026-04-06T09:00:00', @su, '2026-04-06T09:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-06T09:00:00', 3, N'A', '2026-04-06T09:00:00', N'Component');
 
     INSERT INTO [dbo].[act_relationship]
         ([target_act_uid], [source_act_uid], [type_cd], [source_class_cd], [target_class_cd],
@@ -742,9 +742,9 @@ BEGIN
          [record_status_cd], [record_status_time], [sequence_nbr], [status_cd], [status_time])
     VALUES
         -- lab -> investigation (LabReport) so morb + labs share the same inv
-        (@inv, @lab1, N'LabReport', N'OBS', N'CASE', '2026-04-04T08:00:00', @su, '2026-04-04T08:00:00', '2026-04-04T08:00:00', @su, N'ACTIVE', '2026-04-04T08:00:00', 1, N'A', '2026-04-04T08:00:00'),
-        (@inv, @lab2, N'LabReport', N'OBS', N'CASE', '2026-04-05T09:00:00', @su, '2026-04-05T09:00:00', '2026-04-05T09:00:00', @su, N'ACTIVE', '2026-04-05T09:00:00', 1, N'A', '2026-04-05T09:00:00'),
-        (@inv, @lab3, N'LabReport', N'OBS', N'CASE', '2026-04-06T09:00:00', @su, '2026-04-06T09:00:00', '2026-04-06T09:00:00', @su, N'ACTIVE', '2026-04-06T09:00:00', 1, N'A', '2026-04-06T09:00:00');
+        (@inv, @lab1, N'LabReport', N'OBS', N'CASE', '2026-04-04T08:00:00', @su, '2026-04-04T08:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T08:00:00', 1, N'A', '2026-04-04T08:00:00'),
+        (@inv, @lab2, N'LabReport', N'OBS', N'CASE', '2026-04-05T09:00:00', @su, '2026-04-05T09:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-05T09:00:00', 1, N'A', '2026-04-05T09:00:00'),
+        (@inv, @lab3, N'LabReport', N'OBS', N'CASE', '2026-04-06T09:00:00', @su, '2026-04-06T09:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-06T09:00:00', 1, N'A', '2026-04-06T09:00:00');
 
     -- =================================================================
     -- TREATMENT acts (3) — treatment + treatment_administered + act_id.
@@ -762,17 +762,17 @@ BEGIN
     VALUES
         (@trt1, '2026-04-04T00:00:00', @su, N'1', N'Hepatitis A IG, 0.1 mL/kg, IM, x 1',
          N'2.16.840.1.114222.4.5.1', N'NEDSS Base System', N'TRMT',
-         '2026-04-04T00:00:00', @su, N'TRT22015700GA01', N'STD', N'130001', @trt1,
+         CAST(GETDATE() AS DATE), @su, N'TRT22015700GA01', N'STD', N'130001', @trt1,
          N'ACTIVE', '2026-04-04T00:00:00', N'T', N'A', '2026-04-04T00:00:00',
          1, '2026-04-04T00:00:00', '2026-04-04T00:00:00', N'Post-exposure prophylaxis.'),
         (@trt2, '2026-04-04T00:00:00', @su, N'1', N'Acetaminophen, 500 mg, PO, q6h, x 5d',
          N'2.16.840.1.114222.4.5.1', N'NEDSS Base System', N'TRMT',
-         '2026-04-04T00:00:00', @su, N'TRT22015701GA01', N'STD', N'130001', @trt2,
+         CAST(GETDATE() AS DATE), @su, N'TRT22015701GA01', N'STD', N'130001', @trt2,
          N'ACTIVE', '2026-04-04T00:00:00', N'T', N'A', '2026-04-04T00:00:00',
          1, '2026-04-04T00:00:00', '2026-04-08T00:00:00', N'Antipyretic; max 3 g/day.'),
         (@trt3, '2026-04-04T00:00:00', @su, N'OTH', N'IV Fluids, normal saline, 1L, x 1',
          N'2.16.840.1.114222.4.5.1', N'NEDSS Base System', N'TRMT',
-         '2026-04-04T00:00:00', @su, N'TRT22015702GA01', N'STD', N'130001', @trt3,
+         CAST(GETDATE() AS DATE), @su, N'TRT22015702GA01', N'STD', N'130001', @trt3,
          N'ACTIVE', '2026-04-04T00:00:00', N'T', N'A', '2026-04-04T00:00:00',
          1, '2026-04-04T00:00:00', '2026-04-04T00:00:00', N'Supportive hydration (custom name).');
 
@@ -799,24 +799,24 @@ BEGIN
          [last_chg_time], [last_chg_user_id], [record_status_cd],
          [record_status_time], [root_extension_txt], [type_cd], [type_desc_txt], [status_cd], [status_time])
     VALUES
-        (@trt1, 1, '2026-04-04T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'TRT22015700GA01', N'TRMT_LOCAL_ID', N'Local Treatment Identifier', N'A', '2026-04-04T00:00:00'),
-        (@trt2, 1, '2026-04-04T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'TRT22015701GA01', N'TRMT_LOCAL_ID', N'Local Treatment Identifier', N'A', '2026-04-04T00:00:00'),
-        (@trt3, 1, '2026-04-04T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'TRT22015702GA01', N'TRMT_LOCAL_ID', N'Local Treatment Identifier', N'A', '2026-04-04T00:00:00');
+        (@trt1, 1, '2026-04-04T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'TRT22015700GA01', N'TRMT_LOCAL_ID', N'Local Treatment Identifier', N'A', '2026-04-04T00:00:00'),
+        (@trt2, 1, '2026-04-04T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'TRT22015701GA01', N'TRMT_LOCAL_ID', N'Local Treatment Identifier', N'A', '2026-04-04T00:00:00'),
+        (@trt3, 1, '2026-04-04T00:00:00', @su, N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'TRT22015702GA01', N'TRMT_LOCAL_ID', N'Local Treatment Identifier', N'A', '2026-04-04T00:00:00');
 
     INSERT INTO [dbo].[participation]
         ([act_uid], [subject_entity_uid], [type_cd], [act_class_cd], [subject_class_cd],
          [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
          [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
     VALUES
-        (@trt1, @patient, N'SubjOfTrmt',     N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Treatment'),
-        (@trt1, @phys,    N'ProviderOfTrmt', N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Provider of Treatment'),
-        (@trt1, @hosp,    N'ReporterOfTrmt', N'TRMT', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Treatment'),
-        (@trt2, @patient, N'SubjOfTrmt',     N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Treatment'),
-        (@trt2, @phys,    N'ProviderOfTrmt', N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Provider of Treatment'),
-        (@trt2, @hosp,    N'ReporterOfTrmt', N'TRMT', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Treatment'),
-        (@trt3, @patient, N'SubjOfTrmt',     N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Treatment'),
-        (@trt3, @phys,    N'ProviderOfTrmt', N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Provider of Treatment'),
-        (@trt3, @hosp,    N'ReporterOfTrmt', N'TRMT', N'ORG', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Treatment');
+        (@trt1, @patient, N'SubjOfTrmt',     N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Treatment'),
+        (@trt1, @phys,    N'ProviderOfTrmt', N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Provider of Treatment'),
+        (@trt1, @hosp,    N'ReporterOfTrmt', N'TRMT', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Treatment'),
+        (@trt2, @patient, N'SubjOfTrmt',     N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Treatment'),
+        (@trt2, @phys,    N'ProviderOfTrmt', N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Provider of Treatment'),
+        (@trt2, @hosp,    N'ReporterOfTrmt', N'TRMT', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Treatment'),
+        (@trt3, @patient, N'SubjOfTrmt',     N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Subject of Treatment'),
+        (@trt3, @phys,    N'ProviderOfTrmt', N'TRMT', N'PSN', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Provider of Treatment'),
+        (@trt3, @hosp,    N'ReporterOfTrmt', N'TRMT', N'ORG', '2026-04-04T00:00:00', @su, CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', N'A', '2026-04-04T00:00:00', N'Reporter of Treatment');
 
     INSERT INTO [dbo].[act_relationship]
         ([target_act_uid], [source_act_uid], [type_cd], [source_class_cd], [target_class_cd],
@@ -824,13 +824,13 @@ BEGIN
          [record_status_cd], [record_status_time], [sequence_nbr], [status_cd], [status_time])
     VALUES
         -- TreatmentToPHC (TRMT -> CASE)
-        (@inv, @trt1, N'TreatmentToPHC', N'TRMT', N'CASE', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
-        (@inv, @trt2, N'TreatmentToPHC', N'TRMT', N'CASE', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
-        (@inv, @trt3, N'TreatmentToPHC', N'TRMT', N'CASE', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
+        (@inv, @trt1, N'TreatmentToPHC', N'TRMT', N'CASE', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
+        (@inv, @trt2, N'TreatmentToPHC', N'TRMT', N'CASE', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
+        (@inv, @trt3, N'TreatmentToPHC', N'TRMT', N'CASE', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
         -- TreatmentToMorb (TRMT -> OBS Morb Order)
-        (@morb_order, @trt1, N'TreatmentToMorb', N'TRMT', N'OBS', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
-        (@morb_order, @trt2, N'TreatmentToMorb', N'TRMT', N'OBS', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
-        (@morb_order, @trt3, N'TreatmentToMorb', N'TRMT', N'OBS', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', '2026-04-04T00:00:00', @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00');
+        (@morb_order, @trt1, N'TreatmentToMorb', N'TRMT', N'OBS', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
+        (@morb_order, @trt2, N'TreatmentToMorb', N'TRMT', N'OBS', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00'),
+        (@morb_order, @trt3, N'TreatmentToMorb', N'TRMT', N'OBS', '2026-04-04T00:00:00', @su, '2026-04-04T00:00:00', CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-04T00:00:00', 1, N'A', '2026-04-04T00:00:00');
 
 END
 GO

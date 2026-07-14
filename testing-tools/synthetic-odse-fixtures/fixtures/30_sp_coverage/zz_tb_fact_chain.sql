@@ -112,15 +112,15 @@ BEGIN
     VALUES
         -- OrgAsReporterOfPHC -> org_as_reporter_uid (routine 056 line 932)
         (22040000, @tb_phc_uid, '2026-04-01T00:00:00', @superuser_id,
-         @org_uid, 1, '2026-04-01T00:00:00', @superuser_id,
+         @org_uid, 1, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-01T00:00:00', N'OrgAsReporterOfPHC'),
         -- HospOfADT -> hospital_uid (routine 056 line 914)
         (22040001, @tb_phc_uid, '2026-04-01T00:00:00', @superuser_id,
-         @org_uid, 1, '2026-04-01T00:00:00', @superuser_id,
+         @org_uid, 1, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-01T00:00:00', N'HospOfADT'),
         -- PerAsReporterOfPHC -> person_as_reporter_uid (routine 056 line 913)
         (22040002, @tb_phc_uid, '2026-04-01T00:00:00', @superuser_id,
-         @person_uid, 1, '2026-04-01T00:00:00', @superuser_id,
+         @person_uid, 1, CAST(GETDATE() AS DATE), @superuser_id,
          N'ACTIVE', '2026-04-01T00:00:00', N'PerAsReporterOfPHC');
 
     SET IDENTITY_INSERT [dbo].[nbs_act_entity] OFF;

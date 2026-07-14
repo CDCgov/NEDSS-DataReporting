@@ -125,7 +125,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@tb_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10220', N'Tuberculosis', N'NND', N'NND',
-     N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22001000GA01',
+     N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22001000GA01',
      N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'TB', N'130001',
      22001000, N'N', NULL,
@@ -143,7 +143,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@tb_full_phc_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'CAS22001000GA01', N'PHC_LOCAL_ID',
      N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -198,67 +198,67 @@ VALUES
     --   Pulmonary; drives D_DISEASE_SITE + D_DISEASE_SITE_GROUP + the
     --   CALC_DISEASE_SITE='Pulmonary' branch in 147 SP lines 859-865.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'39607008', 1079, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'39607008', 1079, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB167 ADDL_RISK -> 73211009 Diabetes Mellitus (PHVS_TB_RISK_FACTORS;
     --   drives D_ADDL_RISK + D_ADDL_RISK_GROUP.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'73211009', 1230, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'73211009', 1230, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB154 HIV_STATUS -> 260385009 Negative (PHVS_HIV_STATUS; drives
     --   D_TB_HIV row.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'260385009', 1273, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'260385009', 1273, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB155 HIV_STATE_PATIENT_NUM -> 'HIV-STATE-TB-01' (text; no code set)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'HIV-STATE-TB-01', 1323, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'HIV-STATE-TB-01', 1323, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB156 HIV_CITY_CNTY_PATIENT_NUM -> 'HIV-CITY-TB-01' (text)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'HIV-CITY-TB-01', 1034, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'HIV-CITY-TB-01', 1034, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB229 MOVE_STATE -> '13' Georgia (STATE_CCD; drives D_MOVE_STATE.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'13', 1248, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'13', 1248, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB228 MOVE_CNTY -> '13121' Fulton County (COUNTY_CCD;
     --   drives D_MOVE_CNTY.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'13121', 1055, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'13121', 1055, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB230 MOVE_CNTRY -> '840' US (PHVS_TB_BIRTH_CNTRY group 4260;
     --   drives D_MOVE_CNTRY. CODE_SET_GROUP_ID 77777 is a special-case
     --   country-direct lookup; we use the standard codeset path.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'840', 1243, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'840', 1243, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB225 MOVED_WHERE -> 'C1512888' Out of the U.S.
     --   (PHVS_TB_DIS_ACQ_JUR; drives D_MOVED_WHERE.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'C1512888', 1256, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'C1512888', 1256, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB235 GT_12_REAS -> '258143003' Non-adherence
     --   (PHVS_TB_EXTEND_REAS; drives D_GT_12_REAS.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'258143003', 1318, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'258143003', 1318, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB237 HC_PROV_TY -> '310174000' Private Outpatient
     --   (PHVS_TB_HC_PRAC_TY; drives D_HC_PROV_TY_3.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'310174000', 1071, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'310174000', 1071, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB129 SMR_EXAM_TY -> '108257001' Pathology/Cytology
     --   (PHVS_TB_MICRO_EX_TY; drives D_SMR_EXAM_TY.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'108257001', 1174, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'108257001', 1174, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB114 OUT_OF_CNTRY -> 'PHC2' (one of the PHVS_TB_BIRTH_CNTRY codes;
     --   drives D_OUT_OF_CNTRY. Note: 147-tb_pam SP excludes TUB114 from
     --   the main pivot — this row lives so the 190-out_of_cntry SP picks
     --   it up.)
     (@tb_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'PHC2', 1080, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'PHC2', 1080, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
 END
 

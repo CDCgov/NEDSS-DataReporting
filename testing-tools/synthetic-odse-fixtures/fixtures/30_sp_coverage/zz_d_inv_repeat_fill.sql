@@ -141,7 +141,7 @@ BEGIN
     VALUES
         (@tbl, @t, @su, N'I',
          N'C', N'502582', N'Latent Tuberculosis Infection (2020 TBLISS)', N'NND', N'NND',
-         N'O', @t, @su, N'CAS22047000GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22047000GA01',
          N'OPEN', @t, N'A', @t,
          N'T', 1, N'TB', N'130001',
          @tbl, N'N', NULL,
@@ -156,7 +156,7 @@ BEGIN
     VALUES
         (@tbl, 1, @t, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @t, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @t, N'CAS22047000GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @t);
 
@@ -166,7 +166,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @tbl, N'SubjOfPHC', N'CASE', @t, @su,
-         @t, @su, N'ACTIVE', @t, N'A', @t, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, N'A', @t, N'PSN',
          N'Subject of Public Health Case');
 
     SET IDENTITY_INSERT [dbo].[case_management] ON;
@@ -198,105 +198,105 @@ INSERT INTO [dbo].[nbs_case_answer]
      [answer_group_seq_nbr])
 VALUES
     -- ADM_ADV_EVE_IND (q 10011154, CODED YNU csg 4150)
-    (@tbl,@t,@su,N'N',10011154,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'Y',10011154,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'N',10011154,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10011154,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Y',10011154,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'N',10011154,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- ADM_ADV_EVE_MNFSTN_DT (q 10012235, CODED csg 118700)
-    (@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'PHC1917',10012235,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'PHC1917',10012235,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'PHC1917',10012235,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'PHC1917',10012235,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- ADM_LINKED_CASE_NBR (q 10012173, TEXT)
-    (@tbl,@t,@su,N'LINK-22047000-A',10012173,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'LINK-22047000-B',10012173,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'LINK-22047000-C',10012173,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'LINK-22047000-A',10012173,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'LINK-22047000-B',10012173,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'LINK-22047000-C',10012173,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- ADM_PREV_STATE_CASE_NBR (q 10012175, TEXT)
-    (@tbl,@t,@su,N'PSC-001',10012175,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'PSC-002',10012175,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'PSC-003',10012175,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'PSC-001',10012175,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'PSC-002',10012175,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'PSC-003',10012175,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_CHEST_STDY_TYPE (q 10010264, CODED csg 115430)
-    (@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'113091000',10010264,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'113091000',10010264,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'113091000',10010264,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'113091000',10010264,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_CHEST_STUDY_DT (q 10012166, DATE)
-    (@tbl,@t,@su,N'2026-03-10',10012166,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'2026-03-12',10012166,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'2026-03-14',10012166,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-10',10012166,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-12',10012166,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-14',10012166,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_DIAGNOSIS_TYPE (q 10012174, CODED csg 118230)
-    (@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'11999007',10012174,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'11999007',10012174,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'11999007',10012174,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'11999007',10012174,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_EVIDENCE_CAVITY (q 10012167, CODED csg 4150)
-    (@tbl,@t,@su,N'N',10012167,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'Y',10012167,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'N',10012167,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10012167,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Y',10012167,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'N',10012167,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_EVIDENCE_MILIARY_TB (q 10012168, CODED csg 4150)
-    (@tbl,@t,@su,N'N',10012168,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'N',10012168,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'Y',10012168,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10012168,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'N',10012168,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'Y',10012168,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_PREVIOUS_ILLNESS_DT (q 10006140, DATE)
-    (@tbl,@t,@su,N'2026-02-01',10006140,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'2026-02-05',10006140,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'2026-02-09',10006140,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-02-01',10006140,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-02-05',10006140,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-02-09',10006140,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CLN_RSLT_CHEST_STDY (q 10010265, CODED csg 115120)
-    (@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'385660001',10010265,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'385660001',10010265,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'385660001',10010265,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'385660001',10010265,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- CMP_ADVERSE_EVENT (q 10012234, CODED csg 118520)
-    (@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'15188001',10012234,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'15188001',10012234,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'15188001',10012234,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'15188001',10012234,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_ANTI_MIC_SUSC_RSLT_DT (q 10012206, DATE)
-    (@tbl,@t,@su,N'2026-03-15',10012206,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'2026-03-17',10012206,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'2026-03-19',10012206,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-15',10012206,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-17',10012206,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-19',10012206,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_GENE_IDENTIFIER (q 10010295, CODED csg 118040)
-    (@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'OTH',10010295,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'OTH',10010295,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'OTH',10010295,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'OTH',10010295,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_AMINO_ACID (q 10012213, TEXT)
-    (@tbl,@t,@su,N'Ser315Thr',10012213,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'Lys43Arg',10012213,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'Asp94Gly',10012213,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'Ser315Thr',10012213,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Lys43Arg',10012213,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'Asp94Gly',10012213,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_INDEL (q 10012214, CODED csg 118130)
-    (@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'246114006',10012214,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'246114006',10012214,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'246114006',10012214,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'246114006',10012214,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_NUCLIC_ACID (q 10012212, TEXT)
-    (@tbl,@t,@su,N'katG c.944G>C',10012212,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'rpoB c.1349C>T',10012212,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'gyrA c.280G>A',10012212,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'katG c.944G>C',10012212,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'rpoB c.1349C>T',10012212,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'gyrA c.280G>A',10012212,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_REPRTD_DT (q 10012209, DATE)
-    (@tbl,@t,@su,N'2026-03-20',10012209,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'2026-03-22',10012209,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'2026-03-24',10012209,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-20',10012209,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-22',10012209,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-24',10012209,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_SPC_COLC_DT (q 10012208, DATE)
-    (@tbl,@t,@su,N'2026-03-05',10012208,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'2026-03-07',10012208,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'2026-03-09',10012208,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'2026-03-05',10012208,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'2026-03-07',10012208,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'2026-03-09',10012208,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_SPEC_TY (q 10012210, CODED csg 117770)
-    (@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'10200004',10012210,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'10200004',10012210,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'10200004',10012210,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'10200004',10012210,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_TST_MTHD (q 10012215, CODED csg 118630)
-    (@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'OTH',10012215,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'OTH',10012215,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'OTH',10012215,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'OTH',10012215,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_MOLE_SUSC_TST_RSLT (q 10012211, CODED csg 118600)
-    (@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'260373001',10012211,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'260373001',10012211,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'260373001',10012211,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'260373001',10012211,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRT_CMPLT_TRT_PREV_DIAG (q 10012176, CODED csg 4150)
-    (@tbl,@t,@su,N'N',10012176,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'Y',10012176,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'N',10012176,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'N',10012176,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'Y',10012176,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'N',10012176,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRT_DRG_USD_TRT_MDR_TB (q 10012229, CODED csg 117700)
-    (@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'10109',10012229,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbl,@t,@su,N'10109',10012229,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'10109',10012229,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'10109',10012229,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRT_DUR_DRG_ADMINSTRD (q 10012230, CODED csg 118300)
-    (@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbl,@t,@su,N'266710000',10012230,1,@t,@su,N'ACTIVE',@t,3,3);
+    (@tbl,@t,@su,N'266710000',10012230,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbl,@t,@su,N'266710000',10012230,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbl,@t,@su,N'266710000',10012230,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3);
 END
 GO
 
@@ -323,7 +323,7 @@ BEGIN
     VALUES
         (@tri, @t, @su, N'I',
          N'C', N'10270', N'Trichinellosis', N'NND', N'NND',
-         N'O', @t, @su, N'CAS22047500GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22047500GA01',
          N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @tri, N'N', NULL,
@@ -338,7 +338,7 @@ BEGIN
     VALUES
         (@tri, 1, @t, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @t, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @t, N'CAS22047500GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @t);
 
@@ -348,7 +348,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @tri, N'SubjOfPHC', N'CASE', @t, @su,
-         @t, @su, N'ACTIVE', @t, N'A', @t, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, N'A', @t, N'PSN',
          N'Subject of Public Health Case');
 
     SET IDENTITY_INSERT [dbo].[case_management] ON;
@@ -378,65 +378,65 @@ INSERT INTO [dbo].[nbs_case_answer]
      [answer_group_seq_nbr])
 VALUES
     -- EPI_OTHER_MEAT_TYPE (q 10009139, TEXT)
-    (@tri,@t,@su,N'Wild boar',10009139,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'Bear',10009139,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'Cougar',10009139,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'Wild boar',10009139,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'Bear',10009139,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'Cougar',10009139,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_SPECIMEN_ANALYZED_DT (q 10002105, DATE)
-    (@tri,@t,@su,N'2026-03-11',10002105,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'2026-03-13',10002105,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'2026-03-15',10002105,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'2026-03-11',10002105,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'2026-03-13',10002105,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'2026-03-15',10002105,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_SPECIMEN_TYPE (q 10001372, CODED csg 113080)
-    (@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'119297000',10001372,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'119297000',10001372,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'119297000',10001372,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'119297000',10001372,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_STRAIN_TYPE (q 10009134, CODED csg 113150)
-    (@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'264435007',10009134,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'264435007',10009134,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'264435007',10009134,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'264435007',10009134,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_SUSPECT_MEAT_TESTED (q 10009145, CODED csg 113350)
-    (@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'OTH',10009145,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'OTH',10009145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'OTH',10009145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'OTH',10009145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_CONSUMED_DT (q 10009140, DATE)
-    (@tri,@t,@su,N'2026-02-20',10009140,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'2026-02-22',10009140,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'2026-02-24',10009140,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'2026-02-20',10009140,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'2026-02-22',10009140,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'2026-02-24',10009140,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_COOKING_METHOD (q 10009143, CODED csg 113300)
-    (@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'F0003',10009143,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'F0003',10009143,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'F0003',10009143,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'F0003',10009143,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_LARVA_SUSPECT_MEAT (q 10009144, CODED csg 112930)
-    (@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'2667000',10009144,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'2667000',10009144,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'2667000',10009144,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'2667000',10009144,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_MEAT_COMMENTS (q 10009146, TEXT)
-    (@tri,@t,@su,N'Home-processed, undercooked',10009146,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'Shared at family event',10009146,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'Frozen >30 days',10009146,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'Home-processed, undercooked',10009146,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'Shared at family event',10009146,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'Frozen >30 days',10009146,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_MEAT_PREPARATION (q 10009142, CODED csg 113190)
-    (@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'A0769',10009142,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'A0769',10009142,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'A0769',10009142,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'A0769',10009142,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_SUSPECT_MEAT_TYPE (q 10009138, CODED csg 113020)
-    (@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'B1292',10009138,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'B1292',10009138,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'B1292',10009138,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'B1292',10009138,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_WHERE_MEAT_OBTAINED (q 10009141, CODED csg 112900)
-    (@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'224834004',10009141,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'224834004',10009141,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'224834004',10009141,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'224834004',10009141,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRV_DESTINATION_TYPE (q 10006155, CODED csg 3010)
-    (@tri,@t,@su,N'DOM',10006155,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'INTL',10006155,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'DOM',10006155,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'DOM',10006155,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'INTL',10006155,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'DOM',10006155,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRV_DURATION_OUTSIDE_US (q 10006160, NUMERIC unit_type_cd=CODED ->
     --   SP-gated, likely WON'T pivot; authored for completeness)
-    (@tri,@t,@su,N'14',10006160,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'21',10006160,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'7',10006160,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tri,@t,@su,N'14',10006160,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'21',10006160,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'7',10006160,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRV_TRAVEL_COUNTY (q 10006156, CODED county csg 110410)
-    (@tri,@t,@su,N'13001',10006156,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tri,@t,@su,N'13003',10006156,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tri,@t,@su,N'13001',10006156,1,@t,@su,N'ACTIVE',@t,3,3);
+    (@tri,@t,@su,N'13001',10006156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tri,@t,@su,N'13003',10006156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tri,@t,@su,N'13001',10006156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3);
 END
 GO
