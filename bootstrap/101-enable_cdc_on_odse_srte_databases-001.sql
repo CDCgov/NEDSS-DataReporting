@@ -6,23 +6,29 @@ IF IS_SRVROLEMEMBER('sysadmin') <> 1
     END
 GO
 
+-- Enable Snapshot Isolation for NBS_ODSE for
+-- Debezium Seeding
+-- ------------------------------------------
+ALTER DATABASE NBS_ODSE
+SET ALLOW_SNAPSHOT_ISOLATION ON;
+
 -- ------------------------------------------
 -- 1. Enable CDC at Database Level - NBS_ODSE
 -- ------------------------------------------
 IF (
-    SELECT is_cdc_enabled FROM sys.databases
-    WHERE name = 'NBS_ODSE'
+    SELECT IS_CDC_ENABLED FROM SYS.DATABASES
+    WHERE NAME = 'NBS_ODSE'
 ) = 0
     BEGIN
         -- for aws
         IF
             EXISTS (
-                SELECT 1 FROM sys.databases
-                WHERE name = 'rdsadmin'
+                SELECT 1 FROM SYS.DATABASES
+                WHERE NAME = 'rdsadmin'
             )
             BEGIN
                 PRINT 'AWS RDS detected. Enabling CDC for NBS_ODSE using rds_cdc_enable_db';
-                EXEC msdb.dbo.rds_cdc_enable_db 'NBS_ODSE';
+                EXEC MSDB.DBO.RDS_CDC_ENABLE_DB 'NBS_ODSE';
             END
         ELSE
             BEGIN
@@ -39,13 +45,13 @@ GO
 -- ------------------------------------------
 -- 2. Enable CDC for Tables - NBS_ODSE
 -- ------------------------------------------
-USE nbs_odse;
+USE NBS_ODSE;
 GO
 
-DECLARE @odseTablesToEnable TABLE (tablename NVARCHAR(128));
+DECLARE @odseTablesToEnable TABLE (TABLENAME NVARCHAR(128));
 
-INSERT INTO @odseTablesToEnable (tablename)
-SELECT tablename
+INSERT INTO @odseTablesToEnable (TABLENAME)
+SELECT TABLENAME
 FROM (
     VALUES
     ('Act_relationship'),
@@ -68,23 +74,23 @@ FROM (
     ('Treatment'),
     ('NBS_configuration'),
     ('LOOKUP_QUESTION')
-) AS newrows (tablename)
+) AS NEWROWS (TABLENAME)
 EXCEPT
-SELECT name
-FROM sys.tables
-WHERE is_tracked_by_cdc = 1;
+SELECT NAME
+FROM SYS.TABLES
+WHERE IS_TRACKED_BY_CDC = 1;
 
 DECLARE @odseTableName NVARCHAR(128);
-DECLARE odseCur CURSOR FOR SELECT tablename FROM @odseTablesToEnable;
+DECLARE ODSECUR CURSOR FOR SELECT TABLENAME FROM @odseTablesToEnable;
 
-OPEN odseCur;
-FETCH NEXT FROM odseCur INTO @odseTableName;
+OPEN ODSECUR;
+FETCH NEXT FROM ODSECUR INTO @odseTableName;
 
 WHILE @@FETCH_STATUS = 0
     BEGIN
         PRINT 'Enabling CDC for table: ' + @odseTableName;
         BEGIN TRY
-            EXEC sys.sp_cdc_enable_table
+            EXEC SYS.SP_CDC_ENABLE_TABLE
                 @source_schema = N'dbo',
                 @source_name = @odseTableName,
                 @role_name = NULL;
@@ -96,30 +102,30 @@ WHILE @@FETCH_STATUS = 0
             + ERROR_MESSAGE();
         END CATCH
 
-        FETCH NEXT FROM odseCur INTO @odseTableName;
+        FETCH NEXT FROM ODSECUR INTO @odseTableName;
     END
 
-CLOSE odseCur;
-DEALLOCATE odseCur;
+CLOSE ODSECUR;
+DEALLOCATE ODSECUR;
 GO
 
 -- ------------------------------------------
 -- 3. Enable CDC at Database Level - NBS_SRTE
 -- ------------------------------------------
 IF (
-    SELECT is_cdc_enabled FROM sys.databases
-    WHERE name = 'NBS_SRTE'
+    SELECT IS_CDC_ENABLED FROM SYS.DATABASES
+    WHERE NAME = 'NBS_SRTE'
 ) = 0
     BEGIN
         -- for aws
         IF
             EXISTS (
-                SELECT 1 FROM sys.databases
-                WHERE name = 'rdsadmin'
+                SELECT 1 FROM SYS.DATABASES
+                WHERE NAME = 'rdsadmin'
             )
             BEGIN
                 PRINT 'AWS RDS detected. Enabling CDC for NBS_SRTE using rds_cdc_enable_db';
-                EXEC msdb.dbo.rds_cdc_enable_db 'NBS_SRTE';
+                EXEC MSDB.DBO.RDS_CDC_ENABLE_DB 'NBS_SRTE';
             END
         ELSE
             BEGIN
@@ -136,13 +142,13 @@ GO
 -- ------------------------------------------
 -- 4. Enable CDC for Tables - NBS_SRTE
 -- ------------------------------------------
-USE nbs_srte;
+USE NBS_SRTE;
 GO
 
-DECLARE @srteTablesToEnable TABLE (tablename NVARCHAR(128));
+DECLARE @srteTablesToEnable TABLE (TABLENAME NVARCHAR(128));
 
-INSERT INTO @srteTablesToEnable (tablename)
-SELECT tablename
+INSERT INTO @srteTablesToEnable (TABLENAME)
+SELECT TABLENAME
 FROM (
     VALUES
     ('Anatomic_site_code'),
@@ -188,23 +194,23 @@ FROM (
     ('Unit_code'),
     ('Zip_code_value'),
     ('Zipcnty_code_value')
-) AS newrows (tablename)
+) AS NEWROWS (TABLENAME)
 EXCEPT
-SELECT name
-FROM sys.tables
-WHERE is_tracked_by_cdc = 1;
+SELECT NAME
+FROM SYS.TABLES
+WHERE IS_TRACKED_BY_CDC = 1;
 
 DECLARE @srteTableName NVARCHAR(128);
-DECLARE srteCur CURSOR FOR SELECT tablename FROM @srteTablesToEnable;
+DECLARE SRTECUR CURSOR FOR SELECT TABLENAME FROM @srteTablesToEnable;
 
-OPEN srteCur;
-FETCH NEXT FROM srteCur INTO @srteTableName;
+OPEN SRTECUR;
+FETCH NEXT FROM SRTECUR INTO @srteTableName;
 
 WHILE @@FETCH_STATUS = 0
     BEGIN
         PRINT 'Enabling CDC for table: ' + @srteTableName;
         BEGIN TRY
-            EXEC sys.sp_cdc_enable_table
+            EXEC SYS.SP_CDC_ENABLE_TABLE
                 @source_schema = N'dbo',
                 @source_name = @srteTableName,
                 @role_name = NULL;
@@ -216,9 +222,9 @@ WHILE @@FETCH_STATUS = 0
             + ERROR_MESSAGE();
         END CATCH
 
-        FETCH NEXT FROM srteCur INTO @srteTableName;
+        FETCH NEXT FROM SRTECUR INTO @srteTableName;
     END
 
-CLOSE srteCur;
-DEALLOCATE srteCur;
+CLOSE SRTECUR;
+DEALLOCATE SRTECUR;
 GO
