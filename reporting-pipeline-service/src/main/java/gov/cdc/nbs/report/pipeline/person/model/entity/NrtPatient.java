@@ -23,9 +23,16 @@ public class NrtPatient {
   @Column(name = "patient_uid")
   private Long patientUid;
 
+  @Column(name = "patient_mpr_uid")
   private Long patientMprUid;
+
+  @Column(name = "record_status")
   private String recordStatus;
+
+  @Column(name = "local_id")
   private String localId;
+
+  @Column(name = "general_comments")
   private String generalComments;
 
   @Column(name = "first_name")
@@ -40,8 +47,13 @@ public class NrtPatient {
   @Column(name = "name_suffix")
   private String nmSuffix;
 
+  @Column(name = "nm_use_cd")
   private String nmUseCd;
+
+  @Column(name = "status_name_cd")
   private String statusNameCd;
+
+  @Column(name = "alias_nickname")
   private String aliasNickname;
 
   @Column(name = "street_address_1")
@@ -50,37 +62,100 @@ public class NrtPatient {
   @Column(name = "street_address_2")
   private String streetAddress2;
 
+  @Column(name = "city")
   private String city;
+
+  @Column(name = "state")
   private String state;
+
+  @Column(name = "state_code")
   private String stateCode;
+
+  @Column(name = "zip")
   private String zip;
+
+  @Column(name = "county")
   private String county;
+
+  @Column(name = "county_code")
   private String countyCode;
+
+  @Column(name = "country")
   private String country;
+
+  @Column(name = "country_code")
   private String countryCode;
+
+  @Column(name = "within_city_limits")
   private String withinCityLimits;
+
+  @Column(name = "phone_home")
   private String phoneHome;
+
+  @Column(name = "phone_ext_home")
   private String phoneExtHome;
+
+  @Column(name = "phone_work")
   private String phoneWork;
+
+  @Column(name = "phone_ext_work")
   private String phoneExtWork;
+
+  @Column(name = "phone_cell")
   private String phoneCell;
+
+  @Column(name = "email")
   private String email;
+
+  @Column(name = "dob")
   private LocalDateTime dob;
+
+  @Column(name = "age_reported")
   private BigDecimal ageReported;
+
+  @Column(name = "age_reported_unit")
   private String ageReportedUnit;
+
+  @Column(name = "age_reported_unit_cd")
   private String ageReportedUnitCd;
+
+  @Column(name = "birth_sex")
   private String birthSex;
+
+  @Column(name = "current_sex")
   private String currentSex;
+
+  @Column(name = "curr_sex_cd")
   private String currSexCd;
+
+  @Column(name = "deceased_indicator")
   private String deceasedIndicator;
+
+  @Column(name = "deceased_ind_cd")
   private String deceasedIndCd;
+
+  @Column(name = "deceased_date")
   private LocalDateTime deceasedDate;
+
+  @Column(name = "marital_status")
   private String maritalStatus;
+
+  @Column(name = "marital_status_cd")
   private String maritalStatusCd;
+
+  @Column(name = "ssn")
   private String ssn;
+
+  @Column(name = "ethnic_group_ind")
   private String ethnicGroupInd;
+
+  @Column(name = "ethnicity")
   private String ethnicity;
+
+  @Column(name = "race_calculated")
   private String raceCalculated;
+
+  @Column(name = "race_calc_details")
   private String raceCalcDetails;
 
   @Column(name = "race_amer_ind_1")
@@ -158,24 +233,61 @@ public class NrtPatient {
   @Column(name = "race_white_all")
   private String raceWhiteAll;
 
+  @Column(name = "patient_number")
   private String patientNumber;
+
+  @Column(name = "patient_number_auth")
   private String patientNumberAuth;
+
+  @Column(name = "entry_method")
   private String entryMethod;
+
+  @Column(name = "speaks_english")
   private String speaksEnglish;
+
+  @Column(name = "unk_ethnic_rsn")
   private String unkEthnicRsn;
+
+  @Column(name = "curr_sex_unk_rsn")
   private String currSexUnkRsn;
+
+  @Column(name = "preferred_gender")
   private String preferredGender;
+
+  @Column(name = "addl_gender_info")
   private String addlGenderInfo;
+
+  @Column(name = "census_tract")
   private String censusTract;
+
+  @Column(name = "race_all")
   private String raceAll;
+
+  @Column(name = "birth_country")
   private String birthCountry;
+
+  @Column(name = "primary_occupation")
   private String primaryOccupation;
+
+  @Column(name = "primary_language")
   private String primaryLanguage;
+
+  @Column(name = "add_user_id")
   private Long addUserId;
+
+  @Column(name = "add_user_name")
   private String addUserName;
+
+  @Column(name = "add_time")
   private LocalDateTime addTime;
+
+  @Column(name = "last_chg_user_id")
   private Long lastChgUserId;
+
+  @Column(name = "last_chg_user_name")
   private String lastChgUserName;
+
+  @Column(name = "last_chg_time")
   private LocalDateTime lastChgTime;
 
   // GENERATED ALWAYS AS ROW START: SQL Server populates this column; it must never be

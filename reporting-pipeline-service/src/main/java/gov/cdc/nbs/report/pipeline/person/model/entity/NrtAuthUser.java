@@ -20,16 +20,37 @@ public class NrtAuthUser {
   @Column(name = "auth_user_uid")
   private Long authUserId;
 
+  @Column(name = "user_id")
   private String userId;
+
+  @Column(name = "first_nm")
   private String firstNm;
+
+  @Column(name = "last_nm")
   private String lastNm;
+
+  @Column(name = "nedss_entry_id")
   private Long nedssEntryId;
+
+  @Column(name = "provider_uid")
   private Long providerUid;
+
+  @Column(name = "add_time")
   private LocalDateTime addTime;
+
+  @Column(name = "add_user_id")
   private Long addUserId;
+
+  @Column(name = "last_chg_time")
   private LocalDateTime lastChgTime;
+
+  @Column(name = "last_chg_user_id")
   private Long lastChgUserId;
+
+  @Column(name = "record_status_cd")
   private String recordStatusCd;
+
+  @Column(name = "record_status_time")
   private LocalDateTime recordStatusTime;
 
   // GENERATED ALWAYS AS ROW START: SQL Server populates this column; it must never be
