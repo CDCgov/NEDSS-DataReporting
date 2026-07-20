@@ -174,4 +174,3 @@ uv run pytest
 - The application under test must be running and connected to the same
   databases so it can process the inserted source data into `RDB_MODERN`.
 
-
