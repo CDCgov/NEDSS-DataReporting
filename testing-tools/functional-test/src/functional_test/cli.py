@@ -162,6 +162,53 @@ def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentPar
         "you can inspect the database between steps.",
     )
     parser.add_argument(
+        "--bulk",
+        type=int,
+        default=None,
+        metavar="COPIES",
+        help="Bulk-file generation: evaluate every selected test's setup.sql offline and "
+        "write COPIES shifted copies of the resulting rows as sharded Parquet plus "
+        "OPENROWSET loader scripts (SQL Server 2022+). No database connection is "
+        "made. Requires --bulk-out.",
+    )
+    parser.add_argument(
+        "--bulk-out",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="Output directory for --bulk files.",
+    )
+    parser.add_argument(
+        "--bulk-workers",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Parallel generation worker processes for --bulk; the copies are "
+        "sharded and each shard also loads in parallel via load.sh. "
+        "Defaults to min(8, CPU count).",
+    )
+    parser.add_argument(
+        "--manage-indexes",
+        action="store_true",
+        help="Emit load-script sections that disable non-unique nonclustered indexes "
+        "on the target tables during the load and rebuild them after (parquet format).",
+    )
+    parser.add_argument(
+        "--identity-base",
+        type=int,
+        default=500_000_000,
+        metavar="N",
+        help="First synthetic value for identity columns captured via OUTPUT INSERTED "
+        "in the setup scripts (loaded with KEEPIDENTITY). Pick a range unused on the "
+        "target database.",
+    )
+    parser.add_argument(
+        "--skip-query",
+        action="store_true",
+        help="Run each step's setup.sql but skip the query/expected polling entirely — "
+        "useful for just loading test data without waiting for the pipeline to process it.",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Live-print each query's SQL and its expected vs actual results on every poll "
@@ -217,6 +264,71 @@ def _print_test_result(result: TestResult) -> None:
             print(_dim(f"        {step.setup_error}"))
 
 
+def _run_bulk_generation(args, test_dirs: list[Path]) -> int:
+    import time
+    from collections import Counter
+
+    from .bulk import build_bulk_plan
+    from .bulkgen import BulkGenError, evaluate_suite
+    from .parquet_out import write_bulk_parquet
+
+    base = args.shift_id or 0
+    try:
+        plan = build_bulk_plan(test_dirs)
+        suite = evaluate_suite(plan)
+    except (ValueError, BulkGenError) as exc:
+        print(_red(str(exc)), file=sys.stderr)
+        return 2
+
+    identity_total = sum(t.identity_count for t in suite.tables.values())
+    print(_bold(
+        f"Evaluated {len(plan.tests)} test(s): {suite.rows_per_copy} rows/copy across "
+        f"{len(suite.tables)} tables ({identity_total} synthesized identity values/copy)."
+    ))
+    print(_dim(
+        f"  shift pattern: base {base:+d}, stride {plan.stride}, "
+        f"{plan.slots} copies per region, region span {plan.span}"
+    ))
+    print(_dim(
+        f"  copy offsets {plan.offset_for(0, base)} .. {plan.offset_for(args.bulk - 1, base)}; "
+        f"identity values from {args.identity_base}"
+    ))
+    for warning, count in Counter(suite.warnings).items():
+        prefix = f"{count}x " if count > 1 else ""
+        print(_dim(f"  warning: {prefix}{warning}"))
+
+    start = time.monotonic()
+    workers = args.bulk_workers or min(8, os.cpu_count() or 1)
+
+    def on_shard(done: int, total: int) -> None:
+        print(_dim(f"  shard {done}/{total} written "
+                   f"({time.monotonic() - start:.1f}s elapsed)"))
+        sys.stdout.flush()
+
+    written = write_bulk_parquet(
+        suite,
+        args.bulk_out,
+        args.bulk,
+        base_shift=base,
+        identity_base=args.identity_base,
+        database=args.database,
+        workers=workers,
+        manage_indexes=args.manage_indexes,
+        on_progress=on_shard,
+    )
+    hint = ("  load with: SERVER=... DBUSER=... DBPASSWORD=... "
+            "DATA_DIR=<server-visible path> sh load.sh "
+            "(OPENROWSET, SQL Server 2022+; parallel shard loaders)")
+
+    total_bytes = sum(p.stat().st_size for p in written)
+    print(_bold(_green(
+        f"Wrote {len(written)} files ({total_bytes / 2**20:.1f} MiB, "
+        f"{suite.rows_per_copy * args.bulk} rows) to {args.bulk_out}"
+    )))
+    print(_dim(hint))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -240,6 +352,16 @@ def main(argv: list[str] | None = None) -> int:
         for test_dir in test_dirs:
             print(f"  {test_dir.name}")
         return 0
+
+    if (args.bulk is None) != (args.bulk_out is None):
+        print(_red("--bulk and --bulk-out must be used together."), file=sys.stderr)
+        return 2
+    if args.bulk is not None:
+        if args.start_id is not None:
+            print(_red("--bulk cannot be combined with -i/--id; use -s for a base shift."),
+                  file=sys.stderr)
+            return 2
+        return _run_bulk_generation(args, test_dirs)
 
     if not args.user:
         print(
@@ -265,7 +387,8 @@ def main(argv: list[str] | None = None) -> int:
         print(_red(f"Failed to connect: {type(exc).__name__}: {exc}"), file=sys.stderr)
         return 2
 
-    print(_bold(f"Running {len(test_dirs)} functional test(s)\n"))
+    print(_bold(f"Running {len(test_dirs)} functional test(s)"
+                + (" (setup only, queries skipped)" if args.skip_query else "") + "\n"))
 
     def emit(msg: str) -> None:
         print(_dim(msg))
@@ -311,6 +434,7 @@ def main(argv: list[str] | None = None) -> int:
                 on_query=on_query,
                 on_poll=on_poll,
                 on_step_complete=on_step_complete,
+                skip_query=args.skip_query,
             )
             results.append(result)
             _print_test_result(result)

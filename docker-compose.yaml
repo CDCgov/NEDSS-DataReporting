@@ -18,9 +18,12 @@ services:
     volumes:
       - ./containers/db/initialize:/tmp/sql/initialize
       - ./bootstrap:/tmp/sql/bootstrap
+      # odse-volume-generator staging: the server reads generated Parquet
+      # directly via OPENROWSET instead of docker-cp'ing files in.
+      - ./testing-tools/odse-volume-generator/out:/staging:ro
     ports:
       - 3433:1433
-    mem_limit: 2.5G
+    mem_limit: 12G
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1

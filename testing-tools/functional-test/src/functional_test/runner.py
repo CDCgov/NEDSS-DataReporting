@@ -225,6 +225,7 @@ def run_step(
     remapper: Optional[IdRemapper] = None,
     on_query: Optional[Callable[["QueryResult"], None]] = None,
     on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
+    skip_query: bool = False,
 ) -> StepResult:
     result = StepResult(name=step_dir.name)
 
@@ -232,27 +233,35 @@ def run_step(
     query_path = step_dir / QUERY_FILE
     expected_path = step_dir / EXPECTED_FILE
 
-    for path in (setup_path, query_path, expected_path):
+    # With skip_query only the setup matters: the step just seeds data, so the
+    # query/expected files are neither required nor read.
+    required = (setup_path,) if skip_query else (setup_path, query_path, expected_path)
+    for path in required:
         if not path.is_file():
             result.setup_error = f"Missing required file: {path.name}"
             return result
 
     setup_sql = setup_path.read_text()
-    query_text = query_path.read_text()
-    expected_text = expected_path.read_text()
     if remapper is not None:
         setup_sql = remapper.apply(setup_sql)
-        query_text = remapper.apply(query_text)
-        expected_text = remapper.apply(expected_text)
-
-    queries = split_statements(query_text)
-    expected_map = json.loads(expected_text)
 
     try:
         db.execute_setup(setup_sql)
     except Exception as exc:  # noqa: BLE001 - surface any DB error to the report
         result.setup_error = f"{type(exc).__name__}: {exc}"
         return result
+
+    if skip_query:
+        return result
+
+    query_text = query_path.read_text()
+    expected_text = expected_path.read_text()
+    if remapper is not None:
+        query_text = remapper.apply(query_text)
+        expected_text = remapper.apply(expected_text)
+
+    queries = split_statements(query_text)
+    expected_map = json.loads(expected_text)
 
     for i, query in enumerate(queries):
         if on_event:
@@ -322,6 +331,7 @@ def run_test(
     on_query: Optional[Callable[["QueryResult"], None]] = None,
     on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
     on_step_complete: Optional[Callable[["StepResult"], None]] = None,
+    skip_query: bool = False,
 ) -> TestResult:
     result = TestResult(name=test_dir.name)
     try:
@@ -354,7 +364,8 @@ def run_test(
         if on_event:
             on_event(f"    step {step_dir.name}")
         step_result = run_step(
-            db, step_dir, max_retry, retry_delay, on_event, remapper, on_query, on_poll
+            db, step_dir, max_retry, retry_delay, on_event, remapper, on_query, on_poll,
+            skip_query=skip_query,
         )
         result.steps.append(step_result)
         # Give callers a chance to pause/inspect after each step (e.g. --pause).

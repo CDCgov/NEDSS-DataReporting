@@ -140,6 +140,9 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
 | `--max-retry` | `40` | Maximum polls per query before failing. |
 | `--retry-delay` | `6` | Seconds between polls. |
 | `--skip-query` | off | Run each step's `setup.sql` but skip the query/expected polling — just load the test data without waiting for the pipeline to process it. |
+| `--bulk` | — | Generate MSSQL bulk-load files instead of running tests: COPIES shifted copies of every selected test's final setup rows (see below). Requires `--bulk-out`. |
+| `--bulk-out` | — | Output directory for `--bulk`. |
+| `--identity-base` | `500000000` | First synthetic value for identity columns in `--bulk` output (loaded with `KEEPIDENTITY`). |
 | `--fail-fast` | off | Stop after the first failing test. |
 | `--pause` | off | Pause and wait for Enter after each step completes (Ctrl-C to abort), so you can inspect the database between steps. |
 | `--debug` | off | Live-print each query's SQL and its expected vs actual results on every poll attempt. |
@@ -156,6 +159,69 @@ the fastest way to see *why* a query isn't matching.
 
 The process exits `0` when all tests pass, `1` when any test fails, and `2` on
 a usage/connection error.
+
+## Bulk data generation (`--bulk`)
+
+To mass-generate data (e.g. for volume/performance testing), `--bulk` turns the
+setup scripts into MSSQL bulk-load files instead of executing them:
+
+```sh
+uv run functional-test -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
+    --bulk 10000 --bulk-out /tmp/bulkdata
+```
+
+No database connection is made. The setup scripts are *evaluated* offline by a
+small T-SQL interpreter (variables, `OUTPUT INSERTED` identity captures,
+UPDATEs and DELETEs are all applied), producing each test's **final-state
+rows**. Those rows are then written `COPIES` times, each copy shifted to a
+fresh UID range using a collision-free pattern derived from the tests' ID
+blocks (tile each 1000-wide block in strides of the widest test, then jump
+past the whole occupied range and repeat) — so any number of copies can be
+loaded next to the original data and next to each other. `-s` offsets the
+whole series, e.g. past data from earlier normal runs.
+
+Generation is sharded over `--bulk-workers` processes (default `min(8, CPUs)`;
+copy offsets and identity values are pure functions of the global copy index,
+so shards are independent and deterministic). Rows are written as **Parquet**
+— one file per table column-set per shard — and loaded with SQL Server 2022's
+native reader: `INSERT INTO t (cols) SELECT cols FROM OPENROWSET(BULK ...,
+FORMAT='PARQUET')`, one set-based statement per file. Inserts that use
+different column subsets get separate files, so omitted columns take their
+column defaults, and NULL / empty-string / `T`-separator timestamp values load
+as-is. The output directory contains:
+
+- `<Table>[__N]__s<K>.parquet` — table (column-set `N`) rows for shard `K`.
+- `pre.sql` / `shard_<K>.sql` / `post.sql` — the per-shard loads. `pre.sql`
+  turns off FK/CHECK validation on the target tables (as bcp's bulk path
+  implicitly does; `post.sql` re-enables without validating, leaving them
+  untrusted — the same end-state as a bcp load) and, with `--manage-indexes`,
+  disables non-unique nonclustered indexes for `post.sql` to rebuild. Each
+  shard loads the tables in a rotated order to reduce lock contention, wraps
+  every insert in a deadlock-retry block, guards identity tables with
+  `IDENTITY_INSERT`, and `post.sql` reseeds identity tables.
+- `load.sh` — runs `pre.sql`, then the shard scripts in parallel
+  (`LOAD_WORKERS`, default 6), then `post.sql` and `fixup.sql`:
+
+  ```sh
+  SERVER=localhost,3433 DBUSER=sa DBPASSWORD=... \
+      DATA_DIR=/staging/bulkdata sh load.sh
+  ```
+
+  `DATA_DIR` is the path where the **server** sees the `.parquet` files —
+  e.g. bind-mount the output directory into the mssql container. With
+  `mssql-tools18`, also set `SQLCMD_OPTS=-C` to trust a self-signed server
+  certificate.
+- `load.sql` — the same load as one sequential script for plain
+  `sqlcmd -v DataDir=... -i load.sql`.
+- `fixup.sql` — the few INSERTs whose values read seed data that only exists
+  on a real database, generated set-based (one statement covers all copies).
+
+Caveats: needs SQL Server 2022+ (`OPENROWSET ... FORMAT='PARQUET'`);
+identity-column values are synthesized starting at `--identity-base` (pick a
+range unused on the target; `DBCC CHECKIDENT` afterwards moves the tables'
+identity seeds past it); recorded UPDATE/DELETEs that no-op on a real replay
+(stale recorded state, or rows seeded outside the tests) are skipped with a
+warning.
 
 ## Development
 
