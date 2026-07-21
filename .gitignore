@@ -78,3 +78,6 @@ testing-tools/local-db-tracing/known_replay_associations.json
 # Local docker-compose overrides (e.g. comparison-fixtures fast-drain tuning), not for PR
 docker-compose.override.yaml
 docker-compose.override.yml
+
+# functional-test --bulk staging (bind-mounted into nbs-mssql at /staging)
+testing-tools/functional-test/out/

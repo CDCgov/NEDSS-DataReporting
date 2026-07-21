@@ -167,8 +167,12 @@ setup scripts into MSSQL bulk-load files instead of executing them:
 
 ```sh
 uv run functional-test -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
-    --bulk 10000 --bulk-out /tmp/bulkdata
+    --bulk 10000 --bulk-out out/bulkdata
 ```
+
+(`out/` is bind-mounted read-only into the local mssql container at `/staging`
+— see `docker-compose.yaml` — so output written there is immediately readable
+by the server as `/staging/bulkdata`.)
 
 No database connection is made. The setup scripts are *evaluated* offline by a
 small T-SQL interpreter (variables, `OUTPUT INSERTED` identity captures,
@@ -208,7 +212,7 @@ as-is. The output directory contains:
   ```
 
   `DATA_DIR` is the path where the **server** sees the `.parquet` files —
-  e.g. bind-mount the output directory into the mssql container. With
+  with the compose mount, `--bulk-out out/<name>` is `/staging/<name>`. With
   `mssql-tools18`, also set `SQLCMD_OPTS=-C` to trust a self-signed server
   certificate.
 - `load.sql` — the same load as one sequential script for plain
