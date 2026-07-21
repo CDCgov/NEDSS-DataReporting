@@ -139,6 +139,7 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
 | `--database` | `NBS_ODSE` | Initial database for the connection. |
 | `--max-retry` | `40` | Maximum polls per query before failing. |
 | `--retry-delay` | `6` | Seconds between polls. |
+| `--skip-query` | off | Run each step's `setup.sql` but skip the query/expected polling — just load the test data without waiting for the pipeline to process it. |
 | `--fail-fast` | off | Stop after the first failing test. |
 | `--pause` | off | Pause and wait for Enter after each step completes (Ctrl-C to abort), so you can inspect the database between steps. |
 | `--debug` | off | Live-print each query's SQL and its expected vs actual results on every poll attempt. |
@@ -173,5 +174,4 @@ uv run pytest
   ID ranges in `testData/functional/README.md`) between runs if needed.
 - The application under test must be running and connected to the same
   databases so it can process the inserted source data into `RDB_MODERN`.
-
 
