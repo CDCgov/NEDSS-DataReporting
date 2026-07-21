@@ -116,10 +116,17 @@ def _value_pool(patients: int, seed: int):
     return dfs["patient_values"] if isinstance(dfs, dict) else dfs
 
 
-def generate(cfg: cfgmod.Config, out_dir: Path) -> dict:
+def generate(cfg: cfgmod.Config, out_dir: Path, shard_idx: int = 0,
+             start: int = 0, count: int | None = None) -> dict:
+    """Generate patients [start, start+count). Keys are global (deterministic from
+    the patient index), so shards never collide. The seed is offset by shard_idx so
+    each shard's values differ yet the whole run is reproducible."""
+    if count is None:
+        count = cfg.patients
+    seed = cfg.seed + shard_idx
     ka = KeyAllocator(base=cfg.key_base, stride=cfg.key_stride_per_patient)
-    rng = random.Random(cfg.seed)
-    df = _value_pool(cfg.patients, cfg.seed)
+    rng = random.Random(seed)
+    df = _value_pool(count, seed)
     cols = {t: {c: [] for c, _ in spec} for t, spec in TABLES.items()}
     samples = []
 
@@ -130,11 +137,11 @@ def generate(cfg: cfgmod.Config, out_dir: Path) -> dict:
     def n(name, **over):
         return cfg.dist(name).sample(rng)
 
-    for i in range(cfg.patients):
+    for i in range(start, start + count):
         primary = ka.person_uid(i)
-        row = df.iloc[i]
+        row = df.iloc[i - start]
         first, last = str(row["first_nm"]), str(row["last_nm"])
-        start = str(row["start_date"])[:10]
+        activity_dt = str(row["start_date"])[:10]
 
         n_person = max(1, n("person_records_per_patient"))
         n_org = n("organizations_per_patient")
@@ -197,7 +204,7 @@ def generate(cfg: cfgmod.Config, out_dir: Path) -> dict:
                 record_status_cd="OPEN", record_status_time=TS, investigation_status_cd="O",
                 prog_area_cd=prog_cd, jurisdiction_cd=juris_cd,
                 program_jurisdiction_oid=pools.oid(juris_uid, prog_cd), shared_ind="T",
-                version_ctrl_nbr=1, status_cd="A", status_time=TS, activity_from_time=start,
+                version_ctrl_nbr=1, status_cd="A", status_time=TS, activity_from_time=activity_dt,
                 local_id=ka.local_id(phc, "CAS"), add_time=TS, add_user_id=SUPERUSER,
                 last_chg_time=TS, last_chg_user_id=SUPERUSER)
             add("participation", act_uid=phc, subject_entity_uid=primary,
@@ -267,7 +274,7 @@ def generate(cfg: cfgmod.Config, out_dir: Path) -> dict:
                 record_status_time=TS, status_cd="A", status_time=TS, add_time=TS,
                 add_user_id=SUPERUSER)
 
-        if i < 3 or i == cfg.patients - 1:
+        if i < start + 3 or i == start + count - 1:
             samples.append({"idx": i, "last_nm": last, "mpr_uid": primary,
                             "phc_uids": phc_uids, "n_obs": n_obs, "n_person": n_person})
 
@@ -281,8 +288,8 @@ def generate(cfg: cfgmod.Config, out_dir: Path) -> dict:
         written[t] = {"path": str(out_dir / f"{t}.parquet"), "rows": table.num_rows,
                       "columns": [c for c, _ in spec]}
 
-    manifest = {"patients": cfg.patients, "seed": cfg.seed, "key_base": cfg.key_base,
-                "max_uid": ka.max_uid(cfg.patients), "load_order": LOAD_ORDER,
+    manifest = {"patients": count, "shard_idx": shard_idx, "start": start,
+                "seed": seed, "key_base": cfg.key_base, "load_order": LOAD_ORDER,
                 "tables": written, "samples": samples}
     (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return manifest

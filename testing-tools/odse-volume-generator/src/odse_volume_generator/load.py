@@ -14,7 +14,7 @@ import subprocess
 from pathlib import Path
 
 CONTAINER = "nedss-datareporting-nbs-mssql-1"
-STAGE = "/tmp/odse_volume"
+STAGE_ROOT = "/tmp/odse_volume"
 
 
 def _sqlcmd(sql: str) -> tuple[int, str]:
@@ -26,9 +26,10 @@ def _sqlcmd(sql: str) -> tuple[int, str]:
     return proc.returncode, (proc.stdout + proc.stderr)
 
 
-def load(manifest_path: Path) -> dict:
+def load(manifest_path: Path, stage_suffix: str = "") -> dict:
     m = json.loads(Path(manifest_path).read_text())
-    subprocess.run(["docker", "exec", CONTAINER, "mkdir", "-p", STAGE], check=True)
+    stage = f"{STAGE_ROOT}{('_' + stage_suffix) if stage_suffix else ''}"
+    subprocess.run(["docker", "exec", CONTAINER, "mkdir", "-p", stage], check=True)
 
     results = {}
     # FK-safe order comes from the manifest (parents before children).
@@ -36,7 +37,7 @@ def load(manifest_path: Path) -> dict:
     for t in order:
         info = m["tables"][t]
         local = Path(info["path"])
-        staged = f"{STAGE}/{t}.parquet"
+        staged = f"{stage}/{t}.parquet"
         subprocess.run(["docker", "cp", str(local), f"{CONTAINER}:{staged}"], check=True)
         collist = ", ".join(f"[{c}]" for c in info["columns"])
         sql = (f"SET NOCOUNT ON; "
