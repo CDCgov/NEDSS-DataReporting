@@ -22,6 +22,24 @@
 docker compose up -d
 ```
 
+### Running the combined stack with NEDSS-DataIngestion
+
+To run DataReporting and NEDSS-DataIngestion together against one shared
+database, Kafka cluster, and Debezium/Connect worker (rather than this repo's
+standalone `docker compose up` above), check out both repos as sibling
+directories under one parent folder, then from either repo run:
+
+```bash
+./scripts/nbs7-deploy.sh up
+```
+
+This starts shared MSSQL, Kafka, and Debezium/Connect once, plus both
+projects' app services (`reporting-pipeline-service`, `data-ingestion-service`,
+`data-processing-service`, etc.) on one Docker network. See
+`docker-compose.shared.yml` and `scripts/nbs7-deploy.sh` for details, and
+`scripts/nbs7-deploy.sh` with no arguments (or `down`/`ps`/`logs`/`build`) for
+other commands.
+
 ### Verifying functionality
 
 1. Log into [NBS 6](http://localhost:7003/nbs/login) using the user: `superuser`. No password is required

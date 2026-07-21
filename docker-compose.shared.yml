@@ -1,0 +1,221 @@
+# Shared local-dev stack for running NEDSS-DataReporting alongside
+# NEDSS-DataIngestion against one database and one Kafka cluster.
+#
+# This file owns the infrastructure both projects depend on (nbs-mssql,
+# kafka, debezium) plus this project's own services. It is meant to be run
+# together with ../NEDSS-DataIngestion/docker-compose.shared.yml as a single
+# Compose project - use the orchestrator script instead of `docker compose up`
+# directly:
+#
+#   ./scripts/nbs7-deploy.sh up   (from this repo, once checked out alongside its sibling)
+#
+# Manual equivalent:
+#   docker compose -p nbs7 \
+#     -f docker-compose.shared.yml \
+#     -f ../NEDSS-DataIngestion/docker-compose.shared.yml \
+#     up -d --wait
+#
+# The standalone docker-compose.yaml / docker-compose.test.yaml in this repo
+# are untouched and continue to work as before for DataReporting-only dev.
+
+services:
+  # Canonical shared database. Superset of both projects: restores
+  # RDB_MODERN and enables CDC (needed by this project's pipeline), then
+  # layers NEDSS-DataIngestion's data-ingestion/deduplication/mpi databases
+  # on top so a single instance serves both apps.
+  nbs-mssql:
+    image: ghcr.io/cdcent/nedssdb:6.0.17.0-replacement-beta
+    platform: linux/amd64
+    environment:
+      - DATABASE_VERSION=6.0.18.1
+      - DEPLOY_ADMIN_PASSWORD=${DATABASE_PASSWORD:-fake.fake.fake.1234}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-fake.fake.fake.1234}
+      - RTR_SERVICE_USER_NAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - RTR_SERVICE_USER_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >-
+        cp -r /tmp/sql/reporting-init/. /docker-entrypoint-initdb.d/ &&
+        cp -r /tmp/sql/reporting-bootstrap/. /docker-entrypoint-initdb.d/ &&
+        cp -r /tmp/sql/ingestion-init/. /docker-entrypoint-initdb.d/ &&
+        exec ./entrypoint.sh
+    volumes:
+      - ${NBS7_ROOT:-/Volumes/skylight-dev/development/nbs7}/NEDSS-DataReporting/containers/db/initialize:/tmp/sql/reporting-init
+      - ${NBS7_ROOT:-/Volumes/skylight-dev/development/nbs7}/NEDSS-DataReporting/bootstrap:/tmp/sql/reporting-bootstrap
+      - ${NBS7_ROOT:-/Volumes/skylight-dev/development/nbs7}/NEDSS-DataIngestion/containers/db/initialize:/tmp/sql/ingestion-init
+    ports:
+      - "3433:1433" # DataReporting's historical host port
+      - "2433:1433" # DataIngestion's historical host port (same DB, same container)
+    mem_limit: 2.5G
+    networks:
+      - shared
+
+  wildfly:
+    image: ghcr.io/cdcent/nedssdev:6.0.18.1
+    depends_on:
+      nbs-mssql:
+        condition: service_healthy
+    ports:
+      - "9991:9990"
+      - "7003:7001"
+      - "8788:8787"
+    networks:
+      - shared
+
+  sas:
+    image: ghcr.io/cdcent/nbs7-sas-linux:v1.0.4
+    profiles: [sas] # Only start if sas profile is enabled
+    platform: linux/amd64
+    ports:
+      - "2323:2323"
+    environment:
+      - db_host=nbs-mssql
+      - rdb_user=${DATABASE_USERNAME:-sa}
+      - rdb_pass=${DATABASE_PASSWORD:-fake.fake.fake.1234}
+      - odse_user=${DATABASE_USERNAME:-sa}
+      - odse_pass=${DATABASE_PASSWORD:-fake.fake.fake.1234}
+      - sas_user_pass=n3dss4dm1n
+      - sas_encoding=latin1
+      - ADDITIONAL_SAS_FLAGS=-DEBUG
+      - PATH=/home/SAS/.local/bin:/home/SAS/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/mssql-tools18/bin
+    depends_on:
+      nbs-mssql:
+        condition: service_healthy
+    networks:
+      - shared
+
+  # Single shared Kafka broker (KRaft, no zookeeper needed). Aliased as
+  # "broker" too, since NEDSS-DataIngestion's services and connector config
+  # were written against that hostname - this lets both projects keep their
+  # existing "broker:29092" / "kafka:29092" references without edits.
+  kafka:
+    image: confluentinc/cp-kafka:7.8.7
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      CLUSTER_ID: RwB4L8JMReqMdSiPoP-9Og
+      KAFKA_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://kafka:9092,CONTROLLER://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka:29092 --list
+      start_period: 10s
+    networks:
+      shared:
+        aliases:
+          - broker
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:7.6.1
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >-
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.6 &&
+        exec /etc/confluent/docker/run
+    depends_on:
+      kafka:
+        condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    volumes:
+      - kafka-connect-plugins:/usr/share/confluent-hub-components
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka:29092"
+      CONNECT_GROUP_ID: "cp-kafka-connect.groupId"
+      CONNECT_CONFIG_STORAGE_TOPIC: "kafka-sink-connector-config"
+      CONNECT_OFFSET_STORAGE_TOPIC: "kafka-sink-connector-offset"
+      CONNECT_STATUS_STORAGE_TOPIC: "kafka-sink-connector-status"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
+      CONNECT_CONSUMER_METADATA_MAX_AGE_MS: 1000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
+      start_period: 10s
+    networks:
+      - shared
+
+  # Single shared Debezium/Kafka Connect worker used for CDC by both
+  # projects. DataReporting's reporting-pipeline-service registers its own
+  # source connectors on startup; DataIngestion's connector is registered by
+  # the orchestrator script (see containers/debezium/connectors/connector.json
+  # in NEDSS-DataIngestion).
+  debezium:
+    image: quay.io/debezium/connect:2.7
+    depends_on:
+      kafka:
+        condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
+    ports:
+      - "8085:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: connect-cluster
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      OFFSET_STORAGE_FILE_FILENAME: /tmp/connect.offsets
+      OFFSET_FLUSH_INTERVAL_MS: 10000
+      PLUGIN_PATH: /kafka/connect
+      CONFIG_STORAGE_TOPIC: connect-configs
+      OFFSET_STORAGE_TOPIC: connect-offsets
+      STATUS_STORAGE_TOPIC: connect-status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
+      start_period: 10s
+    networks:
+      - shared
+
+  reporting-pipeline-service:
+    build:
+      context: ${NBS7_ROOT:-/Volumes/skylight-dev/development/nbs7}/NEDSS-DataReporting
+      dockerfile: ./reporting-pipeline-service/Dockerfile
+    environment:
+      - DB_USERNAME=${RTR_SERVICE_USER_NAME:-rtr_service_user}
+      - DB_PASSWORD=${RTR_SERVICE_USER_PASSWORD:-rtr_service_user}
+      - DB_CONNECTION_URL=jdbc:sqlserver://nbs-mssql:1433;databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
+      - KAFKA_BOOTSTRAP_SERVER=kafka:29092
+      - DEBEZIUM_CONNECT_URL=http://debezium:8083
+      - KAFKA_CONNECT_URL=http://kafka-connect:8083
+    ports:
+      - "8095:8095"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      nbs-mssql:
+        condition: service_healthy
+      debezium:
+        condition: service_healthy
+      kafka-connect:
+        condition: service_healthy
+    networks:
+      - shared
+
+networks:
+  shared:
+    name: nbs7-shared
+    driver: bridge
+
+volumes:
+  kafka-connect-plugins:
