@@ -17,16 +17,40 @@ CONTAINER = "nedss-datareporting-nbs-mssql-1"
 STAGE_ROOT = "/tmp/odse_volume"
 
 
-def _sqlcmd(sql: str) -> tuple[int, str]:
+def _sqlcmd(sql: str, timeout: int = 7200) -> tuple[int, str]:
     proc = subprocess.run(
         ["docker", "exec", "-i", CONTAINER, "/opt/mssql-tools18/bin/sqlcmd",
-         "-C", "-b", "-S", "localhost", "-U", "sa", "-P", "PizzaIsGood33!",
+         "-C", "-b", "-t", "0", "-S", "localhost", "-U", "sa", "-P", "PizzaIsGood33!",
          "-Q", sql],
-        capture_output=True, text=True)
+        capture_output=True, text=True, timeout=timeout)
     return proc.returncode, (proc.stdout + proc.stderr)
 
 
-def load(manifest_path: Path, stage_suffix: str = "") -> dict:
+# Disabling the non-unique nonclustered indexes drops per-row index maintenance
+# during the load; we rebuild them after. PK/clustered and unique indexes are left
+# alone (FK enforcement uses them), so referential integrity holds throughout.
+_IDX_WHERE = "i.type_desc='NONCLUSTERED' AND i.is_unique=0 AND i.is_primary_key=0"
+
+
+def _index_batch(tables: list[str], action: str) -> str:
+    tl = ",".join(f"'{t}'" for t in tables)
+    return (
+        "DECLARE @sql nvarchar(max)=N''; "
+        f"SELECT @sql += N'ALTER INDEX '+QUOTENAME(i.name)+N' ON NBS_ODSE.dbo.'"
+        f"+QUOTENAME(t.name)+N' {action};'+CHAR(10) "
+        "FROM NBS_ODSE.sys.indexes i JOIN NBS_ODSE.sys.tables t ON t.object_id=i.object_id "
+        f"WHERE t.name IN ({tl}) AND {_IDX_WHERE}; EXEC sp_executesql @sql;")
+
+
+def disable_indexes(tables: list[str]) -> tuple[int, str]:
+    return _sqlcmd(_index_batch(tables, "DISABLE"))
+
+
+def rebuild_indexes(tables: list[str]) -> tuple[int, str]:
+    return _sqlcmd(_index_batch(tables, "REBUILD"))
+
+
+def load(manifest_path: Path, stage_suffix: str = "", verbose: bool = True) -> dict:
     m = json.loads(Path(manifest_path).read_text())
     stage = f"{STAGE_ROOT}{('_' + stage_suffix) if stage_suffix else ''}"
     subprocess.run(["docker", "exec", CONTAINER, "mkdir", "-p", stage], check=True)
@@ -42,12 +66,11 @@ def load(manifest_path: Path, stage_suffix: str = "") -> dict:
         collist = ", ".join(f"[{c}]" for c in info["columns"])
         sql = (f"SET NOCOUNT ON; "
                f"INSERT INTO NBS_ODSE.dbo.[{t}] ({collist}) "
-               f"SELECT {collist} FROM OPENROWSET(BULK N'{staged}', FORMAT='PARQUET') AS r; "
-               f"SELECT '{t}', @@ROWCOUNT;")
+               f"SELECT {collist} FROM OPENROWSET(BULK N'{staged}', FORMAT='PARQUET') AS r;")
         rc, out = _sqlcmd(sql)
         results[t] = {"rc": rc, "out": out.strip()}
-        status = "OK" if rc == 0 else "FAIL"
-        print(f"  [{status}] {t}: {out.strip().splitlines()[-1] if out.strip() else rc}")
+        if verbose:
+            print(f"  [{'OK' if rc == 0 else 'FAIL'}] {t}: {out.strip() or rc}")
         if rc != 0:
             break
     return results
