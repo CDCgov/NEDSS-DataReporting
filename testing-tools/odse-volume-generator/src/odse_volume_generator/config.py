@@ -76,7 +76,7 @@ _DIST_KEYS = {
     "obs_value_date_per_observation",
     "act_relationships_per_patient",
     "participations_per_patient",
-    "treatments_per_patient",
+    "treatments_per_investigation",
     "notifications_per_patient",
 }
 

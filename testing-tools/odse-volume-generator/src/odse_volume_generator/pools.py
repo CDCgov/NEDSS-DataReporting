@@ -44,10 +44,20 @@ LOINC = [
     ("6349-5", "Bacteria identified"),
 ]
 PARTICIPATION_TYPES = [
-    "PATSBJ", "ORD", "AUT", "PRF", "InvestgrOfPHC", "PhysicianOfPHC",
-    "OrgAsReporterOfPHC",
+    "ORD", "AUT", "PRF", "InvestgrOfPHC", "PhysicianOfPHC", "OrgAsReporterOfPHC",
 ]
 ENTITY_ID_TYPES = ["PI", "SS", "MR", "NPI", "FI"]
+
+# (SNOMED result code, display) for the lab's obs_value_coded.
+RESULT_CODES = [
+    ("260373001", "Detected"), ("260385009", "Negative"), ("10828004", "Positive"),
+    ("11214006", "Reactive"), ("131194007", "Non-reactive"),
+]
+# Treatment regimen text shown in the investigation Treatments section.
+TREATMENT_REGIMENS = [
+    "Isoniazid 300mg daily", "Rifampin 600mg daily", "Doxycycline 100mg BID",
+    "Azithromycin 1g single dose", "Ceftriaxone 250mg IM", "Penicillin G 2.4M units IM",
+]
 
 
 def oid(jurisdiction_nbs_uid: int, prog_area_cd: str) -> int:

@@ -82,26 +82,33 @@ def main() -> int:
         print(f"{'mpr':>11} {'last':<12} {'file_kb':>7} {'found':>5} {'inv':>4} "
               f"{'lab_sect':>8} {'obs_db':>6}  status")
 
+        print(f"{'mpr':>11} {'last':<12} {'file':>5} {'inv':>4} {'detail_kb':>9} "
+              f"{'labs':>5} {'trmts':>5}  status")
         ok = fail = 0
         for p in pats:
-            res = _curl(["-b", cj, "-c", cj, "-L", "--data-urlencode",
-                         f"patientSearchVO.lastName={p['last']}",
-                         f"{BASE}/HomePage.do?method=patientSearchSubmit", "-o", "-"])
-            found = f"uid={p['mpr']}" in res
+            _curl(["-b", cj, "-c", cj, "-L", "--data-urlencode",
+                   f"patientSearchVO.lastName={p['last']}",
+                   f"{BASE}/HomePage.do?method=patientSearchSubmit", "-o", "-"])
             html = _curl(["-b", cj, "-c", cj, "-L",
                           f"{BASE}/PatientSearchResults1.do?ContextAction=ViewFile&uid={p['mpr']}",
                           "-o", "-"])
-            err = "Error Page" in html or "NullPointerException" in html
+            file_ok = not ("Error Page" in html or "NullPointerException" in html)
             inv = f"publicHealthCaseUID={p['phc']}" in html
-            labs = len(re.findall(r"Lab Report", html))
-            status = "FAIL" if (err or not inv) else "ok"
-            if status == "ok":
-                ok += 1
-            else:
-                fail += 1
-            print(f"{p['mpr']:>11} {p['last'][:12]:<12} {len(html)//1024:>7} "
-                  f"{str(found):>5} {str(inv):>4} {labs:>8} {p['obs']:>6}  {status}"
-                  + ("  <ERROR PAGE>" if err else ""))
+            # investigation detail page: where labs and treatments render
+            det = _curl(["-b", cj, "-c", cj, "-L",
+                         f"{BASE}/ViewFile1.do?ContextAction=InvestigationIDOnSummary"
+                         f"&publicHealthCaseUID={p['phc']}", "-o", "-"])
+            det_err = "Error Page" in det or "DSInvestigationFormCd" in det
+            labs = len(re.findall(r"(?i)lab report|Order_rslt", det))
+            trmts = len(re.findall(r"(?i)treatment|isoniazid|rifampin|doxycycline|azithromycin",
+                                   det))
+            good = file_ok and inv and not det_err and labs > 0
+            status = "ok" if good else "FAIL"
+            ok += good
+            fail += not good
+            print(f"{p['mpr']:>11} {p['last'][:12]:<12} {str(file_ok):>5} {str(inv):>4} "
+                  f"{len(det)//1024:>9} {labs:>5} {trmts:>5}  {status}"
+                  + ("  <detail err>" if det_err else ""))
 
         print(f"\n{ok} ok, {fail} failed out of {len(pats)}")
     return 0 if fail == 0 else 1

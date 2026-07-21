@@ -61,9 +61,9 @@ notifications_per_patient:    # KY: 2.33M / 12.47M
   distribution: poisson
   mean: 0.19
 
-treatments_per_patient:       # KY: 134K / 12.47M -- rare
-  distribution: poisson
-  mean: 0.011
+treatments_per_investigation: # attached to the investigation so they render in the UI
+  distribution: poisson       # KY treatments are rare (~0.05/investigation); bumped for
+  mean: 0.8                   # demo realism (negligible footprint, ~0.03 GB total at KY)
 
 # --- Key allocation ---
 # Reserve a range ABOVE the correctness fixtures (they occupy 20_000_000..22_099_999).
