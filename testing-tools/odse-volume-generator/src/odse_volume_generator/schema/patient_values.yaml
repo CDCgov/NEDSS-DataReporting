@@ -1,0 +1,22 @@
+# tablefaker owns the demographic column VALUES. The driver owns keys and the
+# graph. row_count and config.seed are set by the driver from ratios.yaml at run
+# time. Columns here are the free/random per-patient values only; every key, FK,
+# and gate column is assembled by the driver.
+config:
+  seed: 42
+tables:
+  - table_name: patient_values
+    row_count: 10000
+    columns:
+      - column_name: idx
+        data: row_id
+        type: int64
+      - column_name: first_nm
+        data: fake.first_name()
+        type: string
+      - column_name: last_nm
+        data: fake.last_name()
+        type: string
+      - column_name: start_date
+        data: fake.date_between(start_date='-3y', end_date='today').isoformat()
+        type: string

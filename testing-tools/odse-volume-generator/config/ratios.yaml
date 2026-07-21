@@ -1,0 +1,69 @@
+# ODSE volume model. Every fan-out is configurable here.
+# Ratios are ESTIMATES pending a real STLT ODSE profile (COUNT(*) per table +
+# distinct-MPR patient count). Treat them as planning numbers, not measured.
+#
+# distribution: "fixed" uses `value`; "uniform" picks in [min,max]; "zipf" is a
+# power law over [min,max] with `zipf_param` (higher = more skew toward min),
+# which models the real shape where a few patients carry most of the volume.
+
+patients: 10000        # distinct real patients (MPR)
+seed: 42
+
+# --- Prototype gate: patient + one visible investigation ---
+investigations_per_patient:
+  distribution: fixed
+  value: 1             # prototype: exactly one; raise for full footprint
+
+# --- Full-footprint fan-out (scaffolded; wired in after the prototype gate) ---
+person_records_per_patient:   # NBS mints a Person per ingestion; MPR dedups
+  distribution: zipf
+  min: 1
+  max: 3
+  zipf_param: 2.0
+
+observations_per_patient:     # dominant snapshot + footprint driver
+  distribution: zipf
+  min: 5
+  max: 40
+  zipf_param: 1.5
+
+obs_values_per_result:
+  distribution: fixed
+  value: 1
+
+act_relationships_per_act:
+  distribution: uniform
+  min: 2
+  max: 5
+
+participations_per_act:
+  distribution: uniform
+  min: 2
+  max: 4
+
+treatments_per_patient:
+  distribution: uniform
+  min: 0
+  max: 2
+
+notifications_per_patient:
+  distribution: uniform
+  min: 0
+  max: 1
+
+# --- Key allocation ---
+# Reserve a range ABOVE the correctness fixtures (they occupy 20_000_000..22_099_999).
+# Each patient owns a contiguous stride block so every child UID is DERIVED, with no
+# cross-shard lookups and no collisions.
+key_base: 100000000
+key_stride_per_patient: 1000
+
+# --- Sharding (bounds tablefaker's in-memory DataFrames) ---
+patients_per_shard: 2000
+
+# --- Load target ---
+db:
+  server: "localhost,3433"
+  database: "NBS_ODSE"
+  user: "sa"
+  # password read from ODSE_DB_PASSWORD env (default PizzaIsGood33! for the local stack)
