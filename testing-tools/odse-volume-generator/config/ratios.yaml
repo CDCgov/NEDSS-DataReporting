@@ -1,55 +1,48 @@
 # ODSE volume model. Every fan-out is configurable here.
-# Ratios are ESTIMATES pending a real STLT ODSE profile (COUNT(*) per table +
-# distinct-MPR patient count). Treat them as planning numbers, not measured.
 #
-# distribution: "fixed" uses `value`; "uniform" picks in [min,max]; "zipf" is a
-# power law over [min,max] with `zipf_param` (higher = more skew toward min),
-# which models the real shape where a few patients carry most of the volume.
+# Per-patient means below are MEASURED from the Kentucky ODSE: 12,474,606 unique
+# MPR patients, 3,241 GB total, profiled via scripts/odse_volume_profile.sql.
+# Poisson takes the measured mean directly and gets total volume right
+# (sum = mean * patients), which is the footprint target.
+#
+# distribution: "fixed" -> value; "uniform" -> [min,max]; "poisson" -> mean;
+# "zipf" -> power law over [min,max] with zipf_param (skew toward min).
 
-patients: 10000        # distinct real patients (MPR)
+patients: 10000        # distinct real patients (MPR); raise toward millions for footprint
 seed: 42
 
-# --- Prototype gate: patient + one visible investigation ---
-investigations_per_patient:
-  distribution: fixed
-  value: 1             # prototype: exactly one; raise for full footprint
+# --- Per-patient fan-out, measured from Kentucky ---
+investigations_per_patient:   # KY: 2,646,466 PHC / 12.47M patients
+  distribution: poisson
+  mean: 0.21             # most patients have none; a fifth have one
 
-# --- Full-footprint fan-out (scaffolded; wired in after the prototype gate) ---
-person_records_per_patient:   # NBS mints a Person per ingestion; MPR dedups
-  distribution: zipf
-  min: 1
-  max: 3
-  zipf_param: 2.0
+person_records_per_patient:   # KY: 64.7M PAT person rows / 12.47M MPR
+  distribution: poisson
+  mean: 5.19
 
-observations_per_patient:     # dominant snapshot + footprint driver
-  distribution: zipf
-  min: 5
-  max: 40
-  zipf_param: 1.5
+observations_per_patient:     # KY: 112.9M observation / 12.47M
+  distribution: poisson
+  mean: 9.05
 
-obs_values_per_result:
-  distribution: fixed
-  value: 1
+obs_values_per_observation:   # KY: 221.6M value rows (txt+num+coded+date) / 112.9M obs
+  distribution: poisson
+  mean: 1.96
 
-act_relationships_per_act:
-  distribution: uniform
-  min: 2
-  max: 5
+act_relationships_per_patient:  # KY: 79.4M / 12.47M
+  distribution: poisson
+  mean: 6.36
 
-participations_per_act:
-  distribution: uniform
-  min: 2
-  max: 4
+participations_per_patient:   # KY: 253.9M / 12.47M -- the largest fan-out
+  distribution: poisson
+  mean: 20.35
 
-treatments_per_patient:
-  distribution: uniform
-  min: 0
-  max: 2
+notifications_per_patient:    # KY: 2.33M / 12.47M
+  distribution: poisson
+  mean: 0.19
 
-notifications_per_patient:
-  distribution: uniform
-  min: 0
-  max: 1
+treatments_per_patient:       # KY: 134K / 12.47M -- rare
+  distribution: poisson
+  mean: 0.011
 
 # --- Key allocation ---
 # Reserve a range ABOVE the correctness fixtures (they occupy 20_000_000..22_099_999).
