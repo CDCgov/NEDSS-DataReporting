@@ -14,6 +14,8 @@ import org.springframework.web.client.RestTemplate;
 public class DebeziumConfig implements ApplicationRunner {
 
   private static final Logger log = LoggerFactory.getLogger(DebeziumConfig.class);
+  private static final String SEEDING_SNAPSHOT_MODE_PLACEHOLDER =
+      "${connector.debezium.seeding-snapshot-mode}";
 
   private final ConnectorProperties.Group properties;
   private final ObjectMapper objectMapper;
@@ -46,11 +48,19 @@ public class DebeziumConfig implements ApplicationRunner {
             new RestTemplate(),
             objectMapper,
             resourceLoader,
-            environment::resolveRequiredPlaceholders);
+            this::resolvePlaceholders);
 
     client.waitForReady();
     for (String definition : properties.definitions()) {
       client.register(definition);
     }
+  }
+
+  String resolvePlaceholders(String connectorDefinition) {
+    boolean seedingEnabled =
+        environment.getProperty("featureFlag.seeding-enable", Boolean.class, true);
+    String snapshotMode = seedingEnabled ? "initial" : "schema_only";
+    return environment.resolveRequiredPlaceholders(
+        connectorDefinition.replace(SEEDING_SNAPSHOT_MODE_PLACEHOLDER, snapshotMode));
   }
 }
