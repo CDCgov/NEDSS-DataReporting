@@ -33,6 +33,22 @@ JURISDICTIONS = [
     ("130005", 13005), ("130006", 13006),
 ]
 
+# Fan-out generation pools. type_cd columns are not FK-enforced, but these are the
+# real values from the ODSE, so the data stays plausible.
+LOINC = [
+    ("13950-1", "Hepatitis A virus IgM Ab"),
+    ("5195-3", "Hepatitis B virus surface Ag"),
+    ("24312-9", "Hepatitis C virus Ab"),
+    ("94500-6", "SARS coronavirus 2 RNA"),
+    ("11585-7", "Pertussis DNA"),
+    ("6349-5", "Bacteria identified"),
+]
+PARTICIPATION_TYPES = [
+    "PATSBJ", "ORD", "AUT", "PRF", "InvestgrOfPHC", "PhysicianOfPHC",
+    "OrgAsReporterOfPHC",
+]
+ENTITY_ID_TYPES = ["PI", "SS", "MR", "NPI", "FI"]
+
 
 def oid(jurisdiction_nbs_uid: int, prog_area_cd: str) -> int:
     """program_jurisdiction_oid = jurisdiction.nbs_uid*100000 + program_area.nbs_uid."""

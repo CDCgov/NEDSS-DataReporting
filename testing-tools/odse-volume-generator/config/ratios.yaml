@@ -20,13 +20,34 @@ person_records_per_patient:   # KY: 64.7M PAT person rows / 12.47M MPR
   distribution: poisson
   mean: 5.19
 
+person_names_per_patient:     # KY: 80.8M person_name / 12.47M
+  distribution: poisson
+  mean: 6.48
+
+entity_ids_per_patient:       # KY: 205.7M entity_id / 12.47M -- top byte driver (110 GB)
+  distribution: poisson
+  mean: 16.49
+
+organizations_per_patient:    # KY: 57.2M organization / 12.47M (org + organization_name each)
+  distribution: poisson
+  mean: 4.59
+
 observations_per_patient:     # KY: 112.9M observation / 12.47M
   distribution: poisson
   mean: 9.05
 
-obs_values_per_observation:   # KY: 221.6M value rows (txt+num+coded+date) / 112.9M obs
+obs_value_txt_per_observation:      # KY: 96.0M / 112.9M obs
   distribution: poisson
-  mean: 1.96
+  mean: 0.850
+obs_value_numeric_per_observation:  # KY: 71.7M / 112.9M
+  distribution: poisson
+  mean: 0.635
+obs_value_coded_per_observation:    # KY: 53.7M / 112.9M
+  distribution: poisson
+  mean: 0.476
+obs_value_date_per_observation:     # KY: 0.16M / 112.9M
+  distribution: poisson
+  mean: 0.00146
 
 act_relationships_per_patient:  # KY: 79.4M / 12.47M
   distribution: poisson

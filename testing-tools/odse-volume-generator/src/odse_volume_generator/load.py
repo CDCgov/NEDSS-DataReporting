@@ -31,8 +31,8 @@ def load(manifest_path: Path) -> dict:
     subprocess.run(["docker", "exec", CONTAINER, "mkdir", "-p", STAGE], check=True)
 
     results = {}
-    # Load order respects FKs: entity/act/person before person_name/phc/participation.
-    order = ["entity", "act", "person", "person_name", "public_health_case", "participation"]
+    # FK-safe order comes from the manifest (parents before children).
+    order = m.get("load_order") or list(m["tables"].keys())
     for t in order:
         info = m["tables"][t]
         local = Path(info["path"])
