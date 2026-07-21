@@ -14,7 +14,7 @@ SET NOCOUNT ON;
 
 /* 1. Row count + on-disk size for the tables that drive reporting volume. */
 SELECT
-    t.name                                                          AS table_name,
+    CAST(t.name AS varchar(40))                              AS table_name,
     SUM(CASE WHEN ps.index_id IN (0, 1) THEN ps.row_count ELSE 0 END)      AS [row_count],
     CAST(SUM(ps.reserved_page_count) * 8.0 / 1024 AS DECIMAL(18, 1)) AS reserved_mb
 FROM sys.dm_db_partition_stats ps
