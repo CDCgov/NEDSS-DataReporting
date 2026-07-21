@@ -68,6 +68,15 @@ class DebeziumConfigTest {
   }
 
   @Test
+  void mainConnectorCompressesProducerBatchesWithZstandard() throws Exception {
+    JsonNode config = connectorConfig("connectors/debezium/odse_main_connector.json");
+
+    assertEquals("zstd", config.path("producer.override.compression.type").asText());
+    assertEquals("20", config.path("producer.override.linger.ms").asText());
+    assertEquals("131072", config.path("producer.override.batch.size").asText());
+  }
+
+  @Test
   void connectorDefinitionsOmitValueSchemaAndPreservePayloadEnvelope() throws Exception {
     Set<String> resources =
         Set.of(
