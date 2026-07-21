@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.mock.env.MockEnvironment;
 
 class DebeziumConfigTest {
 
@@ -68,6 +70,15 @@ class DebeziumConfigTest {
   }
 
   @Test
+  void mainConnectorSnapshotModeFollowsSeedingFeatureFlag() throws Exception {
+    assertEquals("initial", resolvedMainSnapshotMode(connectorEnvironment()));
+    assertEquals(
+        "schema_only",
+        resolvedMainSnapshotMode(
+            connectorEnvironment().withProperty("featureFlag.seeding-enable", "false")));
+  }
+
+  @Test
   void mainConnectorCompressesProducerBatchesWithZstandard() throws Exception {
     JsonNode config = connectorConfig("connectors/debezium/odse_main_connector.json");
 
@@ -115,6 +126,30 @@ class DebeziumConfigTest {
   private Set<String> candidates(Set<String> included, String excluded) {
     return Stream.concat(included.stream(), Stream.of(excluded))
         .collect(Collectors.toUnmodifiableSet());
+  }
+
+  private String resolvedMainSnapshotMode(MockEnvironment environment) throws Exception {
+    DefaultResourceLoader resourceLoader = new DefaultResourceLoader();
+    ObjectMapper objectMapper = new ObjectMapper();
+    try (InputStream input =
+        resourceLoader
+            .getResource("classpath:connectors/debezium/odse_main_connector.json")
+            .getInputStream()) {
+      String definition = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+      String resolved =
+          new DebeziumConfig(new ConnectorProperties(), objectMapper, resourceLoader, environment)
+              .resolvePlaceholders(definition);
+      return objectMapper.readTree(resolved).path("config").path("snapshot.mode").asText();
+    }
+  }
+
+  private MockEnvironment connectorEnvironment() {
+    return new MockEnvironment()
+        .withProperty("connector.database.host", "database")
+        .withProperty("connector.database.port", "1433")
+        .withProperty("connector.database.username", "user")
+        .withProperty("connector.database.password", "password")
+        .withProperty("connector.kafka.bootstrap-servers", "kafka:9092");
   }
 
   private JsonNode connectorConfig(String resourcePath) throws Exception {

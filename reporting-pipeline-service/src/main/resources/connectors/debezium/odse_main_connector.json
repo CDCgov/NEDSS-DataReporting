@@ -20,7 +20,7 @@
     "producer.override.compression.type": "zstd",
     "producer.override.linger.ms": "20",
     "producer.override.batch.size": "131072",
-    "snapshot.mode": "initial",
+    "snapshot.mode": "${connector.debezium.seeding-snapshot-mode}",
     "snapshot.isolation.mode": "snapshot",
     "schema.history.internal.kafka.topic": "odse-main-schema-history",
     "schema.history.internal.kafka.bootstrap.servers": "${connector.kafka.bootstrap-servers}",
