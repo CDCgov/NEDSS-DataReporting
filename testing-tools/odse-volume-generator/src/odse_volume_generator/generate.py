@@ -80,6 +80,11 @@ TABLES: dict[str, list[tuple[str, str]]] = {
         ("program_jurisdiction_oid", "i"), ("shared_ind", "s"), ("version_ctrl_nbr", "i"),
         ("status_cd", "s"), ("record_status_cd", "s"), ("activity_from_time", "s"),
         ("local_id", "s"), ("add_time", "s"), ("add_user_id", "i")],
+    "treatment_administered": [
+        ("treatment_uid", "i"), ("treatment_administered_seq", "i"), ("cd", "s"),
+        ("cd_desc_txt", "s"), ("cd_system_cd", "s"), ("dose_qty", "s"),
+        ("dose_qty_unit_cd", "s"), ("route_cd", "s"), ("interval_cd", "s"),
+        ("status_cd", "s"), ("status_time", "s")],
     "obs_value_coded": [
         ("observation_uid", "i"), ("code", "s"), ("code_system_cd", "s"),
         ("code_system_desc_txt", "s"), ("display_name", "s")],
@@ -104,7 +109,7 @@ TABLES: dict[str, list[tuple[str, str]]] = {
 }
 
 LOAD_ORDER = [
-    "entity", "act", "person", "organization", "treatment",
+    "entity", "act", "person", "organization", "treatment", "treatment_administered",
     "person_name", "entity_id", "organization_name", "public_health_case",
     "observation", "obs_value_coded", "obs_value_txt", "obs_value_numeric",
     "obs_value_date", "act_relationship", "participation",
@@ -269,19 +274,29 @@ def generate(cfg: cfgmod.Config, out_dir: Path, shard_idx: int = 0,
         for phc in phc_uids:
             for _ in range(n("treatments_per_investigation")):
                 t = ka.misc_act_uid(i, misc); misc += 1
+                drug_cd, drug_nm, dose, unit, route, interval = rng.choice(pools.DRUGS)
                 add("act", act_uid=t, class_cd="TRMT", mood_cd="EVN")
                 act_uids.append(t)
-                add("treatment", treatment_uid=t, cd="1",
-                    cd_desc_txt=rng.choice(pools.TREATMENT_REGIMENS),
+                add("treatment", treatment_uid=t, cd="1", cd_desc_txt=drug_nm,
                     cd_system_cd="2.16.840.1.114222.4.5.1", cd_system_desc_txt="NEDSS Base System",
                     class_cd="TRMT", jurisdiction_cd=inv_juris, program_jurisdiction_oid=inv_oid,
                     shared_ind="T", version_ctrl_nbr=1, status_cd="A", record_status_cd="ACTIVE",
                     activity_from_time=activity_dt, local_id=ka.local_id(t, "TRT"),
                     add_time=TS, add_user_id=SUPERUSER)
+                # sp_treatment_event INNER JOINs Treatment_administered -> required to flow.
+                add("treatment_administered", treatment_uid=t, treatment_administered_seq=1,
+                    cd=drug_cd, cd_desc_txt=drug_nm, cd_system_cd="TREAT_DRUG", dose_qty=dose,
+                    dose_qty_unit_cd=unit, route_cd=route, interval_cd=interval, status_cd="A",
+                    status_time=TS)
                 add("act_relationship", source_act_uid=t, target_act_uid=phc, type_cd="TreatmentToPHC",
                     source_class_cd="TRMT", target_class_cd="CASE", sequence_nbr=1,
                     record_status_cd="ACTIVE", status_cd="A", add_time=TS, add_user_id=SUPERUSER)
                 struct_ar += 1
+                add("participation", act_uid=t, subject_entity_uid=primary, type_cd="SubjOfTrmt",
+                    act_class_cd="TRMT", subject_class_cd="PSN", type_desc_txt="Subject of Treatment",
+                    record_status_cd="ACTIVE", record_status_time=TS, status_cd="A",
+                    status_time=TS, add_time=TS, add_user_id=SUPERUSER)
+                struct_part += 1
 
         # Top up act_relationships (COMP obs->obs) toward the KY mean.
         seen_ar = set()

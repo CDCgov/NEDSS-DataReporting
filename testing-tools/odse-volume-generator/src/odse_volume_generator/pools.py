@@ -53,10 +53,16 @@ RESULT_CODES = [
     ("260373001", "Detected"), ("260385009", "Negative"), ("10828004", "Positive"),
     ("11214006", "Reactive"), ("131194007", "Non-reactive"),
 ]
-# Treatment regimen text shown in the investigation Treatments section.
-TREATMENT_REGIMENS = [
-    "Isoniazid 300mg daily", "Rifampin 600mg daily", "Doxycycline 100mg BID",
-    "Azithromycin 1g single dose", "Ceftriaxone 250mg IM", "Penicillin G 2.4M units IM",
+# Drugs for treatment_administered: (drug_cd, drug_nm, dose, unit, route_cd, interval).
+# sp_treatment_event INNER JOINs Treatment_administered, so a row here is REQUIRED for
+# a treatment to flow into RDB_MODERN; these columns drive the TREATMENT dim.
+DRUGS = [
+    ("500", "Acyclovir", "200", "mg", "C0205531", "TID"),
+    ("450", "Isoniazid", "300", "mg", "C0205531", "QD"),
+    ("451", "Rifampin", "600", "mg", "C0205531", "QD"),
+    ("620", "Doxycycline", "100", "mg", "C0205531", "BID"),
+    ("710", "Azithromycin", "1", "g", "C0205531", "QD"),
+    ("305", "Ceftriaxone", "250", "mg", "C1522726", "QD"),
 ]
 
 
