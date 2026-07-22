@@ -33,7 +33,7 @@
     "topic.creation.default.cleanup.policy": "delete",
     "time.precision.mode": "connect",
     "transforms": "dropPrefix, convertTimezone, hoistPayload",
-    "transforms.dropPrefix.regex": "cdc_odse_main\\.NBS_ODSE\\.dbo\\.(.+)",
+    "transforms.dropPrefix.regex": "(?i)^cdc_odse_main\\.NBS_ODSE\\.dbo\\.(.+)",
     "transforms.dropPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
     "transforms.dropPrefix.replacement": "nbs_$1",
     "transforms.convertTimezone.type": "io.debezium.transforms.TimezoneConverter",
