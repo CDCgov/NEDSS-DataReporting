@@ -18,6 +18,8 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.List;
 import java.util.Optional;
@@ -92,15 +94,19 @@ public class LdfDataService {
         Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("ldf-"));
   }
 
-  // BATCHING SPIKE: records grouped by (business_object_nm, ldf_uid) — the
-  // proc's natural batch key; @bus_obj_uid_list is already a list parameter.
+  // BATCHING SPIKE: records grouped by business_object_nm only — BOTH proc
+  // parameters are IN-style lists (@ldf_uid_list, @bus_obj_uid_list), so one
+  // call per object type covers the poll. The cross-product only returns
+  // rows that exist, which during a snapshot is the poll's own records (a
+  // few boundary rows publish twice; the sink upserts, so it is harmless).
   // Deletes stay per-record (rare; they publish a tombstone bean, no proc).
   // Retry/DLT and missing-entity semantics intentionally absent.
   @KafkaListener(
       topics = "${spring.kafka.topics.nbs.state-defined-field-data}",
       containerFactory = "ldfdataKafkaListenerContainerFactory")
   public void processMessages(List<ConsumerRecord<String, String>> records) throws Exception {
-    Map<String, List<String>> groups = new LinkedHashMap<>();
+    Map<String, Set<String>> ldfUidsByObj = new LinkedHashMap<>();
+    Map<String, Set<String>> busObjUidsByObj = new LinkedHashMap<>();
     for (ConsumerRecord<String, String> rec : records) {
       String message = rec.value();
       if (message == null || message.isBlank()) {
@@ -119,15 +125,17 @@ public class LdfDataService {
       if (operationType.equals("d")) {
         publishLdfData(initializeBean(ldfUid, busObjUid, busObjNm));
       } else {
-        groups
-            .computeIfAbsent(busObjNm + "," + ldfUid, k -> new ArrayList<>())
-            .add(busObjUid);
+        ldfUidsByObj.computeIfAbsent(busObjNm, k -> new LinkedHashSet<>()).add(ldfUid);
+        busObjUidsByObj.computeIfAbsent(busObjNm, k -> new LinkedHashSet<>()).add(busObjUid);
       }
     }
-    logger.info("Batch: {} records -> {} (busObjNm, ldfUid) groups", records.size(), groups.size());
-    for (Map.Entry<String, List<String>> entry : groups.entrySet()) {
-      String[] key = entry.getKey().split(",", 2);
-      processLdfDataUids(key[0], key[1], String.join(",", entry.getValue()));
+    logger.info(
+        "Batch: {} records -> {} business-object groups", records.size(), ldfUidsByObj.size());
+    for (Map.Entry<String, Set<String>> entry : ldfUidsByObj.entrySet()) {
+      processLdfDataUids(
+          entry.getKey(),
+          String.join(",", entry.getValue()),
+          String.join(",", busObjUidsByObj.get(entry.getKey())));
     }
   }
 
