@@ -15,6 +15,8 @@ import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -129,23 +131,6 @@ public class InvestigationService {
         Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("inv-"));
   }
 
-  @RetryableTopic(
-      attempts = "${spring.kafka.consumer.max-retry}",
-      autoCreateTopics = "false",
-      dltStrategy = DltStrategy.FAIL_ON_ERROR,
-      retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-      dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-      // retry topic name, such as topic-retry-1, topic-retry-2, etc
-      topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-      // time to wait before attempting to retry
-      backoff = @Backoff(delay = 1000, multiplier = 2.0),
-      exclude = {
-        SerializationException.class,
-        DeserializationException.class,
-        RuntimeException.class,
-        NoDataException.class
-      },
-      kafkaTemplate = "investigationKafkaTemplate")
   @KafkaListener(
       topics = {
         "${spring.kafka.topics.nbs.public-health-case}",
@@ -157,68 +142,95 @@ public class InvestigationService {
         "${spring.kafka.topics.nbs.act-relationship}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
-    final String topic = rec.topic();
-    final String message = rec.value();
-    final long batchId = toBatchId.applyAsLong(rec);
-
-    logger.debug(topicDebugLog, "message", message, topic);
-
-    return CompletableFuture.runAsync(
-        () -> {
-          if (topic.equals(investigationTopic)) {
-            processInvestigation(message, batchId);
-          } else if (topic.equals(notificationTopic)) {
-            processNotification(message);
-          } else if (topic.equals(interviewTopic)) {
-            processInterview(message, batchId);
-          } else if (topic.equals(contactTopic)) {
-            processContact(message);
-          } else if (topic.equals(vaccinationTopic)) {
-            processVaccination(message, true, "");
-          } else if (topic.equals(treatmentTopic)) {
-            processTreatment(message, true, "");
-          } else if (topic.equals(actRelationshipTopic) && message != null) {
-            processActRelationship(message);
-          }
-        },
-        invExecutor);
+  // BATCHING SPIKE: investigations and notifications (the volume drivers,
+  // whose procs take comma-separated uid lists) are grouped into ONE proc
+  // call per poll; the low-volume arms stay per-record. Retry/DLT and
+  // missing-entity semantics are intentionally absent — measurement only.
+  public void processMessages(List<ConsumerRecord<String, String>> records) throws Exception {
+    if (records.isEmpty()) {
+      return;
+    }
+    final long batchId = toBatchId.applyAsLong(records.get(0));
+    List<String> investigationUids = new ArrayList<>();
+    List<String> notificationUids = new ArrayList<>();
+    List<String> interviewUids = new ArrayList<>();
+    List<String> contactUids = new ArrayList<>();
+    List<String> vaccinationUids = new ArrayList<>();
+    List<String> treatmentUids = new ArrayList<>();
+    for (ConsumerRecord<String, String> rec : records) {
+      final String topic = rec.topic();
+      final String message = rec.value();
+      if (topic.equals(investigationTopic)) {
+        final String phcUid = extractUid(message, "public_health_case_uid");
+        investigationUids.add(phcUid);
+        if (phcDatamartEnable) {
+          CompletableFuture.runAsync(
+              () -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
+        }
+      } else if (topic.equals(notificationTopic)) {
+        final String notfUid = extractUid(message, "notification_uid");
+        notificationUids.add(notfUid);
+        if (phcDatamartEnable) {
+          CompletableFuture.runAsync(
+              () -> processDataUtil.processPhcFactDatamart("NOTF", notfUid), phcExecutor);
+        }
+      } else if (topic.equals(interviewTopic)) {
+        interviewUids.add(extractUid(message, "interview_uid"));
+      } else if (topic.equals(contactTopic)) {
+        contactUids.add(extractUid(message, "ct_contact_uid"));
+      } else if (topic.equals(vaccinationTopic)) {
+        vaccinationUids.add(extractUid(message, "intervention_uid"));
+      } else if (topic.equals(treatmentTopic)) {
+        // Treatment topic messages only matter on update (creates arrive via
+        // act_relationship), matching the original per-record gate.
+        if (extractChangeDataCaptureOperation(message).equals("u")) {
+          treatmentUids.add(extractUid(message, "treatment_uid"));
+        }
+      } else if (topic.equals(actRelationshipTopic) && message != null) {
+        processActRelationship(message);
+      }
+    }
+    logger.info("Batch: {} records -> {} investigations, {} notifications",
+        records.size(), investigationUids.size(), notificationUids.size());
+    if (!investigationUids.isEmpty()) {
+      processInvestigationUids(String.join(",", investigationUids), batchId);
+    }
+    if (!notificationUids.isEmpty()) {
+      processNotificationUids(String.join(",", notificationUids));
+    }
+    if (!interviewUids.isEmpty()) {
+      processInterviewUids(String.join(",", interviewUids), batchId);
+    }
+    if (!contactUids.isEmpty()) {
+      processContactUids(String.join(",", contactUids));
+    }
+    if (!vaccinationUids.isEmpty()) {
+      processVaccinationUids(String.join(",", vaccinationUids));
+    }
+    if (!treatmentUids.isEmpty()) {
+      processTreatmentUids(String.join(",", treatmentUids));
+    }
   }
 
-  public void processInvestigation(String value, long batchId) {
-    msgProcessed.increment();
+  // BATCHING SPIKE: one proc call for a comma-separated uid list; each result
+  // row goes through the same transform/publish chain as the per-record path.
+  public void processInvestigationUids(String investigationUids, long batchId) {
     metrics.recordTime(
         "inv_msg_processing_seconds",
         () -> {
-          String publicHealthCaseUid = "";
           try {
-            final String phcUid = publicHealthCaseUid = extractUid(value, "public_health_case_uid");
-
-            if (phcDatamartEnable) {
-              CompletableFuture.runAsync(
-                  () -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
-            }
-
-            logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
-            Optional<Investigation> investigationData =
-                investigationRepository.computeInvestigations(publicHealthCaseUid);
-            if (investigationData.isPresent()) {
-              Investigation investigation = investigationData.get();
-              investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
+            List<Investigation> investigations =
+                investigationRepository.computeInvestigations(investigationUids);
+            for (Investigation investigation : investigations) {
+              msgProcessed.increment();
+              InvestigationKey key = new InvestigationKey();
+              key.setPublicHealthCaseUid(investigation.getPublicHealthCaseUid());
               InvestigationTransformed investigationTransformed =
                   processDataUtil.transformInvestigationData(investigation, batchId);
               InvestigationReporting reportingModel =
                   buildReportingModelForTransformedData(investigation, investigationTransformed);
-              pushKeyValuePairToKafka(investigationKey, reportingModel, investigationTopicReporting)
-                  // only process and send notifications when investigation data has been sent
-                  .whenComplete(
-                      (res, ex) -> {
-                        logger.info(
-                            "Investigation data (uid={}) sent to {}",
-                            phcUid,
-                            investigationTopicReporting);
-                        msgSuccess.increment();
-                      })
+              pushKeyValuePairToKafka(key, reportingModel, investigationTopicReporting)
+                  .whenComplete((res, ex) -> msgSuccess.increment())
                   .thenRunAsync(
                       () ->
                           processDataUtil.processInvestigationCaseManagement(
@@ -228,17 +240,11 @@ public class InvestigationService {
                           processDataUtil.processNotifications(
                               investigation.getInvestigationNotifications()))
                   .join();
-            } else {
-              throw new EntityNotFoundException(
-                  "Unable to find Investigation with id: " + publicHealthCaseUid);
             }
-          } catch (EntityNotFoundException ex) {
-            msgFailure.increment();
-            throw new NoDataException(ex.getMessage(), ex);
           } catch (Exception e) {
             msgFailure.increment();
             throw new DataProcessingException(
-                errorMessage("Investigation", publicHealthCaseUid, e), e);
+                errorMessage("Investigation", investigationUids, e), e);
           }
         },
         SERVICE_TAG,
@@ -273,163 +279,99 @@ public class InvestigationService {
     }
   }
 
-  public void processNotification(String value) {
+  public void processNotificationUids(String notificationUids) {
     metrics.recordTime(
         "ntf_msg_processing_seconds",
         () -> {
-          String notificationUid = "";
           try {
-            final String notfUid = notificationUid = extractUid(value, "notification_uid");
-
-            if (phcDatamartEnable) {
-              CompletableFuture.runAsync(
-                  () -> processDataUtil.processPhcFactDatamart("NOTF", notfUid), phcExecutor);
-            }
-
-            logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
-
-            Optional<NotificationUpdate> notificationData =
-                notificationRepository.computeNotifications(notificationUid);
-            if (notificationData.isPresent()) {
-              NotificationUpdate notification = notificationData.get();
+            List<NotificationUpdate> notifications =
+                notificationRepository.computeNotifications(notificationUids);
+            for (NotificationUpdate notification : notifications) {
               processDataUtil.processNotifications(notification.getInvestigationNotifications());
-            } else {
-              throw new EntityNotFoundException(
-                  "Unable to find Notification with id; " + notificationUid);
             }
-          } catch (EntityNotFoundException ex) {
-            ntfFailure.increment();
-            throw new NoDataException(ex.getMessage(), ex);
           } catch (Exception e) {
             ntfFailure.increment();
-            throw new DataProcessingException(errorMessage("Notification", notificationUid, e), e);
+            throw new DataProcessingException(
+                errorMessage("Notification", notificationUids, e), e);
           }
         },
         SERVICE_TAG,
         SERVICE_NAME);
   }
 
-  private void processInterview(String value, long batchId) {
-    String interviewUid = "";
+    private void processInterviewUids(String interviewUids, long batchId) {
     try {
-      interviewUid = extractUid(value, "interview_uid");
-
-      logger.info(topicDebugLog, "Interview", interviewUid, interviewTopic);
-      Optional<Interview> interviewData = interviewRepository.computeInterviews(interviewUid);
-      if (interviewData.isPresent()) {
-        Interview interview = interviewData.get();
+      List<Interview> interviews = interviewRepository.computeInterviews(interviewUids);
+      for (Interview interview : interviews) {
         processDataUtil.processInterview(interview, batchId);
         processDataUtil.processColumnMetadata(interview.getRdbCols(), interview.getInterviewUid());
-
-      } else {
-        throw new EntityNotFoundException("Unable to find Interview with id: " + interviewUid);
       }
-    } catch (EntityNotFoundException ex) {
-      throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("Interview", interviewUid, e), e);
+      throw new DataProcessingException(errorMessage("Interview", interviewUids, e), e);
     }
   }
 
-  private void processContact(String value) {
-    String contactUid = "";
+    private void processContactUids(String contactUids) {
     try {
-      contactUid = extractUid(value, "ct_contact_uid");
-
-      logger.info(topicDebugLog, "Contact", contactUid, contactTopic);
-      Optional<Contact> contactData = contactRepository.computeContact(contactUid);
-      if (contactData.isPresent()) {
-        Contact contact = contactData.get();
+      List<Contact> contacts = contactRepository.computeContact(contactUids);
+      for (Contact contact : contacts) {
         processDataUtil.processContact(contact);
         processDataUtil.processColumnMetadata(contact.getRdbCols(), contact.getContactUid());
-      } else {
-        throw new EntityNotFoundException("Unable to find Contact with id: " + contactUid);
       }
-    } catch (EntityNotFoundException ex) {
-      throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("Contact", contactUid, e), e);
+      throw new DataProcessingException(errorMessage("Contact", contactUids, e), e);
     }
   }
 
-  private void processVaccination(
-      String value, boolean isFromVaccinationTopic, String actRelationshipSourceActUid) {
-    String vaccinationUid = "";
-    String topic = (isFromVaccinationTopic) ? vaccinationTopic : actRelationshipTopic;
+    private void processVaccinationUids(String vaccinationUids) {
     try {
-      String operationType = extractChangeDataCaptureOperation(value);
-      if (isFromVaccinationTopic) {
-        vaccinationUid = extractUid(value, "intervention_uid");
-      } else {
-        if (operationType.equals("u")) {
-          return;
-        }
-        vaccinationUid = actRelationshipSourceActUid;
-      }
-      logger.info(topicDebugLog, "Vaccination", vaccinationUid, topic);
-      Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
-      if (vacData.isPresent()) {
-        Vaccination vaccination = vacData.get();
+      List<Vaccination> vaccinations = vaccinationRepository.computeVaccination(vaccinationUids);
+      for (Vaccination vaccination : vaccinations) {
         processDataUtil.processVaccination(vaccination);
         processDataUtil.processColumnMetadata(
             vaccination.getRdbCols(), vaccination.getVaccinationUid());
-      } else {
-        throw new EntityNotFoundException("Unable to find Vaccination with id: " + vaccinationUid);
       }
-    } catch (EntityNotFoundException ex) {
-      throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("Vaccination", vaccinationUid, e), e);
+      throw new DataProcessingException(errorMessage("Vaccination", vaccinationUids, e), e);
     }
   }
 
-  private void processTreatment(
-      String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
-    String treatmentUid = "";
-    String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
-
+  // Act-relationship path: single uid, with the original CDC-operation gates.
+  private void processVaccination(
+      String value, boolean isFromVaccinationTopic, String actRelationshipSourceActUid) {
     try {
-      String operationType = extractChangeDataCaptureOperation(value);
-
-      // Treatment cannot be created without an association to Investigation by default
-      // Therefore, if the message comes from the treatment topic, only process if it is an update
-      if (isFromTreatmentTopic) {
-        if (!operationType.equals("u")) {
-          return;
-        }
-        treatmentUid = extractUid(value, "treatment_uid");
-      } else {
-        treatmentUid = actRelationshipSourceActUid;
+      if (!isFromVaccinationTopic
+          && extractChangeDataCaptureOperation(value).equals("u")) {
+        return;
       }
+      processVaccinationUids(actRelationshipSourceActUid);
+    } catch (DataProcessingException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new DataProcessingException(
+          errorMessage("Vaccination", actRelationshipSourceActUid, e), e);
+    }
+  }
 
-      logger.info(topicDebugLog, "Treatment", treatmentUid, topic);
-      Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
-      if (treatmentData.isPresent()) {
-        Treatment treatment = treatmentData.get();
-
-        // Using Treatment directly as the reporting object
+    private void processTreatmentUids(String treatmentUids) {
+    try {
+      List<Treatment> treatments = treatmentRepository.computeTreatment(treatmentUids);
+      for (Treatment treatment : treatments) {
         TreatmentReportingKey treatmentReportingKey =
             new TreatmentReportingKey(treatment.getTreatmentUid());
-
         String jsonKey = jsonGenerator.generateStringJson(treatmentReportingKey);
         String jsonValue = jsonGenerator.generateStringJson(treatment, "treatment_uid");
-        kafkaTemplate
-            .send(treatmentOutputTopicName, jsonKey, jsonValue)
-            .whenComplete(
-                (res, e) ->
-                    logger.info(
-                        "Treatment data (uid={}) sent to {}",
-                        treatment.getTreatmentUid(),
-                        treatmentOutputTopicName));
-
-      } else {
-        throw new EntityNotFoundException("Unable to find treatment with id: " + treatmentUid);
+        kafkaTemplate.send(treatmentOutputTopicName, jsonKey, jsonValue);
       }
-    } catch (EntityNotFoundException ex) {
-      throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("Treatment", treatmentUid, e), e);
+      throw new DataProcessingException(errorMessage("Treatment", treatmentUids, e), e);
     }
+  }
+
+  // Act-relationship path: single uid (any CDC operation).
+  private void processTreatment(
+      String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
+    processTreatmentUids(actRelationshipSourceActUid);
   }
 
   // This same method can be used for elastic search as well and that is why the generic model is

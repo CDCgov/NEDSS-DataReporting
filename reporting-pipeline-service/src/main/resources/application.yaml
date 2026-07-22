@@ -71,7 +71,7 @@ spring:
       auto-offset-reset: earliest
       max-retry: 3
       maxPollIntervalMs: 30000
-      maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:200}
+      maxPollRecs: ${KAFKA_CONSUMER_MAX_POLL_RECS:500}
       key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     admin:

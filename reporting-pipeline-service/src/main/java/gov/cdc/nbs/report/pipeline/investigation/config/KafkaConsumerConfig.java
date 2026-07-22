@@ -55,7 +55,10 @@ public class KafkaConsumerConfig {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(investigationConsumerFactory());
-    factory.getContainerProperties().setAsyncAcks(true);
+    // BATCHING SPIKE: deliver each poll as one List so the listener can make
+    // a single sp_*_event call per entity type. Async per-record acks do not
+    // apply to batch listeners (offsets commit when the batch returns).
+    factory.setBatchListener(true);
     return factory;
   }
 }

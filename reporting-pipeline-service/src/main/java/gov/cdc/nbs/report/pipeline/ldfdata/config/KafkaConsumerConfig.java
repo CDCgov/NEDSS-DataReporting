@@ -53,7 +53,8 @@ public class KafkaConsumerConfig {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(ldfdataConsumerFactory());
-    factory.getContainerProperties().setAsyncAcks(true);
+    // BATCHING SPIKE: see LdfDataService.processMessages.
+    factory.setBatchListener(true);
     return factory;
   }
 }

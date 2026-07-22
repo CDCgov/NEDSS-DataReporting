@@ -1,7 +1,7 @@
 package gov.cdc.nbs.report.pipeline.investigation.repository;
 
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.Contact;
-import java.util.Optional;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,5 +9,5 @@ import org.springframework.data.repository.query.Param;
 public interface ContactRepository extends JpaRepository<Contact, String> {
 
   @Query(nativeQuery = true, value = "exec sp_contact_record_event :ct_contact_uid")
-  Optional<Contact> computeContact(@Param("ct_contact_uid") String contactUid);
+  List<Contact> computeContact(@Param("ct_contact_uid") String contactUid);
 }

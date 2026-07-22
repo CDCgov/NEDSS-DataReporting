@@ -16,6 +16,10 @@ import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -88,108 +92,75 @@ public class LdfDataService {
         Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("ldf-"));
   }
 
-  @RetryableTopic(
-      attempts = "${spring.kafka.consumer.max-retry}",
-      autoCreateTopics = "false",
-      dltStrategy = DltStrategy.FAIL_ON_ERROR,
-      retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-      dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-      // retry topic name, such as topic-retry-1, topic-retry-2, etc
-      topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-      // time to wait before attempting to retry
-      backoff = @Backoff(delay = 1000, multiplier = 2.0),
-      exclude = {
-        SerializationException.class,
-        DeserializationException.class,
-        RuntimeException.class,
-        NoDataException.class
-      },
-      kafkaTemplate = "ldfdataKafkaTemplate")
+  // BATCHING SPIKE: records grouped by (business_object_nm, ldf_uid) — the
+  // proc's natural batch key; @bus_obj_uid_list is already a list parameter.
+  // Deletes stay per-record (rare; they publish a tombstone bean, no proc).
+  // Retry/DLT and missing-entity semantics intentionally absent.
   @KafkaListener(
       topics = "${spring.kafka.topics.nbs.state-defined-field-data}",
       containerFactory = "ldfdataKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
-    String topic = rec.topic();
-    String message = rec.value();
-    logger.debug(topicDebugLog, message, topic);
-    return CompletableFuture.runAsync(
-        () -> {
-          if (message == null || message.isBlank()) {
-            logger.warn("Received null or empty message on topic: {}", topic);
-          } else {
-            processLdfData(message);
-          }
-        },
-        ldfExecutor);
+  public void processMessages(List<ConsumerRecord<String, String>> records) throws Exception {
+    Map<String, List<String>> groups = new LinkedHashMap<>();
+    for (ConsumerRecord<String, String> rec : records) {
+      String message = rec.value();
+      if (message == null || message.isBlank()) {
+        logger.warn("Received null or empty message on topic: {}", rec.topic());
+        continue;
+      }
+      msgProcessed.increment();
+      JsonNode jsonNode = objectMapper.readTree(message).get("payload");
+      String operationType = extractChangeDataCaptureOperation(message);
+      JsonNode payloadNode =
+          operationType.equals("d") ? jsonNode.path("before") : jsonNode.path("after");
+      payloadNode = payloadNode.isMissingNode() ? jsonNode : payloadNode;
+      String ldfUid = extractUid(payloadNode);
+      String busObjNm = payloadNode.get("business_object_nm").asText();
+      String busObjUid = payloadNode.get("business_object_uid").asText();
+      if (operationType.equals("d")) {
+        publishLdfData(initializeBean(ldfUid, busObjUid, busObjNm));
+      } else {
+        groups
+            .computeIfAbsent(busObjNm + "," + ldfUid, k -> new ArrayList<>())
+            .add(busObjUid);
+      }
+    }
+    logger.info("Batch: {} records -> {} (busObjNm, ldfUid) groups", records.size(), groups.size());
+    for (Map.Entry<String, List<String>> entry : groups.entrySet()) {
+      String[] key = entry.getKey().split(",", 2);
+      processLdfDataUids(key[0], key[1], String.join(",", entry.getValue()));
+    }
   }
 
-  public void processLdfData(String value) {
-    msgProcessed.increment();
+  private void processLdfDataUids(String busObjNm, String ldfUid, String busObjUids) {
     metrics.recordTime(
         "ldf_msg_processing_seconds",
         () -> {
-          String busObjNm = "";
-          String ldfUid = "";
-          String busObjUid = "";
           try {
-            JsonNode jsonNode = objectMapper.readTree(value).get("payload");
-            String operationType = extractChangeDataCaptureOperation(value);
-            JsonNode payloadNode =
-                operationType.equals("d") ? jsonNode.path("before") : jsonNode.path("after");
-            payloadNode = payloadNode.isMissingNode() ? jsonNode : payloadNode;
-            ldfUid = extractUid(payloadNode);
-            busObjNm = payloadNode.get("business_object_nm").asText();
-            busObjUid = payloadNode.get("business_object_uid").asText();
-
-            Optional<LdfData> ldfData;
-
-            logger.info(topicDebugLog, busObjNm, ldfUid, busObjUid, ldfDataTopic);
-
-            ldfData = getLdfData(operationType, busObjNm, ldfUid, busObjUid);
-            if (ldfData.isPresent()) {
-              ldfDataKey.setLdfUid(Long.valueOf(ldfUid));
-              ldfDataKey.setBusObjUid(Long.valueOf(busObjUid));
-              pushKeyValuePairToKafka(ldfDataKey, ldfData.get(), ldfDataTopicReporting);
-              msgSuccess.increment();
-              logger.info(
-                  "LDF data (uid={} busObjUid={}) sent to {}",
-                  ldfUid,
-                  busObjUid,
-                  ldfDataTopicReporting);
-            } else {
-              throw new EntityNotFoundException("Unable to find LDF data with id: " + ldfUid);
+            List<LdfData> results = ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUids);
+            for (LdfData ldfData : results) {
+              publishLdfData(ldfData);
             }
-          } catch (EntityNotFoundException ex) {
-            msgFailure.increment();
-            throw new NoDataException(ex.getMessage(), ex);
           } catch (Exception e) {
             msgFailure.increment();
-            String msg =
-                "Error processing LDF data"
-                    + (busObjNm.isEmpty()
-                        ? ": "
-                        : " for business_object_nm='"
-                            + busObjNm
-                            + "',ldf_uid='"
-                            + ldfUid
-                            + "',business_object_uid='"
-                            + busObjUid
-                            + "': ");
-            throw new DataProcessingException(msg, e);
+            throw new DataProcessingException(
+                "Error processing LDF data for business_object_nm='" + busObjNm
+                    + "',ldf_uid='" + ldfUid + "',business_object_uid(s)='" + busObjUids + "'",
+                e);
           }
         },
         SERVICE_TAG,
         SERVICE_NAME);
   }
 
-  private Optional<LdfData> getLdfData(
-      String opType, String busObjNm, String ldfUid, String busObjUid) {
-    if (opType.equals("d")) {
-      return Optional.of(initializeBean(ldfUid, busObjUid, busObjNm));
-    } else {
-      return ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUid);
-    }
+  private void publishLdfData(LdfData ldfData) {
+    LdfDataKey key = new LdfDataKey();
+    key.setLdfUid(ldfData.getLdfUid());
+    key.setBusObjUid(ldfData.getBusinessObjectUid());
+    pushKeyValuePairToKafka(key, ldfData, ldfDataTopicReporting);
+    msgSuccess.increment();
   }
+
+
 
   private LdfData initializeBean(String ldfUid, String busObjUid, String busObjNm) {
 

@@ -16,6 +16,7 @@ import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -126,48 +128,41 @@ public class OrganizationService {
         Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("org-"));
   }
 
-  @RetryableTopic(
-      kafkaTemplate = "organizationKafkaTemplate",
-      attempts = "${spring.kafka.consumer.max-retry}",
-      autoCreateTopics = "false",
-      dltStrategy = DltStrategy.FAIL_ON_ERROR,
-      retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-      dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-      // retry topic name, such as topic-retry-1, topic-retry-2, etc
-      topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-      // time to wait before attempting to retry
-      backoff = @Backoff(delay = 1000, multiplier = 2.0),
-      exclude = {
-        SerializationException.class,
-        DeserializationException.class,
-        RuntimeException.class,
-        NoDataException.class
-      })
+  // BATCHING SPIKE: the per-record @RetryableTopic listener is replaced by a
+  // batch listener that groups each poll's uids into ONE sp_*_event call per
+  // entity type (the procs take comma-separated uid lists). Retry/DLT and
+  // missing-entity semantics are intentionally absent — measurement only.
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.organization}", "${spring.kafka.topics.nbs.place}"},
       containerFactory = "organizationKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-    if (topic.equals(orgTopic)) {
-      return CompletableFuture.runAsync(() -> processOrganization(message, topic), orgExecutor);
-    } else if (topic.equals(placeTopic)) {
-      return CompletableFuture.runAsync(() -> processPlace(message, topic), orgExecutor);
-    } else {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+  public void processMessages(List<ConsumerRecord<String, String>> records) throws Exception {
+    List<String> orgUids = new ArrayList<>();
+    List<String> placeUids = new ArrayList<>();
+    for (ConsumerRecord<String, String> rec : records) {
+      if (rec.topic().equals(orgTopic)) {
+        orgUids.add(extractUid(rec.value(), "organization_uid"));
+      } else if (rec.topic().equals(placeTopic)) {
+        placeUids.add(extractUid(rec.value(), "place_uid"));
+      }
+    }
+    log.info("Batch: {} records -> {} organizations, {} places",
+        records.size(), orgUids.size(), placeUids.size());
+    if (!orgUids.isEmpty()) {
+      processOrganizations(String.join(",", orgUids));
+    }
+    if (!placeUids.isEmpty()) {
+      processPlaces(String.join(",", placeUids));
     }
   }
 
-  private void processOrganization(String message, String topic) {
+  private void processOrganizations(String uids) {
     msgProcessed.increment();
     metrics.recordTime(
         "org_msg_processing_seconds",
         () -> {
           String organizationUid = "";
           try {
-            final String orgUid = organizationUid = extractUid(message, "organization_uid");
-            log.info(topicDebugLog, organization, organizationUid, topic);
+            final String orgUid = organizationUid = uids;
 
             if (phcDatamartEnable) {
               CompletableFuture.runAsync(() -> processPhcFactDatamart(orgUid), rtrExecutor);
@@ -229,11 +224,10 @@ public class OrganizationService {
     }
   }
 
-  private void processPlace(String message, String topic) {
+  private void processPlaces(String uids) {
     String placeUid = "";
     try {
-      placeUid = extractUid(message, "place_uid");
-      log.info(topicDebugLog, "Place", placeUid, topic);
+      placeUid = uids;
       Optional<List<Place>> placeData = placeRepository.computeAllPlaces(placeUid);
 
       if (placeData.isPresent() && !placeData.get().isEmpty()) {

@@ -1,7 +1,7 @@
 package gov.cdc.nbs.report.pipeline.investigation.repository;
 
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.Investigation;
-import java.util.Optional;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface InvestigationRepository extends JpaRepository<Investigation, String> {
 
   @Query(nativeQuery = true, value = "execute sp_investigation_event :investigation_uids")
-  Optional<Investigation> computeInvestigations(
+  List<Investigation> computeInvestigations(
       @Param("investigation_uids") String investigationUids);
 
   @Procedure("sp_public_health_case_fact_datamart_event")

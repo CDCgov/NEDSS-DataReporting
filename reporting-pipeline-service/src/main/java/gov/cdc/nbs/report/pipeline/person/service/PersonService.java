@@ -135,37 +135,40 @@ public class PersonService {
         Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
   }
 
-  @RetryableTopic(
-      attempts = "${spring.kafka.consumer.max-retry}",
-      autoCreateTopics = "false",
-      dltStrategy = DltStrategy.FAIL_ON_ERROR,
-      retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-      dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-      // retry topic name, such as topic-retry-1, topic-retry-2, etc
-      topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-      // time to wait before attempting to retry
-      backoff = @Backoff(delay = 1000, multiplier = 2.0),
-      exclude = {
-        SerializationException.class,
-        DeserializationException.class,
-        RuntimeException.class,
-        NoDataException.class
-      },
-      kafkaTemplate = "personKafkaTemplate")
+  // BATCHING SPIKE: the per-record @RetryableTopic listener is replaced by a
+  // batch listener that groups each poll's uids into ONE sp_*_event call per
+  // entity type (the procs take comma-separated uid lists). Retry/DLT and
+  // missing-entity semantics are intentionally absent — measurement only.
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-    if (topic.equals(personTopic)) {
-      return CompletableFuture.runAsync(() -> processPerson(message, topic), prsExecutor);
-    } else if (topic.equals(userTopic)) {
-      return CompletableFuture.runAsync(() -> processUser(message, topic), prsExecutor);
-    } else {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+  public void processMessages(List<org.apache.kafka.clients.consumer.ConsumerRecord<String, String>> records)
+      throws Exception {
+    List<String> patientUids = new ArrayList<>();
+    List<String> providerUids = new ArrayList<>();
+    for (org.apache.kafka.clients.consumer.ConsumerRecord<String, String> rec : records) {
+      msgProcessed.increment();
+      if (!rec.topic().equals(personTopic)) {
+        processUser(rec.value(), rec.topic()); // auth-user volume is tiny; per-record is fine
+        continue;
+      }
+      JsonNode after = objectMapper.readTree(rec.value()).get("payload").path("after");
+      String uid = after.get("person_uid").asText();
+      if ("PAT".equals(after.get("cd").asText())) {
+        patientUids.add(uid);
+      } else {
+        providerUids.add(uid);
+      }
     }
+    log.info("Batch: {} records -> {} patients, {} providers",
+        records.size(), patientUids.size(), providerUids.size());
+    if (!patientUids.isEmpty()) {
+      processPatientData(patientRepository.computePatients(String.join(",", patientUids)));
+    }
+    if (!providerUids.isEmpty()) {
+      processProviderData(providerRepository.computeProviders(String.join(",", providerUids)));
+    }
+    msgSuccess.increment();
   }
 
   private void processPerson(String message, String topic) {
