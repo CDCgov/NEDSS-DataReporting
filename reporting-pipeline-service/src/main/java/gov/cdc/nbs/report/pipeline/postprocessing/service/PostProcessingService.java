@@ -324,6 +324,22 @@ public class PostProcessingService {
   }
 
   /**
+   * Adds a single id directly to the postprocessing batch cache for the given topic, without
+   * requiring a Kafka round-trip. Intended for direct-write callers (e.g. {@code PersonService},
+   * for patient/provider/auth-user records written straight to their {@code nrt_*} table instead of
+   * via Kafka-Connect) so they still go through the same priority-ordered batch drain (see {@link
+   * #processCachedIds()}) and its ordering guarantees relative to other entity types.
+   *
+   * <p>This bypasses the payload-based enrichment in {@link #extractValFromMessage}, which only
+   * applies to investigation/notification/observation topics — do not use this for those.
+   */
+  public void enqueue(String topic, Long uid) {
+    synchronized (cacheLock) {
+      idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(uid);
+    }
+  }
+
+  /**
    * Extracts and categorizes additional values from a Kafka message payload based on the entity
    * type.
    *

@@ -22,6 +22,8 @@ When adding a new functional test, pick the next available range, and add your t
 | stdContactTracingPartTwo | 1000009000  | 1000009028 |
 | hivNotificationPlan      | 1000010000  | 1000010004 |
 | d_tb_pam                 | 1000011000  | 1000011004 |
+| authUserDirectWrite      | 1000012000  | 1000012000 |
+| providerDirectWrite      | 1000013000  | 1000013000 |
 
 ## Helper tools
 
