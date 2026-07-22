@@ -131,7 +131,6 @@
       "CTT_SHARED_IND": "T",
       "CTT_SYMP_NOTES": "",
       "CTT_TRT_NOTES": "",
-      "D_CONTACT_RECORD_KEY": 2.0,
       "LAST_CHG_TIME": "2026-05-06T22:43:44.773",
       "LAST_CHG_USER_ID": 10009282,
       "LOCAL_ID": "CON1000009027GA01",
@@ -702,8 +701,7 @@
     }
   ],
   "33": [
-    {
-    },
+    {},
     {
       "HIV_900_TEST_IND": "No",
       "HIV_900_TEST_REFERRAL_DT": "2026-04-24",
