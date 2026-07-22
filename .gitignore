@@ -57,8 +57,11 @@ NEDSSDev/
 .settings/
 .factorypath
 
-# Performance-testing
+# Python virtual environments
 venv/
+.venv/
+
+# Performance-testing
 examples/
 
 # node libs
@@ -78,3 +81,7 @@ testing-tools/local-db-tracing/known_replay_associations.json
 # Local docker-compose overrides (e.g. comparison-fixtures fast-drain tuning), not for PR
 docker-compose.override.yaml
 docker-compose.override.yml
+
+# e2e-elr-ingest: generated/converted test fixtures, not the tool itself
+testing-tools/e2e-elr-ingest/**/*.hl7
+testing-tools/e2e-elr-ingest/**/*.sql
