@@ -139,6 +139,22 @@ services:
       test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s
 
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:v1.2.0
+    profiles: ["kafka-ui"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: kafka-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_NAME: debezium
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_ADDRESS: http://debezium:8083
+
   reporting-pipeline-service:
     build:
       dockerfile: ./reporting-pipeline-service/Dockerfile
@@ -149,6 +165,7 @@ services:
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
       - DEBEZIUM_CONNECT_URL=http://debezium:8083
       - KAFKA_CONNECT_URL=http://kafka-connect:8083
+      - FF_SEEDING_ENABLE=${FF_SEEDING_ENABLE:-true}
     ports:
       - "8095:8095"
     depends_on:

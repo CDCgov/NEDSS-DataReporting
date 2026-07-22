@@ -81,6 +81,18 @@ When a user or process changes data in the NBS ODSE database, Debezium captures 
 
 To set up a local development environment follow the guide [here](documentation/DevSetup.md)
 
+### Kafka UI
+
+The local Docker Compose stack includes [Kafbat UI](https://github.com/kafbat/kafka-ui) at <http://localhost:8080>. It provides topic, partition, message, consumer-group lag, and storage details for the local Kafka broker, along with visibility into the Kafka Connect and Debezium connectors.
+
+Start it with the full stack or independently with its Kafka dependency:
+
+```sh
+docker compose --profile kafka-ui up -d kafka-ui
+```
+
+When only `kafka-ui` is started, the configured Kafka Connect and Debezium pages remain unavailable until those services are also running.
+
 ## Testing
 Each service has its own suite of test cases. These can be executed with the following command.
 
