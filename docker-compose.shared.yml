@@ -71,10 +71,18 @@ services:
       - "2323:2323"
     environment:
       - db_host=nbs-mssql
-      - rdb_user=${DATABASE_USERNAME:-sa}
-      - rdb_pass=${DATABASE_PASSWORD:-fake.fake.fake.1234}
-      - odse_user=${DATABASE_USERNAME:-sa}
-      - odse_pass=${DATABASE_PASSWORD:-fake.fake.fake.1234}
+      # Least-privilege, per-database logins (nbs_rdb -> RDB_MODERN, nbs_ods
+      # -> NBS_ODSE) rather than the shared sa/DATABASE_PASSWORD superuser -
+      # matches what NEDSS-Modernization's own local sas config
+      # (cdc-sandbox/docker-compose.nbs6.yml) expects, and what
+      # modernization-api's report datasource routing (DataSourceNameUtils,
+      # "nbs_rdb.<table>" / "nbs_ods.<table>") is named after. Both logins
+      # are already provisioned in the shared nbs-mssql golden backup image -
+      # verified working directly against this stack, not assumed.
+      - rdb_user=${SAS_RDB_USER:-nbs_rdb}
+      - rdb_pass=${SAS_RDB_PASSWORD:-rdb}
+      - odse_user=${SAS_ODSE_USER:-nbs_ods}
+      - odse_pass=${SAS_ODSE_PASSWORD:-ods}
       - sas_user_pass=n3dss4dm1n
       - sas_encoding=latin1
       - ADDITIONAL_SAS_FLAGS=-DEBUG
