@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
-# Orchestrates a combined local deployment of NEDSS-DataIngestion and
-# NEDSS-DataReporting: one shared database, one shared Kafka cluster, one
-# shared Debezium/Connect worker, both projects' app services on one
-# Docker network ("nbs7-shared").
+# Orchestrates a combined local deployment of NEDSS-DataIngestion,
+# NEDSS-DataReporting, and (if checked out) NEDSS-Modernization: one shared
+# database, one shared Kafka cluster, one shared Debezium/Connect worker, one
+# shared Keycloak, all projects' app services on one Docker network
+# ("nbs7-shared").
 #
-# It drives the two docker-compose.shared.yml files (one per project) as a
-# single Compose project ("nbs7") via multiple -f flags.
+# It drives each project's docker-compose.shared.yml as a single Compose
+# project ("nbs7") via multiple -f flags. NEDSS-Modernization is included
+# automatically if its directory/compose file is present as a sibling
+# checkout, and silently skipped otherwise - the 2-repo (DataIngestion +
+# DataReporting) workflow keeps working unchanged if you don't have it cloned.
 #
 # This file is intentionally duplicated (kept byte-identical) in
-# NEDSS-DataReporting/scripts/nbs7-deploy.sh, since there is no dedicated
-# shared/parent repo for this pair - either repo, checked out alongside its
-# sibling, is a self-sufficient starting point for the combined stack. If you
-# change this script, please mirror the change in the other repo's copy.
+# NEDSS-DataReporting/scripts/nbs7-deploy.sh and
+# NEDSS-Modernization/scripts/nbs7-deploy.sh, since there is no dedicated
+# shared/parent repo for this trio - any one of the three repos, checked out
+# alongside its siblings, is a self-sufficient starting point for the
+# combined stack. If you change this script, please mirror the change in the
+# other two repos' copies.
 #
-# Usage (run from either repo, once both are checked out as siblings under one
-# parent folder):
+# Usage (run from any of the three repos, once checked out as siblings under
+# one parent folder):
 #   ./scripts/nbs7-deploy.sh up [--build] [--sas]   # start everything (default command)
 #   ./scripts/nbs7-deploy.sh down [--volumes]       # stop everything
 #   ./scripts/nbs7-deploy.sh restart [--build] [--sas]
@@ -30,8 +36,10 @@ export NBS7_ROOT
 
 REPORTING_DIR="$NBS7_ROOT/NEDSS-DataReporting"
 INGESTION_DIR="$NBS7_ROOT/NEDSS-DataIngestion"
+MODERNIZATION_DIR="$NBS7_ROOT/NEDSS-Modernization"
 REPORTING_COMPOSE="$REPORTING_DIR/docker-compose.shared.yml"
 INGESTION_COMPOSE="$INGESTION_DIR/docker-compose.shared.yml"
+MODERNIZATION_COMPOSE="$MODERNIZATION_DIR/docker-compose.shared.yml"
 PROJECT_NAME="nbs7"
 
 CONNECTOR_NAME="nbs-cdc-test"
@@ -45,6 +53,14 @@ for f in "$REPORTING_COMPOSE" "$INGESTION_COMPOSE"; do
   fi
 done
 
+COMPOSE_FILES=(-f "$REPORTING_COMPOSE" -f "$INGESTION_COMPOSE")
+if [ -f "$MODERNIZATION_COMPOSE" ]; then
+  COMPOSE_FILES+=(-f "$MODERNIZATION_COMPOSE")
+  MODERNIZATION_INCLUDED=1
+else
+  MODERNIZATION_INCLUDED=0
+fi
+
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is not installed or not on PATH." >&2
   exit 1
@@ -56,7 +72,7 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 
 dc() {
-  docker compose -p "$PROJECT_NAME" -f "$REPORTING_COMPOSE" -f "$INGESTION_COMPOSE" "$@"
+  docker compose -p "$PROJECT_NAME" "${COMPOSE_FILES[@]}" "$@"
 }
 
 register_connectors() {
@@ -97,6 +113,21 @@ print_urls() {
   Debezium (CDC source)...... http://localhost:8085/connectors
   Shared MSSQL............... localhost:3433 (alias: localhost:2433), sa / \${DATABASE_PASSWORD:-fake.fake.fake.1234}
 EOF
+  if [ "$MODERNIZATION_INCLUDED" -eq 1 ]; then
+    cat <<EOF
+  nbs-gateway................ http://localhost:8000
+  modernization-api.......... http://localhost:8080/swagger-ui/index.html
+  pagebuilder-api (question-bank) http://localhost:8096
+  report-execution........... http://localhost:8001
+EOF
+  else
+    cat <<EOF
+
+  (NEDSS-Modernization not found as a sibling checkout - skipped. Clone it
+   to $MODERNIZATION_DIR to include modernization-api/nbs-gateway/
+   pagebuilder-api/report-execution in this stack.)
+EOF
+  fi
 }
 
 cmd="${1:-up}"
