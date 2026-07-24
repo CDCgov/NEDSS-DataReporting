@@ -2,9 +2,10 @@
   "name": "Kafka-Connect-SqlServer-Sink",
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-    "tasks.max": "1",
+    "tasks.max": "8",
     "offset.flush.interval.ms": "60000",
-    "batch.size": "200",
+    "batch.size": "500",
+    "retry.backoff.ms": "300",
     "connection.url": "${connector.database.url}",
     "connection.user": "${connector.database.username}",
     "connection.password": "${connector.database.password}",

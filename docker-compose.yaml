@@ -20,7 +20,7 @@ services:
       - ./bootstrap:/tmp/sql/bootstrap
     ports:
       - 3433:1433
-    mem_limit: 2.5G
+    mem_limit: 24G
 
   wildfly:
     image: ghcr.io/cdcent/nedssdev:6.0.18.1
@@ -71,6 +71,12 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
 
       # Topic Configuration
+      # Auto-create fallback stays at 1 partition: nrt_* tables must have a
+      # single writer (the JDBC sink MERGEs with HOLDLOCK; concurrent writers
+      # deadlock), so an accidentally auto-created topic errs on the safe
+      # side. Deliberate partitioning is done by the pipeline service's
+      # TopicProvisioningConfig (nbs_* partitioned, nrt_* single-partition).
+      KAFKA_NUM_PARTITIONS: ${KAFKA_DEFAULT_PARTITIONS:-1}
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -108,6 +114,9 @@ services:
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
       CONNECT_CONSUMER_METADATA_MAX_AGE_MS: 1000
+      # Allow connectors to override consumer settings (the sink raises
+      # max.poll.records to match its batch.size).
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: "All"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s
@@ -139,6 +148,21 @@ services:
       test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors"]
       start_period: 10s
 
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: debezium
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://debezium:8083
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_NAME: kafka-connect-sink
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_ADDRESS: http://kafka-connect:8083
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   reporting-pipeline-service:
     build:
       dockerfile: ./reporting-pipeline-service/Dockerfile
@@ -149,8 +173,26 @@ services:
       - KAFKA_BOOTSTRAP_SERVER=kafka:29092
       - DEBEZIUM_CONNECT_URL=http://debezium:8083
       - KAFKA_CONNECT_URL=http://kafka-connect:8083
+      - FF_POST_PROCESSING_ENABLE=${FF_POST_PROCESSING_ENABLE:-true}
+      # Per-service worker pool for entity processing (prs/obs/inv/org/ldf
+      # executors); default 1 = serial per topic, matching upstream behavior.
+      - FF_THREAD_POOL_SIZE=${FF_THREAD_POOL_SIZE:-1}
+      # Set RTR_LOG_LEVEL=WARN to silence the per-record INFO chatter during
+      # snapshot/backfill runs (errors still log).
+      - LOGGING_LEVEL_GOV_CDC_NBS_REPORT_PIPELINE=${RTR_LOG_LEVEL:-INFO}
+      # Parallel poll loops per listener (requires partitioned topics to
+      # matter; default 1 = upstream behavior).
+      - KAFKA_LISTENER_CONCURRENCY=${KAFKA_LISTENER_CONCURRENCY:-1}
+      # Partition count for nbs_* topics created at startup (only applies
+      # when the topics don't exist yet, i.e. after a kafka wipe). Total
+      # consume parallelism = hot topics x this value.
+      - NBS_TOPIC_PARTITIONS=${NBS_TOPIC_PARTITIONS:-10}
+    # Ephemeral host port so the service can scale horizontally
+    # (docker compose up -d --scale reporting-pipeline-service=N).
+    # Find an instance's actuator port with: docker compose port --index 1
+    # reporting-pipeline-service 8095
     ports:
-      - "8095:8095"
+      - "8095"
     depends_on:
       kafka:
         condition: service_healthy

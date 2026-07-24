@@ -1,6 +1,7 @@
 FROM amazoncorretto:21 AS builder
 WORKDIR /usr/src/
-RUN yum update -y && yum clean all
+# findutils: gradlew requires xargs, which current amazoncorretto:21 no longer ships
+RUN yum update -y && yum install -y findutils && yum clean all
 
 #Copy project config
 COPY gradle gradle
@@ -20,7 +21,9 @@ RUN ./gradlew :reporting-pipeline-service:buildNeeded -x test --no-daemon
 
 FROM amazoncorretto:21
 WORKDIR /
-RUN yum update -y && yum install -y curl-8.3.0 && yum clean all
+# unpinned + --allowerasing: the base image now ships a conflicting
+# curl-minimal, and the pinned 8.3.0 is no longer in the repos
+RUN yum update -y && yum install -y --allowerasing curl && yum clean all
 
 COPY --from=builder /usr/src/reporting-pipeline-service/build/libs/reporting-pipeline-service*.jar reporting-pipeline-service.jar
 
