@@ -1,6 +1,6 @@
 FROM amazoncorretto:21 AS builder
 WORKDIR /usr/src/
-RUN yum update -y && yum clean all
+RUN yum update -y && yum install -y findutils && yum clean all
 
 #Copy project config
 COPY gradle gradle
