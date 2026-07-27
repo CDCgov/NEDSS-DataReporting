@@ -20,7 +20,6 @@ RUN ./gradlew :reporting-pipeline-service:buildNeeded -x test --no-daemon
 
 FROM amazoncorretto:21
 WORKDIR /
-RUN yum update -y && yum install -y --allowerasing curl-8.3.0 && yum clean all
 
 COPY --from=builder /usr/src/reporting-pipeline-service/build/libs/reporting-pipeline-service*.jar reporting-pipeline-service.jar
 
