@@ -23,6 +23,7 @@
     "table.include.list": "dbo.Act_relationship",
     "column.include.list": "dbo\\.Act_relationship\\.(source_act_uid|target_act_uid|type_cd|target_class_cd)",
     "tasks.max": 1,
+    "tombstones.on.delete": "false",
     "topic.prefix": "cdc_odse_act_rel",
     "topic.creation.default.replication.factor": 1,
     "topic.creation.default.partitions": 10,

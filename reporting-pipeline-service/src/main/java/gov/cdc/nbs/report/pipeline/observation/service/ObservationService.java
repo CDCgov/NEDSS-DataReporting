@@ -217,6 +217,10 @@ public class ObservationService {
       String typeCd;
       String targetClassCd;
       String operationType = extractChangeDataCaptureOperation(value);
+      if (operationType == null) {
+        // possible tombstone message, nothing to process
+        return;
+      }
 
       if (operationType.equals("d")) {
         sourceActUid = extractUid(value, "source_act_uid", BEFORE_PATH);
