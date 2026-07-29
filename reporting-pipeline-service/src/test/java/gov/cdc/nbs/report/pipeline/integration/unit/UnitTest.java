@@ -40,7 +40,7 @@ public abstract class UnitTest {
   private static final ComposeContainer environment =
       new ComposeContainer(base)
           .withServices("nbs-mssql")
-          .waitingFor("nbs-mssql", Wait.forHealthcheck())
+          .waitingFor("nbs-mssql", Wait.forHealthcheck().withStartupTimeout(Duration.ofMinutes(10)))
           .withLogConsumer("nbs-mssql", consumer)
           // Set the maximum startup timeout all the waits set are bounded to
           .withStartupTimeout(Duration.ofMinutes(10));
