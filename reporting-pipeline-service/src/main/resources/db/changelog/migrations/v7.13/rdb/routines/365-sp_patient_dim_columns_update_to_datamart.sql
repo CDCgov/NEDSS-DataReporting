@@ -29,7 +29,7 @@ BEGIN
 
     SELECT @id_list = LEFT(STRING_AGG(CAST(src.patient_uid AS NVARCHAR(MAX)), ','), 500)
     FROM (
-        SELECT TOP (250) patient_uid
+        SELECT TOP (60) patient_uid
         FROM #PATIENT_UPDATE_LIST
         ORDER BY patient_uid
     ) src;
