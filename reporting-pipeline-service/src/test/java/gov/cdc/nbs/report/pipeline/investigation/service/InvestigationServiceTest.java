@@ -478,6 +478,15 @@ class InvestigationServiceTest {
     verifyNoInteractions(kafkaTemplate);
   }
 
+  @Test
+  void testProcessActRelationshipTombstoneNull() {
+    String payload = null;
+
+    ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+    investigationService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
   @ParameterizedTest
   @CsvSource({"c,1180", "u,1180", "u,1180", "d,1180", "c,OTHER"})
   void testProcessActRelationshipVaccination(String op, String typeCd)

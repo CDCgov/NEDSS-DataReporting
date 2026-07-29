@@ -188,6 +188,15 @@ class ObservationServiceTest {
   }
 
   @Test
+  void testProcessActRelationshipTombstoneNull() {
+    String payload = null;
+
+    ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
+    observationService.processMessage(rec);
+    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+  }
+
+  @Test
   void testProcessMessageUnknownTopic() {
     ConsumerRecord<String, String> rec = getRecord(null, "dummyTopicName");
 

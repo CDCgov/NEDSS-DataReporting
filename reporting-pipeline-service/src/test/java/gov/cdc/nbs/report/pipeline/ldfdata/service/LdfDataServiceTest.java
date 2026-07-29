@@ -169,6 +169,16 @@ class LdfDataServiceTest {
     verifyNoInteractions(kafkaTemplate);
   }
 
+  @Test
+  void testProcessEmptyTombstoneNull() {
+    String ldfTopic = "LdfData";
+    String payload = null;
+
+    ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
+    ldfDataService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
   private void testEmptyMessage(String ldfTopic, String ldfTopicOutput, String payload) {
     ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
     setupLdfService(ldfTopic, ldfTopicOutput);
