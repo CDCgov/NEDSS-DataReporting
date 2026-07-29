@@ -814,7 +814,7 @@ BEGIN
         -- PCR Source transformation (replacing DATA step)
         SELECT
             D_PCR_SOURCE_GROUP_KEY,
-            STRING_AGG(value, ' | ') AS PCR_TEST_SOURCE_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') AS PCR_TEST_SOURCE_ALL,
             MAX(CASE WHEN rn = 1 THEN value END) AS PCR_TEST_SOURCE_1,
             MAX(CASE WHEN rn = 2 THEN value END) AS PCR_TEST_SOURCE_2,
             MAX(CASE WHEN rn = 3 THEN value END) AS PCR_TEST_SOURCE_3,
@@ -885,7 +885,7 @@ BEGIN
 
         SELECT
             D_RASH_LOC_GEN_GROUP_KEY,
-            STRING_AGG(value, ' | ') AS RASH_LOCATION_GENERAL_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') AS RASH_LOCATION_GENERAL_ALL,
             MAX(CASE WHEN rn = 1 THEN value END) AS RASH_LOCATION_GENERAL_1,
             MAX(CASE WHEN rn = 2 THEN value END) AS RASH_LOCATION_GENERAL_2,
             MAX(CASE WHEN rn = 3 THEN value END) AS RASH_LOCATION_GENERAL_3,

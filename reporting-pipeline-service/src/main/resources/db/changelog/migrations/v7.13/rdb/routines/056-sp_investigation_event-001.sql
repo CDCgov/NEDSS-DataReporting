@@ -1014,7 +1014,7 @@ BEGIN
                  LEFT JOIN  (
                               SELECT
                                 note_parent_uid,
-                                String_agg(CONVERT(VARCHAR(20), add_time) + '^' + note, '; ') AS PHC_NOTES
+                                                                String_agg(CAST(CONVERT(VARCHAR(20), add_time) + '^' + note AS NVARCHAR(MAX)), '; ') AS PHC_NOTES
                               FROM
                                 nbs_odse.dbo.nbs_note WITH (nolock)
                               WHERE

@@ -111,7 +111,7 @@ BEGIN
                       -- follow up observations associated with observation-nested obs handling
                       (
                           SELECT
-                              STRING_AGG(ar.target_act_uid, ',') AS associated_phc_uids
+                              STRING_AGG(CAST(ar.target_act_uid AS NVARCHAR(MAX)), ',') AS associated_phc_uids
                           from nbs_odse.dbo.Act_relationship ar with (NOLOCK)
                           where ar.type_cd IN ('MorbReport', 'LabReport')
                             and ar.target_class_cd = 'CASE'

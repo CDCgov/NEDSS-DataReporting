@@ -117,7 +117,7 @@ BEGIN
 
         SELECT DISTINCT
             source_act_uid as treatment_uid,
-            STRING_AGG(target_act_uid, ',') AS associated_phc_uids
+            STRING_AGG(CAST(target_act_uid AS NVARCHAR(MAX)), ',') AS associated_phc_uids
         INTO #ASSOCIATED_PHC_UIDS
         FROM NBS_ODSE.dbo.act_relationship WITH (NOLOCK)
             where source_act_uid IN (
