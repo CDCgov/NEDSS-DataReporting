@@ -27,7 +27,7 @@ BEGIN
 
     SELECT @id_list = LEFT(STRING_AGG(CAST(src.provider_uid AS NVARCHAR(MAX)), ','), 500)
     FROM (
-        SELECT TOP (60) provider_uid
+        SELECT TOP (250) provider_uid
         FROM #PROVIDER_UPDATE_LIST
         ORDER BY provider_uid
     ) src;
