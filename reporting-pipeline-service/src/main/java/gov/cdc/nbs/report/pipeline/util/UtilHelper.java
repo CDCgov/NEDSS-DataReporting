@@ -55,7 +55,13 @@ public class UtilHelper {
   public static String extractChangeDataCaptureOperation(String message)
       throws JsonProcessingException {
     JsonNode jsonNode = objectMapper.readTree(message);
-    return jsonNode.get(PAYLOAD_KEY).path("op").asText();
+    JsonNode payload = jsonNode.get(PAYLOAD_KEY);
+    if (payload == null || payload.isNull()) {
+      // payload key is not present OR the payload content is null indicating a probable tombstone
+      // message
+      return null;
+    }
+    return payload.path("op").asText();
   }
 
   public static String errorMessage(String entityName, String ids, Exception e) {

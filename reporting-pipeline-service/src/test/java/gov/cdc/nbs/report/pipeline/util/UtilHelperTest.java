@@ -146,4 +146,27 @@ class UtilHelperTest {
     String value = UtilHelper.extractChangeDataCaptureOperation(sampleJson);
     assertEquals("d", value);
   }
+
+  @Test
+  void testExtractCdcOperationNullPayload() throws JsonProcessingException {
+    String json =
+        """
+        {
+          "payload": null
+        }
+        """;
+    String value = UtilHelper.extractChangeDataCaptureOperation(json);
+    assertEquals(null, value);
+  }
+
+  @Test
+  void testExtractCdcOperationNoPayload() throws JsonProcessingException {
+    String json =
+        """
+        {
+        }
+        """;
+    String value = UtilHelper.extractChangeDataCaptureOperation(json);
+    assertEquals(null, value);
+  }
 }

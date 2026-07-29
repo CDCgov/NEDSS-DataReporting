@@ -2,9 +2,11 @@ package gov.cdc.nbs.report.pipeline.investigation.service;
 
 import static gov.cdc.nbs.report.pipeline.investigation.service.InvestigationService.toBatchId;
 import static gov.cdc.nbs.report.pipeline.investigation.utils.TestUtils.*;
-import static gov.cdc.nbs.report.pipeline.investigation.utils.TestUtils.FILE_PATH_PREFIX;
 import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -446,6 +448,43 @@ class InvestigationServiceTest {
   void testProcessVaccinationNoDataException() {
     String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"\"}}}";
     checkException(vaccinationTopic, payload, NoDataException.class);
+  }
+
+  @Test
+  void testProcessActRelationshipTombstone() {
+    String payload =
+        """
+        {
+          "payload": null
+        }
+        """;
+
+    ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+    investigationService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
+  @Test
+  void testProcessActRelationshipTombstoneNoPayload() {
+    String payload =
+        """
+        {
+
+        }
+        """;
+
+    ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+    investigationService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
+  @Test
+  void testProcessActRelationshipTombstoneNull() {
+    String payload = null;
+
+    ConsumerRecord<String, String> rec = getRecord(actRelationshipTopic, payload);
+    investigationService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
   }
 
   @ParameterizedTest
