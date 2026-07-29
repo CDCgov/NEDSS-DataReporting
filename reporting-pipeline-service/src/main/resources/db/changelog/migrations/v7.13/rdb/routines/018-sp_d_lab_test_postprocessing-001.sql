@@ -309,8 +309,8 @@ BEGIN
 
         SELECT 
             obs.observation_uid,
-            STRING_AGG(CAST(COALESCE(rsn.reason_cd + '(' + rsn.reason_desc_txt + ')', '') AS NVARCHAR(MAX)), '|') AS REASON_FOR_TEST_DESC,
-            STRING_AGG(CAST(rsn.reason_cd AS NVARCHAR(MAX)), '|') AS REASON_FOR_TEST_CD
+              LEFT(STRING_AGG(CAST(COALESCE(rsn.reason_cd + '(' + rsn.reason_desc_txt + ')', '') AS NVARCHAR(MAX)), '|'), 4000) AS REASON_FOR_TEST_DESC,
+              LEFT(STRING_AGG(CAST(rsn.reason_cd AS NVARCHAR(MAX)), '|'), 4000) AS REASON_FOR_TEST_CD
         INTO #reason_data
         FROM #observation_data obs	
         LEFT JOIN dbo.nrt_observation_reason rsn ON obs.LAB_TEST_uid = rsn.observation_uid

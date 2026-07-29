@@ -296,7 +296,7 @@ BEGIN
                 SELECT 
                     TB_PAM_UID,
                     DATAMART_COLUMN_NM,
-                    STRING_AGG(CAST(ANSWER_TXT AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS concatenated_answer_txt,
+                        LEFT(STRING_AGG(CAST(ANSWER_TXT AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT), 2000) AS concatenated_answer_txt,
                     MAX(ADD_USER_ID) AS ADD_USER_ID,
                     MAX(ADD_TIME) AS ADD_TIME,
                     MAX(LAST_CHG_USER_ID) AS LAST_CHG_USER_ID,
