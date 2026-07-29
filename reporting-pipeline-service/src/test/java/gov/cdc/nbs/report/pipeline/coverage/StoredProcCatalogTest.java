@@ -12,7 +12,7 @@ class StoredProcCatalogTest {
 
   @Test
   void finds_every_routine_file() {
-    assertEquals(130, catalog.size());
+    assertEquals(132, catalog.size());
   }
 
   @Test
