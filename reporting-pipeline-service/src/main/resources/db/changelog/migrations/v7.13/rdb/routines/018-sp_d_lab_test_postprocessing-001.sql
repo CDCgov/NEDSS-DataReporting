@@ -223,7 +223,7 @@ BEGIN
         declare @backfill_list nvarchar(max);  
         SET @backfill_list = 
 		( 
-			SELECT string_agg(t.value, ',')
+			SELECT string_agg(CAST(t.value AS NVARCHAR(MAX)), ',')
 			FROM (SELECT distinct TRIM(value) AS value FROM STRING_SPLIT(@obs_ids, ',')) t
                 left join #observation_data tmp
                 on tmp.observation_uid = t.value	
@@ -309,8 +309,8 @@ BEGIN
 
         SELECT 
             obs.observation_uid,
-            STRING_AGG(COALESCE(rsn.reason_cd + '(' + rsn.reason_desc_txt + ')', ''), '|') AS REASON_FOR_TEST_DESC,
-            STRING_AGG(rsn.reason_cd, '|') AS REASON_FOR_TEST_CD
+            STRING_AGG(CAST(COALESCE(rsn.reason_cd + '(' + rsn.reason_desc_txt + ')', '') AS NVARCHAR(MAX)), '|') AS REASON_FOR_TEST_DESC,
+            STRING_AGG(CAST(rsn.reason_cd AS NVARCHAR(MAX)), '|') AS REASON_FOR_TEST_CD
         INTO #reason_data
         FROM #observation_data obs	
         LEFT JOIN dbo.nrt_observation_reason rsn ON obs.LAB_TEST_uid = rsn.observation_uid
@@ -744,7 +744,7 @@ BEGIN
 		followup AS (
 			SELECT value as observation_uid  
 			FROM STRING_SPLIT(
-				(SELECT STRING_AGG(followup_observation_uid , ',' ) FROM #observation_data), ','
+                (SELECT STRING_AGG(CAST(followup_observation_uid AS NVARCHAR(MAX)), ',' ) FROM #observation_data), ','
 			) 
 		),
 		obstxt AS (

@@ -453,7 +453,7 @@ BEGIN
     WITH aggregated_answers AS (
         SELECT INTERVENTION_UID,
             NBS_QUESTION_UID,
-            STRING_AGG(TRIM(ANSWER_TXT1), ' | ')        AS ANSWER_DESC11
+            STRING_AGG(CAST(TRIM(ANSWER_TXT1) AS NVARCHAR(MAX)), ' | ')        AS ANSWER_DESC11
 
         FROM #coded_table_sn_merged
         GROUP BY INTERVENTION_UID,
@@ -549,7 +549,7 @@ BEGIN
         SELECT
             INTERVENTION_UID,
             NBS_QUESTION_UID,
-            STRING_AGG(TRIM(ANSWER_TXT1),
+            STRING_AGG(CAST(TRIM(ANSWER_TXT1) AS NVARCHAR(MAX)),
             ' | ') AS ANSWER_DESC11
         FROM
             #CODED_COUNTY_TABLE

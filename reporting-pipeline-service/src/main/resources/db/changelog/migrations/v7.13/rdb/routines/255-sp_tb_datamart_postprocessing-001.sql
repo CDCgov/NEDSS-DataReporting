@@ -866,7 +866,7 @@ BEGIN
         )
         SELECT 
             D_GT_12_REAS_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS GT_12_REAS_ALL,  
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS GT_12_REAS_ALL,  
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS GT_12_REAS_1,  
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS GT_12_REAS_2,  
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS GT_12_REAS_3,  
@@ -914,7 +914,7 @@ BEGIN
         )
         SELECT 
             D_SMR_EXAM_TY_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS SMR_EXAM_TY_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS SMR_EXAM_TY_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS SMR_EXAM_TY_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS SMR_EXAM_TY_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS SMR_EXAM_TY_3,
@@ -962,7 +962,7 @@ BEGIN
         )
         SELECT 
             D_ADDL_RISK_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS ADDL_RISK_ALL,  
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS ADDL_RISK_ALL,  
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS ADDL_RISK_1,  
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS ADDL_RISK_2,  
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS ADDL_RISK_3,  
@@ -1010,7 +1010,7 @@ BEGIN
         )
         SELECT 
             D_DISEASE_SITE_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS DISEASE_SITE_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS DISEASE_SITE_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS DISEASE_SITE_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS DISEASE_SITE_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS DISEASE_SITE_3,
@@ -1058,7 +1058,7 @@ BEGIN
         )
         SELECT 
             D_HC_PROV_TY_3_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS HC_PROV_TY_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS HC_PROV_TY_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS HC_PROV_TY_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS HC_PROV_TY_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS HC_PROV_TY_3,
@@ -1106,7 +1106,7 @@ BEGIN
         )
         SELECT 
             D_MOVED_WHERE_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVED_WHERE_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS MOVED_WHERE_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS MOVED_WHERE_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS MOVED_WHERE_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS MOVED_WHERE_3,
@@ -1154,7 +1154,7 @@ BEGIN
         )
         SELECT 
             D_OUT_OF_CNTRY_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS OUT_OF_CNTRY_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS OUT_OF_CNTRY_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS OUT_OF_CNTRY_3,
@@ -1202,7 +1202,7 @@ BEGIN
         )
         SELECT 
             D_MOVE_STATE_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_STATE_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_STATE_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS MOVE_STATE_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS MOVE_STATE_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS MOVE_STATE_3,
@@ -1251,7 +1251,7 @@ BEGIN
         )
         SELECT 
             D_MOVE_CNTRY_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_CNTRY_ALL,
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_CNTRY_ALL,
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'') AS MOVE_CNTRY_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'') AS MOVE_CNTRY_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'') AS MOVE_CNTRY_3,
@@ -1300,7 +1300,7 @@ BEGIN
         )
         SELECT 
             D_MOVE_CNTY_GROUP_KEY,
-            STRING_AGG(value, ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_CNTY_ALL,  
+            STRING_AGG(CAST(value AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY value) AS MOVE_CNTY_ALL,  
             NULLIF(MAX(CASE WHEN rn = 1 THEN value ELSE '' END),'')  AS MOVE_CNTY_1,
             NULLIF(MAX(CASE WHEN rn = 2 THEN value ELSE '' END),'')  AS MOVE_CNTY_2,
             NULLIF(MAX(CASE WHEN rn = 3 THEN value ELSE '' END),'')  AS MOVE_CNTY_3,

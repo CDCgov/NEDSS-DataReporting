@@ -296,7 +296,7 @@ BEGIN
                 SELECT 
                     TB_PAM_UID,
                     DATAMART_COLUMN_NM,
-                    STRING_AGG(ANSWER_TXT, ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS concatenated_answer_txt,
+                    STRING_AGG(CAST(ANSWER_TXT AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS concatenated_answer_txt,
                     MAX(ADD_USER_ID) AS ADD_USER_ID,
                     MAX(ADD_TIME) AS ADD_TIME,
                     MAX(LAST_CHG_USER_ID) AS LAST_CHG_USER_ID,
@@ -381,14 +381,14 @@ BEGIN
             
             DECLARE @AlterQuery NVARCHAR(MAX);
 
-            set @AlterQuery = 'ALTER TABLE dbo.TB_PAM_LDF ADD ' + (select STRING_AGG( col_nm + ' ' +  col_data_type +
+            set @AlterQuery = 'ALTER TABLE dbo.TB_PAM_LDF ADD ' + (select STRING_AGG(CAST(col_nm + ' ' +  col_data_type +
             CASE
                 WHEN col_data_type IN ('decimal', 'numeric') THEN '(' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + ',' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + ')'
                 WHEN col_data_type = 'varchar' THEN '(' +
                     CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN 'MAX' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END
                 + ')'
                 ELSE ''
-            END, ', ') from #MISSED_COLS);
+            END AS NVARCHAR(MAX)), ', ') from #MISSED_COLS);
 
             exec sp_executesql @AlterQuery;
             
@@ -541,7 +541,7 @@ BEGIN
 
             SET @tb_ldf_columns = (
                 SELECT ISNULL(
-                    STRING_AGG('tb.' + TRIM(value), ','),
+                    STRING_AGG(CAST('tb.' + TRIM(value) AS NVARCHAR(MAX)), ','),
                     ''
                 )
                 FROM STRING_SPLIT(ISNULL(@ldf_columns, ''), ',')

@@ -285,7 +285,7 @@ BEGIN
             DATAMART_COLUMN_NM,
             VAR_PAM_UID,
             NCA_ADD_TIME as ADD_TIME,
-            STRING_AGG(ANSWER_TXT, ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS ANSWER_TXT
+            STRING_AGG(CAST(ANSWER_TXT AS NVARCHAR(MAX)), ' | ') WITHIN GROUP (ORDER BY ANSWER_TXT) AS ANSWER_TXT
         INTO #LDF_BASE_TRANSLATED
         FROM #LDF_BASE_COUNTRY_TRANSLATED t
         GROUP BY
@@ -345,14 +345,14 @@ BEGIN
 
             DECLARE @AlterQuery NVARCHAR(MAX);
 
-            set @AlterQuery = 'ALTER TABLE dbo.VAR_PAM_LDF ADD ' + (select STRING_AGG( col_nm + ' ' +  col_data_type +
+            set @AlterQuery = 'ALTER TABLE dbo.VAR_PAM_LDF ADD ' + (select STRING_AGG(CAST(col_nm + ' ' +  col_data_type +
                                                                                        CASE
                                                                                            WHEN col_data_type IN ('decimal', 'numeric') THEN '(' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + ',' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + ')'
                                                                                            WHEN col_data_type = 'varchar' THEN '(' +
                                                                                                                                CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN 'MAX' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END
                                                                                                + ')'
                                                                                            ELSE ''
-                                                                                           END, ', ') from #missed_cols);
+                                                                                           END AS NVARCHAR(MAX)), ', ') from #missed_cols);
 
             exec sp_executesql @AlterQuery;
 
