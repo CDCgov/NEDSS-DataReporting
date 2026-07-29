@@ -27,12 +27,7 @@ BEGIN
     declare @package_name varchar(200) = 'sp_patient_delta_update';
     declare @id_list nvarchar(max);
 
-    SELECT @id_list = LEFT(STRING_AGG(CAST(src.patient_uid AS NVARCHAR(MAX)), ','), 500)
-    FROM (
-        SELECT TOP (250) patient_uid
-        FROM #PATIENT_UPDATE_LIST
-        ORDER BY patient_uid
-    ) src;
+    SELECT @id_list = STRING_AGG(patient_uid, ',') FROM #PATIENT_UPDATE_LIST;
     ---------------------------------------------------------------------------------------------------------------------------------
 
     

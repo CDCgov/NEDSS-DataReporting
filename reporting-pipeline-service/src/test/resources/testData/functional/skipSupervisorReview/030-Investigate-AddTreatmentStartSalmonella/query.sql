@@ -670,9 +670,7 @@ WHERE [LAB_TEST_UID] IN (1000006009, 1000006012, 1000006008)
 -- dbo.LDF_DATA | operations: delete, insert
 -- Query: 16
 -- Step: 3
--- Scoped to this run's investigation via LDF_GROUP so rows from other
--- investigations with the same condition don't leak in. LDF_GROUP_KEY is an
--- environment-relative surrogate and is deliberately not selected.
+-- Logical comparison marked this identity as not comparison-safe.
 SELECT
     [BUSINESS_OBJ_NM],
     [CDC_NATIONAL_ID],
@@ -685,16 +683,13 @@ SELECT
     [IMPORT_VERSION_NBR],
     [LABEL_TXT],
     [LDF_COLUMN_TYPE],
+    [LDF_GROUP_KEY],
     [LDF_OID],
     [LDF_VALUE],
     [NND_IND],
     [RECORD_STATUS_CD]
 FROM [RDB_MODERN].[dbo].[LDF_DATA]
-WHERE [LDF_GROUP_KEY] IN (
-    SELECT [LDF_GROUP_KEY]
-    FROM [RDB_MODERN].[dbo].[LDF_GROUP]
-    WHERE [BUSINESS_OBJECT_UID] = 1000006026
-)
+WHERE [CONDITION_CD] = (SELECT [CONDITION_CD] FROM [RDB_MODERN].[dbo].[CONDITION] WHERE [CONDITION_DESC] = N'Salmonellosis (excluding S. typhi/paratyphi)')
 ;
 
 -- dbo.LDF_DATAMART_COLUMN_REF | operations: update

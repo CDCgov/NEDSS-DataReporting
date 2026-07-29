@@ -25,12 +25,7 @@ BEGIN
     declare @package_name varchar(200) = 'sp_provider_delta_update';
     declare @id_list nvarchar(max);
 
-    SELECT @id_list = LEFT(STRING_AGG(CAST(src.provider_uid AS NVARCHAR(MAX)), ','), 500)
-    FROM (
-        SELECT TOP (250) provider_uid
-        FROM #PROVIDER_UPDATE_LIST
-        ORDER BY provider_uid
-    ) src;
+    SELECT @id_list = STRING_AGG(provider_uid, ',') FROM #PROVIDER_UPDATE_LIST;
     ---------------------------------------------------------------------------------------------------------------------------------
 
     SET @proc_step_name=' Update Provider attributes in MORBIDITY_REPORT_DATAMART for PROVIDER';
