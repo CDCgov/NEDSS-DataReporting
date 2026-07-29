@@ -814,31 +814,31 @@ BEGIN
                     tgt.LDF_GROUP_KEY = src.LDF_GROUP_KEY,
                     tgt.GEOCODING_LOCATION_KEY = src.GEOCODING_LOCATION_KEY'
                     + IIF(@obscoded_columns != '',
-                          ',' + (SELECT STRING_AGG('tgt.'
+                          ',' + (SELECT STRING_AGG(CAST('tgt.'
                                                        + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX))
                                                        + ' = ovc.'
-                                                       + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)),',')
+                                             + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) AS NVARCHAR(MAX)),',')
                                  FROM (SELECT DISTINCT col_nm FROM #OBS_CODED_BMIRD_Case) as cols),
                           '')
                     + IIF(@obsnum_columns != '',
-                          ',' + (SELECT STRING_AGG('tgt.'
+                          ',' + (SELECT STRING_AGG(CAST('tgt.'
                                                        + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX))
                                                        + ' = '
-                                                       + CAST(converted_column AS NVARCHAR(MAX)),',')
+                                             + CAST(converted_column AS NVARCHAR(MAX)) AS NVARCHAR(MAX)),',')
                                  FROM (SELECT DISTINCT col_nm, converted_column FROM #OBS_NUMERIC_BMIRD_Case) as cols),
                           '')
                     + IIF(@obstxt_columns != '',
-                          ',' + (SELECT STRING_AGG('tgt.'
+                          ',' + (SELECT STRING_AGG(CAST('tgt.'
                                                        + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX))
                                                        + ' = ovt.'
-                                                       + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)),',')
+                                             + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) AS NVARCHAR(MAX)),',')
                                  FROM (SELECT DISTINCT col_nm FROM #OBS_TXT_BMIRD_Case) as cols),
                           '')
                     + IIF(@obsdate_columns != '',
-                          ',' + (SELECT STRING_AGG('tgt.'
+                          ',' + (SELECT STRING_AGG(CAST('tgt.'
                                                        + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX))
                                                        + ' = ovd.'
-                                                       + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)),',')
+                                             + CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) AS NVARCHAR(MAX)),',')
                                  FROM (SELECT DISTINCT col_nm FROM #OBS_DATE_BMIRD_Case) as cols),
                           '')
                 + ' FROM #KEY_ATTR_INIT src

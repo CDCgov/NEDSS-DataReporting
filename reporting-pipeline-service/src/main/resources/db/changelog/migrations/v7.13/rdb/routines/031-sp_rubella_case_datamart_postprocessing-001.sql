@@ -339,35 +339,35 @@ BEGIN
         tgt.LDF_GROUP_KEY = src.LDF_GROUP_KEY,
         tgt.GEOCODING_LOCATION_KEY = src.GEOCODING_LOCATION_KEY
         ' + CASE
-                WHEN @obscoded_columns != '' THEN ',' + (SELECT STRING_AGG('tgt.' +
+                WHEN @obscoded_columns != '' THEN ',' + (SELECT STRING_AGG(CAST('tgt.' +
                                                         CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) +
                                                         ' = ovc.' +
                                                         CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)),
-                                                        ',')
+                                          ',') AS NVARCHAR(MAX),
                     FROM (SELECT DISTINCT col_nm FROM #OBS_CODED_Rubella_Case) as cols)
             ELSE '' END
                 + CASE
-                      WHEN @obsnum_columns != '' THEN ',' + (SELECT STRING_AGG('tgt.' +
+                    WHEN @obsnum_columns != '' THEN ',' + (SELECT STRING_AGG(CAST('tgt.' +
                                                                                 CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) +
                                                                                ' = ' +
                                                                                CAST(converted_column AS NVARCHAR(MAX)),
-                                                                               ',')
+                                                         ',') AS NVARCHAR(MAX),
                                                              FROM (SELECT DISTINCT col_nm, converted_column FROM #OBS_NUMERIC_Rubella_Case) as cols)
                       ELSE '' END
                 + CASE
-                      WHEN @obstxt_columns != '' THEN ',' + (SELECT STRING_AGG('tgt.' +
+                    WHEN @obstxt_columns != '' THEN ',' + (SELECT STRING_AGG(CAST('tgt.' +
                                                                                CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) +
                                                                                ' = ovt.' +
                                                                                CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)),
-                                                                               ',')
+                                                         ',') AS NVARCHAR(MAX),
                                                              FROM (SELECT DISTINCT col_nm FROM #OBS_TXT_Rubella_Case) as cols)
                       ELSE '' END
                 + CASE
-                      WHEN @obsdate_columns != '' THEN ',' + (SELECT STRING_AGG('tgt.' +
+                    WHEN @obsdate_columns != '' THEN ',' + (SELECT STRING_AGG(CAST('tgt.' +
                                                                                 CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)) +
                                                                                 ' = ovd.' +
                                                                                 CAST(QUOTENAME(col_nm) AS NVARCHAR(MAX)),
-                                                                                ',')
+                                                          ',') AS NVARCHAR(MAX),
                                                               FROM (SELECT DISTINCT col_nm FROM #OBS_DATE_Rubella_Case) as cols)
                       ELSE '' END +
                               ' FROM
