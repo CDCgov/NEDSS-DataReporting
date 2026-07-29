@@ -3288,20 +3288,20 @@ databaseChangeLog:
             path: db/changelog/migrations/v7.13/rdb/tables/262-alter_nrt_dead_letter_log.sql
             splitStatements: false
   - changeSet:
-      id: app-911-sp_patient_event-performance
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/routines/371-sp_patient_event.sql
-            splitStatements: true
-            endDelimiter: GO
-  - changeSet:
       id: app-911-sp_patient_race_event-performance
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/routines/372-sp_patient_race_event.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/043-sp_patient_race_event-002.sql
+            splitStatements: true
+            endDelimiter: GO
+  - changeSet:
+      id: app-911-sp_patient_event-performance
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/routines/054-sp_patient_event-002.sql
             splitStatements: true
             endDelimiter: GO
