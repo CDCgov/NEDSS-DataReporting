@@ -72,7 +72,8 @@ public class DeadLetterProcessingService {
       @Header(KafkaHeaders.RECEIVED_TIMESTAMP) Long receiveTimestamp,
       @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
       @Header(KafkaHeaders.EXCEPTION_STACKTRACE) String stackTrace,
-      @Header(KafkaHeaders.ORIGINAL_CONSUMER_GROUP) String originalConsumerGroup,
+      @Header(name = KafkaHeaders.ORIGINAL_CONSUMER_GROUP, required = false)
+          String originalConsumerGroup,
       @Header(KafkaHeaders.EXCEPTION_FQCN) String exceptionFqcn,
       @Header(KafkaHeaders.EXCEPTION_CAUSE_FQCN) String exceptionCauseFqcn,
       @Header(KafkaHeaders.EXCEPTION_MESSAGE) String exceptionMessage) {

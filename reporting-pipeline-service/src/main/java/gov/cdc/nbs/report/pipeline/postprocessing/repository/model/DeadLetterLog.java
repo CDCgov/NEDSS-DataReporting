@@ -27,7 +27,7 @@ public class DeadLetterLog {
   @Column(name = "payload_key", nullable = false)
   private String payloadKey;
 
-  @Column(name = "original_consumer_group")
+  @Column(name = "original_consumer_group", nullable = true)
   private String originalConsumerGroup;
 
   @Column(name = "exception_stack_trace")
