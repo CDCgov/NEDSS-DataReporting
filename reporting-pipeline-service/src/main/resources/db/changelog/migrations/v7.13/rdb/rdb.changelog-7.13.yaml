@@ -3293,7 +3293,7 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/routines/043-sp_patient_race_event-002.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/053-sp_patient_race_event-002.sql
             splitStatements: true
             endDelimiter: GO
   - changeSet:
