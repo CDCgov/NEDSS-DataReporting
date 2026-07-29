@@ -4,6 +4,8 @@ import static gov.cdc.nbs.report.pipeline.observation.service.ObservationService
 import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -150,6 +152,35 @@ class ObservationServiceTest {
   @Test
   void testProcessActRelationshipNullPayload() {
     ConsumerRecord<String, String> rec = getRecord(null, inputTopicNameActRelationship);
+
+    observationService.processMessage(rec);
+
+    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+  }
+
+  @Test
+  void testProcessActRelationshipTombstone() {
+    String payload =
+        """
+        {
+          "payload": null
+        }
+        """;
+    ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
+
+    observationService.processMessage(rec);
+
+    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+  }
+
+  @Test
+  void testProcessActRelationshipTombstoneNoPayload() {
+    String payload =
+        """
+        {
+        }
+        """;
+    ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
 
     observationService.processMessage(rec);
 
