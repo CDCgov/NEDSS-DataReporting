@@ -131,7 +131,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@var_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'10030', N'Varicella (Chickenpox)', N'NND', N'NND',
-     N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22002000GA01',
+     N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22002000GA01',
      N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'GCD', N'130001',
      22002000, N'N', NULL,
@@ -149,7 +149,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@var_full_phc_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'CAS22002000GA01', N'PHC_LOCAL_ID',
      N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -205,7 +205,7 @@ INSERT INTO [dbo].[nbs_act_entity]
      [record_status_cd], [record_status_time])
 VALUES
     (@var_full_phc_uid_nae, @foundation_person_uid, N'PerAsReporterOfPHC', 1,
-     '2026-04-01T00:00:00', @superuser_id_nae, '2026-04-01T00:00:00', @superuser_id_nae,
+     '2026-04-01T00:00:00', @superuser_id_nae, CAST(GETDATE() AS DATE), @superuser_id_nae,
      N'ACTIVE', '2026-04-01T00:00:00');
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[nbs_act_entity]
@@ -217,7 +217,7 @@ INSERT INTO [dbo].[nbs_act_entity]
      [record_status_cd], [record_status_time])
 VALUES
     (@var_full_phc_uid_nae, @foundation_org_uid, N'OrgAsReporterOfPHC', 1,
-     '2026-04-01T00:00:00', @superuser_id_nae, '2026-04-01T00:00:00', @superuser_id_nae,
+     '2026-04-01T00:00:00', @superuser_id_nae, CAST(GETDATE() AS DATE), @superuser_id_nae,
      N'ACTIVE', '2026-04-01T00:00:00');
 
 GO
@@ -253,106 +253,106 @@ INSERT INTO [dbo].[nbs_case_answer]
 VALUES
     -- VAR101 VARICELLA_VACCINE (YNU 4150) -> 'Y'
     (22002100, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 1442, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 1442, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR103 RASH_LOCATION (PHVS_VZ_RASH_DISTRO 2780) -> Generalized (need a code)
     --   Skipped specific code; just use 'OTH' fallback per general patterns
     (22002101, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'OTH', 1363, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'OTH', 1363, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR105 RASH_LOCATION_GENERAL_1 (PHVS_VZ_RASH_LOC_NOT 2790) -> '22943007' Trunk
     --   Drives D_RASH_LOC_GEN (225 SP filters on VAR105).
     (22002102, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'22943007', 1356, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'22943007', 1356, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR111 VESICLES (YNU) -> 'Y'
     (22002103, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 1141, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 1141, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR113 MACULAR_PAPULAR (YNU) -> 'N'
     (22002104, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1432, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1432, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR122 FEVER (YNU) -> 'Y'
     (22002105, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 1036, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 1036, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR123 FEVER_ONSET_DATE (no codeset, date)
     (22002106, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'2026-03-25', 1017, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'2026-03-25', 1017, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR126 IMMUNOCOMPROMISED (YNU) -> 'N'
     (22002107, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1190, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1190, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR128 PATIENT_VISIT_HC_PROVIDER (YNU) -> 'Y'
     (22002108, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 1187, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 1187, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR129 COMPLICATIONS (YNU) -> 'N'
     (22002109, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1126, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1126, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR135 COMPLICATIONS_PNEUMONIA (YNU) -> 'N'
     (22002110, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1172, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1172, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR139 TREATED (YNU) -> 'N'
     (22002111, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1333, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1333, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR143 DEATH_AUTOPSY (YNU) -> 'N'
     (22002112, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1277, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1277, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR150 PREVIOUS_DIAGNOSIS (YNU) -> 'N'
     (22002113, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1347, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1347, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR154 EPI_LINKED (YNU) -> 'N'
     (22002114, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1446, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1446, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR156 TRANSMISSION_SETTING (PHVS_TRAN_SETNG 2660) -> '133928008' Community
     (22002115, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'133928008', 1170, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'133928008', 1170, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR158 HEALTHCARE_WORKER (YNU) -> 'N'
     (22002116, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1184, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1184, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR170 LAB_TESTING (YNU) -> 'Y'
     (22002117, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 1210, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 1210, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR171 DFA_TEST (YNU) -> 'N'
     (22002118, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1084, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1084, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR174 PCR_TEST (YNU) -> 'Y'
     (22002119, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 1241, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 1241, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR176 PCR_TEST_SOURCE_1 (PHVS_VZ_PCR_SPEC_SRC 2770) -> '69640009' Scab
     --   Drives D_PCR_SOURCE (230 SP filters on VAR176).
     (22002120, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'69640009', 1329, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'69640009', 1329, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR178 PCR_TEST_RESULT (PHVS_VZ_LAB_TEST_INT 4200) -> '10828004' Positive
     (22002121, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'10828004', 1016, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'10828004', 1016, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR180 CULTURE_TEST (YNU) -> 'N'
     (22002122, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1343, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1343, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR188 SEROLOGY_TEST (YNU) -> 'N'
     (22002123, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1020, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1020, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- VAR195 IGG_TEST (YNU) -> 'N'
     (22002124, @var_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 1024, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 1024, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
 
 SET IDENTITY_INSERT [dbo].[nbs_case_answer] OFF;

@@ -202,7 +202,7 @@ INSERT INTO [dbo].[public_health_case]
 VALUES
     (@covid_full_phc_uid, '2026-04-01T00:00:00', @superuser_id, N'I',
      N'C', N'11065', N'2019 Novel Coronavirus', N'NND', N'NND',
-     N'O', '2026-04-01T00:00:00', @superuser_id, N'CAS22003000GA01',
+     N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22003000GA01',
      N'OPEN', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'COV', N'130001',
      22003000, N'N', NULL,
@@ -233,7 +233,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@covid_full_phc_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'CAS22003000GA01', N'PHC_LOCAL_ID',
      N'Local Public Health Case Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -290,99 +290,99 @@ VALUES
     -- ===== Symptoms (PHVS YNU code_set_group_id 4150) =====
     -- 386661006 FEVER -> Y
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10001378, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10001378, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 43724002 CHILLS_RIGORS -> Y
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10001379, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10001379, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 271795006 FATIGUE_MALAISE -> Y
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10001380, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10001380, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 25064002 HEADACHE -> Y
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10001382, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10001382, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 68962001 MYALGIA -> Y
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10001383, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10001383, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 419284004 ALT_MENTAL_STATUS -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001390, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001390, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 16932000 NAUSEA -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001394, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001394, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 62315008 DIARRHEA -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001395, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001395, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 21522001 ABDOMINAL_PAIN -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10001396, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10001396, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Disposition (4150) =====
     -- 309904001 HOSPITAL_ICU_STAY -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004144, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004144, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS540 US_HC_WORKER_IND -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004148, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004148, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Exposure (4150) =====
     -- INV664 TRAVEL_DOMESTICALLY -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004151, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004151, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TRAVEL38 TRAVEL_INTERNATIONAL -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004153, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004153, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 473085002 CRUISE_TRAVEL_EXP -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004155, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004155, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- 445000002 AIR_TRAVEL_EXP -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004160, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004160, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS684 WORKPLACE_EXP -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004157, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004157, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- NBS559 ANIMAL_EXPOSURE_IND -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10004165, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10004165, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Labs =====
     -- INV290 TEST_TYPE -> '94309-2' SARS coronavirus 2 RNA NAA (code_set_group 108020)
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'94309-2', 10001370, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'94309-2', 10001370, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- INV291 TEST_RESULT -> '10828004' Positive (code_set_group 108610)
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'10828004', 10001371, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'10828004', 10001371, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- LAB606 PERFORMING_LAB_TYPE -> 'PHC1317' Hospital Laboratory (108620)
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'PHC1317', 10001374, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'PHC1317', 10001374, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
 
     -- ===== Comorbidity / Status (4150) =====
     -- ARB017 HYPERTENSION -> N
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'N', 10000075, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'N', 10000075, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- INV576 Symptomatic -> Y
     (@covid_full_phc_uid_2, '2026-04-01T00:00:00', @superuser_id_2,
-     N'Y', 10001027, 1, '2026-04-01T00:00:00', @superuser_id_2,
+     N'Y', 10001027, 1, CAST(GETDATE() AS DATE), @superuser_id_2,
      N'ACTIVE', '2026-04-01T00:00:00', 0);
 END
 

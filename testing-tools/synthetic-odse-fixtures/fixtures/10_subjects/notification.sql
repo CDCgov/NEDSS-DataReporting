@@ -148,7 +148,7 @@ INSERT INTO [dbo].[notification]
 VALUES
     (@dbo_Act_notification_v2_uid, '2026-04-01T00:00:00', @superuser_id,
      N'NOTF', N'Notification (NOTF)',
-     '2026-04-04T00:00:00', @superuser_id, N'NOT20060010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'NOT20060010GA01',
      N'COMPLETED', '2026-04-04T00:00:00', N'A', '2026-04-01T00:00:00',
      N'T', 1, N'HEP', N'130001',
      20060010, N'C', N'10110',

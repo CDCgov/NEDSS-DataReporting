@@ -68,7 +68,7 @@ INSERT INTO [dbo].[entity_id]
 VALUES
     (@foundation_provider_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'CMS', N'Centers for Medicare & Medicaid Services',
-     '2026-04-01T00:00:00', @superuser_id,
+     CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'1234567890', N'NPI', N'National provider identifier', '2026-04-01T00:00:00');
 
@@ -84,7 +84,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_provider_work_o, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-0210', N'1234',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-0210', N'1234',
      N'foundation.provider@nbs.test',
      N'ACTIVE', '2026-04-01T00:00:00');
 
@@ -96,7 +96,7 @@ INSERT INTO [dbo].[entity_locator_participation]
 VALUES
     (@foundation_provider_uid, @dbo_Tele_locator_provider_work_o,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'Provider work phone/email',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'Provider work phone/email',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00');
 
@@ -121,7 +121,7 @@ INSERT INTO [dbo].[person]
      [description])
 VALUES
     (@dbo_Entity_provider_v2_uid, '2026-04-01T00:00:00', @superuser_id, N'PRV',
-     '2026-04-01T00:00:00', @superuser_id, N'PSN20010010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'PSN20010010GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'Variant', N'Q', N'Provider', N'DR', N'JR',
      1, '2026-04-01T00:00:00',
@@ -151,7 +151,7 @@ INSERT INTO [dbo].[entity_id]
 VALUES
     (@dbo_Entity_provider_v2_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'CMS', N'Centers for Medicare & Medicaid Services',
-     '2026-04-01T00:00:00', @superuser_id,
+     CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'9876543210', N'NPI', N'National provider identifier', '2026-04-01T00:00:00');
 
@@ -165,7 +165,7 @@ INSERT INTO [dbo].[postal_locator]
      [street_addr1], [street_addr2], [zip_cd])
 VALUES
     (@dbo_Postal_locator_provider_v2, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-     N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+     N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
      N'2010 Variant Provider Way', N'Suite 200', N'30303');
 
@@ -176,7 +176,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_provider_v2_work, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-1010', N'5678',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-1010', N'5678',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- v2 Provider tele_locator (work email).
@@ -186,7 +186,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_provider_v2_email, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'variant.provider@nbs.test',
+     CAST(GETDATE() AS DATE), @superuser_id, N'variant.provider@nbs.test',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- v2 Provider tele_locator (cell phone). Filter at sp_provider_event line 132 is `cd='CP'`.
@@ -196,7 +196,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_provider_v2_cell, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-1011',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-1011',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- v2 Provider entity_locator_participation rows.
@@ -211,25 +211,25 @@ VALUES
     -- v2 Provider work address (PST/WP/O — drives address columns).
     (@dbo_Entity_provider_v2_uid, @dbo_Postal_locator_provider_v2,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'PST', '2026-04-01T00:00:00', @superuser_id, N'v2 Provider work address',
+     N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Provider work address',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     -- v2 Provider work phone (TELE/WP/O — drives phone_work / phone_ext_work).
     (@dbo_Entity_provider_v2_uid, @dbo_Tele_locator_provider_v2_work,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'v2 Provider work phone',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Provider work phone',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     -- v2 Provider work email (TELE/WP/O — drives email_work).
     (@dbo_Entity_provider_v2_uid, @dbo_Tele_locator_provider_v2_email,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'v2 Provider work email',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Provider work email',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     -- v2 Provider cell phone (TELE/CP/* — drives phone_cell).
     (@dbo_Entity_provider_v2_uid, @dbo_Tele_locator_provider_v2_cell,
      '2026-04-01T00:00:00', @superuser_id, N'CP',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'v2 Provider cell phone',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Provider cell phone',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00');
 

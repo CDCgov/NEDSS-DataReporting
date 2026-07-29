@@ -13,7 +13,7 @@ buildscript {
 
 plugins {
     id 'org.sonarqube' version '7.3.0.8198'
-    id 'com.diffplug.spotless' version '8.7.0'
+    id 'com.diffplug.spotless' version '8.8.0'
     id 'io.github.dsdolzhenko.dotenv' version '0.1.0'
 }
 

@@ -114,7 +114,7 @@ UPDATE [dbo].[public_health_case]
        contact_inv_txt          = COALESCE(contact_inv_txt,          N'Contact tracing complete; no further leads.'),
        status_time              = COALESCE(status_time,              '2026-04-01T00:00:00'),
        record_status_time       = COALESCE(record_status_time,       '2026-04-01T00:00:00'),
-       last_chg_time            = '2026-06-05T00:00:05'
+       last_chg_time            =  CAST(GETDATE() AS DATE)
  WHERE public_health_case_uid IN (22001000, 22002000, 22003000, 22004000,
                                   22005000, 22006000, 22007000);
 GO
@@ -173,7 +173,7 @@ INSERT INTO [dbo].[act_id]
     ([act_uid], [act_id_seq], [add_time], [add_user_id],
      [last_chg_time], [last_chg_user_id], [record_status_cd],
      [record_status_time], [root_extension_txt], [type_cd], [status_cd], [status_time])
-SELECT s.phc, s.seq, @t, @u, @t, @u, N'ACTIVE', @t,
+SELECT s.phc, s.seq, @t, @u,  CAST(GETDATE() AS DATE), @u, N'ACTIVE', @t,
        s.prefix + CAST(s.phc AS varchar(20)), s.tcd, N'A', @t
 FROM (VALUES
                     (CAST(22001000 AS bigint), 1, N'STATE',  N'GA-2026-STATE-'),
@@ -221,7 +221,7 @@ INSERT INTO [dbo].[participation]
      [from_time], [add_time], [add_user_id], [last_chg_time], [last_chg_user_id],
      [record_status_cd], [record_status_time], [status_cd], [status_time], [type_desc_txt])
 SELECT s.phc, @inv_prov, N'InvestgrOfPHC', N'CASE', N'PSN',
-       @t2, @t2, @u2, @t2, @u2, N'ACTIVE', @t2, N'A', @t2, N'Investigator'
+       @t2, @t2, @u2,  CAST(GETDATE() AS DATE), @u2, N'ACTIVE', @t2, N'A', @t2, N'Investigator'
 FROM (VALUES
         (CAST(22002000 AS bigint)),
         (22005000),

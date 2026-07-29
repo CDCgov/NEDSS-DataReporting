@@ -40,7 +40,7 @@ INSERT INTO dbo.notification
    confidentiality_cd, confidentiality_desc_txt, method_cd, method_desc_txt, reason_cd,
    reason_desc_txt, auto_resend_ind, txt)
   SELECT nuid, '2026-04-16T09:00:00', @su, N'NOTF', N'Notification (NOTF)',
-         '2026-04-16T09:00:00', @su, N'NOT' + CAST(nuid AS varchar(20)) + N'GA01',
+         CAST(GETDATE() AS DATE), @su, N'NOT' + CAST(nuid AS varchar(20)) + N'GA01',
          N'COMPLETED', '2026-04-16T09:00:00', N'A', '2026-04-16T09:00:00', N'T',
          1, pa, juris, oid, ISNULL(ccl, N'C'),
          cd, N'LB', ISNULL(wk, N'15'), ISNULL(yr, N'2026'), '2026-04-16T09:00:00', N'PHC',
@@ -53,7 +53,7 @@ INSERT INTO dbo.act_relationship
    add_time, add_user_id, last_chg_time, last_chg_user_id, record_status_cd, record_status_time,
    status_cd, status_time)
   SELECT phc, nuid, N'Notification', N'NOTF', N'CASE',
-         '2026-04-16T09:00:00', @su, '2026-04-16T09:00:00', @su, N'ACTIVE', '2026-04-16T09:00:00',
+         '2026-04-16T09:00:00', @su,  CAST(GETDATE() AS DATE), @su, N'ACTIVE', '2026-04-16T09:00:00',
          N'A', '2026-04-16T09:00:00'
   FROM #need;
 

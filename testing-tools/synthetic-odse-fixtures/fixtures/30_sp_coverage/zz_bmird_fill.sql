@@ -295,7 +295,7 @@ BEGIN
          [record_status_cd],[record_status_time],[source_class_cd],[status_cd],
          [status_time],[target_class_cd],[type_desc_txt])
     VALUES
-        (@phc_uid, @l1_uid, N'PHCInvForm', @ts, @ts, N'ACTIVE', @ts, N'OBS', N'A',
+        (@phc_uid, @l1_uid, N'PHCInvForm', @ts, CAST(GETDATE() AS DATE), N'ACTIVE', @ts, N'OBS', N'A',
          @ts, N'CASE', N'PHC Investigation Form');
 END;
 GO

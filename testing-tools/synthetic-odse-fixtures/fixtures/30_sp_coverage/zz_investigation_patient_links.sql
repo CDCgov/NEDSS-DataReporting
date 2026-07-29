@@ -25,7 +25,7 @@ INSERT INTO NBS_ODSE.dbo.participation
      last_chg_time, last_chg_user_id, record_status_cd, record_status_time,
      status_cd, status_time, subject_class_cd, type_desc_txt)
 SELECT 20000000, phc.public_health_case_uid, 'SubjOfPHC', 'CASE',
-       '2026-04-01', 10009282, '2026-04-01', 10009282, 'ACTIVE', '2026-04-01',
+       '2026-04-01', 10009282,  CAST(GETDATE() AS DATE), 10009282, 'ACTIVE', '2026-04-01',
        'A', '2026-04-01', 'PSN', 'Subject of Public Health Case'
 FROM NBS_ODSE.dbo.public_health_case phc
 -- NOTE: 22003000 (COVID full-chain), 22004000 (STD Syphilis full-chain) and

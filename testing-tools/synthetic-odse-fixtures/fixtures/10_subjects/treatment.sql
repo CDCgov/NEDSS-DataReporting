@@ -153,7 +153,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@foundation_act_treatment_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'TRT20000150GA01', N'TRMT_LOCAL_ID',
      N'Local Treatment Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -190,7 +190,7 @@ VALUES
     (@dbo_Act_treatment_v2_uid, '2026-04-01T00:00:00', @superuser_id,
      N'1', N'Acyclovir, 200 mg, PO, 5ID, x 5 days',
      N'2.16.840.1.114222.4.5.1', N'NEDSS Base System', N'TRMT',
-     '2026-04-01T00:00:00', @superuser_id, N'TRT20100010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'TRT20100010GA01',
      N'STD', N'130001', 20100010,
      N'ACTIVE', '2026-04-01T00:00:00',
      N'T', N'A', '2026-04-01T00:00:00',
@@ -227,7 +227,7 @@ INSERT INTO [dbo].[act_id]
 VALUES
     (@dbo_Act_treatment_v2_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-     '2026-04-01T00:00:00', @superuser_id, N'ACTIVE',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
      '2026-04-01T00:00:00', N'TRT20100010GA01', N'TRMT_LOCAL_ID',
      N'Local Treatment Identifier', N'A', '2026-04-01T00:00:00');
 
@@ -252,7 +252,7 @@ VALUES
     (@dbo_Act_treatment_v3_uid, '2026-04-01T00:00:00', @superuser_id,
      N'OTH', N'Other / free-text treatment',
      N'TRMT',
-     '2026-04-01T00:00:00', @superuser_id, N'TRT20100020GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'TRT20100020GA01',
      N'STD', N'130001',
      N'ACTIVE', '2026-04-01T00:00:00',
      N'F', N'A', '2026-04-01T00:00:00',

@@ -170,7 +170,7 @@ INSERT INTO [dbo].[person]
      [electronic_ind], [person_parent_uid], [edx_ind])
 VALUES
     (@dbo_Entity_contact_party_uid, '2026-04-15T10:00:00', @superuser_id, N'PAT',
-     '2026-04-15T10:00:00', @superuser_id, N'PSN20120020GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'PSN20120020GA01',
      N'ACTIVE', '2026-04-15T10:00:00', N'A', '2026-04-15T10:00:00',
      N'V2 Contact', N'Party', 1,
      N'N', @dbo_Entity_contact_party_uid, N'Y');
@@ -234,7 +234,7 @@ VALUES
      @foundation_investigation_uid, @foundation_investigation_uid,
      @foundation_patient_uid, @foundation_investigation_uid,
      N'ACTIVE', '2026-04-15T10:00:00',
-     @superuser_id, '2026-04-15T10:00:00', '2026-04-15T10:00:00', @superuser_id,
+     @superuser_id, '2026-04-15T10:00:00', CAST(GETDATE() AS DATE), @superuser_id,
      1,
      N'HEP', N'130001', 9999999,
      N'Y', N'Y',
