@@ -1,4 +1,4 @@
-FROM amazoncorretto:21 AS builder
+FROM amazoncorretto:24 AS builder
 WORKDIR /usr/src/
 RUN yum update -y && yum install -y findutils && yum clean all
 
@@ -18,7 +18,7 @@ COPY reporting-pipeline-service/src reporting-pipeline-service/src
 # Build
 RUN ./gradlew :reporting-pipeline-service:buildNeeded -x test --no-daemon
 
-FROM amazoncorretto:21
+FROM amazoncorretto:24
 WORKDIR /
 
 COPY --from=builder /usr/src/reporting-pipeline-service/build/libs/reporting-pipeline-service*.jar reporting-pipeline-service.jar
