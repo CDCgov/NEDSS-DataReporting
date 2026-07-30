@@ -134,6 +134,10 @@ public class LdfDataService {
           try {
             JsonNode jsonNode = objectMapper.readTree(value).get("payload");
             String operationType = extractChangeDataCaptureOperation(value);
+            if (operationType == null) {
+              // possible tombstone message, nothing to process
+              return;
+            }
             JsonNode payloadNode =
                 operationType.equals("d") ? jsonNode.path("before") : jsonNode.path("after");
             payloadNode = payloadNode.isMissingNode() ? jsonNode : payloadNode;
