@@ -142,6 +142,8 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
 | `--skip-query` | off | Run each step's `setup.sql` but skip the query/expected polling — just load the test data without waiting for the pipeline to process it. |
 | `--bulk` | — | Generate MSSQL bulk-load files instead of running tests: COPIES shifted copies of every selected test's final setup rows (see below). Requires `--bulk-out`. |
 | `--bulk-out` | — | Output directory for `--bulk`. |
+| `--bulk-workers` | `min(8, CPUs)` | Parallel worker processes for `--bulk` generation; the copies are sharded across workers (each shard also loads in parallel via `load.sh`). |
+| `--manage-indexes` | off | With `--bulk`: emit load-script sections that disable non-unique nonclustered indexes on the target tables during the load and rebuild them after. |
 | `--identity-base` | `500000000` | First synthetic value for identity columns in `--bulk` output (loaded with `KEEPIDENTITY`). |
 | `--fail-fast` | off | Stop after the first failing test. |
 | `--pause` | off | Pause and wait for Enter after each step completes (Ctrl-C to abort), so you can inspect the database between steps. |
