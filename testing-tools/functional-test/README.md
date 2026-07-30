@@ -169,8 +169,12 @@ setup scripts into MSSQL bulk-load files instead of executing them:
 
 ```sh
 uv run functional-test -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
-    --bulk 10000 --bulk-out out/bulkdata
+    --bulk 10000 --bulk-out out/bulkdata --manage-indexes
 ```
+
+Use `--manage-indexes` for any sizable load — inserting through the tables'
+non-unique nonclustered indexes slows the bulk path badly, and
+disabling/rebuilding them is much faster at volume.
 
 (`out/` is bind-mounted read-only into the local mssql container at `/staging`
 — see `docker-compose.yaml` — so output written there is immediately readable
