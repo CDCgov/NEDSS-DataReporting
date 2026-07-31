@@ -47,7 +47,12 @@ services:
     ports:
       - "3433:1433" # DataReporting's historical host port
       - "2433:1433" # DataIngestion's historical host port (same DB, same container)
-    mem_limit: 2.5G
+    # Raised from 2.5G (2026-07-24): SQL Server self-terminated from memory
+    # exhaustion (Error 701/17300/17803, "insufficient system memory") under
+    # sustained concurrent load from 11 app containers during a large ELR
+    # backlog drain - see APP-850 comment 108372. 2.5G was too tight for this
+    # many concurrently-connected services; local Docker Desktop has headroom.
+    mem_limit: 6G
     networks:
       - shared
 
