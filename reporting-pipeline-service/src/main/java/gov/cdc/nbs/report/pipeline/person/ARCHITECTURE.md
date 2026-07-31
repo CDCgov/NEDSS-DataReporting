@@ -38,7 +38,8 @@ flowchart TD
         DW{"directWrite flag"}
         DW -->|true| JpaSave["JPA save<br/>→ nrt_patient / nrt_provider / nrt_auth_user"]
         DW -->|false| KafkaPublish["Publish enriched JSON<br/>→ nrt.patient / nrt.provider / nrt.auth-user"]
-        KafkaPublish --> KafkaConnect["Kafka-Connect JDBC Sink<br/>upserts nrt_* table"]
+        JpaSave --> KafkaPublish
+        KafkaPublish -->|"directWrite=false only"| KafkaConnect["Kafka-Connect JDBC Sink<br/>upserts nrt_* table"]
         KafkaPublish --> PPListener["PostProcessingService<br/>@KafkaListener on nrt.* topic"]
     end
 
@@ -46,12 +47,10 @@ flowchart TD
     ComputeProvider --> DW
     ComputeAuthUser --> DW
 
-    JpaSave --> Enqueue["PostProcessingService.enqueue(topic, uid)<br/>(direct in-process call — no Kafka round-trip)"]
     PPListener --> ProcessNrt["processNrtMessage()<br/>parses Kafka payload"]
-    ProcessNrt --> Enqueue
 
     subgraph POSTPROC["Shared postprocessing pipeline (priority-ordered batch)"]
-        Enqueue --> IdCache[("idCache<br/>keyed by topic<br/>producer adds + drain snapshot/clear both under cacheLock")]
+        ProcessNrt --> IdCache[("idCache<br/>keyed by topic<br/>producer adds + drain snapshot/clear both under cacheLock")]
         IdCache -->|"@Scheduled processCachedIds()<br/>sorted by Entity.priority"| Drain["Priority-ordered SP execution"]
         Drain --> PatientSP["sp_nrt_patient_postprocessing<br/>→ D_PATIENT"]
         Drain --> ProviderSP["sp_nrt_provider_postprocessing<br/>→ D_PROVIDER"]
@@ -72,28 +71,33 @@ flowchart TD
     classDef highlight fill:#3a2a12,stroke:#e7a53d,color:#f4dcae,stroke-width:2px;
     classDef muted fill:#16273d,stroke:#48607e,color:#6c839c,stroke-dasharray: 3 3;
     class DW,JpaSave highlight;
-    class KafkaPublish,KafkaConnect,PPListener,ProcessNrt muted;
+    class KafkaConnect muted;
 ```
 
-🟧 amber = `person-service-direct-write` (active path) · ⬜ dashed = Kafka-Connect (legacy, feature-flagged off)
+🟧 amber = `person-service-direct-write` (active path) · ⬜ dashed = Kafka-Connect JDBC Sink (only
+runs when `directWrite=false`, since direct-write already wrote the row itself)
 
 ## Key conditionals
 
 - **`cd` field** routes `nbs_Person` events to patient vs. provider stored procs.
-- **`person-service-direct-write` flag** is the main fork: JPA save (direct-write) vs. Kafka
-  publish → Kafka-Connect (legacy). Both paths converge on the same
-  `PostProcessingService.enqueue()` call into the shared `idCache` — direct-write calls it
-  in-process, the legacy path via its existing `@KafkaListener` → `processNrtMessage()`, which
-  itself now delegates to `enqueue()` for id-caching.
+- **`person-service-direct-write` flag** only gates the JPA save: when `true`, the row is written
+  straight to `nrt_patient`/`nrt_provider`/`nrt_auth_user` before publishing; when `false`, the
+  save is skipped. Either way, `PersonService` then publishes the same enriched JSON to the
+  `nrt.*` topic. `PostProcessingService`'s existing `@KafkaListener` (`processNrtMessage()` →
+  `extractIdFromMessage()`) consumes that topic and populates `idCache` regardless of the flag —
+  there is no separate in-process path into `idCache` for direct-write.
+- **Kafka-Connect JDBC Sink** only needs to run when `directWrite=false`, since the direct-write
+  path already persisted the row itself; consuming the same topic twice for the same write would
+  be redundant when `directWrite=true`.
 - **Priority-ordered batch drain** is what keeps `D_PATIENT` hydration ahead of
   investigation/case_management processing within the same cycle. Direct-write must go through
   this same shared pipeline rather than calling postprocessing stored procedures itself —
   bypassing it breaks that ordering guarantee (see APP-787).
-- **`cacheLock`** guards every producer-side cache write (`enqueue()` and the legacy path's
-  payload-enrichment writes) against the scheduled drain's snapshot-then-clear. Without it, an
-  add landing between the drain's snapshot and its `clear()` was silently and permanently
-  dropped rather than merely delayed — this affected every entity type processed by this shared
-  service, not just Patient/Provider/AuthUser (see APP-787 concurrency follow-up).
+- **`cacheLock`** guards every producer-side cache write against the scheduled drain's
+  snapshot-then-clear. Without it, an add landing between the drain's snapshot and its `clear()`
+  was silently and permanently dropped rather than merely delayed — this affected every entity
+  type processed by this shared service, not just Patient/Provider/AuthUser (see APP-787
+  concurrency follow-up).
 - **Datamart routing** only actually carries rows in the happy path for Patient (Covid
   datamarts); Provider/AuthUser postprocessing stored procedures return empty result sets there.
 

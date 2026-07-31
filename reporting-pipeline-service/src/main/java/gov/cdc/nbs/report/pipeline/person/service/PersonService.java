@@ -22,7 +22,6 @@ import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonType;
-import gov.cdc.nbs.report.pipeline.postprocessing.service.PostProcessingService;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
@@ -84,12 +83,6 @@ public class PersonService {
   private final NrtPatientRepository nrtPatientRepository;
   private final NrtProviderRepository nrtProviderRepository;
   private final NrtAuthUserRepository nrtAuthUserRepository;
-
-  // Feeds the same shared, priority-ordered postprocessing pipeline that Kafka-Connect-sourced
-  // nrt_* messages already go through, instead of calling the postprocessing stored procedures
-  // directly. This keeps direct-write patients/providers/auth-users on the same batching/ordering
-  // guarantees relative to investigation/case_management processing (see APP-787).
-  private final PostProcessingService postProcessingService;
 
   private final PersonTransformers transformer;
 
@@ -259,17 +252,16 @@ public class PersonService {
             nrtProviderRepository.save(NrtProvider.from(reporting));
             log.info(
                 "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
-            postProcessingService.enqueue(providerReportingOutputTopic, provider.getPersonUid());
-          } else {
-            String reportingKey = transformer.buildProviderKey(provider);
-            String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
-            kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
-            log.info(
-                "Provider data (uid={}) sent to {}",
-                provider.getPersonUid(),
-                providerReportingOutputTopic);
-            log.debug("Provider Reporting: {}", reportingData);
           }
+
+          String reportingKey = transformer.buildProviderKey(provider);
+          String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
+          kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
+          log.info(
+              "Provider data (uid={}) sent to {}",
+              provider.getPersonUid(),
+              providerReportingOutputTopic);
+          log.debug("Provider Reporting: {}", reportingData);
 
           if (elasticSearchEnable) {
             String elasticKey = transformer.buildProviderKey(provider);
@@ -306,18 +298,16 @@ public class PersonService {
             nrtPatientRepository.save(NrtPatient.from(reporting));
             log.info(
                 "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
-            postProcessingService.enqueue(patientReportingOutputTopic, personData.getPersonUid());
-          } else {
-            String reportingKey = transformer.buildPatientKey(personData);
-            String reportingData =
-                transformer.processData(personData, PersonType.PATIENT_REPORTING);
-            kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
-            log.info(
-                "Patient data (uid={}) sent to {}",
-                personData.getPersonUid(),
-                patientReportingOutputTopic);
-            log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
           }
+
+          String reportingKey = transformer.buildPatientKey(personData);
+          String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
+          kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
+          log.info(
+              "Patient data (uid={}) sent to {}",
+              personData.getPersonUid(),
+              patientReportingOutputTopic);
+          log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
 
           if (elasticSearchEnable) {
             String elasticKey = transformer.buildPatientKey(personData);
@@ -349,26 +339,19 @@ public class PersonService {
         throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUid);
       }
 
-      if (directWrite) {
-        // write directly to the database
-        authUsers.forEach(
-            authUser -> {
+      authUsers.forEach(
+          authUser -> {
+            if (directWrite) {
               nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-              postProcessingService.enqueue(userReportingOutputTopic, authUser.getAuthUserUid());
-            });
-      } else {
-        // publish events in kafka
-        authUsers.forEach(
-            authUser -> {
-              String jsonKey = transformer.buildUserKey(authUser);
-              String jsonValue = transformer.processData(authUser);
-              kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
-              log.info(
-                  "User data (uid={}) sent to {}",
-                  authUser.getAuthUserUid(),
-                  userReportingOutputTopic);
-            });
-      }
+            }
+            String jsonKey = transformer.buildUserKey(authUser);
+            String jsonValue = transformer.processData(authUser);
+            kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
+            log.info(
+                "User data (uid={}) sent to {}",
+                authUser.getAuthUserUid(),
+                userReportingOutputTopic);
+          });
     } catch (EntityNotFoundException ex) {
       throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
