@@ -18,8 +18,11 @@ services:
     volumes:
       - ./containers/db/initialize:/tmp/sql/initialize
       - ./bootstrap:/tmp/sql/bootstrap
+      # uncomment the below when bulk loading with testing-tools/functional-test
+      #- ./testing-tools/functional-test/out:/staging:ro
     ports:
       - 3433:1433
+    # increase the below value when adding large amounts of data to the local db
     mem_limit: 2.5G
 
   wildfly:
