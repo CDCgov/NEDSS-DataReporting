@@ -235,6 +235,37 @@ class TestRunStep:
         assert len(result.queries) == 1  # query 1 was never attempted
         assert db.select_calls == ["SELECT a"]
 
+    def test_skip_query_runs_setup_only(self, tmp_path):
+        step = _make_step(
+            tmp_path / "010-step",
+            setup="INSERT 1",
+            query="SELECT a",
+            expected={"0": [{"a": 1}]},
+        )
+        db = FakeDB()  # select() would return no rows -> query would fail
+        result = run_step(db, step, max_retry=1, retry_delay=0, skip_query=True)
+        assert result.passed is True
+        assert db.setup_calls == ["INSERT 1"]
+        assert db.select_calls == []
+        assert result.queries == []
+
+    def test_skip_query_does_not_require_query_files(self, tmp_path):
+        step = tmp_path / "010-step"
+        step.mkdir()
+        (step / "setup.sql").write_text("INSERT 1")
+        # no query.sql / expected.json
+        db = FakeDB()
+        result = run_step(db, step, max_retry=1, retry_delay=0, skip_query=True)
+        assert result.passed is True
+        assert db.setup_calls == ["INSERT 1"]
+
+    def test_skip_query_still_reports_setup_error(self, tmp_path):
+        step = _make_step(tmp_path / "010-step", expected={"0": [{"a": 1}]})
+        db = FakeDB(setup_error=RuntimeError("duplicate key"))
+        result = run_step(db, step, max_retry=1, retry_delay=0, skip_query=True)
+        assert result.passed is False
+        assert "duplicate key" in result.setup_error
+
     def test_select_exception_recorded(self, tmp_path):
         step = _make_step(tmp_path / "010-step", query="SELECT a", expected={"0": [{"a": 1}]})
 
@@ -414,6 +445,30 @@ class TestRunTest:
         result = run_test(db, test_dir, max_retry=1, retry_delay=0)
         assert result.passed is False
         assert [s.name for s in result.steps] == ["010-a"]  # 020-b never ran
+
+    def test_skip_query_runs_all_steps_without_selects(self, tmp_path):
+        test_dir = tmp_path / "mytest"
+        _make_step(test_dir / "010-a", query="SELECT a", expected={"0": [{"a": 1}]})
+        _make_step(test_dir / "020-b", query="SELECT b", expected={"0": [{"b": 2}]})
+        db = FakeDB()  # no query results needed
+        result = run_test(db, test_dir, max_retry=1, retry_delay=0, skip_query=True)
+        assert result.passed is True
+        assert [s.name for s in result.steps] == ["010-a", "020-b"]
+        assert len(db.setup_calls) == 2
+        assert db.select_calls == []
+
+    def test_skip_query_still_applies_remapper_to_setup(self, tmp_path):
+        test_dir = tmp_path / "interview"
+        step = test_dir / "010-step"
+        step.mkdir(parents=True)
+        (step / "setup.sql").write_text(SETUP_WITH_IDS)
+        db = FakeDB()
+        result = run_test(
+            db, test_dir, max_retry=1, retry_delay=0, new_start_id=1000014000, skip_query=True
+        )
+        assert result.passed is True
+        assert "1000014000" in db.setup_calls[0]
+        assert "1000004000" not in db.setup_calls[0]
 
     def test_no_steps_is_error(self, tmp_path):
         test_dir = tmp_path / "empty"
