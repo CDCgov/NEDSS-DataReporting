@@ -81,3 +81,6 @@ docker-compose.override.yml
 
 # One-off functional tests
 reporting-pipeline-service/src/test/resources/testData/manual/
+
+# functional-test --bulk staging (bind-mounted into nbs-mssql at /staging)
+testing-tools/functional-test/out/
