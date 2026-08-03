@@ -78,3 +78,6 @@ testing-tools/local-db-tracing/known_replay_associations.json
 # Local docker-compose overrides (e.g. comparison-fixtures fast-drain tuning), not for PR
 docker-compose.override.yaml
 docker-compose.override.yml
+
+# One-off functional tests
+reporting-pipeline-service/src/test/resources/testData/manual/
