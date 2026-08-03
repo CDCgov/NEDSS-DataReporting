@@ -39,7 +39,6 @@ flowchart TD
         DW -->|true| JpaSave["JPA save<br/>→ nrt_patient / nrt_provider / nrt_auth_user"]
         DW -->|false| KafkaPublish["Publish enriched JSON<br/>→ nrt.patient / nrt.provider / nrt.auth-user"]
         JpaSave -->|"always, even though the row<br/>was already saved via JPA"| KafkaPublish
-        KafkaPublish -->|"directWrite=false only"| KafkaConnect["Kafka-Connect JDBC Sink<br/>upserts nrt_* table"]
         KafkaPublish --> PPListener["PostProcessingService<br/>@KafkaListener on nrt.* topic"]
     end
 
