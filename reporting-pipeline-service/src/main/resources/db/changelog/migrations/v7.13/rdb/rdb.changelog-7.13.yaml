@@ -3288,10 +3288,18 @@ databaseChangeLog:
             path: db/changelog/migrations/v7.13/rdb/tables/262-alter_nrt_dead_letter_log.sql
             splitStatements: false
   - changeSet:
-      id: app-923-sp_case_lab_datamart_postprocessing
+      id: app-923-sp_case_lab_datamart_postprocessing-263
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/tables/263-alter-event_metric_inc.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/263-alter_event_metric_inc.sql
+            splitStatements: false
+  - changeSet:
+      id: app-923-sp_case_lab_datamart_postprocessing-264
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/tables/264-alter_lab_test_result.sql
             splitStatements: false
