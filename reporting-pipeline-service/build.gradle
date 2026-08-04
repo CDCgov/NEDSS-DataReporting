@@ -40,6 +40,12 @@ test {
       excludeTags 'Functional'
       excludeTags 'Unit'
     }
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 5005
+    }
     finalizedBy jacocoTestReport
 }
 
@@ -52,6 +58,12 @@ tasks.register("test-functional", Test) {
 
     useJUnitPlatform {
         includeTags "Functional"
+    }
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 5005
     }
     finalizedBy jacocoTestReport
 }
