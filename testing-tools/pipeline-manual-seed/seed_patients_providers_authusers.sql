@@ -1038,12 +1038,12 @@ BEGIN
             SELECT
                 CASE WHEN ABS(CHECKSUM(NEWID())) % 2 = 1 THEN 1 ELSE 0 END AS change_first,
                 CASE WHEN ABS(CHECKSUM(NEWID())) % 2 = 1 THEN 1 ELSE 0 END AS change_last,
-                (SELECT v FROM (VALUES (0,N'Jordan'),(1,N'Taylor'),(2,N'Morgan'),(3,N'Casey'),
-                                        (4,N'Avery'),(5,N'Riley'),(6,N'Quinn'),(7,N'Skyler')) AS t(i,v)
-                 WHERE t.i = ABS(CHECKSUM(NEWID())) % 8) AS new_first_nm,
-                (SELECT v FROM (VALUES (0,N'Reed'),(1,N'Foster'),(2,N'Nguyen'),(3,N'Patel'),
-                                        (4,N'Osei'),(5,N'Silva'),(6,N'Kowalski'),(7,N'Haddad')) AS t(i,v)
-                 WHERE t.i = ABS(CHECKSUM(NEWID())) % 8) AS new_last_nm
+                CASE ABS(CHECKSUM(NEWID())) % 8
+                    WHEN 0 THEN N'Jordan' WHEN 1 THEN N'Taylor' WHEN 2 THEN N'Morgan' WHEN 3 THEN N'Casey'
+                    WHEN 4 THEN N'Avery'  WHEN 5 THEN N'Riley'  WHEN 6 THEN N'Quinn'  ELSE N'Skyler' END AS new_first_nm,
+                CASE ABS(CHECKSUM(NEWID())) % 8
+                    WHEN 0 THEN N'Reed' WHEN 1 THEN N'Foster' WHEN 2 THEN N'Nguyen'   WHEN 3 THEN N'Patel'
+                    WHEN 4 THEN N'Osei' WHEN 5 THEN N'Silva'  WHEN 6 THEN N'Kowalski' ELSE N'Haddad' END AS new_last_nm
         ) r
         WHERE pn.[person_name_seq] = 1;
         PRINT CONCAT(N'  Person_name rows evaluated for name change: ', @@ROWCOUNT);
@@ -1098,8 +1098,9 @@ BEGIN
         CROSS APPLY (
             SELECT
                 CASE WHEN ABS(CHECKSUM(NEWID())) % 2 = 1 THEN 1 ELSE 0 END AS change,
-                (SELECT v FROM (VALUES (0,N'2106-3'),(1,N'2028-9'),(2,N'2054-5'),(3,N'1002-5'),(4,N'U')) AS t(i,v)
-                 WHERE t.i = ABS(CHECKSUM(NEWID())) % 5) AS new_code
+                CASE ABS(CHECKSUM(NEWID())) % 5
+                    WHEN 0 THEN N'2106-3' WHEN 1 THEN N'2028-9' WHEN 2 THEN N'2054-5'
+                    WHEN 3 THEN N'1002-5' ELSE N'U' END AS new_code
         ) r;
         PRINT CONCAT(N'  Person_race rows evaluated for reassignment (single-race persons only): ', @@ROWCOUNT);
 
@@ -1120,15 +1121,15 @@ BEGIN
         CROSS APPLY (
             SELECT
                 CASE WHEN ABS(CHECKSUM(NEWID())) % 2 = 1 THEN 1 ELSE 0 END AS change,
-                (SELECT v FROM (VALUES (0,N'118 Willow Bend'),(1,N'27 Chestnut Way'),(2,N'860 Magnolia Ct'),
-                                        (3,N'44 Sunrise Trl'),(4,N'509 Ridgeview Dr')) AS t(i,v)
-                 WHERE t.i = ABS(CHECKSUM(NEWID())) % 5) AS new_addr,
-                (SELECT v FROM (VALUES (0,N'Augusta'),(1,N'Columbus'),(2,N'Roswell'),
-                                        (3,N'Marietta'),(4,N'Albany')) AS t(i,v)
-                 WHERE t.i = ABS(CHECKSUM(NEWID())) % 5) AS new_city,
-                (SELECT v FROM (VALUES (0,N'30901'),(1,N'31901'),(2,N'30075'),
-                                        (3,N'30060'),(4,N'31701')) AS t(i,v)
-                 WHERE t.i = ABS(CHECKSUM(NEWID())) % 5) AS new_zip
+                CASE ABS(CHECKSUM(NEWID())) % 5
+                    WHEN 0 THEN N'118 Willow Bend' WHEN 1 THEN N'27 Chestnut Way' WHEN 2 THEN N'860 Magnolia Ct'
+                    WHEN 3 THEN N'44 Sunrise Trl'  ELSE N'509 Ridgeview Dr' END AS new_addr,
+                CASE ABS(CHECKSUM(NEWID())) % 5
+                    WHEN 0 THEN N'Augusta' WHEN 1 THEN N'Columbus' WHEN 2 THEN N'Roswell'
+                    WHEN 3 THEN N'Marietta' ELSE N'Albany' END AS new_city,
+                CASE ABS(CHECKSUM(NEWID())) % 5
+                    WHEN 0 THEN N'30901' WHEN 1 THEN N'31901' WHEN 2 THEN N'30075'
+                    WHEN 3 THEN N'30060' ELSE N'31701' END AS new_zip
         ) r
         WHERE pl.[record_status_cd] = N'ACTIVE';
         PRINT CONCAT(N'  Postal_locator rows evaluated for address change: ', @@ROWCOUNT);
