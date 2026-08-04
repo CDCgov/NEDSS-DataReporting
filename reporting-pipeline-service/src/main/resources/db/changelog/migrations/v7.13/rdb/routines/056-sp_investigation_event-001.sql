@@ -6,7 +6,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_investigat
     END
 GO
 
-CREATE PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
+CREATE PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -15,23 +15,26 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'sp_investigation_event'
-               , 'START'
-               , 0
-               , LEFT('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT(@phc_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                   , 'Investigation PRE-Processing Event'
+                   , 'sp_investigation_event'
+                   , 'START'
+                   , 0
+                   , LEFT('Pre ID-' + @phc_id_list, 199)
+                   , 0
+                   , LEFT(@phc_id_list, 199));
+        END;
 
         /*Complete Investigation section*/
          SELECT results.public_health_case_uid,
@@ -1029,23 +1032,26 @@ BEGIN
 
         -- select * from dbo.Investigation_Dim_Event;
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'sp_investigation_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT(@phc_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                   , 'Investigation PRE-Processing Event'
+                   , 'sp_investigation_event'
+                   , 'COMPLETE'
+                   , 0
+                   , LEFT('Pre ID-' + @phc_id_list, 199)
+                   , 0
+                   , LEFT(@phc_id_list, 199));
+        END;
 
     END TRY
     BEGIN CATCH

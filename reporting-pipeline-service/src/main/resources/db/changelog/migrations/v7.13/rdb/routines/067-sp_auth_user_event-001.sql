@@ -6,7 +6,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_auth_user_event @user_id_list nvarchar(max)
+CREATE PROCEDURE dbo.sp_auth_user_event @user_id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -15,23 +15,26 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Auth_User PRE-Processing Event'
-               , 'sp_auth_user_event'
-               , 'START'
-               , 0
-               , LEFT('Pre ID-' + @user_id_list, 199)
-               , 0
-               , LEFT(@user_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                   , 'Auth_User PRE-Processing Event'
+                   , 'sp_auth_user_event'
+                   , 'START'
+                   , 0
+                   , LEFT('Pre ID-' + @user_id_list, 199)
+                   , 0
+                   , LEFT(@user_id_list, 199));
+        END;
 
         SELECT a.auth_user_uid,
                a.user_id,
@@ -48,22 +51,25 @@ BEGIN
         FROM nbs_odse.dbo.Auth_user a WITH (NOLOCK)
         WHERE a.auth_user_uid in (SELECT value FROM STRING_SPLIT(@user_id_list, ','));
 
-        INSERT INTO [dbo].[job_flow_log] ( batch_id
-                                                      , [Dataflow_Name]
-                                                      , [package_Name]
-                                                      , [Status_Type]
-                                                      , [step_number]
-                                                      , [step_name]
-                                                      , [row_count]
-                                                      , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Auth_User PRE-Processing Event'
-               , 'sp_auth_user_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT('Pre ID-' + @user_id_list, 199)
-               , 0
-               , LEFT(@user_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] ( batch_id
+                                                          , [Dataflow_Name]
+                                                          , [package_Name]
+                                                          , [Status_Type]
+                                                          , [step_number]
+                                                          , [step_name]
+                                                          , [row_count]
+                                                          , [Msg_Description1])
+            VALUES ( @batch_id
+                   , 'Auth_User PRE-Processing Event'
+                   , 'sp_auth_user_event'
+                   , 'COMPLETE'
+                   , 0
+                   , LEFT('Pre ID-' + @user_id_list, 199)
+                   , 0
+                   , LEFT(@user_id_list, 199));
+        END;
 
     END TRY
     BEGIN CATCH

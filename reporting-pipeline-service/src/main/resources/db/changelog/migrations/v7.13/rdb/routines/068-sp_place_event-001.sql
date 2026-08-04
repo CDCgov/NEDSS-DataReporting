@@ -6,7 +6,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_place_event @id_list nvarchar(max)
+CREATE PROCEDURE dbo.sp_place_event @id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -15,23 +15,26 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[Msg_Description1])
-        VALUES (@batch_id
-               ,'Place PRE-Processing Event'
-               ,'sp_place_event'
-               ,'START'
-               ,0
-               ,LEFT('Pre ID-' + @id_list, 199)
-               ,0
-               ,LEFT(@id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id
+            ,[Dataflow_Name]
+            ,[package_Name]
+            ,[Status_Type]
+            ,[step_number]
+            ,[step_name]
+            ,[row_count]
+            ,[Msg_Description1])
+            VALUES (@batch_id
+                   ,'Place PRE-Processing Event'
+                   ,'sp_place_event'
+                   ,'START'
+                   ,0
+                   ,LEFT('Pre ID-' + @id_list, 199)
+                   ,0
+                   ,LEFT(@id_list, 199));
+        END;
 
 
         SELECT
@@ -122,22 +125,25 @@ BEGIN
                                            FOR json path, INCLUDE_NULL_VALUES) AS tele) AS tele) AS nested
         WHERE p.place_uid in (SELECT value FROM STRING_SPLIT(@id_list, ','));
 
-        INSERT INTO [dbo].[job_flow_log] (batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-                                                      ,[Msg_Description1])
-        VALUES (@batch_id
-               ,'Place PRE-Processing Event'
-               ,'sp_place_event'
-               ,'COMPLETE'
-               ,0
-               ,LEFT('Pre ID-' + @id_list, 199)
-               ,0
-               ,LEFT(@id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+                                                          ,[Msg_Description1])
+            VALUES (@batch_id
+                   ,'Place PRE-Processing Event'
+                   ,'sp_place_event'
+                   ,'COMPLETE'
+                   ,0
+                   ,LEFT('Pre ID-' + @id_list, 199)
+                   ,0
+                   ,LEFT(@id_list, 199));
+        END;
 
     END TRY
     BEGIN CATCH

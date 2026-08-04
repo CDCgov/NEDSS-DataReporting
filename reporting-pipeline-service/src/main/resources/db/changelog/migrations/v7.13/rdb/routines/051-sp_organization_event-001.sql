@@ -6,7 +6,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_organizati
     END
 GO
 
-CREATE PROCEDURE dbo.sp_organization_event @org_id_list nvarchar(max)
+CREATE PROCEDURE dbo.sp_organization_event @org_id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -14,27 +14,30 @@ BEGIN
 
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
-        INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[Msg_Description1]
-        )
-        VALUES (
-                 @batch_id
-               ,'Organization PRE-Processing Event'
-               ,'sp_organization_event'
-               ,'START'
-               ,0
-               ,LEFT('Pre ID-' + @org_id_list,199)
-               ,0
-               ,LEFT(@org_id_list,199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (
+              batch_id
+            ,[Dataflow_Name]
+            ,[package_Name]
+            ,[Status_Type]
+            ,[step_number]
+            ,[step_name]
+            ,[row_count]
+            ,[Msg_Description1]
+            )
+            VALUES (
+                     @batch_id
+                   ,'Organization PRE-Processing Event'
+                   ,'sp_organization_event'
+                   ,'START'
+                   ,0
+                   ,LEFT('Pre ID-' + @org_id_list,199)
+                   ,0
+                   ,LEFT(@org_id_list,199)
+                   );
+        END;
 
         SELECT o.organization_uid,
                LTRIM(RTRIM(SUBSTRING(o.description,1,1000))) as description,
@@ -154,27 +157,30 @@ BEGIN
                  LEFT JOIN nbs_srte.dbo.NAICS_INDUSTRY_CODE naics WITH (NOLOCK) ON (NAICS.CODE = o.STANDARD_INDUSTRY_CLASS_CD)
         WHERE o.organization_uid in (SELECT value FROM STRING_SPLIT(@org_id_list, ','))
 
-        INSERT INTO [dbo].[job_flow_log]
-        (
-          batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[Msg_Description1]
-        )
-        VALUES (
-                 @batch_id
-               ,'Organization PRE-Processing Event'
-               ,'sp_organization_event'
-               ,'COMPLETE'
-               ,0
-               ,LEFT('Pre ID-' + @org_id_list,199)
-               ,0
-               ,LEFT(@org_id_list,199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (
+              batch_id
+            ,[Dataflow_Name]
+            ,[package_Name]
+            ,[Status_Type]
+            ,[step_number]
+            ,[step_name]
+            ,[row_count]
+            ,[Msg_Description1]
+            )
+            VALUES (
+                     @batch_id
+                   ,'Organization PRE-Processing Event'
+                   ,'sp_organization_event'
+                   ,'COMPLETE'
+                   ,0
+                   ,LEFT('Pre ID-' + @org_id_list,199)
+                   ,0
+                   ,LEFT(@org_id_list,199)
+                   );
+        END;
 
     END TRY
 

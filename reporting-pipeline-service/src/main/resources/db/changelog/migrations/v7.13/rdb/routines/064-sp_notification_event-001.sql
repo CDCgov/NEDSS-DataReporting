@@ -6,7 +6,7 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_notificati
     END
 GO
 
-CREATE PROCEDURE [dbo].[sp_notification_event] @notification_list nvarchar(max)
+CREATE PROCEDURE [dbo].[sp_notification_event] @notification_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -16,25 +16,28 @@ BEGIN
 
 
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) as bigint);
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES (
-                 @batch_id
-               , 'Notification PRE-Processing Event'
-               , 'sp_notification_event'
-               , 'START'
-               , 0
-               , LEFT ('Pre ID-' + @notification_list, 199)
-               , 0
-               , LEFT (@notification_list, 199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES (
+                     @batch_id
+                   , 'Notification PRE-Processing Event'
+                   , 'sp_notification_event'
+                   , 'START'
+                   , 0
+                   , LEFT ('Pre ID-' + @notification_list, 199)
+                   , 0
+                   , LEFT (@notification_list, 199)
+                   );
+        END;
 
 
         --Payload structure
@@ -216,25 +219,28 @@ BEGIN
 
 
 
-        INSERT INTO [dbo].[job_flow_log]
-        (      batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES (
-                 @batch_id
-               , 'Notification PRE-Processing Event'
-               , 'sp_notification_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT ('Pre ID-' + @notification_list, 199)
-               , 0
-               , LEFT (@notification_list, 199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (      batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES (
+                     @batch_id
+                   , 'Notification PRE-Processing Event'
+                   , 'sp_notification_event'
+                   , 'COMPLETE'
+                   , 0
+                   , LEFT ('Pre ID-' + @notification_list, 199)
+                   , 0
+                   , LEFT (@notification_list, 199)
+                   );
+        END;
 
     END TRY
 

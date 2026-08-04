@@ -6,7 +6,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE [dbo].[sp_observation_event] @obs_id_list nvarchar(max)
+CREATE PROCEDURE [dbo].[sp_observation_event] @obs_id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -15,26 +15,29 @@ BEGIN
         DECLARE @batch_id BIGINT;
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) AS bigint);
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-                                                      ,[Msg_Description1]
-        )
-        VALUES (
-                 @batch_id
-               ,'Observation PRE-Processing Event'
-               ,'sp_observation_event'
-               ,'START'
-               ,0
-               ,LEFT('Pre ID-' + @obs_id_list,199)
-               ,0
-               ,LEFT(@obs_id_list,199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+                                                          ,[Msg_Description1]
+            )
+            VALUES (
+                     @batch_id
+                   ,'Observation PRE-Processing Event'
+                   ,'sp_observation_event'
+                   ,'START'
+                   ,0
+                   ,LEFT('Pre ID-' + @obs_id_list,199)
+                   ,0
+                   ,LEFT(@obs_id_list,199)
+                   );
+        END;
 
         SELECT
             act.act_uid,
@@ -443,25 +446,28 @@ BEGIN
 
         -- select * from dbo.Observation_Dim_Event;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (     batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES (
-                 @batch_id
-               , 'Observation PRE-Processing Event'
-               , 'sp_observation_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT ('Pre ID-' + @obs_id_list, 199)
-               , 0
-               , LEFT (@obs_id_list, 199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (     batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES (
+                     @batch_id
+                   , 'Observation PRE-Processing Event'
+                   , 'sp_observation_event'
+                   , 'COMPLETE'
+                   , 0
+                   , LEFT ('Pre ID-' + @obs_id_list, 199)
+                   , 0
+                   , LEFT (@obs_id_list, 199)
+                   );
+        END;
 
     END TRY
 
