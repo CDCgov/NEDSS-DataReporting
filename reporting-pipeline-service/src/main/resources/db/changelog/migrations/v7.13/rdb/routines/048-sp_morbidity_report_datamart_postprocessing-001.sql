@@ -73,6 +73,45 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_EVENT_INIT';
 
+        /*
+            Parse each UID param ONCE into a typed bigint temp table with a clustered PK,
+            then probe with EXISTS. Replaces 7 per-row STRING_SPLIT re-parses / implicit converts.
+        */
+        IF OBJECT_ID('tempdb..#uid_obs') IS NOT NULL DROP TABLE #uid_obs;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_obs
+        FROM STRING_SPLIT(@obs_uids, ',') ss
+        ;
+        ALTER TABLE #uid_obs ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_pat') IS NOT NULL DROP TABLE #uid_pat;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_pat
+        FROM STRING_SPLIT(@pat_uids, ',') ss
+        ;
+        ALTER TABLE #uid_pat ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_prov') IS NOT NULL DROP TABLE #uid_prov;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_prov
+        FROM STRING_SPLIT(@prov_uids, ',') ss
+        ;
+        ALTER TABLE #uid_prov ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_org') IS NOT NULL DROP TABLE #uid_org;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_org
+        FROM STRING_SPLIT(@org_uids, ',') ss
+        ;
+        ALTER TABLE #uid_org ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_inv') IS NOT NULL DROP TABLE #uid_inv;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_inv
+        FROM STRING_SPLIT(@inv_uids, ',') ss
+        ;
+        ALTER TABLE #uid_inv ADD PRIMARY KEY CLUSTERED (u);
+
         SELECT
             MR.MORB_RPT_KEY AS MORBIDITY_REPORT_KEY,
             MRE.PATIENT_KEY AS PERSON_KEY,
@@ -214,19 +253,19 @@ BEGIN
                  LEFT JOIN dbo.EVENT_METRIC EM WITH (NOLOCK)
                            ON MR.MORB_RPT_UID = EM.EVENT_UID
         WHERE
-            (inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@inv_uids, ','))
+            (   EXISTS (SELECT 1 FROM #uid_inv  z WHERE z.u = inv.CASE_UID)
                 OR
-             pat.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_pat  z WHERE z.u = pat.PATIENT_UID)
                 OR
-             prov.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = prov.PROVIDER_UID)
                 OR
-             rep.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = rep.PROVIDER_UID)
                 OR
-             rep_fac.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_org  z WHERE z.u = rep_fac.ORGANIZATION_UID)
                 OR
-             hsptl.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_org  z WHERE z.u = hsptl.ORGANIZATION_UID)
                 OR
-             CAST(mr.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_obs  z WHERE z.u = CAST(mr.MORB_RPT_UID AS bigint))
                 )
           AND MR.MORB_RPT_KEY <> 1
           AND MR.RECORD_STATUS_CD = 'ACTIVE';
