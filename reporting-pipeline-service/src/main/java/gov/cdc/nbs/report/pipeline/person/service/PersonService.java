@@ -343,8 +343,9 @@ public class PersonService {
           authUser -> {
             if (directWrite) {
               nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-                log.info(
-                        "Authorized user data (uid={}) directly written to nrt_patient", authUser.getUserId());
+              log.info(
+                  "Authorized user data (uid={}) directly written to nrt_patient",
+                  authUser.getUserId());
             }
             String jsonKey = transformer.buildUserKey(authUser);
             String jsonValue = transformer.processData(authUser);
