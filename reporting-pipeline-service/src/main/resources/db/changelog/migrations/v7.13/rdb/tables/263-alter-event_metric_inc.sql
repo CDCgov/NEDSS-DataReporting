@@ -15,4 +15,3 @@ BEGIN
             LAST_CHG_TIME
         );
 END
-GO
