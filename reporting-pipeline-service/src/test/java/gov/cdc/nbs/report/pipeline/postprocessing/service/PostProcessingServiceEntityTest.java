@@ -14,16 +14,21 @@ import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -55,11 +60,12 @@ class PostProcessingServiceEntityTest {
                 postProcRepositoryMock,
                 investigationRepositoryMock,
                 datamartProcessor,
+                new RetryTopicResolver(),
                 new CustomMetrics(new SimpleMeterRegistry())));
+    PostProcessingTestUtils.configureNrtTopics(postProcessingServiceMock);
     postProcessingServiceMock.initMetrics();
     datamartProcessor.initMetrics();
 
-    postProcessingServiceMock.setInvestigationTopic("dummy_investigation");
     postProcessingServiceMock.setServiceEnable(true);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
@@ -102,6 +108,41 @@ class PostProcessingServiceEntityTest {
     postProcessingServiceMock.processNrtMessage(topic, key, key);
 
     assertTrue(postProcessingServiceMock.idCache.isEmpty());
+  }
+
+  @ParameterizedTest(name = "{0} retry-{3}")
+  @MethodSource("retryTopicMappings")
+  void testRetryTopicUsesLogicalCacheKey(
+      String logicalTopic, String uidField, boolean textualUid, int retryIndex) {
+    String uid = textualUid ? "TEST_CD" : "123";
+    String key =
+        "{\"payload\":{\"" + uidField + "\":" + (textualUid ? "\"" + uid + "\"" : uid) + "}}";
+    String physicalTopic = logicalTopic + "_retry-" + retryIndex;
+    ConsumerRecord<String, String> record =
+        PostProcessingTestUtils.retryRecord(physicalTopic, logicalTopic, key, key);
+
+    postProcessingServiceMock.processNrtMessage(record);
+
+    assertFalse(postProcessingServiceMock.idCache.containsKey(physicalTopic));
+    assertFalse(postProcessingServiceMock.cdCache.containsKey(physicalTopic));
+    if (textualUid) {
+      assertEquals(uid, postProcessingServiceMock.cdCache.get(logicalTopic).element());
+    } else {
+      assertEquals(
+          Long.valueOf(uid), postProcessingServiceMock.idCache.get(logicalTopic).element());
+    }
+  }
+
+  @Test
+  void testRetryTopicRejectsUnknownOriginalTopic() {
+    String key = "{\"payload\":{\"patient_uid\":123}}";
+    ConsumerRecord<String, String> record =
+        PostProcessingTestUtils.retryRecord("dummy_patient_retry-0", "unknown_topic", key, key);
+
+    assertThrows(
+        NoSuchElementException.class, () -> postProcessingServiceMock.processNrtMessage(record));
+    assertTrue(postProcessingServiceMock.idCache.isEmpty());
+    assertTrue(postProcessingServiceMock.cdCache.isEmpty());
   }
 
   @Test
@@ -883,7 +924,7 @@ class PostProcessingServiceEntityTest {
   @Test
   void testPostProcessNoUserProfileUidException() {
     String userProfileKey = "{\"payload\":{}}";
-    String topic = "dummy_user_profile";
+    String topic = "dummy_auth_user";
 
     RuntimeException ex =
         assertThrows(
@@ -1024,15 +1065,46 @@ class PostProcessingServiceEntityTest {
   void testPostProcessUnknownTopic(String key) {
     String topic = "dummy_topic";
 
-    postProcessingServiceMock.processNrtMessage(topic, key, key);
-    postProcessingServiceMock.processCachedIds();
+    NoSuchElementException exception =
+        assertThrows(
+            NoSuchElementException.class,
+            () -> postProcessingServiceMock.processNrtMessage(topic, key, key));
 
-    List<ILoggingEvent> logs = listAppender.list;
-    assertTrue(
-        logs.get(2)
-            .getFormattedMessage()
-            .contains("Unknown topic: " + topic + " cannot be processed"));
+    assertEquals("Received data from an unknown topic: " + topic, exception.getMessage());
+    assertTrue(postProcessingServiceMock.idCache.isEmpty());
+    assertTrue(postProcessingServiceMock.cdCache.isEmpty());
   }
+
+  private static Stream<Arguments> retryTopicMappings() {
+    return Stream.of(
+            new TopicMapping(
+                PostProcessingTestUtils.INVESTIGATION_TOPIC, "public_health_case_uid", false),
+            new TopicMapping(PostProcessingTestUtils.ORGANIZATION_TOPIC, "organization_uid", false),
+            new TopicMapping(PostProcessingTestUtils.PATIENT_TOPIC, "patient_uid", false),
+            new TopicMapping(PostProcessingTestUtils.PROVIDER_TOPIC, "provider_uid", false),
+            new TopicMapping(PostProcessingTestUtils.NOTIFICATION_TOPIC, "notification_uid", false),
+            new TopicMapping(
+                PostProcessingTestUtils.CASE_MANAGEMENT_TOPIC, "public_health_case_uid", false),
+            new TopicMapping(PostProcessingTestUtils.INTERVIEW_TOPIC, "interview_uid", false),
+            new TopicMapping(PostProcessingTestUtils.LDF_DATA_TOPIC, "ldf_uid", false),
+            new TopicMapping(PostProcessingTestUtils.OBSERVATION_TOPIC, "observation_uid", false),
+            new TopicMapping(PostProcessingTestUtils.PLACE_TOPIC, "place_uid", false),
+            new TopicMapping(PostProcessingTestUtils.AUTH_USER_TOPIC, "auth_user_uid", false),
+            new TopicMapping(PostProcessingTestUtils.CONTACT_TOPIC, "contact_uid", false),
+            new TopicMapping(PostProcessingTestUtils.TREATMENT_TOPIC, "treatment_uid", false),
+            new TopicMapping(PostProcessingTestUtils.VACCINATION_TOPIC, "vaccination_uid", false),
+            new TopicMapping(
+                PostProcessingTestUtils.STATE_DEFINED_FIELD_METADATA_TOPIC, "ldf_uid", false),
+            new TopicMapping(PostProcessingTestUtils.NBS_PAGE_TOPIC, "nbs_page_uid", false),
+            new TopicMapping(PostProcessingTestUtils.CONDITION_CODE_TOPIC, "condition_cd", true))
+        .flatMap(
+            topic ->
+                Stream.of(
+                    Arguments.of(topic.logicalTopic(), topic.uidField(), topic.textualUid(), 0),
+                    Arguments.of(topic.logicalTopic(), topic.uidField(), topic.textualUid(), 1)));
+  }
+
+  private record TopicMapping(String logicalTopic, String uidField, boolean textualUid) {}
 
   @Test
   void testShutdown() {
