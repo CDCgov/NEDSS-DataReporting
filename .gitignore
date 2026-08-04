@@ -79,8 +79,5 @@ testing-tools/local-db-tracing/known_replay_associations.json
 docker-compose.override.yaml
 docker-compose.override.yml
 
-# One-off functional tests
-reporting-pipeline-service/src/test/resources/testData/manual/
-
 # functional-test --bulk staging (bind-mounted into nbs-mssql at /staging)
 testing-tools/functional-test/out/
