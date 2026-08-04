@@ -7,18 +7,17 @@
                 dbo.LAB100 and reconciles inactive/removed source records.
 
    Parameters:
-     @labtestuids            Comma-delimited list of dbo.LAB_TEST.lab_test_uid
-                              values to process for this batch. Only rows with
-                              LAB_TEST_TYPE = 'Result' (plus each row's parent
-                              Order) are considered.
-     @debug                  1 = emit intermediate result sets for every temp
-                              table, for troubleshooting.
-                              0 = normal operation (default).
+     @labtestuids   Comma-delimited list of dbo.LAB_TEST.lab_test_uid values
+                     to process for this batch. Only rows with
+                     LAB_TEST_TYPE = 'Result' (plus each row's parent Order)
+                     are considered.
+     @debug          1 = emit intermediate result sets for every temp table,
+                     for troubleshooting.
+                     0 = normal operation (default).
 
    Returns:     A single result row describing the outcome (empty on success;
                 populated with error detail on failure). Per-step row counts
                 are written to dbo.JOB_FLOW_LOG for observability.
-
    ============================================================================= */
 IF EXISTS (
     SELECT * FROM sysobjects
@@ -45,9 +44,7 @@ BEGIN
 
     BEGIN TRY
 
-        -- ---------------------------------------------------------------
-        -- Step: batch start marker
-        -- ---------------------------------------------------------------
+        -- Log the start of the batch.
         SET @ProcStepNo = 1;
         SET @ProcStepName = 'SP_Start';
 
@@ -56,12 +53,9 @@ BEGIN
         VALUES
             (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
 
-        -- ---------------------------------------------------------------
-        -- Step: base order + result rows for this batch
-        -- Pulls every LAB_TEST row for the requested UIDs plus, for any
-        -- Result row, its parent Order row (so a result can never be
-        -- processed without its order context).
-        -- ---------------------------------------------------------------
+        -- Build the base working set: every LAB_TEST row for the requested
+        -- UIDs, plus, for each Result row, its parent Order row, so a
+        -- result is never processed without its order context.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTEST_LABTESTRESULT';
 
@@ -110,9 +104,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTEST_LABTESTRESULT' AS step, * FROM #TMP_LABTEST_LABTESTRESULT;
 
-        -- ---------------------------------------------------------------
-        -- Step: isolate the Order-side rows and shape order-specific fields
-        -- ---------------------------------------------------------------
+        -- Split off the Order-side rows and project order-specific fields.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTEST_ORDER';
 
@@ -152,9 +144,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTEST_ORDER' AS step, * FROM #TMP_LABTEST_ORDER;
 
-        -- ---------------------------------------------------------------
-        -- Step: isolate the Result-side rows and shape result-specific fields
-        -- ---------------------------------------------------------------
+        -- Split off the Result-side rows and project result-specific fields.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTEST_RESULT';
 
@@ -207,9 +197,8 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTEST_RESULT' AS step, * FROM #TMP_LABTEST_RESULT;
 
-        -- ---------------------------------------------------------------
-        -- Step: exclude results/orders tied to an inactive morbidity report
-        -- ---------------------------------------------------------------
+        -- Identify and exclude orders/results tied to a morbidity report
+        -- that has since been marked INACTIVE.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_DELETEDMORBS';
 
@@ -237,10 +226,8 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_DELETEDMORBS' AS step, * FROM #TMP_DELETEDMORBS;
 
-        -- ---------------------------------------------------------------
-        -- Step: normalize/decode raw result values for the batch's result
-        -- groups (unescape XML entities, build display strings)
-        -- ---------------------------------------------------------------
+        -- Normalize raw result values for this batch's result groups:
+        -- decode escaped XML entities and build a combined display string.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_RESULT_VALMODIFIED';
 
@@ -281,35 +268,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_RESULT_VALMODIFIED' AS step, * FROM #TMP_LAB_RESULT_VALMODIFIED;
 
-        -- ---------------------------------------------------------------
-        -- Step: attach normalized result values to their result rows
-        -- ---------------------------------------------------------------
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'GENERATING TMP_LABTEST_RESULTS_VAL';
-
-        IF OBJECT_ID('tempdb..#TMP_LABTEST_RESULTS_VAL', 'U') IS NOT NULL
-            DROP TABLE #TMP_LABTEST_RESULTS_VAL;
-
-        SELECT
-            ltr.*, ltrv.*
-        INTO #TMP_LABTEST_RESULTS_VAL
-        FROM #TMP_LABTEST_RESULT ltr
-            LEFT OUTER JOIN #TMP_LAB_RESULT_VALMODIFIED ltrv
-                ON ltr.TEST_RESULT_GRP_KEY = ltrv.TEST_RESULT_GRP_KEY_VAL;
-
-        ALTER TABLE #TMP_LABTEST_RESULTS_VAL DROP COLUMN TEST_RESULT_GRP_KEY_VAL;
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        IF @debug = 1 SELECT 'TMP_LABTEST_RESULTS_VAL' AS step, * FROM #TMP_LABTEST_RESULTS_VAL;
-
-        -- ---------------------------------------------------------------
-        -- Step: pull comments tied to this batch's lab tests
-        -- ---------------------------------------------------------------
+        -- Pull comment records tied to this batch's lab tests.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_RESULT_COMMENT';
 
@@ -338,45 +297,38 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_RESULT_COMMENT' AS step, * FROM #TMP_LAB_RESULT_COMMENT;
 
-        -- ---------------------------------------------------------------
-        -- Step: attach comments to their result+value rows
-        -- ---------------------------------------------------------------
+        -- Attach normalized values and comments to each result row, and
+        -- derive the result's parent order UID.
         SET @ProcStepNo += 1;
-        SET @ProcStepName = 'GENERATING TMP_LABTEST_RESULTS_VAL_COMMENT';
+        SET @ProcStepName = 'GENERATING TMP_LABTEST_RESULT_ENRICHED';
 
-        IF OBJECT_ID('tempdb..#TMP_LABTEST_RESULTS_VAL_COMMENT', 'U') IS NOT NULL
-            DROP TABLE #TMP_LABTEST_RESULTS_VAL_COMMENT;
-
-        SELECT lrv.*, tlrc.LAB_RESULT_COMMENTS
-        INTO #TMP_LABTEST_RESULTS_VAL_COMMENT
-        FROM #TMP_LABTEST_RESULTS_VAL lrv
-            LEFT OUTER JOIN #TMP_LAB_RESULT_COMMENT tlrc
-                ON tlrc.RESULT_COMMENT_GRP_KEY = lrv.RESULT_COMMENT_GRP_KEY;
-
-        ALTER TABLE #TMP_LABTEST_RESULTS_VAL_COMMENT DROP COLUMN RESULT_COMMENT_GRP_KEY, LAB_RPT_DT_KEY;
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        IF @debug = 1 SELECT 'TMP_LABTEST_RESULTS_VAL_COMMENT' AS step, * FROM #TMP_LABTEST_RESULTS_VAL_COMMENT;
-
-        -- ---------------------------------------------------------------
-        -- Step: derive each result's parent order UID
-        -- ---------------------------------------------------------------
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'GENERATING TMP_LABTEST_UPDATED';
-
-        IF OBJECT_ID('tempdb..#TMP_LABTEST_UPDATED', 'U') IS NOT NULL
-            DROP TABLE #TMP_LABTEST_UPDATED;
+        IF OBJECT_ID('tempdb..#TMP_LABTEST_RESULT_ENRICHED', 'U') IS NOT NULL
+            DROP TABLE #TMP_LABTEST_RESULT_ENRICHED;
 
         SELECT
-            lrvc1.*,
-            PARENT_TEST_PNTR AS ORDERED_TEST_UID
-        INTO #TMP_LABTEST_UPDATED
-        FROM #TMP_LABTEST_RESULTS_VAL_COMMENT lrvc1;
+            ltr.LAB_TEST_KEY, ltr.LAB_RPT_LOCAL_ID, ltr.TEST_METHOD_CD, ltr.TEST_METHOD_CD_DESC,
+            ltr.RESULTED_LAB_TEST_CD, ltr.ELR_IND, ltr.RESULTED_RPT_UID, ltr.RESULTED_TEST,
+            ltr.INTERPRETATION_FLG, ltr.LAB_RPT_RECEIVED_BY_PH_DT, ltr.LAB_RPT_CREATED_DT,
+            ltr.LAB_RPT_CREATED_BY, ltr.LAB_TEST_DT, ltr.LAB_RPT_LAST_UPDATE_DT, ltr.JURISDICTION_CD,
+            ltr.LAB_TEST_CD_SYS_NM, ltr.JURISDICTION_NM, ltr.OID, ltr.ACCESSION_NBR, ltr.SPECIMEN_SRC,
+            ltr.SPECIMEN_DESC, ltr.SPECIMEN_SITE, ltr.SPECIMEN_SITE_DESC, ltr.SPECIMEN_COLLECTION_DT,
+            ltr.RESULTED_TEST_UID, ltr.ROOT_ORDERED_TEST_PNTR, ltr.PARENT_TEST_PNTR,
+            ltr.TEST_RESULT_GRP_KEY, ltr.PERFORMING_LAB_KEY, ltr.LAB_RPT_LAST_UPDATE_BY,
+            ltr.ALT_LAB_TEST_CD, ltr.ALT_LAB_TEST_CD_DESC, ltr.ALT_LAB_TEST_CD_SYS_CD, ltr.ALT_LAB_TEST_CD_SYS_NM,
+            ltr.RESULTED_LAB_TEST_CD_DESC, ltr.RESULTEDTEST_CD_SYS_NM, ltr.RESULT_TEST_METHOD_CD,
+            ltr.RESULTED_LAB_TEST_KEY, ltr.lab_test_type,
+            ltrv.RESULT, ltrv.TEST_RESULT_VAL_CD, ltrv.TEST_RESULT_VAL_CD_SYS_NM, ltrv.LOCAL_RESULT_CODE,
+            ltrv.LOCAL_RESULT_NAME, ltrv.RESULT_REF_RANGE_FRM, ltrv.RESULT_REF_RANGE_TO,
+            ltrv.RESULTEDTEST_VAL_CD, ltrv.RESULTEDTEST_VAL_CD_DESC, ltrv.LAB_RESULT_TXT_VAL,
+            ltrv.NUMERIC_RESULT_WITHUNITS,
+            tlrc.LAB_RESULT_COMMENTS,
+            ltr.PARENT_TEST_PNTR AS ORDERED_TEST_UID
+        INTO #TMP_LABTEST_RESULT_ENRICHED
+        FROM #TMP_LABTEST_RESULT ltr
+            LEFT OUTER JOIN #TMP_LAB_RESULT_VALMODIFIED ltrv
+                ON ltr.TEST_RESULT_GRP_KEY = ltrv.TEST_RESULT_GRP_KEY_VAL
+            LEFT OUTER JOIN #TMP_LAB_RESULT_COMMENT tlrc
+                ON tlrc.RESULT_COMMENT_GRP_KEY = ltr.RESULT_COMMENT_GRP_KEY;
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
@@ -384,11 +336,9 @@ BEGIN
         VALUES
             (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
 
-        IF @debug = 1 SELECT 'TMP_LABTEST_UPDATED' AS step, * FROM #TMP_LABTEST_UPDATED;
+        IF @debug = 1 SELECT 'TMP_LABTEST_RESULT_ENRICHED' AS step, * FROM #TMP_LABTEST_RESULT_ENRICHED;
 
-        -- ---------------------------------------------------------------
-        -- Step: enrich order rows with patient demographic/address fields
-        -- ---------------------------------------------------------------
+        -- Enrich order rows with patient demographic and address fields.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTEST_ORDER1';
 
@@ -426,6 +376,8 @@ BEGIN
         FROM #TMP_LABTEST_ORDER LTO
             LEFT OUTER JOIN dbo.D_PATIENT PAT WITH (NOLOCK) ON LTO.PATIENT_KEY = PAT.PATIENT_KEY;
 
+        -- Default the address-use descriptors whenever a patient address
+        -- was actually resolved.
         UPDATE #TMP_LABTEST_ORDER1
         SET ADDR_USE_CD_DESC = 'HOME',
             ADDR_CD_DESC = 'HOUSE'
@@ -439,11 +391,9 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTEST_ORDER1' AS step, * FROM #TMP_LABTEST_ORDER1;
 
-        -- ---------------------------------------------------------------
-        -- Step: derive PROGRAM_AREA_ID from the OID string
-        -- (left-aligned parse first; falls back to a right-aligned parse
-        --  to match legacy SAS SUBSTR(PUT(OID,11.),7,5) behavior)
-        -- ---------------------------------------------------------------
+        -- Derive PROGRAM_AREA_ID by parsing the OID string. Tries a
+        -- left-aligned parse first, then falls back to a right-aligned
+        -- parse to match legacy SAS SUBSTR(PUT(OID,11.),7,5) behavior.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_RESULTS_ORDER_CONTACT1';
 
@@ -456,7 +406,7 @@ BEGIN
                 TRY_CAST(NULLIF(LTRIM(RTRIM(SUBSTRING(RIGHT(SPACE(11) + RTRIM(CAST(oid AS VARCHAR(30))), 11), 7, 5))), '') AS INT)
             ) AS PROGRAM_AREA_ID
         INTO #TMP_LAB_RESULTS_ORDER_CONTACT1
-        FROM #TMP_LABTEST_UPDATED;
+        FROM #TMP_LABTEST_RESULT_ENRICHED;
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
@@ -466,9 +416,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_RESULTS_ORDER_CONTACT1' AS step, * FROM #TMP_LAB_RESULTS_ORDER_CONTACT1;
 
-        -- ---------------------------------------------------------------
-        -- Step: resolve program-area reference data for the derived ID
-        -- ---------------------------------------------------------------
+        -- Resolve program-area reference data for the derived ID.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_RESULTS_ORDER_CONTACT2';
 
@@ -490,9 +438,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_RESULTS_ORDER_CONTACT2' AS step, * FROM #TMP_LAB_RESULTS_ORDER_CONTACT2;
 
-        -- ---------------------------------------------------------------
-        -- Step: attach ordering-provider details to each order
-        -- ---------------------------------------------------------------
+        -- Attach ordering-provider details to each order.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_PERSON_ORDER_PROVIDER';
 
@@ -524,6 +470,9 @@ BEGIN
              #TMP_LABTEST_ORDER1 LABORDER
         WHERE LABORDER.ORDERING_PROVIDER_KEY = P.PROVIDER_KEY;
 
+        -- Default the provider address-use descriptors whenever a provider
+        -- address was actually resolved, then null out any that ended up
+        -- blank.
         UPDATE #TMP_PERSON_ORDER_PROVIDER
         SET PRV_ADDR_USE_CD_DESC = 'PRIMARY WORK PLACE',
             PRV_ADDR_CD_DESC = 'OFFICE'
@@ -545,53 +494,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_PERSON_ORDER_PROVIDER' AS step, * FROM #TMP_PERSON_ORDER_PROVIDER;
 
-        -- ---------------------------------------------------------------
-        -- Step: distinct reporting-lab keys seen in this batch
-        -- ---------------------------------------------------------------
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'GENERATING TMP_LAB_REPORTING_ORG';
-
-        IF OBJECT_ID('tempdb..#TMP_LAB_REPORTING_ORG', 'U') IS NOT NULL
-            DROP TABLE #TMP_LAB_REPORTING_ORG;
-
-        SELECT
-            REPORTING_LAB_KEY_ORDER AS REPORTING_LAB_KEY_REPORTING
-        INTO #TMP_LAB_REPORTING_ORG
-        FROM #TMP_PERSON_ORDER_PROVIDER;
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        IF @debug = 1 SELECT 'TMP_LAB_REPORTING_ORG' AS step, * FROM #TMP_LAB_REPORTING_ORG;
-
-        -- ---------------------------------------------------------------
-        -- Step: distinct ordering-org keys seen in this batch
-        -- ---------------------------------------------------------------
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'GENERATING TMP_ORDERING_ORG';
-
-        IF OBJECT_ID('tempdb..#TMP_ORDERING_ORG', 'U') IS NOT NULL
-            DROP TABLE #TMP_ORDERING_ORG;
-
-        SELECT
-            ORDERING_ORG_KEY AS ORDERING_ORG_KEY_ORDER
-        INTO #TMP_ORDERING_ORG
-        FROM #TMP_PERSON_ORDER_PROVIDER;
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        IF @debug = 1 SELECT 'TMP_ORDERING_ORG' AS step, * FROM #TMP_ORDERING_ORG;
-
-        -- ---------------------------------------------------------------
-        -- Step: resolve reporting-facility details
-        -- ---------------------------------------------------------------
+        -- Resolve reporting-facility (lab) organization details.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ENTITY1';
 
@@ -599,16 +502,17 @@ BEGIN
             DROP TABLE #TMP_LAB_ENTITY1;
 
         SELECT
-            DISTINCT A.*,
-                     REPORTING_LAB.ORGANIZATION_NAME AS REPORTING_FACILITY,
-                     REPORTING_LAB.ORGANIZATION_FACILITY_ID AS REPORTING_FACILITY_CLIA_NBR,
-                     REPORTING_LAB.ORGANIZATION_LOCAL_ID AS REPORTING_FACILITY_ID,
-                     REPORTING_LAB.ORGANIZATION_UID AS REPORTING_FACILITY_UID,
-                     REPORTING_LAB.ORGANIZATION_PHONE_WORK AS REPORTING_FACILITY_PHONE_NBR
+            DISTINCT
+            pop.REPORTING_LAB_KEY_ORDER AS REPORTING_LAB_KEY_REPORTING,
+            REPORTING_LAB.ORGANIZATION_NAME AS REPORTING_FACILITY,
+            REPORTING_LAB.ORGANIZATION_FACILITY_ID AS REPORTING_FACILITY_CLIA_NBR,
+            REPORTING_LAB.ORGANIZATION_LOCAL_ID AS REPORTING_FACILITY_ID,
+            REPORTING_LAB.ORGANIZATION_UID AS REPORTING_FACILITY_UID,
+            REPORTING_LAB.ORGANIZATION_PHONE_WORK AS REPORTING_FACILITY_PHONE_NBR
         INTO #TMP_LAB_ENTITY1
-        FROM #TMP_LAB_REPORTING_ORG A,
-             dbo.D_ORGANIZATION REPORTING_LAB WITH (NOLOCK)
-        WHERE REPORTING_LAB.ORGANIZATION_KEY = A.REPORTING_LAB_KEY_REPORTING;
+        FROM #TMP_PERSON_ORDER_PROVIDER pop
+            INNER JOIN dbo.D_ORGANIZATION REPORTING_LAB WITH (NOLOCK)
+                ON REPORTING_LAB.ORGANIZATION_KEY = pop.REPORTING_LAB_KEY_ORDER;
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
@@ -618,9 +522,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ENTITY1' AS step, * FROM #TMP_LAB_ENTITY1;
 
-        -- ---------------------------------------------------------------
-        -- Step: resolve ordering-facility details
-        -- ---------------------------------------------------------------
+        -- Resolve ordering-facility organization details.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ENTITY2';
 
@@ -628,14 +530,15 @@ BEGIN
             DROP TABLE #TMP_LAB_ENTITY2;
 
         SELECT
-            DISTINCT A.*,
-                     ORDERING_ORG.ORGANIZATION_LOCAL_ID AS ORDERING_FACILITY_ID,
-                     ORDERING_ORG.ORGANIZATION_NAME AS ORDERING_FACILITY,
-                     ORDERING_ORG.ORGANIZATION_PHONE_WORK AS ORDERING_FACILITY_PHONE_NBR
+            DISTINCT
+            pop.ORDERING_ORG_KEY AS ORDERING_ORG_KEY_ORDER,
+            ORDERING_ORG.ORGANIZATION_LOCAL_ID AS ORDERING_FACILITY_ID,
+            ORDERING_ORG.ORGANIZATION_NAME AS ORDERING_FACILITY,
+            ORDERING_ORG.ORGANIZATION_PHONE_WORK AS ORDERING_FACILITY_PHONE_NBR
         INTO #TMP_LAB_ENTITY2
-        FROM #TMP_ORDERING_ORG A,
-             dbo.D_ORGANIZATION ORDERING_ORG WITH (NOLOCK)
-        WHERE ORDERING_ORG.ORGANIZATION_KEY = A.ORDERING_ORG_KEY_ORDER;
+        FROM #TMP_PERSON_ORDER_PROVIDER pop
+            INNER JOIN dbo.D_ORGANIZATION ORDERING_ORG WITH (NOLOCK)
+                ON ORDERING_ORG.ORGANIZATION_KEY = pop.ORDERING_ORG_KEY;
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
@@ -645,9 +548,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ENTITY2' AS step, * FROM #TMP_LAB_ENTITY2;
 
-        -- ---------------------------------------------------------------
-        -- Step: join reporting-facility rows back to provider/order context
-        -- ---------------------------------------------------------------
+        -- Join reporting-facility rows back to the provider/order context.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ORDER_ENTITY1';
 
@@ -669,9 +570,8 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ORDER_ENTITY1' AS step, * FROM #TMP_LAB_ORDER_ENTITY1;
 
-        -- ---------------------------------------------------------------
-        -- Step: union of ordering-org keys from both entity resolutions
-        -- ---------------------------------------------------------------
+        -- Union the ordering-org keys found via both entity resolutions
+        -- above, to build one distinct list to drive the merge below.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ORDER_ENTITY_KEY';
 
@@ -695,10 +595,8 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ORDER_ENTITY_KEY' AS step, * FROM #TMP_LAB_ORDER_ENTITY_KEY;
 
-        -- ---------------------------------------------------------------
-        -- Step: combine reporting + ordering facility details per key
-        -- (INVESTIGATION_KEYS / INV_KEY placeholders are populated below)
-        -- ---------------------------------------------------------------
+        -- Combine reporting- and ordering-facility details per key.
+        -- INVESTIGATION_KEYS / INV_KEY are placeholders, populated below.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ORDER_ENTITY11';
 
@@ -722,11 +620,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ORDER_ENTITY11' AS step, * FROM #TMP_LAB_ORDER_ENTITY11;
 
-        -- ---------------------------------------------------------------
-        -- Step: roll up investigation keys per lab test into a single
-        -- delimited string (STRING_AGG replaces the previous correlated
-        -- FOR XML PATH concatenation)
-        -- ---------------------------------------------------------------
+        -- Roll up investigation keys per lab test into one delimited string.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ORDER_ENTITY11_INVKEYS';
 
@@ -749,10 +643,9 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ORDER_ENTITY11_INVKEYS' AS step, * FROM #TMP_LAB_ORDER_ENTITY11_INVKEYS;
 
-        -- ---------------------------------------------------------------
-        -- Step: final flattened order/entity/investigation-key row set,
-        -- with source columns disambiguated via _OE suffixes
-        -- ---------------------------------------------------------------
+        -- Build the final flattened order/entity/investigation-key row
+        -- set. Source columns that could collide are disambiguated with
+        -- an _OE suffix.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LAB_ORDER_ENTITY';
 
@@ -848,9 +741,7 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LAB_ORDER_ENTITY' AS step, * FROM #TMP_LAB_ORDER_ENTITY;
 
-        -- ---------------------------------------------------------------
-        -- Step: join the order/entity rows back to their result rows
-        -- ---------------------------------------------------------------
+        -- Join the order/entity rows back to their result rows.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTESTSINIT';
 
@@ -860,7 +751,7 @@ BEGIN
         SELECT *
         INTO #TMP_LABTESTSINIT
         FROM #TMP_LAB_ORDER_ENTITY loe
-            LEFT OUTER JOIN #TMP_LABTEST_UPDATED loeu ON loe.ORDERED_TEST_UID_OE = loeu.ORDERED_TEST_UID;
+            LEFT OUTER JOIN #TMP_LABTEST_RESULT_ENRICHED loeu ON loe.ORDERED_TEST_UID_OE = loeu.ORDERED_TEST_UID;
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
@@ -870,9 +761,10 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTESTSINIT' AS step, * FROM #TMP_LABTESTSINIT;
 
-        -- ---------------------------------------------------------------
-        -- Step: attach condition + program-area reference data, derive LOINC
-        -- ---------------------------------------------------------------
+        -- Attach condition, program-area, and LOINC reference data.
+        -- LOINC is resolved from the ordered test code when it is itself
+        -- LOINC-coded, falling back to a hyphenated local code or a
+        -- reference-table lookup.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTESTS';
 
@@ -880,25 +772,53 @@ BEGIN
             DROP TABLE #TMP_LABTESTS;
 
         SELECT
-            li.*,
-            lroc2.code_seq,
-            lroc2.code_set_nm,
-            lroc2.nbs_uid,
-            lroc2.prog_area_cd,
-            lroc2.prog_area_desc_txt,
-            lroc2.PROGRAM_AREA_ID,
-            lroc2.status_cd,
-            lroc2.status_time,
-            CONDITION_SHORT_NM,
+            li.ORDERING_ORG_KEY_MAIN, li.ORDERING_ORG_KEY_ORDER, li.ORDERING_FACILITY_ID, li.ORDERING_FACILITY,
+            li.ORDERING_FACILITY_PHONE_NBR, li.REPORTING_LAB_KEY_REPORTING, li.REPORTING_FACILITY,
+            li.REPORTING_FACILITY_CLIA_NBR, li.REPORTING_FACILITY_ID, li.REPORTING_FACILITY_UID,
+            li.REPORTING_FACILITY_PHONE_NBR, li.LAB_TEST_STATUS, li.LAB_TEST_KEY_OE, li.LAB_RPT_LOCAL_ID_OE,
+            li.REASON_FOR_TEST_DESC, li.RECORD_STATUS_CD, li.ORDERED_RPT_UID, li.ORDERED_LAB_TEST_CD,
+            li.ORDERED_LAB_TEST_CD_DESC, li.ORDERED_TEST_CODE, li.ORDERED_LABTEST_CD_SYS_NM, li.SPECIMEN_DETAILS,
+            li.ORDERED_TEST_UID_OE, li.SPECIMEN_ADD_TIME, li.SPECIMEN_LAST_CHANGE_TIME, li.ORDERING_ORG_KEY,
+            li.REPORTING_LAB_KEY_ORDER, li.CONDITION_KEY, li.ORDERING_PROVIDER_KEY, li.LAB_RPT_STATUS, li.oid_order,
+            li.CONDITION_CD, li.REASON_FOR_TEST_DESC1, li.SPECIMEN_SRC_CD, li.SPECIMEN_SRC_DESC, li.LDF_GROUP_KEY,
+            li.MORB_RPT_KEY, li.PATIENT_KEY, li.DOCUMENT_LINK, li.ALT_LAB_TEST_CD_SYS_CD_OE, li.lab_test_type_oe,
+            li.PATIENT_UID, li.PERSON_FIRST_NM, li.PERSON_MIDDLE_NM, li.PERSON_LAST_NM, li.PERSON_LOCAL_ID,
+            li.PERSON_DOB, li.PERSON_CURR_GENDER, li.PATIENT_ADDRESS, li.PATIENT_STREET_ADDRESS_2, li.PATIENT_CITY,
+            li.PATIENT_STATE, li.PATIENT_ZIP_CODE, li.PATIENT_COUNTY, li.PATIENT_COUNTRY, li.AGE_REPORTED,
+            li.PATIENT_REPORTED_AGE_UNITS, li.ADDR_USE_CD_DESC, li.ADDR_CD_DESC, li.PROVIDER_PHONE,
+            li.PROVIDER_FIRST_NAME, li.PROVIDER_MIDDLE_NAME, li.PROVIDER_LAST_NAME, li.ORDERING_PROVIDER_NM,
+            li.PROVIDER_STREET_ADDRESS_1, li.PROVIDER_STREET_ADDRESS_2, li.PROVIDER_CITY, li.PROVIDER_STATE,
+            li.PROVIDER_ZIP, li.PROVIDER_COUNTY, li.PROVIDER_COUNTRY, li.PROVIDER_ADDRESS, li.PRV_ADDR_USE_CD_DESC,
+            li.PRV_ADDR_CD_DESC, li.INVESTIGATION_KEYS, li.INV_KEY, li.LAB_TEST_KEY, li.LAB_RPT_LOCAL_ID,
+            li.TEST_METHOD_CD, li.TEST_METHOD_CD_DESC, li.RESULTED_LAB_TEST_CD, li.ELR_IND, li.RESULTED_RPT_UID,
+            li.RESULTED_TEST, li.INTERPRETATION_FLG, li.LAB_RPT_RECEIVED_BY_PH_DT, li.LAB_RPT_CREATED_DT,
+            li.LAB_RPT_CREATED_BY, li.LAB_TEST_DT, li.LAB_RPT_LAST_UPDATE_DT, li.JURISDICTION_CD,
+            li.LAB_TEST_CD_SYS_NM, li.JURISDICTION_NM, li.OID, li.ACCESSION_NBR, li.SPECIMEN_SRC, li.SPECIMEN_DESC,
+            li.SPECIMEN_SITE, li.SPECIMEN_SITE_DESC, li.SPECIMEN_COLLECTION_DT, li.RESULTED_TEST_UID,
+            li.ROOT_ORDERED_TEST_PNTR, li.PARENT_TEST_PNTR, li.TEST_RESULT_GRP_KEY, li.PERFORMING_LAB_KEY,
+            li.ALT_LAB_TEST_CD, li.ALT_LAB_TEST_CD_DESC, li.ALT_LAB_TEST_CD_SYS_CD, li.ALT_LAB_TEST_CD_SYS_NM,
+            li.RESULTED_LAB_TEST_CD_DESC, li.RESULTEDTEST_CD_SYS_NM, li.RESULT_TEST_METHOD_CD,
+            li.RESULTED_LAB_TEST_KEY, li.lab_test_type, li.RESULT, li.TEST_RESULT_VAL_CD,
+            li.TEST_RESULT_VAL_CD_SYS_NM, li.LOCAL_RESULT_CODE, li.LOCAL_RESULT_NAME, li.RESULT_REF_RANGE_FRM,
+            li.RESULT_REF_RANGE_TO, li.RESULTEDTEST_VAL_CD, li.RESULTEDTEST_VAL_CD_DESC, li.LAB_RESULT_TXT_VAL,
+            li.NUMERIC_RESULT_WITHUNITS, li.LAB_RESULT_COMMENTS, li.ORDERED_TEST_UID,
+            lroc2.code_seq, lroc2.code_set_nm, lroc2.nbs_uid, lroc2.prog_area_cd, lroc2.prog_area_desc_txt,
+            lroc2.PROGRAM_AREA_ID, lroc2.status_cd, lroc2.status_time,
+            cc.CONDITION_SHORT_NM,
             CASE
-                WHEN UPPER(li.LAB_TEST_CD_SYS_NM) = 'LOINC' THEN ORDERED_LAB_TEST_CD
-                ELSE CAST(NULL AS VARCHAR(50))
+                WHEN LTRIM(RTRIM(lr.LOINC_RAW)) IS NULL AND CHARINDEX('-', li.ORDERED_LAB_TEST_CD) > 3 THEN li.ORDERED_LAB_TEST_CD
+                WHEN LTRIM(RTRIM(lr.LOINC_RAW)) IS NULL THEN ll.loinc_cd
+                ELSE lr.LOINC_RAW
             END AS LOINC,
             CAST(NULL AS VARCHAR(50)) AS CONDITION
         INTO #TMP_LABTESTS
         FROM #TMP_LABTESTSINIT li
             LEFT OUTER JOIN dbo.nrt_srte_Condition_code cc WITH (NOLOCK) ON cc.CONDITION_CD = li.CONDITION_CD
-            LEFT OUTER JOIN #TMP_LAB_RESULTS_ORDER_CONTACT2 lroc2 ON lroc2.RESULTED_TEST_UID = li.RESULTED_TEST_UID;
+            LEFT OUTER JOIN #TMP_LAB_RESULTS_ORDER_CONTACT2 lroc2 ON lroc2.RESULTED_TEST_UID = li.RESULTED_TEST_UID
+            LEFT OUTER JOIN dbo.nrt_srte_Labtest_loinc ll ON ll.LAB_TEST_CD = li.ORDERED_LAB_TEST_CD
+            CROSS APPLY (
+                SELECT CASE WHEN UPPER(li.LAB_TEST_CD_SYS_NM) = 'LOINC' THEN li.ORDERED_LAB_TEST_CD ELSE CAST(NULL AS VARCHAR(50)) END AS LOINC_RAW
+            ) lr;
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
@@ -908,70 +828,8 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTESTS' AS step, * FROM #TMP_LABTESTS;
 
-        -- ---------------------------------------------------------------
-        -- Step: flatten TMP_LABTESTS into an explicit column list
-        -- (drops the duplicate-name columns produced by the joins above)
-        -- ---------------------------------------------------------------
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'GENERATING TMP_LABTESTS2';
-
-        IF OBJECT_ID('tempdb..#TMP_LABTESTS2', 'U') IS NOT NULL
-            DROP TABLE #TMP_LABTESTS2;
-
-        SELECT
-            tl.ORDERING_ORG_KEY_MAIN, tl.ORDERING_ORG_KEY_ORDER, tl.ORDERING_FACILITY_ID, tl.ORDERING_FACILITY,
-            tl.ORDERING_FACILITY_PHONE_NBR, tl.REPORTING_LAB_KEY_REPORTING, tl.REPORTING_FACILITY,
-            tl.REPORTING_FACILITY_CLIA_NBR, tl.REPORTING_FACILITY_ID, tl.REPORTING_FACILITY_UID,
-            tl.REPORTING_FACILITY_PHONE_NBR, tl.LAB_TEST_STATUS, tl.LAB_TEST_KEY_OE, tl.LAB_RPT_LOCAL_ID_OE,
-            tl.REASON_FOR_TEST_DESC, tl.RECORD_STATUS_CD, tl.ORDERED_RPT_UID, tl.ORDERED_LAB_TEST_CD,
-            tl.ORDERED_LAB_TEST_CD_DESC, tl.ORDERED_TEST_CODE, tl.ORDERED_LABTEST_CD_SYS_NM, tl.SPECIMEN_DETAILS,
-            tl.ORDERED_TEST_UID_OE, tl.SPECIMEN_ADD_TIME, tl.SPECIMEN_LAST_CHANGE_TIME, tl.ORDERING_ORG_KEY,
-            tl.REPORTING_LAB_KEY_ORDER, tl.CONDITION_KEY, tl.ORDERING_PROVIDER_KEY, tl.LAB_RPT_STATUS, tl.oid_order,
-            tl.CONDITION_CD, tl.REASON_FOR_TEST_DESC1, tl.SPECIMEN_SRC_CD, tl.SPECIMEN_SRC_DESC, tl.LDF_GROUP_KEY,
-            tl.MORB_RPT_KEY, tl.PATIENT_KEY, tl.DOCUMENT_LINK, tl.ALT_LAB_TEST_CD_SYS_CD_OE, tl.lab_test_type_oe,
-            tl.PATIENT_UID, tl.PERSON_FIRST_NM, tl.PERSON_MIDDLE_NM, tl.PERSON_LAST_NM, tl.PERSON_LOCAL_ID,
-            tl.PERSON_DOB, tl.PERSON_CURR_GENDER, tl.PATIENT_ADDRESS, tl.PATIENT_STREET_ADDRESS_2, tl.PATIENT_CITY,
-            tl.PATIENT_STATE, tl.PATIENT_ZIP_CODE, tl.PATIENT_COUNTY, tl.PATIENT_COUNTRY, tl.AGE_REPORTED,
-            tl.PATIENT_REPORTED_AGE_UNITS, tl.ADDR_USE_CD_DESC, tl.ADDR_CD_DESC, tl.PROVIDER_PHONE,
-            tl.PROVIDER_FIRST_NAME, tl.PROVIDER_MIDDLE_NAME, tl.PROVIDER_LAST_NAME, tl.ORDERING_PROVIDER_NM,
-            tl.PROVIDER_STREET_ADDRESS_1, tl.PROVIDER_STREET_ADDRESS_2, tl.PROVIDER_CITY, tl.PROVIDER_STATE,
-            tl.PROVIDER_ZIP, tl.PROVIDER_COUNTY, tl.PROVIDER_COUNTRY, tl.PROVIDER_ADDRESS, tl.PRV_ADDR_USE_CD_DESC,
-            tl.PRV_ADDR_CD_DESC, tl.INVESTIGATION_KEYS, tl.INV_KEY, tl.LAB_TEST_KEY, tl.LAB_RPT_LOCAL_ID,
-            tl.TEST_METHOD_CD, tl.TEST_METHOD_CD_DESC, tl.RESULTED_LAB_TEST_CD, tl.ELR_IND, tl.RESULTED_RPT_UID,
-            tl.RESULTED_TEST, tl.INTERPRETATION_FLG, tl.LAB_RPT_RECEIVED_BY_PH_DT, tl.LAB_RPT_CREATED_DT,
-            tl.LAB_RPT_CREATED_BY, tl.LAB_TEST_DT, tl.LAB_RPT_LAST_UPDATE_DT, tl.JURISDICTION_CD,
-            tl.LAB_TEST_CD_SYS_NM, tl.JURISDICTION_NM, tl.OID, tl.ACCESSION_NBR, tl.SPECIMEN_SRC, tl.SPECIMEN_DESC,
-            tl.SPECIMEN_SITE, tl.SPECIMEN_SITE_DESC, tl.SPECIMEN_COLLECTION_DT, tl.RESULTED_TEST_UID,
-            tl.ROOT_ORDERED_TEST_PNTR, tl.PARENT_TEST_PNTR, tl.TEST_RESULT_GRP_KEY, tl.PERFORMING_LAB_KEY,
-            tl.ALT_LAB_TEST_CD, tl.ALT_LAB_TEST_CD_DESC, tl.ALT_LAB_TEST_CD_SYS_CD, tl.ALT_LAB_TEST_CD_SYS_NM,
-            tl.RESULTED_LAB_TEST_CD_DESC, tl.RESULTEDTEST_CD_SYS_NM, tl.RESULT_TEST_METHOD_CD,
-            tl.RESULTED_LAB_TEST_KEY, tl.lab_test_type, tl.RESULT, tl.TEST_RESULT_VAL_CD,
-            tl.TEST_RESULT_VAL_CD_SYS_NM, tl.LOCAL_RESULT_CODE, tl.LOCAL_RESULT_NAME, tl.RESULT_REF_RANGE_FRM,
-            tl.RESULT_REF_RANGE_TO, tl.RESULTEDTEST_VAL_CD, tl.RESULTEDTEST_VAL_CD_DESC, tl.LAB_RESULT_TXT_VAL,
-            tl.NUMERIC_RESULT_WITHUNITS, tl.LAB_RESULT_COMMENTS, tl.ORDERED_TEST_UID, tl.code_seq, tl.code_set_nm,
-            tl.nbs_uid, tl.prog_area_cd, tl.prog_area_desc_txt, tl.PROGRAM_AREA_ID, tl.status_cd, tl.status_time,
-            tl.CONDITION_SHORT_NM,
-            CASE
-                WHEN LTRIM(RTRIM(tl.LOINC)) IS NULL AND CHARINDEX('-', ORDERED_LAB_TEST_CD) > 3 THEN ORDERED_LAB_TEST_CD
-                WHEN LTRIM(RTRIM(tl.LOINC)) IS NULL THEN loinc_cd
-                ELSE tl.LOINC
-            END AS LOINC,
-            tl.CONDITION
-        INTO #TMP_LABTESTS2
-        FROM #TMP_LABTESTS tl
-            LEFT OUTER JOIN dbo.nrt_srte_Labtest_loinc ll ON ll.LAB_TEST_CD = tl.ORDERED_LAB_TEST_CD;
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        IF @debug = 1 SELECT 'TMP_LABTESTS2' AS step, * FROM #TMP_LABTESTS2;
-
-        -- ---------------------------------------------------------------
-        -- Step: overlay SNOMED-derived condition code where available
-        -- ---------------------------------------------------------------
+        -- Overlay a condition code derived from LOINC/condition reference
+        -- data wherever one is available.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTESTS3';
 
@@ -1023,7 +881,7 @@ BEGIN
             lt2.LOINC,
             lt2.CONDITION
         INTO #TMP_LABTESTS3
-        FROM #TMP_LABTESTS2 lt2
+        FROM #TMP_LABTESTS lt2
             LEFT OUTER JOIN dbo.nrt_srte_Loinc_condition lc WITH (NOLOCK) ON lc.loinc_cd = lt2.LOINC;
 
         SELECT @RowCountNo = @@ROWCOUNT;
@@ -1034,10 +892,9 @@ BEGIN
 
         IF @debug = 1 SELECT 'TMP_LABTESTS3' AS step, * FROM #TMP_LABTESTS3;
 
-        -- ---------------------------------------------------------------
-        -- Step: apply SNOMED-derived overrides, blank-out empty address /
-        -- descriptor fields, and finalize CONDITION / SNOMED columns
-        -- ---------------------------------------------------------------
+        -- Apply SNOMED-derived condition overrides where the resulted
+        -- value looks like a SNOMED code, blank out empty address/
+        -- descriptor fields, and finalize the CONDITION/SNOMED columns.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING TMP_LABTESTS4';
 
@@ -1115,15 +972,13 @@ BEGIN
         IF @debug = 1 SELECT 'TMP_LABTESTS4' AS step, * FROM #TMP_LABTESTS4;
 
         -- =================================================================
-        -- Durable writes to dbo.LAB100 begin here. This is the only portion
-        -- of the batch that needs transactional atomicity/rollback, since
-        -- everything above only touches temp tables.
+        -- Durable writes to dbo.LAB100 begin here. This is the only
+        -- portion of the batch that needs transactional atomicity /
+        -- rollback, since everything above only touches temp tables.
         -- =================================================================
         BEGIN TRANSACTION;
 
-        -- ---------------------------------------------------------------
-        -- Step: update existing LAB100 rows matched by RESULTED_LAB_TEST_KEY
-        -- ---------------------------------------------------------------
+        -- Update existing LAB100 rows matched by RESULTED_LAB_TEST_KEY.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING LAB100 Table - Update';
 
@@ -1208,9 +1063,8 @@ BEGIN
         VALUES
             (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
 
-        -- ---------------------------------------------------------------
-        -- Step: insert LAB100 rows that don't yet exist for this batch
-        -- ---------------------------------------------------------------
+        -- Insert LAB100 rows for lab tests that don't yet exist in the
+        -- table.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'GENERATING LAB100 Table - Insert';
 
@@ -1282,18 +1136,16 @@ BEGIN
         COMMIT TRANSACTION;
 
         -- =================================================================
-        -- These two steps are NOT
-        -- scoped to @labtestuids: they detect orders that became inactive
-        -- or LAB_TEST rows that were removed entirely, anywhere in the
-        -- source system, and are therefore independent of the current
-        -- batch's size. 
+        -- The two reconciliation steps below are NOT scoped to
+        -- @labtestuids: they detect orders that became inactive, or
+        -- LAB_TEST rows that were removed entirely, anywhere in the
+        -- source system, and therefore run independently of the current
+        -- batch's size.
         -- =================================================================
         BEGIN TRANSACTION;
 
-        -- -------------------------------------------------------------
-        -- Step: mark LAB100 rows INACTIVE when their parent order has
-        -- since been marked INACTIVE in LAB_TEST
-        -- -------------------------------------------------------------
+        -- Mark LAB100 rows INACTIVE when their parent order has since been
+        -- marked INACTIVE in LAB_TEST.
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'Update Inactive LAB100 Records';
 
@@ -1322,10 +1174,8 @@ BEGIN
         VALUES
             (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
 
-        -- -------------------------------------------------------------
-        -- Step: remove LAB100 rows whose underlying LAB_TEST row no
-        -- longer exists at all (true orphans, not just inactive ones)
-        -- -------------------------------------------------------------
+        -- Remove LAB100 rows whose underlying LAB_TEST row no longer
+        -- exists at all (true orphans, not just inactive ones).
         SET @ProcStepNo += 1;
         SET @ProcStepName = 'DELETE REMOVED OBSERVATIONS FROM LAB100';
 
@@ -1346,9 +1196,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
-        -- ---------------------------------------------------------------
-        -- Step: batch completion marker
-        -- ---------------------------------------------------------------
+        -- Log batch completion and return an empty success result set.
         SET @ProcStepNo = 999;
         SET @ProcStepName = 'SP_COMPLETE';
 
@@ -1371,6 +1219,8 @@ BEGIN
 
     BEGIN CATCH
 
+        -- Roll back any open transaction, log full error detail to
+        -- JOB_FLOW_LOG, and return an error result row to the caller.
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
         DECLARE @FullErrorMessage VARCHAR(8000) =
