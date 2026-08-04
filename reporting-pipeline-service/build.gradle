@@ -68,6 +68,23 @@ tasks.register("test-unit", Test) {
     finalizedBy jacocoTestReport
 }
 
+// Add a listener to capture test summary counts after the suite finishes
+tasks.withType(Test).configureEach {
+    addTestListener(new TestListener() {
+        @Override
+        void afterSuite(TestDescriptor suite, TestResult result) {
+            if (suite.parent == null) {
+                println(
+                        "Tests: ${result.testCount}, " +
+                        "passed: ${result.successfulTestCount}, " +
+                        "failed: ${result.failedTestCount}, " +
+                        "skipped: ${result.skippedTestCount}"
+                )
+            }
+        }
+    })
+}
+
 jacoco {
     toolVersion = "0.8.11"
     reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
