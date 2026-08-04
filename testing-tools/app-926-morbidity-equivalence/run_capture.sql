@@ -58,6 +58,12 @@ TRUNCATE TABLE dbo.MORBIDITY_REPORT_DATAMART;
 EXEC dbo.sp_morbidity_report_datamart_postprocessing 'abc,,-1,999999999999','','','','', 'false';
 SELECT * INTO dbo.$(PFX)_8 FROM dbo.MORBIDITY_REPORT_DATAMART;
 
+/* scenario 9: multi-event (pat UID 8000010 -> report 30, which has 2 MRE rows: one matches, one doesn't) */
+IF OBJECT_ID('dbo.$(PFX)_9') IS NOT NULL DROP TABLE dbo.$(PFX)_9;
+TRUNCATE TABLE dbo.MORBIDITY_REPORT_DATAMART;
+EXEC dbo.sp_morbidity_report_datamart_postprocessing '','8000010','','','', 'false';
+SELECT * INTO dbo.$(PFX)_9 FROM dbo.MORBIDITY_REPORT_DATAMART;
+
 SELECT '$(PFX) capture done' AS status;
 SELECT 1 sc, COUNT(*) rows FROM dbo.$(PFX)_1
 UNION ALL SELECT 2, COUNT(*) FROM dbo.$(PFX)_2
@@ -67,4 +73,5 @@ UNION ALL SELECT 5, COUNT(*) FROM dbo.$(PFX)_5
 UNION ALL SELECT 6, COUNT(*) FROM dbo.$(PFX)_6
 UNION ALL SELECT 7, COUNT(*) FROM dbo.$(PFX)_7
 UNION ALL SELECT 8, COUNT(*) FROM dbo.$(PFX)_8
+UNION ALL SELECT 9, COUNT(*) FROM dbo.$(PFX)_9
 ORDER BY sc;

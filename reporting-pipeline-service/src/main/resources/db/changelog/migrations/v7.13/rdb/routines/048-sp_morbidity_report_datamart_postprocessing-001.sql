@@ -112,6 +112,47 @@ BEGIN
         ;
         ALTER TABLE #uid_inv ADD PRIMARY KEY CLUSTERED (u);
 
+        /*
+            Candidate pre-filter (equivalence-safe batch scoping).
+            Collect a SUPERSET of MORB_RPT_KEYs that could pass the #MORB_EVENT_INIT
+            filter, via seek-driven UNION branches each driven by a small #uid_* temp.
+            This lets the main projection seek the ~250 candidate reports instead of
+            scanning every ACTIVE report. The original WHERE below is left UNCHANGED,
+            so it still decides per (MR,MRE) row -> output is byte-identical even when
+            a report has multiple MRE rows (some matching, some not). #cand may contain
+            keys the final WHERE then drops (e.g. inactive); that's fine, it's a superset.
+        */
+        IF OBJECT_ID('tempdb..#cand') IS NOT NULL DROP TABLE #cand;
+        SELECT MORB_RPT_KEY INTO #cand FROM (
+            SELECT MR.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
+              WHERE EXISTS (SELECT 1 FROM #uid_obs z WHERE z.u = CAST(MR.MORB_RPT_UID AS bigint))
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = MRE.INVESTIGATION_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_inv z WHERE z.u = inv.CASE_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = MRE.PATIENT_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_pat z WHERE z.u = pat.PATIENT_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_PROVIDER prov WITH (NOLOCK) ON prov.PROVIDER_KEY = MRE.PHYSICIAN_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = prov.PROVIDER_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_PROVIDER rep WITH (NOLOCK) ON rep.PROVIDER_KEY = MRE.REPORTER_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = rep.PROVIDER_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_ORGANIZATION o WITH (NOLOCK) ON o.ORGANIZATION_KEY = MRE.MORB_RPT_SRC_ORG_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_org z WHERE z.u = o.ORGANIZATION_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_ORGANIZATION h WITH (NOLOCK) ON h.ORGANIZATION_KEY = MRE.HSPTL_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_org z WHERE z.u = h.ORGANIZATION_UID)
+        ) q;
+        ALTER TABLE #cand ADD PRIMARY KEY CLUSTERED (MORB_RPT_KEY);
+
         SELECT
             MR.MORB_RPT_KEY AS MORBIDITY_REPORT_KEY,
             MRE.PATIENT_KEY AS PERSON_KEY,
@@ -234,6 +275,8 @@ BEGIN
             IIF(MRD.MORBIDITY_REPORT_KEY IS NULL, 'I', 'U') AS DML_IND
         INTO #MORB_EVENT_INIT
         FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
+                 INNER JOIN #cand cnd
+                           ON cnd.MORB_RPT_KEY = MR.MORB_RPT_KEY
                  LEFT JOIN dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
                            ON MR.MORB_RPT_KEY = MRE.MORB_RPT_KEY
                  LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART MRD WITH (NOLOCK)
@@ -684,7 +727,8 @@ BEGIN
                   LEFT JOIN dbo.RDB_DATE d2 WITH (NOLOCK)
                             ON src.ILLNESS_ONSET_DT_KEY = d2.DATE_KEY
                   LEFT JOIN dbo.RDB_DATE d3 WITH (NOLOCK)
-                            ON src.HSPTL_DISCHARGE_DT_KEY = d3.DATE_KEY;
+                            ON src.HSPTL_DISCHARGE_DT_KEY = d3.DATE_KEY
+        OPTION (MAXDOP 1);
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_EVENT_FINAL;

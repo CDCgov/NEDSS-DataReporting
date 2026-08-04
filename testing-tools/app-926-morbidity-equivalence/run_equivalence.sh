@@ -39,7 +39,7 @@ echo "== DETERMINISM: orig vs orig2 (should all PASS / zero diff) =="
 docker exec "$C" $SQL -W -Q "
 SET NOCOUNT ON;
 DECLARE @i INT=1;
-WHILE @i<=8 BEGIN
+WHILE @i<=9 BEGIN
   DECLARE @s NVARCHAR(MAX)=N'SELECT '+CAST(@i AS VARCHAR)+N' sc,
     (SELECT COUNT(*) FROM (SELECT * FROM dbo.orig_'+CAST(@i AS VARCHAR)+N' EXCEPT SELECT * FROM dbo.orig2_'+CAST(@i AS VARCHAR)+N') a) o_minus_o2,
     (SELECT COUNT(*) FROM (SELECT * FROM dbo.orig2_'+CAST(@i AS VARCHAR)+N' EXCEPT SELECT * FROM dbo.orig_'+CAST(@i AS VARCHAR)+N') b) o2_minus_o;';

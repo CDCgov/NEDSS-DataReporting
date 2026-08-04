@@ -11,6 +11,14 @@
       org  UID 8000004  key 8000004  -> MRE MORB_RPT_KEY 5 (MORB_RPT_SRC_ORG_KEY)
       org  UID 8000005  key 8000005  -> MRE MORB_RPT_KEY 6 (HSPTL_KEY)
       inv  CASE_UID 10000013 key 2   -> MRE MORB_RPT_KEY 7 (INVESTIGATION_KEY)  [pre-existing row]
+
+    MULTI-EVENT case (scenario 9): report MORB_RPT_KEY 30 has TWO MRE rows.
+      - pre-existing MRE row (PATIENT_KEY=1, all FK keys=1) -> matches NOTHING (dims empty / UID NULL).
+      - added MRE row (PATIENT_KEY=8000010) -> matches the pat branch (D_PATIENT 8000010, UID 8000010).
+    The ORIGINAL SP's WHERE decides per (MR,MRE) row, so only the matching MRE emits a datamart row.
+    This is the case a naive key-grain rewrite would break (it would emit the non-matching MRE's data
+    or emit both). Proves the #cand rewrite still keeps the row-grain WHERE.
+    pat UID 8000010 is dedicated to scenario 9 (distinct from scenario-2's 8000001) so scenarios stay independent.
 */
 SET NOCOUNT ON;
 
@@ -37,6 +45,19 @@ UPDATE dbo.MORBIDITY_REPORT_EVENT SET MORB_RPT_SRC_ORG_KEY = 8000004 WHERE MORB_
 UPDATE dbo.MORBIDITY_REPORT_EVENT SET HSPTL_KEY            = 8000005 WHERE MORB_RPT_KEY = 6;
 UPDATE dbo.MORBIDITY_REPORT_EVENT SET INVESTIGATION_KEY    = 2       WHERE MORB_RPT_KEY = 7;
 
+-- MULTI-EVENT scenario (9): dedicated patient dim + a SECOND MRE row for report 30.
+IF NOT EXISTS (SELECT 1 FROM dbo.D_PATIENT WHERE PATIENT_KEY = 8000010)
+    INSERT INTO dbo.D_PATIENT (PATIENT_KEY, PATIENT_UID) VALUES (8000010, 8000010);
+
+-- report 30 keeps its original non-matching MRE row (PATIENT_KEY=1); add one matching MRE row.
+IF NOT EXISTS (SELECT 1 FROM dbo.MORBIDITY_REPORT_EVENT WHERE MORB_RPT_KEY = 30 AND PATIENT_KEY = 8000010)
+    INSERT INTO dbo.MORBIDITY_REPORT_EVENT
+        (MORB_RPT_KEY, PATIENT_KEY, PHYSICIAN_KEY, REPORTER_KEY, MORB_RPT_SRC_ORG_KEY, HSPTL_KEY, INVESTIGATION_KEY, CONDITION_KEY,
+         NURSING_HOME_KEY, HEALTH_CARE_KEY, LDF_GROUP_KEY, MORB_RPT_CREATE_DT_KEY, HSPTL_DISCHARGE_DT_KEY, ILLNESS_ONSET_DT_KEY, MORB_RPT_DT_KEY, RECORD_STATUS_CD)
+    VALUES (30, 8000010, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 'ACTIVE');
+
 SELECT 'seed done' AS status;
+SELECT 'multi-event report 30 MRE rows' AS note, MORB_RPT_KEY, PATIENT_KEY
+FROM dbo.MORBIDITY_REPORT_EVENT WHERE MORB_RPT_KEY = 30 ORDER BY PATIENT_KEY;
 SELECT MORB_RPT_KEY, PATIENT_KEY, PHYSICIAN_KEY, REPORTER_KEY, MORB_RPT_SRC_ORG_KEY, HSPTL_KEY, INVESTIGATION_KEY
 FROM dbo.MORBIDITY_REPORT_EVENT WHERE MORB_RPT_KEY IN (2,3,4,5,6,7) ORDER BY MORB_RPT_KEY;

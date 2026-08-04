@@ -3,53 +3,64 @@
 Proves the optimized stored proc produces **byte-identical output** to the original (AC #2) and
 measures the speedup, using a synthetic RDB_MODERN dataset seeded directly (no ODSE / no pipeline).
 
-## What the optimization did
+## What the optimization did (all RDB_MODERN, nothing in ODSE)
 1. **Covering index** `IX_EVENT_METRIC_EVENT_UID` (migration `tables/263-...`). The `#MORB_EVENT_INIT`
    build `LEFT JOIN EVENT_METRIC ON MR.MORB_RPT_UID = EM.EVENT_UID` scanned all of EVENT_METRIC
-   (~42.6M rows in KY) because the clustered PK is `(EVENT_TYPE, EVENT_UID)`. The index makes it a seek.
-2. **Split materialization** in the SP (`routines/048-...`). The `#MORB_EVENT_INIT` WHERE had seven
-   OR'd `col IN (SELECT value FROM STRING_SPLIT(@param,','))`. Each `@*_uids` list is now parsed once
-   into a typed (bigint) PK-indexed temp (`#uid_obs/#uid_pat/#uid_prov/#uid_org/#uid_inv`) and probed
-   with `EXISTS`. `CAST` (not `TRY_CONVERT`) is used so malformed input throws exactly as the original.
+   (~42.6M rows in KY) because the clustered PK is `(EVENT_TYPE, EVENT_UID)`. The index makes it a seek
+   (the plan's own missing-index hint, 32.7% impact).
+2. **Split materialization** in the SP. The `#MORB_EVENT_INIT` WHERE had seven OR'd
+   `col IN (SELECT value FROM STRING_SPLIT(@param,','))`. Each `@*_uids` list is now parsed once into a
+   typed (bigint) PK-indexed temp (`#uid_obs/#uid_pat/#uid_prov/#uid_org/#uid_inv`) and probed with
+   `EXISTS`. `CAST` (not `TRY_CONVERT`) preserves the original's throw-on-malformed-input behavior.
+3. **Candidate batch-scoping (`#cand`).** The OR-across-outer-joins made the SP seek-join *every* active
+   report (~50k) before filtering to ~250. Now a `#cand` pre-filter collects a **superset** of candidate
+   `MORB_RPT_KEY`s via seek-driven UNION branches (each anchored on a small `#uid_*` temp), and the
+   projection adds `INNER JOIN #cand`. **The original WHERE is unchanged**, so the per-`(MR,MRE)`-row
+   filter still decides output — this is why it stays equivalent even when a report has multiple events.
+   Makes runtime scale with batch size, not total report count or dimension size.
+4. **MAXDOP-1 hint** on the `#MORB_EVENT_FINAL` build (it was taking a parallel plan that burned ~140ms
+   CPU on 251 rows). Hints don't change results; equivalence re-verified after adding it.
 
-## Files
-- `repro_seed.sql` — seeds EVENT_METRIC (5M, unindexed EVENT_UID so the scan reproduces),
-  MORBIDITY_REPORT / MORBIDITY_REPORT_EVENT (50k). Reports qualify via `@obs_uids`.
-- `harness.sql` — timing + output checksum for one 250-UID batch.
-- `seed.sql` — enriches the dimension tables (D_PATIENT/D_PROVIDER/D_ORGANIZATION/INVESTIGATION) and
-  repoints MRE FK keys so the pat/prov/org/inv branches actually match.
-- `run_capture.sql` / `compare.sql` — 8-scenario capture + both-direction `EXCEPT` diff.
-- `run_equivalence.sh` — full harness: deploy ORIGINAL (from `origin/rel-7.13`) → capture (twice, for a
-  determinism check) → deploy OPTIMIZED (the working-tree SP) → capture → diff.
+## Results — **all 9 scenarios byte-identical** (full-row EXCEPT both directions, diff 0/0)
 
-## Results
-Equivalence — **all 8 scenarios byte-identical** (obs / pat / prov / org / inv / mixed / empty / junk):
-
-| scenario | orig_rows | new_rows | diff | verdict |
+| # | scenario | orig | new | verdict |
 |---|---|---|---|---|
-| 1 obs-only | 3 | 3 | 0/0 | PASS |
-| 2 pat-only | 1 | 1 | 0/0 | PASS |
-| 3 prov-only | 2 | 2 | 0/0 | PASS |
-| 4 org-only | 2 | 2 | 0/0 | PASS |
-| 5 inv-only | 1 | 1 | 0/0 | PASS |
-| 6 mixed | 9 | 9 | 0/0 | PASS |
-| 7 empty | 0 | 0 | 0/0 | PASS |
-| 8 junk-obs | 0 | 0 | 0/0 | PASS |
+| 1 | obs-only | 3 | 3 | PASS |
+| 2 | pat-only | 1 | 1 | PASS |
+| 3 | prov-only | 2 | 2 | PASS |
+| 4 | org-only | 2 | 2 | PASS |
+| 5 | inv-only | 1 | 1 | PASS |
+| 6 | mixed | 9 | 9 | PASS |
+| 7 | empty | 0 | 0 | PASS |
+| 8 | junk-obs | 0 | 0 | PASS |
+| 9 | **multi-event** (one report, two MRE rows, only one matches) | 1 | 1 | PASS |
 
-Performance (250-UID batch): full SP **9,273 ms → ~450 ms** with populated dimensions (~20x), the
-line-77 `#MORB_EVENT_INIT` statement **~7,700 ms → ~370 ms**. EVENT_METRIC logical reads
-**100,847 → 828** (scan → seek). The original also deadlocked under parallelism; the optimized SP does not.
+Scenario 9 is the case a naive key-grain rewrite would get wrong; the superset-`#cand` + unchanged-WHERE
+design passes it. Determinism (orig vs orig2) also 0/0 on all 9.
 
-## Run it
+Performance (250-UID batch, warm):
+
+| state | full SP | `#MORB_EVENT_INIT` |
+|---|---|---|
+| baseline | 9,273 ms | ~7,700 ms |
+| + index + split-materialization | ~450 ms | ~370 ms |
+| + `#cand` batch-scoping + MAXDOP1 | **~114 ms** (~82x) | 16.6 ms |
+
+EVENT_METRIC logical reads 100,847 → 828. The original also deadlocks under parallelism; the optimized SP does not.
+
+## Files / run it
+`repro_seed.sql` (base seed: EVENT_METRIC 5M unindexed EVENT_UID, MORBIDITY_REPORT/EVENT 50k),
+`seed.sql` (dim enrichment + the multi-event report), `harness.sql` (timing + checksum),
+`run_capture.sql` / `compare.sql` (9-scenario capture + EXCEPT diff),
+`run_equivalence.sh` (deploy ORIGINAL from origin/rel-7.13 → capture ×2 → deploy OPTIMIZED → capture → diff).
 ```
-bash run_equivalence.sh          # deploys both versions, compares (needs the app-926 working tree)
+bash run_equivalence.sh
 ```
-Requires the `nedss-datareporting-nbs-mssql-1` container with RDB_MODERN and the repro seed applied
-(`repro_seed.sql` then `seed.sql`). MAXDOP is set to 1 for deterministic timing / to avoid the
-original's intra-query parallel deadlock; measure under parallelism for production-representative numbers.
+Needs the `nedss-datareporting-nbs-mssql-1` container with RDB_MODERN + `repro_seed.sql` then `seed.sql` applied.
+MAXDOP was set to 1 on RDB_MODERN for deterministic timing / to dodge the original's intra-query parallel deadlock.
 
-## Known further optimization (not applied)
-The OR-across-outer-joins still makes the SP process every ACTIVE report per call (scales with total
-reports, not batch size — likely a large part of KY's 48h). A UNION-of-seeks pre-filter would fix this
-and close the last gap to <300ms, but it is NOT equivalence-safe unless MORBIDITY_REPORT_EVENT is 1:1
-per MORB_RPT_KEY (it has no unique constraint). Validate that (or build a multi-event test) before shipping it.
+## Remaining floor (~114ms; 30ms not reached without correctness risk)
+`#MORB_EVENT_FINAL` (~45ms) is a 150-column projection with `CONCAT`/`CHARINDEX`/`TRIM`/`IIF`/`CASE`
+over the ~251 candidate rows and 15 joins — intrinsic serial CPU, already batch-scoped, so `#cand`
+doesn't help it. Going lower touches result-producing projection logic and would need its own
+equivalence pass; not attempted, to keep output guaranteed identical.
