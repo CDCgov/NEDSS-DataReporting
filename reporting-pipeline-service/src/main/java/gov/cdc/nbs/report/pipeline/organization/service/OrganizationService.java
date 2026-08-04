@@ -12,6 +12,8 @@ import gov.cdc.nbs.report.pipeline.organization.transformer.DataTransformers;
 import gov.cdc.nbs.report.pipeline.organization.transformer.OrganizationType;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
+import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +28,7 @@ import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,9 +37,7 @@ import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,8 @@ public class OrganizationService {
 
   @Qualifier("organizationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
+
+  private final RetryTopicResolver retryTopicResolver;
 
   @Value("${spring.kafka.topics.nbs.organization}")
   private String orgTopic;
@@ -111,10 +114,12 @@ public class OrganizationService {
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
+  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
+    inputTopics = Set.of(orgTopic, placeTopic);
 
     msgProcessed = metrics.counter("org_msg_processed", tags);
     msgSuccess = metrics.counter("org_msg_success", tags);
@@ -146,16 +151,31 @@ public class OrganizationService {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.organization}", "${spring.kafka.topics.nbs.place}"},
       containerFactory = "organizationKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-    if (topic.equals(orgTopic)) {
-      return CompletableFuture.runAsync(() -> processOrganization(message, topic), orgExecutor);
-    } else if (topic.equals(placeTopic)) {
-      return CompletableFuture.runAsync(() -> processPlace(message, topic), orgExecutor);
+  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> record) {
+    TopicResolution topicResolution;
+    try {
+      topicResolution = retryTopicResolver.resolve(record, inputTopics);
+    } catch (NoSuchElementException exception) {
+      return CompletableFuture.failedFuture(
+          new DataProcessingException(exception.getMessage(), exception));
+    }
+
+    String physicalTopic = topicResolution.physicalTopic();
+    String logicalTopic = topicResolution.logicalTopic();
+    String message = record.value();
+    log.debug(
+        "Resolved Kafka topic: physicalTopic={} logicalTopic={}", physicalTopic, logicalTopic);
+
+    if (logicalTopic.equals(orgTopic)) {
+      return CompletableFuture.runAsync(
+          () -> processOrganization(message, physicalTopic), orgExecutor);
+    } else if (logicalTopic.equals(placeTopic)) {
+      return CompletableFuture.runAsync(() -> processPlace(message, physicalTopic), orgExecutor);
     } else {
       return CompletableFuture.failedFuture(
           new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+              "Received data from an unknown topic: " + physicalTopic,
+              new NoSuchElementException()));
     }
   }
 
