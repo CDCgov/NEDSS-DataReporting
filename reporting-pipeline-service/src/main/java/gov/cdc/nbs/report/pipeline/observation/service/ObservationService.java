@@ -152,8 +152,6 @@ public class ObservationService {
     String physicalTopic = topicResolution.physicalTopic();
     String logicalTopic = topicResolution.logicalTopic();
     String message = rec.value();
-    logger.debug(
-        "Resolved Kafka topic: physicalTopic={} logicalTopic={}", physicalTopic, logicalTopic);
 
     if (logicalTopic.equals(observationTopic)) {
       return CompletableFuture.runAsync(

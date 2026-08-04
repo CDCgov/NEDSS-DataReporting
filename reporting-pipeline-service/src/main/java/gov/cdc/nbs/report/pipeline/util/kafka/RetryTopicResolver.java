@@ -5,12 +5,15 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
 
 /** Resolves a Kafka delivery to one of a listener's configured logical main topics. */
 @Component
 public final class RetryTopicResolver {
+  private static final Logger logger = LoggerFactory.getLogger(RetryTopicResolver.class);
 
   /**
    * Resolves a consumed record to a configured logical main topic.
@@ -32,16 +35,21 @@ public final class RetryTopicResolver {
     validateMainTopics(allowedMainTopics);
 
     String physicalTopic = record.topic();
-    if (allowedMainTopics.contains(physicalTopic)) {
-      return new TopicResolution(physicalTopic, physicalTopic);
+    String originalTopic = null;
+    if (!allowedMainTopics.contains(physicalTopic)) {
+      originalTopic = extractOriginalTopic(record);
+      if (originalTopic == null || !allowedMainTopics.contains(originalTopic)) {
+        throw new NoSuchElementException("Received data from an unknown topic: " + physicalTopic);
+      }
     }
 
-    String originalTopic = extractOriginalTopic(record);
-    if (originalTopic != null && allowedMainTopics.contains(originalTopic)) {
-      return new TopicResolution(physicalTopic, originalTopic);
-    }
-
-    throw new NoSuchElementException("Received data from an unknown topic: " + physicalTopic);
+    TopicResolution resolution =
+        new TopicResolution(physicalTopic, originalTopic != null ? originalTopic : physicalTopic);
+    logger.debug(
+        "Resolved Kafka topic: physicalTopic={} logicalTopic={}",
+        resolution.physicalTopic(),
+        resolution.logicalTopic());
+    return resolution;
   }
 
   private static String extractOriginalTopic(ConsumerRecord<?, ?> record) {

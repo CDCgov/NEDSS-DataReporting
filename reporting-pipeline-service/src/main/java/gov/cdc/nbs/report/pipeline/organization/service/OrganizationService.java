@@ -163,8 +163,6 @@ public class OrganizationService {
     String physicalTopic = topicResolution.physicalTopic();
     String logicalTopic = topicResolution.logicalTopic();
     String message = record.value();
-    log.debug(
-        "Resolved Kafka topic: physicalTopic={} logicalTopic={}", physicalTopic, logicalTopic);
 
     if (logicalTopic.equals(orgTopic)) {
       return CompletableFuture.runAsync(
