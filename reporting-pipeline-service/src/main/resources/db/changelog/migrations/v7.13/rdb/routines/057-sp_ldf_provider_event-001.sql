@@ -6,7 +6,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_ldf_provider_event @ldf_uid_list nvarchar(max), @bus_obj_uid_list nvarchar(max), @batch_id BIGINT
+CREATE PROCEDURE dbo.sp_ldf_provider_event @ldf_uid_list nvarchar(max), @bus_obj_uid_list nvarchar(max), @batch_id BIGINT, @debug_logging bit = 0
 AS
 Begin
 
@@ -15,23 +15,26 @@ Begin
         DECLARE @dataflow_name NVARCHAR(200) = 'ldf_provider PRE-Processing Event';
         DECLARE @package_name NVARCHAR(200) = 'sp_ldf_provider_event';
         
-        INSERT INTO [dbo].[job_flow_log]
-            ( batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
-            VALUES ( @batch_id
-                , @dataflow_name
-                , @package_name
-                , 'START'
-                , 0
-                , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
-                , 0
-                , LEFT(@bus_obj_uid_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+                ( batch_id
+                , [Dataflow_Name]
+                , [package_Name]
+                , [Status_Type]
+                , [step_number]
+                , [step_name]
+                , [row_count]
+                , [Msg_Description1])
+                VALUES ( @batch_id
+                    , @dataflow_name
+                    , @package_name
+                    , 'START'
+                    , 0
+                    , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
+                    , 0
+                    , LEFT(@bus_obj_uid_list, 199));
+        END;
 
         /*select * from dbo.v_ldf_provider ldf
          WHERE ldf.ldf_uid in (SELECT value FROM STRING_SPLIT(@ldf_uid_list, ','))
@@ -85,23 +88,26 @@ Begin
             and p.cd='PRV'
         Order By business_object_uid, display_order_nbr ;
 
-        INSERT INTO [dbo].[job_flow_log]
-            ( batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
-            VALUES ( @batch_id
-                , @dataflow_name
-                , @package_name
-                , 'COMPLETE'
-                , 0
-                , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
-                , 0
-                , LEFT(@bus_obj_uid_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+                ( batch_id
+                , [Dataflow_Name]
+                , [package_Name]
+                , [Status_Type]
+                , [step_number]
+                , [step_name]
+                , [row_count]
+                , [Msg_Description1])
+                VALUES ( @batch_id
+                    , @dataflow_name
+                    , @package_name
+                    , 'COMPLETE'
+                    , 0
+                    , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
+                    , 0
+                    , LEFT(@bus_obj_uid_list, 199));
+        END;
 
     end try
 

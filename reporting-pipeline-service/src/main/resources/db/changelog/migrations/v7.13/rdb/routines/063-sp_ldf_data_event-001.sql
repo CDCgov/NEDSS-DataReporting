@@ -6,7 +6,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_ldf_data_event @bus_obj_nm varchar(20), @ldf_uid nvarchar(max),  @bus_obj_uid_list nvarchar(max)
+CREATE PROCEDURE dbo.sp_ldf_data_event @bus_obj_nm varchar(20), @ldf_uid nvarchar(max),  @bus_obj_uid_list nvarchar(max), @debug_logging bit = 0
 AS 
 begin
 	 begin try
@@ -16,51 +16,101 @@ begin
 		DECLARE @dataflow_name NVARCHAR(200) = 'ldf_data PRE-Processing Event';
         DECLARE @package_name NVARCHAR(200) = 'sp_ldf_data_event';
         
-        INSERT INTO [dbo].[job_flow_log]
-            ( batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
-            VALUES ( @batch_id
-                , @dataflow_name
-                , @package_name
-                , 'START'
-                , 0
-                , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
-                , 0
-                , LEFT(@bus_obj_uid_list, 199));
+		IF @debug_logging = 1
+		BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+                ( batch_id
+                , [Dataflow_Name]
+                , [package_Name]
+                , [Status_Type]
+                , [step_number]
+                , [step_name]
+                , [row_count]
+                , [Msg_Description1])
+                VALUES ( @batch_id
+                    , @dataflow_name
+                    , @package_name
+                    , 'START'
+                    , 0
+                    , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
+                    , 0
+                    , LEFT(@bus_obj_uid_list, 199));
+		END;
 
-			if @bus_obj_nm = 'PAT'  exec dbo.sp_ldf_patient_event @ldf_uid, @bus_obj_uid_list, @batch_id
-			else if @bus_obj_nm = 'PRV'  exec dbo.sp_ldf_provider_event @ldf_uid , @bus_obj_uid_list, @batch_id 
-			else if  @bus_obj_nm = 'ORG'  exec dbo.sp_ldf_organization_event @ldf_uid, @bus_obj_uid_list, @batch_id 
-			else if  @bus_obj_nm = 'LAB'  exec dbo.sp_ldf_observation_event @ldf_uid, @bus_obj_uid_list, @batch_id 
-			else if  @bus_obj_nm = 'PHC'  exec dbo.sp_ldf_phc_event @ldf_uid, @bus_obj_uid_list, @batch_id 
-			else if  @bus_obj_nm = 'BMD'  exec dbo.sp_ldf_phc_event @ldf_uid, @bus_obj_uid_list, @batch_id
-			else if  @bus_obj_nm = 'HEP'  exec dbo.sp_ldf_phc_event @ldf_uid, @bus_obj_uid_list, @batch_id
-			else if  @bus_obj_nm = 'NIP'  exec dbo.sp_ldf_phc_event @ldf_uid, @bus_obj_uid_list, @batch_id
-			else if  @bus_obj_nm = 'VAC'  exec dbo.sp_ldf_intervention_event @ldf_uid, @bus_obj_uid_list, @batch_id 
-		
-		INSERT INTO [dbo].[job_flow_log]
-            ( batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
-            VALUES ( @batch_id
-                , @dataflow_name
-                , @package_name
-                , 'COMPLETE'
-                , 0
-                , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
-                , 0
-                , LEFT(@bus_obj_uid_list, 199));
+			if @bus_obj_nm = 'PAT'
+				exec dbo.sp_ldf_patient_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'PRV'
+				exec dbo.sp_ldf_provider_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'ORG'
+				exec dbo.sp_ldf_organization_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'LAB'
+				exec dbo.sp_ldf_observation_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'PHC'
+				exec dbo.sp_ldf_phc_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'BMD'
+				exec dbo.sp_ldf_phc_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'HEP'
+				exec dbo.sp_ldf_phc_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'NIP'
+				exec dbo.sp_ldf_phc_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+			else if @bus_obj_nm = 'VAC'
+				exec dbo.sp_ldf_intervention_event
+					@ldf_uid_list = @ldf_uid,
+					@bus_obj_uid_list = @bus_obj_uid_list,
+					@batch_id = @batch_id,
+					@debug_logging = @debug_logging;
+		IF @debug_logging = 1
+		BEGIN
+    		INSERT INTO [dbo].[job_flow_log]
+                ( batch_id
+                , [Dataflow_Name]
+                , [package_Name]
+                , [Status_Type]
+                , [step_number]
+                , [step_name]
+                , [row_count]
+                , [Msg_Description1])
+                VALUES ( @batch_id
+                    , @dataflow_name
+                    , @package_name
+                    , 'COMPLETE'
+                    , 0
+                    , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
+                    , 0
+                    , LEFT(@bus_obj_uid_list, 199));
+		END;
 
 	end try
 
