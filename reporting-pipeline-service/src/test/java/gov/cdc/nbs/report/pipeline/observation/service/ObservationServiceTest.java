@@ -16,8 +16,10 @@ import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation
 import gov.cdc.nbs.report.pipeline.observation.repository.ObservationRepository;
 import gov.cdc.nbs.report.pipeline.observation.transformer.ProcessObservationDataUtil;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -30,8 +32,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.*;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
 
 class ObservationServiceTest {
 
@@ -65,6 +69,7 @@ class ObservationServiceTest {
             observationRepository,
             kafkaTemplate,
             transformer,
+            new RetryTopicResolver(),
             new CustomMetrics(new SimpleMeterRegistry()));
     observationService.setObservationTopic(inputTopicNameObservation);
     observationService.setActRelationshipTopic(inputTopicNameActRelationship);
@@ -98,7 +103,26 @@ class ObservationServiceTest {
     when(kafkaTemplate.send(anyString(), anyString(), isNull()))
         .thenReturn(CompletableFuture.completedFuture(null));
 
-    validateData(payload, observation, inputTopicNameObservation);
+    validateData(getRecord(payload, inputTopicNameObservation), observation);
+
+    verify(observationRepository).computeObservations(String.valueOf(observationUid));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Observation_retry-0", "Observation_retry-1"})
+  void testProcessObservationRetryMessage(String retryTopic) throws JsonProcessingException {
+    Long observationUid = 123456789L;
+    String payload =
+        "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
+    Observation observation = constructObservation(observationUid, "Order");
+    when(observationRepository.computeObservations(String.valueOf(observationUid)))
+        .thenReturn(Optional.of(observation));
+    when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+    when(kafkaTemplate.send(anyString(), anyString(), isNull()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+
+    validateData(getRetryRecord(payload, retryTopic, inputTopicNameObservation), observation);
 
     verify(observationRepository).computeObservations(String.valueOf(observationUid));
   }
@@ -116,18 +140,7 @@ class ObservationServiceTest {
       throws JsonProcessingException {
     Long sourceActUid = 123456789L;
     String obsDomainCdSt = "Order";
-    String payload =
-        "{\"payload\": {\"before\": {\"source_act_uid\": \""
-            + sourceActUid
-            + "\", \"type_cd\": \""
-            + typeCd
-            + "\", \"target_class_cd\": \""
-            + targetClassCd
-            + "\"},"
-            + "\"after\": {\"source_act_uid\": \"123\"},"
-            + "\"op\": \""
-            + op
-            + "\"}}";
+    String payload = actRelationshipPayload(sourceActUid, op, typeCd, targetClassCd);
 
     if (typeCd.equals("OTHER") || !op.equals("d") || targetClassCd.equals("OTHER")) {
       ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
@@ -143,10 +156,28 @@ class ObservationServiceTest {
       when(kafkaTemplate.send(anyString(), anyString(), isNull()))
           .thenReturn(CompletableFuture.completedFuture(null));
 
-      validateData(payload, observation, inputTopicNameActRelationship);
+      validateData(getRecord(payload, inputTopicNameActRelationship), observation);
 
       verify(observationRepository).computeObservations(String.valueOf(sourceActUid));
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Act_relationship_retry-0", "Act_relationship_retry-1"})
+  void testProcessActRelationshipRetryMessage(String retryTopic) throws JsonProcessingException {
+    Long sourceActUid = 123456789L;
+    String payload = actRelationshipPayload(sourceActUid, "d", "LabReport", "OBS");
+    Observation observation = constructObservation(sourceActUid, "Order");
+    when(observationRepository.computeObservations(String.valueOf(sourceActUid)))
+        .thenReturn(Optional.of(observation));
+    when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+    when(kafkaTemplate.send(anyString(), anyString(), isNull()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+
+    validateData(getRetryRecord(payload, retryTopic, inputTopicNameActRelationship), observation);
+
+    verify(observationRepository).computeObservations(String.valueOf(sourceActUid));
   }
 
   @Test
@@ -200,9 +231,24 @@ class ObservationServiceTest {
   void testProcessMessageUnknownTopic() {
     ConsumerRecord<String, String> rec = getRecord(null, "dummyTopicName");
 
-    observationService.processMessage(rec);
+    CompletableFuture<Void> future = observationService.processMessage(rec);
 
+    CompletionException exception = assertThrows(CompletionException.class, future::join);
+    assertEquals(NoSuchElementException.class, exception.getCause().getCause().getClass());
+    verifyNoInteractions(observationRepository);
     verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
+  }
+
+  @Test
+  void testProcessMessageRejectsUnknownOriginalTopic() {
+    ConsumerRecord<String, String> rec =
+        getRetryRecord(null, "Observation_retry-0", "unknownTopic");
+
+    CompletableFuture<Void> future = observationService.processMessage(rec);
+
+    CompletionException exception = assertThrows(CompletionException.class, future::join);
+    assertEquals(NoSuchElementException.class, exception.getCause().getCause().getClass());
+    verifyNoInteractions(observationRepository);
   }
 
   @ParameterizedTest
@@ -234,9 +280,8 @@ class ObservationServiceTest {
     assertEquals(NoDataException.class, ex.getCause().getClass());
   }
 
-  private void validateData(String payload, Observation observation, String inputTopic)
+  private void validateData(ConsumerRecord<String, String> rec, Observation observation)
       throws JsonProcessingException {
-    ConsumerRecord<String, String> rec = getRecord(payload, inputTopic);
     observationService.processMessage(rec);
 
     ObservationKey observationKey = new ObservationKey();
@@ -343,7 +388,31 @@ class ObservationServiceTest {
     return observation;
   }
 
+  private String actRelationshipPayload(
+      Long sourceActUid, String operation, String typeCd, String targetClassCd) {
+    return "{\"payload\": {\"before\": {\"source_act_uid\": \""
+        + sourceActUid
+        + "\", \"type_cd\": \""
+        + typeCd
+        + "\", \"target_class_cd\": \""
+        + targetClassCd
+        + "\"},"
+        + "\"after\": {\"source_act_uid\": \"123\"},"
+        + "\"op\": \""
+        + operation
+        + "\"}}";
+  }
+
   private ConsumerRecord<String, String> getRecord(String payload, String inputTopic) {
     return new ConsumerRecord<>(inputTopic, 0, 11L, null, payload);
+  }
+
+  private ConsumerRecord<String, String> getRetryRecord(
+      String payload, String retryTopic, String originalTopic) {
+    ConsumerRecord<String, String> record = getRecord(payload, retryTopic);
+    record
+        .headers()
+        .add(KafkaHeaders.ORIGINAL_TOPIC, originalTopic.getBytes(StandardCharsets.UTF_8));
+    return record;
   }
 }
