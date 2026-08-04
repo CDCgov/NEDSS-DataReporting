@@ -7,7 +7,7 @@ IF IS_SRVROLEMEMBER('sysadmin') <> 1
 GO
 
 -- ------------------------------------------------------------
--- Configure the minimum LOB size that SQL Server can replicate
+-- Ensure SQL Server's replication LOB size limit is at least 512 KiB
 -- ------------------------------------------------------------
 -- This is an instance-wide setting. A 512 KiB binary value expands to about
 -- 683 KiB when Debezium's JSON converter base64-encodes it, leaving room for
@@ -21,8 +21,10 @@ SELECT @currentMaxTextReplicationSizeBytes = CONVERT(INT, VALUE_IN_USE)
 FROM SYS.CONFIGURATIONS
 WHERE NAME = 'max text repl size (B)';
 
-IF @currentMaxTextReplicationSizeBytes <> -1
-    AND @currentMaxTextReplicationSizeBytes < @minimumMaxTextReplicationSizeBytes
+IF
+    @currentMaxTextReplicationSizeBytes <> -1
+    AND @currentMaxTextReplicationSizeBytes
+    < @minimumMaxTextReplicationSizeBytes
     BEGIN
         SELECT @showAdvancedOptionsWasEnabled = CONVERT(BIT, VALUE_IN_USE)
         FROM SYS.CONFIGURATIONS
@@ -35,9 +37,9 @@ IF @currentMaxTextReplicationSizeBytes <> -1
             END
 
         PRINT 'Increasing max text repl size (B) from '
-            + CONVERT(VARCHAR(20), @currentMaxTextReplicationSizeBytes)
-            + ' to '
-            + CONVERT(VARCHAR(20), @minimumMaxTextReplicationSizeBytes);
+        + CONVERT(VARCHAR(20), @currentMaxTextReplicationSizeBytes)
+        + ' to '
+        + CONVERT(VARCHAR(20), @minimumMaxTextReplicationSizeBytes);
 
         EXEC SYS.SP_CONFIGURE
             'max text repl size (B)',
@@ -53,10 +55,10 @@ IF @currentMaxTextReplicationSizeBytes <> -1
 ELSE
     BEGIN
         PRINT 'max text repl size (B) already satisfies the RTR minimum: '
-            + CASE
-                WHEN @currentMaxTextReplicationSizeBytes = -1 THEN 'unlimited'
-                ELSE CONVERT(VARCHAR(20), @currentMaxTextReplicationSizeBytes)
-            END;
+        + CASE
+            WHEN @currentMaxTextReplicationSizeBytes = -1 THEN 'unlimited'
+            ELSE CONVERT(VARCHAR(20), @currentMaxTextReplicationSizeBytes)
+        END;
     END
 GO
 
