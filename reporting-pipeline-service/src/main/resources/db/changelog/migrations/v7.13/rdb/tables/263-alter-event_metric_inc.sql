@@ -1,0 +1,18 @@
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.EVENT_METRIC_INC')
+      AND name = N'IX_EVENT_METRIC_INC_EVENT_UID'
+)
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_EVENT_METRIC_INC_EVENT_UID
+        ON dbo.EVENT_METRIC_INC (EVENT_UID)
+        INCLUDE
+        (
+            PROG_AREA_DESC_TXT,
+            ADD_TIME,
+            LAST_CHG_TIME
+        );
+END
+GO

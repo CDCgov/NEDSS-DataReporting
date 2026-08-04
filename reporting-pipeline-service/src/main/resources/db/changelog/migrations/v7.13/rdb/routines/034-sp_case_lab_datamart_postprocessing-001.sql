@@ -316,13 +316,14 @@ BEGIN
                i.record_status_cd
         into #TMP_CLDM_GEN_PAT_ADD_INV
         from #TMP_CLDM_GEN_PATIENT_ADD as GPA with (nolock)
-                 left join dbo.investigation as i with (nolock)
-                           ON GPA.investigation_key = i.investigation_key
-                 left join dbo.EVENT_METRIC_INC as em with (nolock)
-                           ON em.event_uid = i.case_uid
-                               and i.investigation_key <> 1
-        WHERE (I.RECORD_STATUS_CD <> 'INACTIVE')
-          AND (I.CASE_TYPE <> 'S');
+                INNER JOIN dbo.INVESTIGATION AS i
+                        ON GPA.INVESTIGATION_KEY = i.INVESTIGATION_KEY
+                        AND i.INVESTIGATION_KEY <> 1
+                        AND i.RECORD_STATUS_CD <> 'INACTIVE'
+                        AND i.CASE_TYPE <> 'S'
+                LEFT JOIN dbo.EVENT_METRIC_INC AS em
+                        ON em.EVENT_UID = i.CASE_UID
+        ;
 
         if @debug = 'true'
             select '#TMP_CLDM_GEN_PAT_ADD_INV', * from #TMP_CLDM_GEN_PAT_ADD_INV;
