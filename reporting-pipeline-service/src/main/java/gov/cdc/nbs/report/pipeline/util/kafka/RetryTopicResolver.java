@@ -1,8 +1,5 @@
 package gov.cdc.nbs.report.pipeline.util.kafka;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -53,18 +50,9 @@ public final class RetryTopicResolver {
       return null;
     }
 
-    try {
-      String originalTopic =
-          StandardCharsets.UTF_8
-              .newDecoder()
-              .onMalformedInput(CodingErrorAction.REPORT)
-              .onUnmappableCharacter(CodingErrorAction.REPORT)
-              .decode(ByteBuffer.wrap(originalTopicHeader.value()))
-              .toString();
-      return originalTopic.isBlank() ? null : originalTopic;
-    } catch (CharacterCodingException exception) {
-      return null;
-    }
+    // convert bytes[] to string using UTF-8 encoding
+    String originalTopic = new String(originalTopicHeader.value(), StandardCharsets.UTF_8);
+    return originalTopic.isBlank() ? null : originalTopic;
   }
 
   private static void validateMainTopics(Set<String> allowedMainTopics) {
