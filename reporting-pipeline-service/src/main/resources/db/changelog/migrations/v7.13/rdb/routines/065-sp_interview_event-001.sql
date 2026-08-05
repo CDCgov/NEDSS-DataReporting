@@ -7,7 +7,7 @@ END
 GO 
 
 CREATE PROCEDURE [dbo].[sp_interview_event] @ix_uids nvarchar(max),
-                                                     @debug bit = 'false'
+                                                     @debug bit = 0, @debug_logging bit = 0
 AS
 BEGIN
 
@@ -24,23 +24,26 @@ BEGIN
 
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Interview PRE-Processing Event'
-               , 'sp_interview_event'
-               , 'START'
-               , 0
-               , LEFT('Pre ID-' + @ix_uids, 199)
-               , 0
-               , LEFT(@ix_uids, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                   , 'Interview PRE-Processing Event'
+                   , 'sp_interview_event'
+                   , 'START'
+                   , 0
+                   , LEFT('Pre ID-' + @ix_uids, 199)
+                   , 0
+                   , LEFT(@ix_uids, 199));
+        END;
 
         BEGIN
             TRANSACTION;
@@ -103,10 +106,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -181,10 +187,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -225,10 +234,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -268,10 +280,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -332,10 +347,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -372,10 +390,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -418,10 +439,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -465,10 +489,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -511,10 +538,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -562,10 +592,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -603,10 +636,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -638,10 +674,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -687,10 +726,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -741,10 +783,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -801,10 +846,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -841,10 +889,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -882,10 +933,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
         COMMIT TRANSACTION;
 
@@ -929,10 +983,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
         COMMIT TRANSACTION;
 
@@ -962,10 +1019,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1011,10 +1071,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -1060,10 +1123,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -1094,10 +1160,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -1143,10 +1212,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -1189,10 +1261,13 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
@@ -1256,32 +1331,38 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
-                @RowCount_no);
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
+            VALUES (@batch_id, 'Interview PRE-Processing Event', 'nrt_interview', 'START', @Proc_Step_no, @Proc_Step_Name,
+                    @RowCount_no);
+        END;
 
 
         COMMIT TRANSACTION;
 
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Interview PRE-Processing Event'
-               , 'sp_interview_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT('Pre ID-' + @ix_uids, 199)
-               , 0
-               , LEFT(@ix_uids, 199));
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log]
+            ( batch_id
+            , [Dataflow_Name]
+            , [package_Name]
+            , [Status_Type]
+            , [step_number]
+            , [step_name]
+            , [row_count]
+            , [Msg_Description1])
+            VALUES ( @batch_id
+                   , 'Interview PRE-Processing Event'
+                   , 'sp_interview_event'
+                   , 'COMPLETE'
+                   , 0
+                   , LEFT('Pre ID-' + @ix_uids, 199)
+                   , 0
+                   , LEFT(@ix_uids, 199));
+        END;
 
     END TRY
     BEGIN CATCH
