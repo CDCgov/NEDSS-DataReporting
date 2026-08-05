@@ -17,23 +17,15 @@ Begin
         
         IF @debug_logging = 1
         BEGIN
-            INSERT INTO [dbo].[job_flow_log]
-                ( batch_id
-                , [Dataflow_Name]
-                , [package_Name]
-                , [Status_Type]
-                , [step_number]
-                , [step_name]
-                , [row_count]
-                , [Msg_Description1])
-                VALUES ( @batch_id
-                    , @dataflow_name
-                    , @package_name
-                    , 'START'
-                    , 0
-                    , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
-                    , 0
-                    , LEFT(@bus_obj_uid_list, 199));
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @dataflow_name,
+                @package_name = @package_name,
+                @status_type = 'START',
+                @step_number = 0,
+                @step_name = LEFT('Pre ID-' + @bus_obj_uid_list, 199),
+                @row_count = 0,
+                @msg_description1 = LEFT(@bus_obj_uid_list, 199);
         END;
 
         /*select * from dbo.v_ldf_patient ldf
@@ -91,23 +83,15 @@ Begin
 
         IF @debug_logging = 1
         BEGIN
-            INSERT INTO [dbo].[job_flow_log]
-                ( batch_id
-                , [Dataflow_Name]
-                , [package_Name]
-                , [Status_Type]
-                , [step_number]
-                , [step_name]
-                , [row_count]
-                , [Msg_Description1])
-                VALUES ( @batch_id
-                    , @dataflow_name
-                    , @package_name
-                    , 'COMPLETE'
-                    , 0
-                    , LEFT('Pre ID-' + @bus_obj_uid_list, 199)
-                    , 0
-                    , LEFT(@bus_obj_uid_list, 199));
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @dataflow_name,
+                @package_name = @package_name,
+                @status_type = 'COMPLETE',
+                @step_number = 0,
+                @step_name = LEFT('Pre ID-' + @bus_obj_uid_list, 199),
+                @row_count = 0,
+                @msg_description1 = LEFT(@bus_obj_uid_list, 199);
         END;
     end try
 
@@ -123,27 +107,16 @@ Begin
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1]
-        , [Error_Description]
-        )
-        VALUES ( @batch_id
-               , @dataflow_name
-               , @package_name
-               , 'ERROR'
-               , 0
-               , @dataflow_name
-               , 0
-               , LEFT(@bus_obj_uid_list, 199)
-               , @FullErrorMessage
-               );
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @dataflow_name,
+            @package_name = @package_name,
+            @status_type = 'ERROR',
+            @step_number = 0,
+            @step_name = @dataflow_name,
+            @row_count = 0,
+            @msg_description1 = LEFT(@bus_obj_uid_list, 199),
+            @error_description = @FullErrorMessage;
 
         return @FullErrorMessage;
 

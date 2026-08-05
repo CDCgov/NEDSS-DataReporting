@@ -17,26 +17,15 @@ BEGIN
 
         IF @debug_logging = 1
         BEGIN
-            INSERT INTO [dbo].[job_flow_log] (
-                                                            batch_id
-                                                          ,[Dataflow_Name]
-                                                          ,[package_Name]
-                                                          ,[Status_Type]
-                                                          ,[step_number]
-                                                          ,[step_name]
-                                                          ,[row_count]
-                                                          ,[Msg_Description1]
-            )
-            VALUES (
-                     @batch_id
-                   ,'Observation PRE-Processing Event'
-                   ,'sp_observation_event'
-                   ,'START'
-                   ,0
-                   ,LEFT('Pre ID-' + @obs_id_list,199)
-                   ,0
-                   ,LEFT(@obs_id_list,199)
-                   );
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = 'Observation PRE-Processing Event',
+                @package_name = 'sp_observation_event',
+                @status_type = 'START',
+                @step_number = 0,
+                @step_name = LEFT('Pre ID-' + @obs_id_list,199),
+                @row_count = 0,
+                @msg_description1 = LEFT(@obs_id_list,199);
         END;
 
         SELECT
@@ -448,25 +437,15 @@ BEGIN
 
         IF @debug_logging = 1
         BEGIN
-            INSERT INTO [dbo].[job_flow_log]
-            (     batch_id
-            , [Dataflow_Name]
-            , [package_Name]
-            , [Status_Type]
-            , [step_number]
-            , [step_name]
-            , [row_count]
-            , [Msg_Description1])
-            VALUES (
-                     @batch_id
-                   , 'Observation PRE-Processing Event'
-                   , 'sp_observation_event'
-                   , 'COMPLETE'
-                   , 0
-                   , LEFT ('Pre ID-' + @obs_id_list, 199)
-                   , 0
-                   , LEFT (@obs_id_list, 199)
-                   );
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = 'Observation PRE-Processing Event',
+                @package_name = 'sp_observation_event',
+                @status_type = 'COMPLETE',
+                @step_number = 0,
+                @step_name = LEFT ('Pre ID-' + @obs_id_list, 199),
+                @row_count = 0,
+                @msg_description1 = LEFT (@obs_id_list, 199);
         END;
 
     END TRY
@@ -483,27 +462,16 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log]
-        (      batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1]
-        , [Error_Description])
-        VALUES (
-                 @batch_id
-               , 'Observation PRE-Processing Event'
-               , 'sp_observation_event'
-               , 'ERROR'
-               , 0
-               , 'Observation PRE-Processing Event'
-               , 0
-               , LEFT (@obs_id_list, 199)
-               , @FullErrorMessage
-               );
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = 'Observation PRE-Processing Event',
+            @package_name = 'sp_observation_event',
+            @status_type = 'ERROR',
+            @step_number = 0,
+            @step_name = 'Observation PRE-Processing Event',
+            @row_count = 0,
+            @msg_description1 = LEFT (@obs_id_list, 199),
+            @error_description = @FullErrorMessage;
 
         return @FullErrorMessage;
 
