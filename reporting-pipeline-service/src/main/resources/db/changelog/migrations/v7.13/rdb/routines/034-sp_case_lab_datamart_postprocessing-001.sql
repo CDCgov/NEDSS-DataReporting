@@ -163,13 +163,15 @@ BEGIN
                                  ON
                                      inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select distinct ltr.INVESTIGATION_KEY
-                                        FROM dbo.LAB_TEST_RESULT ltr
-                                                                                                                                                                                                 INNER JOIN dbo.INVESTIGATION inv2
-                                                                                                                                                                                                                                                ON inv2.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
-                                                 INNER JOIN #PHC_IDS phc
-                                                                                                                                                                                                                                                ON phc.CASE_UID = inv2.CASE_UID
-                                        WHERE ltr.INVESTIGATION_KEY <> 1)
+          AND inv.INVESTIGATION_KEY in (
+                select distinct ltr.INVESTIGATION_KEY
+                FROM dbo.LAB_TEST_RESULT ltr
+                INNER JOIN dbo.INVESTIGATION inv2
+                        ON inv2.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                INNER JOIN #PHC_IDS phc
+                        ON phc.CASE_UID = inv2.CASE_UID
+                WHERE ltr.INVESTIGATION_KEY <> 1
+        )
         UNION
 
         SELECT inv.INVESTIGATION_KEY,
@@ -180,9 +182,8 @@ BEGIN
                PATIENT_key,
                PHYSICIAN_KEY
         FROM dbo.INVESTIGATION inv with (nolock)
-                 LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
-                                 ON
-                                     inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
+                LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
+                        ON inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
           AND inv.INVESTIGATION_KEY in (
                 select distinct mre.INVESTIGATION_KEY
