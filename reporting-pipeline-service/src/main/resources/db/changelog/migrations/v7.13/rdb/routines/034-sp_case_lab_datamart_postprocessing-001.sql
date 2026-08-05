@@ -692,27 +692,30 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_morbResults';
 
-         SELECT dbo.lab100.MORB_RPT_KEY,
-               mr.MORB_RPT_LOCAL_ID,
-                 dbo.lab100.RESULTED_LAB_TEST_KEY,
-                 dbo.lab100.LAB_RPT_RECEIVED_BY_PH_DT,
-                 dbo.lab100.SPECIMEN_COLLECTION_DT,
-                 dbo.lab100.RESULTED_LAB_TEST_CD_DESC,
-                 dbo.lab100.RESULTEDTEST_VAL_CD_DESC,
-                 dbo.lab100.NUMERIC_RESULT_WITHUNITS,
-                 dbo.lab100.LAB_RESULT_TXT_VAL,
-                 dbo.lab100.LAB_RESULT_COMMENTS
+        SELECT dbo.lab100.MORB_RPT_KEY,
+                mr.MORB_RPT_LOCAL_ID,
+                dbo.lab100.RESULTED_LAB_TEST_KEY,
+                dbo.lab100.LAB_RPT_RECEIVED_BY_PH_DT,
+                dbo.lab100.SPECIMEN_COLLECTION_DT,
+                dbo.lab100.RESULTED_LAB_TEST_CD_DESC,
+                dbo.lab100.RESULTEDTEST_VAL_CD_DESC,
+                dbo.lab100.NUMERIC_RESULT_WITHUNITS,
+                dbo.lab100.LAB_RESULT_TXT_VAL,
+                dbo.lab100.LAB_RESULT_COMMENTS
         into #TMP_CLDM_morbResults
-         from dbo.lab100 with (nolock)
-                 inner join dbo.MORBIDITY_REPORT mr with (nolock)
-                                ON mr.MORB_RPT_KEY = dbo.lab100.MORB_RPT_KEY
-         where dbo.lab100.MORB_RPT_KEY in (SELECT ME.MORB_RPT_KEY
-                               FROM dbo.MORBIDITY_REPORT_EVENT ME with (nolock)
-                                        INNER JOIN dbo.INVESTIGATION I with (nolock)
-                                                   ON ME.INVESTIGATION_KEY = I.INVESTIGATION_KEY
-                                                       AND I.INVESTIGATION_KEY in
-                                                           (select INVESTIGATION_KEY from #TMP_CLDM_All_Case)
-                               WHERE (I.RECORD_STATUS_CD = 'ACTIVE'));
+        from dbo.lab100 with (nolock)
+                inner join dbo.MORBIDITY_REPORT mr with (nolock)
+                        ON mr.MORB_RPT_KEY = dbo.lab100.MORB_RPT_KEY
+        where dbo.lab100.MORB_RPT_KEY in (
+                SELECT ME.MORB_RPT_KEY
+                FROM dbo.MORBIDITY_REPORT_EVENT ME with (nolock)
+                INNER JOIN dbo.INVESTIGATION I with (nolock)
+                        ON ME.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+                                AND I.INVESTIGATION_KEY in (
+                                        select INVESTIGATION_KEY from #TMP_CLDM_All_Case
+                                )
+                        WHERE (I.RECORD_STATUS_CD = 'ACTIVE')
+                );
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
