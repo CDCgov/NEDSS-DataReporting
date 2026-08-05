@@ -184,14 +184,16 @@ BEGIN
                                  ON
                                      inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select distinct mre.INVESTIGATION_KEY
-                                        from dbo.MORBIDITY_REPORT mr
-                                                 inner join dbo.MORBIDITY_REPORT_EVENT mre
-                                                            on mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
-                                                                                                                                                                                                 inner join dbo.INVESTIGATION inv2
-                                                                                                                                                                                                                                                ON inv2.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
-                                                 inner join #PHC_IDS phc
-                                                                                                                                                                                                                                                ON phc.CASE_UID = inv2.CASE_UID)
+          AND inv.INVESTIGATION_KEY in (
+                select distinct mre.INVESTIGATION_KEY
+                from dbo.MORBIDITY_REPORT mr
+                inner join dbo.MORBIDITY_REPORT_EVENT mre
+                        on mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
+                inner join dbo.INVESTIGATION inv2
+                        ON inv2.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
+                inner join #PHC_IDS phc
+                        ON phc.CASE_UID = inv2.CASE_UID
+        )
         /*  UNION
 
           SELECT inv.INVESTIGATION_KEY,
