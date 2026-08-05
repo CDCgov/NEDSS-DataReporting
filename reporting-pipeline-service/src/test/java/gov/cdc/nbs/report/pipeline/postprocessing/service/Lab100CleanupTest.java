@@ -53,9 +53,9 @@ class Lab100CleanupTest {
                 datamartProcessor,
                 new RetryTopicResolver(),
                 new CustomMetrics(new SimpleMeterRegistry())));
+    PostProcessingTestUtils.configureNrtTopics(service);
     service.initMetrics();
     datamartProcessor.initMetrics();
-    service.setInvestigationTopic("not_real");
     service.setServiceEnable(true);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
