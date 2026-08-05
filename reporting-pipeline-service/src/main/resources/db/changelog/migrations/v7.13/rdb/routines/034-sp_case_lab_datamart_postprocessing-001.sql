@@ -658,7 +658,16 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_morbResults';
 
-        select *
+        SELECT MORB_RPT_KEY,
+               MORB_RPT_LOCAL_ID,
+               RESULTED_LAB_TEST_KEY,
+               LAB_RPT_RECEIVED_BY_PH_DT,
+               SPECIMEN_COLLECTION_DT,
+               RESULTED_LAB_TEST_CD_DESC,
+               RESULTEDTEST_VAL_CD_DESC,
+               NUMERIC_RESULT_WITHUNITS,
+               LAB_RESULT_TXT_VAL,
+               LAB_RESULT_COMMENTS
         into #TMP_CLDM_morbResults
         from dbo.lab100 with (nolock)
         where morb_rpt_key in (SELECT ME.MORB_RPT_KEY
