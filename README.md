@@ -109,6 +109,26 @@ Specific `functional` and `unit` tests can be executed using the `tests` argumen
 ### Adding MasterEtl-level Validation for Functional Tests
 Review [FuncationTestValidation.md](./documentation/FunctionalTestValidation.md) for more details.
 
+### Event-procedure execution logging
+
+Event-procedure routine logging is controlled by
+`EVENT_PROCEDURE_DEBUG_LOGGING` and defaults to `false`:
+
+| Value | Routine `job_flow_log` rows | `ERROR` rows |
+|---|---|---|
+| `false` (default) | Suppressed | Always retained |
+| `true` | Written | Always retained |
+
+Enable it temporarily when investigating stored-procedure execution:
+
+```sh
+EVENT_PROCEDURE_DEBUG_LOGGING=true ./gradlew :reporting-pipeline-service:bootRun
+```
+
+This setting does not enable diagnostic `@debug` result sets. See
+[`documentation/EventProcedureJobFlowLogging.md`](documentation/EventProcedureJobFlowLogging.md)
+for operational guidance and stored-procedure coverage behavior.
+
 ### Windows Note (Testcontainers EOF Error)
 
 If you see `unexpected EOF` while running containerized tests on Windows, this is usually caused by Testcontainers trying to copy the entire project directory into a container and hitting a locked file.
