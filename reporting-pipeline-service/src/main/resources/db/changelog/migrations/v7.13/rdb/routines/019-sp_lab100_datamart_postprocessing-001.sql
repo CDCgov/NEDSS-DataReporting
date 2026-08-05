@@ -4,7 +4,7 @@
                 lab test UIDs. Joins order and result records, resolves
                 patient, provider, organization, program-area, LOINC, and
                 condition reference data, then upserts the resulting rows into
-                dbo.LAB100 and reconciles inactive/removed source records.
+                dbo.LAB100.
 
    Parameters:
      @labtestuids   Comma-delimited list of dbo.LAB_TEST.lab_test_uid values
@@ -1126,67 +1126,6 @@ BEGIN
             #TMP_LABTESTS4 src
                 LEFT JOIN dbo.LAB100 tgt ON src.RESULTED_LAB_TEST_KEY = tgt.RESULTED_LAB_TEST_KEY
         WHERE src.LAB_RPT_LOCAL_ID IS NOT NULL AND tgt.RESULTED_LAB_TEST_KEY IS NULL;
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        COMMIT TRANSACTION;
-
-        -- =================================================================
-        -- The two reconciliation steps below are NOT scoped to
-        -- @labtestuids: they detect orders that became inactive, or
-        -- LAB_TEST rows that were removed entirely, anywhere in the
-        -- source system, and therefore run independently of the current
-        -- batch's size.
-        -- =================================================================
-        BEGIN TRANSACTION;
-
-        -- Mark LAB100 rows INACTIVE when their parent order has since been
-        -- marked INACTIVE in LAB_TEST.
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'Update Inactive LAB100 Records';
-
-        UPDATE l
-        SET record_status_cd = 'INACTIVE'
-        FROM dbo.LAB100 l
-        WHERE
-            RESULTED_LAB_TEST_KEY IN (
-                SELECT
-                    l.RESULTED_LAB_TEST_KEY
-                FROM dbo.LAB_TEST lt
-                    INNER JOIN dbo.LAB100 l ON l.RESULTED_LAB_TEST_KEY = lt.LAB_TEST_KEY
-                WHERE
-                    ROOT_ORDERED_TEST_PNTR IN (
-                        SELECT ROOT_ORDERED_TEST_PNTR
-                        FROM dbo.LAB_TEST ltr
-                        WHERE LAB_TEST_TYPE = 'Order'
-                          AND record_status_cd = 'INACTIVE'
-                    )
-                    AND l.record_status_cd <> 'INACTIVE'
-            );
-
-        SELECT @RowCountNo = @@ROWCOUNT;
-        INSERT INTO dbo.JOB_FLOW_LOG
-            (BATCH_ID, DATAFLOW_NAME, PACKAGE_NAME, STATUS_TYPE, STEP_NUMBER, STEP_NAME, ROW_COUNT)
-        VALUES
-            (@BatchId, @DataflowName, @DataflowName, 'START', @ProcStepNo, @ProcStepName, @RowCountNo);
-
-        -- Remove LAB100 rows whose underlying LAB_TEST row no longer
-        -- exists at all (true orphans, not just inactive ones).
-        SET @ProcStepNo += 1;
-        SET @ProcStepName = 'DELETE REMOVED OBSERVATIONS FROM LAB100';
-
-        DELETE FROM dbo.LAB100
-        WHERE RESULTED_LAB_TEST_KEY IN (
-            SELECT DISTINCT l.RESULTED_LAB_TEST_KEY
-            FROM dbo.LAB100 l
-            EXCEPT
-            SELECT lt.LAB_TEST_KEY
-            FROM dbo.LAB_TEST lt
-        );
 
         SELECT @RowCountNo = @@ROWCOUNT;
         INSERT INTO dbo.JOB_FLOW_LOG
