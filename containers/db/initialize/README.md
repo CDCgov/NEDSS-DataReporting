@@ -4,7 +4,7 @@ These scripts are executed automatically by the `nbs-mssql` container on startup
 
 ## Buckets
 
-### 001–005 — Dev/CI Setup
+### 001–006 — Dev/CI Setup
 
 Custom scripts that prepare the SQL Server instance for local development and CI. These run first and establish the baseline database state that everything else depends on.
 
@@ -15,6 +15,7 @@ Custom scripts that prepare the SQL Server instance for local development and CI
 | `003-fix-lab-test.sql` | Fixes lab test data |
 | `004-prep-for-masterEtl-trace.sql` | Prepares trace settings for MasterETL |
 | `005-clear-job_flow_log.sql` | Clears the job flow log table |
+| `006-set-max-text-repl-size.sql` | Sets the 64 KiB baseline used to verify that bootstrap script 101 raises the CDC LOB replication limit |
 
 # 099 — User Account
 

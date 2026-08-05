@@ -11,6 +11,7 @@ import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
@@ -58,7 +59,9 @@ class PostProcessingServiceDmTest {
                 postProcRepositoryMock,
                 investigationRepositoryMock,
                 datamartProcessor,
+                new RetryTopicResolver(),
                 new CustomMetrics(new SimpleMeterRegistry())));
+    PostProcessingTestUtils.configureNrtTopics(postProcessingServiceMock);
     postProcessingServiceMock.initMetrics();
     datamartProcessor.initMetrics();
     postProcessingServiceMock.setServiceEnable(true);
