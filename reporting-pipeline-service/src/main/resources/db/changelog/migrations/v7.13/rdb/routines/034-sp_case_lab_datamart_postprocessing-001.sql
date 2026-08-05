@@ -115,7 +115,7 @@ BEGIN
 
         SET @PROC_STEP_NAME = 'GENERATING INCREMENTAL TMP_CLDM_All_Case';
 
-        SELECT INVESTIGATION.INVESTIGATION_KEY,
+        SELECT inv.INVESTIGATION_KEY,
                RPT_SRC_ORG_KEY,
                INV_LOCAL_ID    AS INVESTIGATION_LOCAL_ID,
                CONDITION_KEY,
@@ -123,11 +123,11 @@ BEGIN
                PATIENT_key,
                PHYSICIAN_KEY
         INTO #TMP_CLDM_All_Case
-        FROM dbo.INVESTIGATION with (nolock)
+        FROM dbo.INVESTIGATION inv with (nolock)
                  INNER JOIN #PHC_IDS phc
-                         ON phc.CASE_UID = INVESTIGATION.case_uid
-                 LEFT OUTER JOIN dbo.CASE_COUNT with (nolock)
-                                 ON INVESTIGATION.INVESTIGATION_KEY = CASE_COUNT.INVESTIGATION_KEY
+                         ON phc.CASE_UID = inv.CASE_UID
+                 LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
+                                 ON inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE
 --case_uid instead of investigation_key
             CASE_TYPE = 'I'
@@ -165,10 +165,10 @@ BEGIN
         WHERE CASE_TYPE = 'I'
           AND inv.INVESTIGATION_KEY in (select distinct ltr.INVESTIGATION_KEY
                                         FROM dbo.LAB_TEST_RESULT ltr
-                                                 INNER JOIN dbo.LAB_TEST lt
-                                                            ON lt.LAB_TEST_KEY = ltr.LAB_TEST_KEY
+                                                                                                                                                                                                 INNER JOIN dbo.INVESTIGATION inv2
+                                                                                                                                                                                                                                                ON inv2.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
                                                  INNER JOIN #PHC_IDS phc
-                                                            ON phc.CASE_UID = lt.case_uid
+                                                                                                                                                                                                                                                ON phc.CASE_UID = inv2.CASE_UID
                                         WHERE ltr.INVESTIGATION_KEY <> 1)
         UNION
 
@@ -184,12 +184,14 @@ BEGIN
                                  ON
                                      inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select distinct mr.INVESTIGATION_KEY
+          AND inv.INVESTIGATION_KEY in (select distinct mre.INVESTIGATION_KEY
                                         from dbo.MORBIDITY_REPORT mr
                                                  inner join dbo.MORBIDITY_REPORT_EVENT mre
                                                             on mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
+                                                                                                                                                                                                 inner join dbo.INVESTIGATION inv2
+                                                                                                                                                                                                                                                ON inv2.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
                                                  inner join #PHC_IDS phc
-                                                            ON phc.CASE_UID = mr.case_uid)
+                                                                                                                                                                                                                                                ON phc.CASE_UID = inv2.CASE_UID)
         /*  UNION
 
           SELECT inv.INVESTIGATION_KEY,
@@ -687,19 +689,21 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_morbResults';
 
-        SELECT MORB_RPT_KEY,
-               MORB_RPT_LOCAL_ID,
-               RESULTED_LAB_TEST_KEY,
-               LAB_RPT_RECEIVED_BY_PH_DT,
-               SPECIMEN_COLLECTION_DT,
-               RESULTED_LAB_TEST_CD_DESC,
-               RESULTEDTEST_VAL_CD_DESC,
-               NUMERIC_RESULT_WITHUNITS,
-               LAB_RESULT_TXT_VAL,
-               LAB_RESULT_COMMENTS
+         SELECT dbo.lab100.MORB_RPT_KEY,
+               mr.MORB_RPT_LOCAL_ID,
+                 dbo.lab100.RESULTED_LAB_TEST_KEY,
+                 dbo.lab100.LAB_RPT_RECEIVED_BY_PH_DT,
+                 dbo.lab100.SPECIMEN_COLLECTION_DT,
+                 dbo.lab100.RESULTED_LAB_TEST_CD_DESC,
+                 dbo.lab100.RESULTEDTEST_VAL_CD_DESC,
+                 dbo.lab100.NUMERIC_RESULT_WITHUNITS,
+                 dbo.lab100.LAB_RESULT_TXT_VAL,
+                 dbo.lab100.LAB_RESULT_COMMENTS
         into #TMP_CLDM_morbResults
-        from dbo.lab100 with (nolock)
-        where morb_rpt_key in (SELECT ME.MORB_RPT_KEY
+         from dbo.lab100 with (nolock)
+                 inner join dbo.MORBIDITY_REPORT mr with (nolock)
+                                ON mr.MORB_RPT_KEY = dbo.lab100.MORB_RPT_KEY
+         where dbo.lab100.MORB_RPT_KEY in (SELECT ME.MORB_RPT_KEY
                                FROM dbo.MORBIDITY_REPORT_EVENT ME with (nolock)
                                         INNER JOIN dbo.INVESTIGATION I with (nolock)
                                                    ON ME.INVESTIGATION_KEY = I.INVESTIGATION_KEY
