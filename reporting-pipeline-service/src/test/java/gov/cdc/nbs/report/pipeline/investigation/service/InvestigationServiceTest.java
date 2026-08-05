@@ -203,80 +203,80 @@ class InvestigationServiceTest {
   @ValueSource(strings = {"Investigation_retry-0", "Investigation_retry-1"})
   void testProcessInvestigationRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"1\"}}}";
-    when(investigationRepository.computeInvestigations("1")).thenReturn(Optional.empty());
+    when(investigationRepository.computeInvestigations("1", false)).thenReturn(Optional.empty());
     investigationService.setPhcDatamartEnable(false);
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, investigationTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(investigationRepository).computeInvestigations("1");
+    verify(investigationRepository).computeInvestigations("1", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Notification_retry-0", "Notification_retry-1"})
   void testProcessNotificationRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"2\"}}}";
-    when(notificationRepository.computeNotifications("2")).thenReturn(Optional.empty());
+    when(notificationRepository.computeNotifications("2", false)).thenReturn(Optional.empty());
     investigationService.setPhcDatamartEnable(false);
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, notificationTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(notificationRepository).computeNotifications("2");
+    verify(notificationRepository).computeNotifications("2", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Interview_retry-0", "Interview_retry-1"})
   void testProcessInterviewRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"3\"}}}";
-    when(interviewRepository.computeInterviews("3")).thenReturn(Optional.empty());
+    when(interviewRepository.computeInterviews("3", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, interviewTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(interviewRepository).computeInterviews("3");
+    verify(interviewRepository).computeInterviews("3", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Contact_retry-0", "Contact_retry-1"})
   void testProcessContactRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"4\"}}}";
-    when(contactRepository.computeContact("4")).thenReturn(Optional.empty());
+    when(contactRepository.computeContact("4", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, contactTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(contactRepository).computeContact("4");
+    verify(contactRepository).computeContact("4", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Vaccination_retry-0", "Vaccination_retry-1"})
   void testProcessVaccinationRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"5\"}, \"op\": \"u\"}}";
-    when(vaccinationRepository.computeVaccination("5")).thenReturn(Optional.empty());
+    when(vaccinationRepository.computeVaccination("5", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, vaccinationTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(vaccinationRepository).computeVaccination("5");
+    verify(vaccinationRepository).computeVaccination("5", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Treatment_retry-0", "Treatment_retry-1"})
   void testProcessTreatmentRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"6\"}, \"op\": \"u\"}}";
-    when(treatmentRepository.computeTreatment("6")).thenReturn(Optional.empty());
+    when(treatmentRepository.computeTreatment("6", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, treatmentTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(treatmentRepository).computeTreatment("6");
+    verify(treatmentRepository).computeTreatment("6", false);
   }
 
   @ParameterizedTest
@@ -285,13 +285,13 @@ class InvestigationServiceTest {
     String payload =
         "{\"payload\": {\"after\": {\"source_act_uid\": \"7\", \"type_cd\": \"1180\"},"
             + " \"op\": \"c\"}}";
-    when(vaccinationRepository.computeVaccination("7")).thenReturn(Optional.empty());
+    when(vaccinationRepository.computeVaccination("7", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, actRelationshipTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(vaccinationRepository).computeVaccination("7");
+    verify(vaccinationRepository).computeVaccination("7", false);
   }
 
   @Test

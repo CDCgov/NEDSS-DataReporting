@@ -156,7 +156,7 @@ class PersonServiceTest {
 
     personService = createPersonService(true);
     personService.processMessage(
-        readFileData("rawDataFiles/person/PersonPatientChangeData.json"), inputTopicPerson);
+        record(readFileData("rawDataFiles/person/PersonPatientChangeData.json"), inputTopicPerson));
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -303,14 +303,14 @@ class PersonServiceTest {
   void testProcessPersonRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
     PatientSp patient = PatientSp.builder().personUid(10000001L).build();
-    when(patientRepository.computePatients("10000001")).thenReturn(List.of(patient));
+    when(patientRepository.computePatients("10000001", false)).thenReturn(List.of(patient));
     personService.setPhcDatamartEnable(false);
 
     CompletableFuture<Void> future =
         personService.processMessage(retryRecord(payload, retryTopic, inputTopicPerson));
     future.join();
 
-    verify(patientRepository).computePatients("10000001");
+    verify(patientRepository).computePatients("10000001", false);
     verifyNoInteractions(providerRepository, userRepository);
   }
 
@@ -318,14 +318,14 @@ class PersonServiceTest {
   @ValueSource(strings = {"User_retry-0", "User_retry-1"})
   void testProcessAuthUserRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"auth_user_uid\": \"11\"}}}";
-    when(userRepository.computeAuthUsers("11"))
+    when(userRepository.computeAuthUsers("11", false))
         .thenReturn(Optional.of(List.of(constructAuthUser())));
 
     CompletableFuture<Void> future =
         personService.processMessage(retryRecord(payload, retryTopic, inputTopicUser));
     future.join();
 
-    verify(userRepository).computeAuthUsers("11");
+    verify(userRepository).computeAuthUsers("11", false);
     verifyNoInteractions(patientRepository, providerRepository);
   }
 

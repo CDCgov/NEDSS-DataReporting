@@ -138,7 +138,7 @@ class ObservationServiceTest {
 
     validateData(getRecord(payload, inputTopicNameObservation), observation);
 
-    verify(observationRepository).computeObservations(String.valueOf(observationUid));
+    verify(observationRepository).computeObservations(String.valueOf(observationUid), false);
   }
 
   @ParameterizedTest
@@ -148,7 +148,7 @@ class ObservationServiceTest {
     String payload =
         "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
     Observation observation = constructObservation(observationUid, "Order");
-    when(observationRepository.computeObservations(String.valueOf(observationUid)))
+    when(observationRepository.computeObservations(String.valueOf(observationUid), false))
         .thenReturn(Optional.of(observation));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -201,7 +201,7 @@ class ObservationServiceTest {
     Long sourceActUid = 123456789L;
     String payload = actRelationshipPayload(sourceActUid, "d", "LabReport", "OBS");
     Observation observation = constructObservation(sourceActUid, "Order");
-    when(observationRepository.computeObservations(String.valueOf(sourceActUid)))
+    when(observationRepository.computeObservations(String.valueOf(sourceActUid), false))
         .thenReturn(Optional.of(observation));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -210,7 +210,7 @@ class ObservationServiceTest {
 
     validateData(getRetryRecord(payload, retryTopic, inputTopicNameActRelationship), observation);
 
-    verify(observationRepository).computeObservations(String.valueOf(sourceActUid));
+    verify(observationRepository).computeObservations(String.valueOf(sourceActUid), false);
   }
 
   @Test

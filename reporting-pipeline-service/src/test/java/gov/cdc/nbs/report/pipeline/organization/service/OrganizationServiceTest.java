@@ -121,7 +121,7 @@ class OrganizationServiceTest {
 
     organizationService = createOrganizationService(true);
     organizationService.processMessage(
-        readFileData("rawDataFiles/organization/OrgChangeData.json"), orgTopic);
+        record(readFileData("rawDataFiles/organization/OrgChangeData.json"), orgTopic));
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -202,7 +202,7 @@ class OrganizationServiceTest {
   void testProcessOrganizationRetryMessage(String retryTopic) {
     OrganizationSp organization = new OrganizationSp();
     organization.setOrganizationUid(10036000L);
-    when(orgRepository.computeAllOrganizations("10036000")).thenReturn(Set.of(organization));
+    when(orgRepository.computeAllOrganizations("10036000", false)).thenReturn(Set.of(organization));
     organizationService.setElasticSearchEnable(false);
     organizationService.setPhcDatamartEnable(false);
 
@@ -214,7 +214,7 @@ class OrganizationServiceTest {
                 orgTopic));
     future.join();
 
-    verify(orgRepository).computeAllOrganizations("10036000");
+    verify(orgRepository).computeAllOrganizations("10036000", false);
     verifyNoInteractions(placeRepository);
   }
 
@@ -224,13 +224,14 @@ class OrganizationServiceTest {
     String payload = "{\"payload\": {\"after\": {\"place_uid\": \"10045001\"}}}";
     Place place =
         objectMapper.readValue(readFileData("rawDataFiles/organization/Place.json"), Place.class);
-    when(placeRepository.computeAllPlaces("10045001")).thenReturn(Optional.of(List.of(place)));
+    when(placeRepository.computeAllPlaces("10045001", false))
+        .thenReturn(Optional.of(List.of(place)));
 
     CompletableFuture<Void> future =
         organizationService.processMessage(retryRecord(payload, retryTopic, placeTopic));
     future.join();
 
-    verify(placeRepository).computeAllPlaces("10045001");
+    verify(placeRepository).computeAllPlaces("10045001", false);
     verifyNoInteractions(orgRepository);
   }
 
