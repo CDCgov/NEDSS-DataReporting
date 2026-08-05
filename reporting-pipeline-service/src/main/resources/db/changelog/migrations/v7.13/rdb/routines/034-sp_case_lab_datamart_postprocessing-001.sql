@@ -20,7 +20,6 @@ BEGIN
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
-
         SELECT @ROWCOUNT_NO = 0;
 
         INSERT
@@ -45,6 +44,42 @@ BEGIN
 -------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @Proc_Step_Name = 'Creating tempdb..#PHC_IDS';
+
+        IF OBJECT_ID('tempdb..#PHC_IDS') IS NOT NULL DROP TABLE #PHC_IDS;
+
+        SELECT DISTINCT CASE_UID
+        INTO #PHC_IDS
+        FROM (
+                SELECT TRY_CONVERT(bigint, value) AS CASE_UID
+                FROM STRING_SPLIT(@phc_id, ',')
+        ) phc
+        WHERE CASE_UID IS NOT NULL;
+
+        CREATE UNIQUE CLUSTERED INDEX IX_PHC_IDS
+                ON #PHC_IDS (CASE_UID);
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT
+        INTO [dbo].[JOB_FLOW_LOG]
+        (BATCH_ID,
+         [DATAFLOW_NAME],
+         [PACKAGE_NAME],
+         [STATUS_TYPE],
+         [STEP_NUMBER],
+         [STEP_NAME],
+         [ROW_COUNT])
+        VALUES (@batch_id,
+                'CASE_LAB_DATAMART',
+                'CASE_LAB_DATAMART',
+                'START',
+                @PROC_STEP_NO,
+                @PROC_STEP_NAME,
+                @ROWCOUNT_NO);
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Creating LAB_INV_MAP';
 
         SELECT map.INVESTIGATION_KEY, map.LAB_TEST_KEY
@@ -52,7 +87,8 @@ BEGIN
         FROM LAB_TEST_RESULT map
                  JOIN INVESTIGATION inv
                       ON inv.INVESTIGATION_KEY = map.INVESTIGATION_KEY
-                          AND inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','));
+                 INNER JOIN #PHC_IDS phc
+                         ON phc.CASE_UID = inv.CASE_UID;
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT
@@ -88,15 +124,13 @@ BEGIN
                PHYSICIAN_KEY
         INTO #TMP_CLDM_All_Case
         FROM dbo.INVESTIGATION with (nolock)
+                 INNER JOIN #PHC_IDS phc
+                         ON phc.CASE_UID = INVESTIGATION.case_uid
                  LEFT OUTER JOIN dbo.CASE_COUNT with (nolock)
                                  ON INVESTIGATION.INVESTIGATION_KEY = CASE_COUNT.INVESTIGATION_KEY
         WHERE
 --case_uid instead of investigation_key
             CASE_TYPE = 'I'
-          AND INVESTIGATION.case_uid in (SELECT value
-                                         FROM
-                                             STRING_SPLIT(@phc_id,
-                                                          ','))
         UNION
 
         SELECT inv.INVESTIGATION_KEY,
@@ -129,15 +163,13 @@ BEGIN
                                  ON
                                      inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select distinct(INVESTIGATION_KEY)
-                                        FROM dbo.LAB_TEST_RESULT
-                                        where LAB_TEST_KEY in (select lab_test_key
-                                                               FROM dbo.LAB_TEST
-                                                               where case_uid in (SELECT value
-                                                                                  FROM
-                                                                                      STRING_SPLIT(@phc_id,
-                                                                                                   ',')))
-                                          and INVESTIGATION_KEY <> 1)
+          AND inv.INVESTIGATION_KEY in (select distinct ltr.INVESTIGATION_KEY
+                                        FROM dbo.LAB_TEST_RESULT ltr
+                                                 INNER JOIN dbo.LAB_TEST lt
+                                                            ON lt.LAB_TEST_KEY = ltr.LAB_TEST_KEY
+                                                 INNER JOIN #PHC_IDS phc
+                                                            ON phc.CASE_UID = lt.case_uid
+                                        WHERE ltr.INVESTIGATION_KEY <> 1)
         UNION
 
         SELECT inv.INVESTIGATION_KEY,
@@ -152,15 +184,12 @@ BEGIN
                                  ON
                                      inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select INVESTIGATION_KEY
+          AND inv.INVESTIGATION_KEY in (select distinct mr.INVESTIGATION_KEY
                                         from dbo.MORBIDITY_REPORT mr
                                                  inner join dbo.MORBIDITY_REPORT_EVENT mre
-                                                            on
-                                                                mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
-                                        where case_uid in (SELECT value
-                                                           FROM
-                                                               STRING_SPLIT(@phc_id,
-                                                                            ',')))
+                                                            on mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
+                                                 inner join #PHC_IDS phc
+                                                            ON phc.CASE_UID = mr.case_uid)
         /*  UNION
 
           SELECT inv.INVESTIGATION_KEY,
