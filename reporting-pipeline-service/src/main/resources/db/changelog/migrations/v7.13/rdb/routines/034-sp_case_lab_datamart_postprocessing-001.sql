@@ -350,7 +350,7 @@ BEGIN
                i.record_status_cd
         into #TMP_CLDM_GEN_PAT_ADD_INV
         from #TMP_CLDM_GEN_PATIENT_ADD as GPA with (nolock)
-                INNER JOIN dbo.INVESTIGATION AS i
+                INNER JOIN dbo.INVESTIGATION AS i with (nolock)
                         ON GPA.INVESTIGATION_KEY = i.INVESTIGATION_KEY
                         AND i.INVESTIGATION_KEY <> 1
                         AND i.RECORD_STATUS_CD <> 'INACTIVE'
