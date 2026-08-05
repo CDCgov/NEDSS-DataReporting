@@ -1508,4 +1508,11 @@ public class PostProcessingService {
     postProcRepository.executeEventMetricCleanup();
     logger.info(SP_EXECUTION_COMPLETED, "sp_event_metric_cleanup_postprocessing");
   }
+
+  @Scheduled(cron = "${service.schedule.lab100-cleanup}")
+  protected void lab100Cleanup() {
+    logger.info("Running lab100 cleanup...");
+    postProcRepository.executeLab100Cleanup();
+    logger.info(SP_EXECUTION_COMPLETED, "sp_lab100_cleanup");
+  }
 }
