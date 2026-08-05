@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.observation.service;
 
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.*;
 
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
@@ -76,6 +77,7 @@ public class ObservationService {
   private int threadPoolSize;
 
   private final ObservationRepository observationRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
 
   @Qualifier("observationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
@@ -172,7 +174,8 @@ public class ObservationService {
             observationKey.setObservationUid(Long.valueOf(observationUid));
             logger.info(topicDebugLog, observationUid, observationTopic);
             Optional<Observation> observationData =
-                observationRepository.computeObservations(observationUid);
+                observationRepository.computeObservations(
+                    observationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (observationData.isPresent()) {
               ObservationReporting reportingModel =
                   modelMapper.map(observationData.get(), ObservationReporting.class);

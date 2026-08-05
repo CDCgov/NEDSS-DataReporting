@@ -12,6 +12,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
@@ -75,30 +76,35 @@ class PersonServiceTest {
   void setUp() {
     closeable = MockitoAnnotations.openMocks(this);
 
-    PersonTransformers transformer = new PersonTransformers();
-    personService =
-        new PersonService(
-            patientRepository,
-            providerRepository,
-            userRepository,
-            transformer,
-            kafkaTemplate,
-            new CustomMetrics(new SimpleMeterRegistry()));
-    personService.setPersonTopic(inputTopicPerson);
-    personService.setUserTopic(inputTopicUser);
-    personService.setPatientReportingOutputTopic(patientReportingTopic);
-    personService.setPatientElasticSearchOutputTopic(patientElasticTopic);
-    personService.setProviderReportingOutputTopic(providerReportingTopic);
-    personService.setProviderElasticSearchOutputTopic(providerElasticTopic);
-    personService.setUserReportingOutputTopic(userReportingTopic);
-    personService.setElasticSearchEnable(true);
-    personService.setPhcDatamartEnable(true);
-    personService.setThreadPoolSize(1);
-    personService.initMetrics();
+    personService = createPersonService(false);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PersonService.class);
     listAppender.start();
     logger.addAppender(listAppender);
+  }
+
+  private PersonService createPersonService(boolean debugLogging) {
+    PersonService service =
+        new PersonService(
+            patientRepository,
+            providerRepository,
+            userRepository,
+            new EventProcedureLoggingProperties(debugLogging),
+            new PersonTransformers(),
+            kafkaTemplate,
+            new CustomMetrics(new SimpleMeterRegistry()));
+    service.setPersonTopic(inputTopicPerson);
+    service.setUserTopic(inputTopicUser);
+    service.setPatientReportingOutputTopic(patientReportingTopic);
+    service.setPatientElasticSearchOutputTopic(patientElasticTopic);
+    service.setProviderReportingOutputTopic(providerReportingTopic);
+    service.setProviderElasticSearchOutputTopic(providerElasticTopic);
+    service.setUserReportingOutputTopic(userReportingTopic);
+    service.setElasticSearchEnable(true);
+    service.setPhcDatamartEnable(true);
+    service.setThreadPoolSize(1);
+    service.initMetrics();
+    return service;
   }
 
   @AfterEach
@@ -113,7 +119,7 @@ class PersonServiceTest {
     PatientSp patientSp = constructPatient();
     PatientSp mprPatient = constructPatient();
     mprPatient.setPersonParentUid(mprPatient.getPersonUid());
-    Mockito.when(patientRepository.computePatients(anyString()))
+    Mockito.when(patientRepository.computePatients(anyString(), Mockito.eq(false)))
         .thenReturn(List.of(patientSp))
         .thenReturn(List.of(mprPatient));
 
@@ -138,6 +144,21 @@ class PersonServiceTest {
                     .updatePhcFact("PAT", String.valueOf(mprPatient.getPersonUid())));
   }
 
+  @Test
+  void passesEnabledLoggingToPatientRepository() throws JsonProcessingException {
+    PatientSp patientSp = constructPatient();
+    when(patientRepository.computePatients(anyString(), Mockito.eq(true)))
+        .thenReturn(List.of(patientSp));
+
+    personService = createPersonService(true);
+    personService.processMessage(
+        readFileData("rawDataFiles/person/PersonPatientChangeData.json"), inputTopicPerson);
+
+    Awaitility.await()
+        .atMost(1, TimeUnit.SECONDS)
+        .untilAsserted(() -> verify(patientRepository).computePatients("9005400", true));
+  }
+
   @ParameterizedTest
   @CsvSource({
     "PersonTelephone.json , rawDataFiles/provider/ProviderReporting.json, rawDataFiles/provider/ProviderElasticSearch.json",
@@ -151,7 +172,7 @@ class PersonServiceTest {
     ProviderSp providerSp = constructProviderCase(personTelephoneFile);
     ProviderSp mprProvider = constructProviderCase(personTelephoneFile);
     mprProvider.setPersonParentUid(mprProvider.getPersonUid());
-    Mockito.when(providerRepository.computeProviders(anyString()))
+    Mockito.when(providerRepository.computeProviders(anyString(), Mockito.eq(false)))
         .thenReturn(List.of(providerSp))
         .thenReturn(List.of(mprProvider));
 
@@ -179,7 +200,8 @@ class PersonServiceTest {
   @Test
   void testProcessPatientDataNoElasticSearch() {
     PatientSp patientSp = PatientSp.builder().personUid(10000001L).build();
-    Mockito.when(patientRepository.computePatients(anyString())).thenReturn(List.of(patientSp));
+    Mockito.when(patientRepository.computePatients(anyString(), Mockito.eq(false)))
+        .thenReturn(List.of(patientSp));
 
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
@@ -199,7 +221,8 @@ class PersonServiceTest {
   @Test
   void testProcessProviderDataNoElasticSearch() {
     ProviderSp providerSp = ProviderSp.builder().personUid(10000001L).build();
-    Mockito.when(providerRepository.computeProviders(anyString())).thenReturn(List.of(providerSp));
+    Mockito.when(providerRepository.computeProviders(anyString(), Mockito.eq(false)))
+        .thenReturn(List.of(providerSp));
 
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
@@ -240,7 +263,7 @@ class PersonServiceTest {
 
     AuthUser user = constructAuthUser();
     AuthUserKey userKey = AuthUserKey.builder().authUserUid(11L).build();
-    Mockito.when(userRepository.computeAuthUsers(anyString()))
+    Mockito.when(userRepository.computeAuthUsers(anyString(), Mockito.eq(false)))
         .thenReturn(Optional.of(List.of(user)));
 
     personService.processMessage(payload, inputTopicUser);
@@ -292,11 +315,11 @@ class PersonServiceTest {
   void testProcessMessageNoDataException(String payload, String inputTopic) {
     if (inputTopic.equals(inputTopicPerson)) {
       Long personUid = 123456789L;
-      when(providerRepository.computeProviders(String.valueOf(personUid)))
+      when(providerRepository.computeProviders(String.valueOf(personUid), false))
           .thenReturn(Collections.emptyList());
     } else if (inputTopic.equals(inputTopicUser)) {
       Long authUserUid = 11L;
-      when(userRepository.computeAuthUsers(String.valueOf(authUserUid)))
+      when(userRepository.computeAuthUsers(String.valueOf(authUserUid), false))
           .thenReturn(Optional.of(Collections.emptyList()));
     }
     CompletableFuture<Void> future = personService.processMessage(payload, inputTopic);

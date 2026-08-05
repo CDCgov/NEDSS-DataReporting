@@ -11,6 +11,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PlaceRepository extends JpaRepository<Place, String> {
 
-  @Query(nativeQuery = true, value = "execute sp_place_event :place_uids")
-  Optional<List<Place>> computeAllPlaces(@Param("place_uids") String placeUids);
+  @Query(
+      nativeQuery = true,
+      value = "execute sp_place_event @id_list = :place_uids, " + "@debug_logging = :debugLogging")
+  Optional<List<Place>> computeAllPlaces(
+      @Param("place_uids") String placeUids, @Param("debugLogging") boolean debugLogging);
 }

@@ -3,6 +3,7 @@ package gov.cdc.nbs.report.pipeline.organization.service;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.errorMessage;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.Place;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.PlaceTele;
@@ -66,6 +67,7 @@ import org.springframework.util.ObjectUtils;
 public class OrganizationService {
   private final OrgRepository orgRepository;
   private final PlaceRepository placeRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
   private final DataTransformers transformer;
 
   @Qualifier("organizationKafkaTemplate")
@@ -174,7 +176,8 @@ public class OrganizationService {
             }
 
             Set<OrganizationSp> organizations =
-                orgRepository.computeAllOrganizations(organizationUid);
+                orgRepository.computeAllOrganizations(
+                    organizationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (organizations.isEmpty()) {
               throw new EntityNotFoundException(
                   "Unable to find Organization with id: " + organizationUid);
@@ -234,7 +237,9 @@ public class OrganizationService {
     try {
       placeUid = extractUid(message, "place_uid");
       log.info(topicDebugLog, "Place", placeUid, topic);
-      Optional<List<Place>> placeData = placeRepository.computeAllPlaces(placeUid);
+      Optional<List<Place>> placeData =
+          placeRepository.computeAllPlaces(
+              placeUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
       if (placeData.isPresent() && !placeData.get().isEmpty()) {
         placeData

@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProviderRepository extends JpaRepository<ProviderSp, String> {
-  @Query(nativeQuery = true, value = "execute sp_provider_event :person_uids")
-  List<ProviderSp> computeProviders(@Param("person_uids") String personUids);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_provider_event @user_id_list = :person_uids, "
+              + "@debug_logging = :debugLogging")
+  List<ProviderSp> computeProviders(
+      @Param("person_uids") String personUids, @Param("debugLogging") boolean debugLogging);
 }

@@ -10,8 +10,13 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PatientRepository extends JpaRepository<PatientSp, String> {
-  @Query(nativeQuery = true, value = "execute sp_Patient_Event :person_uids")
-  List<PatientSp> computePatients(@Param("person_uids") String personUids);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_patient_event @user_id_list = :person_uids, "
+              + "@debug_logging = :debugLogging")
+  List<PatientSp> computePatients(
+      @Param("person_uids") String personUids, @Param("debugLogging") boolean debugLogging);
 
   @Procedure("sp_public_health_case_fact_datamart_update")
   void updatePhcFact(@Param("objName") String objName, @Param("uidLst") String uidLst);
