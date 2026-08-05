@@ -13,6 +13,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.lang.reflect.Method;
@@ -50,10 +51,11 @@ class EventMetricCleanupTest {
                 postProcRepository,
                 investigationRepository,
                 datamartProcessor,
+                new RetryTopicResolver(),
                 new CustomMetrics(new SimpleMeterRegistry())));
+    PostProcessingTestUtils.configureNrtTopics(service);
     service.initMetrics();
     datamartProcessor.initMetrics();
-    service.setInvestigationTopic("dummy_investigation");
     service.setServiceEnable(true);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);

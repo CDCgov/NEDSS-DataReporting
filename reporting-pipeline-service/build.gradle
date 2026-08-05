@@ -70,6 +70,23 @@ tasks.register("test-unit", Test) {
     finalizedBy jacocoTestReport
 }
 
+// Add a listener to capture test summary counts after the suite finishes
+tasks.withType(Test).configureEach {
+    addTestListener(new TestListener() {
+        @Override
+        void afterSuite(TestDescriptor suite, TestResult result) {
+            if (suite.parent == null) {
+                println(
+                        "Tests: ${result.testCount}, " +
+                        "passed: ${result.successfulTestCount}, " +
+                        "failed: ${result.failedTestCount}, " +
+                        "skipped: ${result.skippedTestCount}"
+                )
+            }
+        }
+    })
+}
+
 jacoco {
     toolVersion = "0.8.11"
     reportsDirectory = layout.buildDirectory.dir('customJacocoReportDir')
@@ -138,6 +155,7 @@ dependencies {
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    testImplementation 'org.springframework.kafka:spring-kafka-test:3.3.16'
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
     testImplementation 'org.testcontainers:testcontainers:2.0.5'
     testImplementation 'org.testcontainers:testcontainers-kafka:2.0.5'

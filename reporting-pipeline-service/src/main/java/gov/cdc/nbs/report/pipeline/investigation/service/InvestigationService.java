@@ -12,11 +12,15 @@ import gov.cdc.nbs.report.pipeline.investigation.util.ProcessInvestigationDataUt
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
+import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -98,6 +102,7 @@ public class InvestigationService {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final ProcessInvestigationDataUtil processDataUtil;
+  private final RetryTopicResolver retryTopicResolver;
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
@@ -116,10 +121,20 @@ public class InvestigationService {
   private Counter msgSuccess;
   private Counter msgFailure;
   private Counter ntfFailure;
+  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {SERVICE_TAG, SERVICE_NAME};
+    inputTopics =
+        Set.of(
+            investigationTopic,
+            notificationTopic,
+            interviewTopic,
+            contactTopic,
+            vaccinationTopic,
+            treatmentTopic,
+            actRelationshipTopic);
 
     msgProcessed = metrics.counter("inv_msg_processed", tags);
     msgSuccess = metrics.counter("inv_msg_success", tags);
@@ -160,28 +175,41 @@ public class InvestigationService {
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
-    final String topic = rec.topic();
+    TopicResolution topicResolution;
+    try {
+      topicResolution = retryTopicResolver.resolve(rec, inputTopics);
+    } catch (NoSuchElementException exception) {
+      return CompletableFuture.failedFuture(
+          new DataProcessingException(exception.getMessage(), exception));
+    }
+
+    final String physicalTopic = topicResolution.physicalTopic();
+    final String logicalTopic = topicResolution.logicalTopic();
     final String message = rec.value();
     final long batchId = toBatchId.applyAsLong(rec);
 
-    logger.debug(topicDebugLog, "message", message, topic);
-
     return CompletableFuture.runAsync(
         () -> {
-          if (topic.equals(investigationTopic)) {
+          if (logicalTopic.equals(investigationTopic)) {
             processInvestigation(message, batchId);
-          } else if (topic.equals(notificationTopic)) {
+          } else if (logicalTopic.equals(notificationTopic)) {
             processNotification(message);
-          } else if (topic.equals(interviewTopic)) {
+          } else if (logicalTopic.equals(interviewTopic)) {
             processInterview(message, batchId);
-          } else if (topic.equals(contactTopic)) {
+          } else if (logicalTopic.equals(contactTopic)) {
             processContact(message);
-          } else if (topic.equals(vaccinationTopic)) {
+          } else if (logicalTopic.equals(vaccinationTopic)) {
             processVaccination(message, true, "");
-          } else if (topic.equals(treatmentTopic)) {
+          } else if (logicalTopic.equals(treatmentTopic)) {
             processTreatment(message, true, "");
-          } else if (topic.equals(actRelationshipTopic) && message != null) {
-            processActRelationship(message);
+          } else if (logicalTopic.equals(actRelationshipTopic)) {
+            if (message != null) {
+              processActRelationship(message);
+            }
+          } else {
+            throw new DataProcessingException(
+                "Received data from an unknown topic: " + physicalTopic,
+                new NoSuchElementException());
           }
         },
         invExecutor);
