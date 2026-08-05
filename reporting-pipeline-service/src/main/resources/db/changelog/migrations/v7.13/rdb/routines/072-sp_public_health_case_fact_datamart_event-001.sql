@@ -6,7 +6,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_public_health_case_fact_datamart_event @phc_id_list nvarchar(max), @debug bit = 'false'
+CREATE PROCEDURE dbo.sp_public_health_case_fact_datamart_event @phc_id_list nvarchar(max), @debug bit = 0, @debug_logging bit = 0
 AS
 BEGIN
     DECLARE @RowCount_no INT;
@@ -81,24 +81,27 @@ BEGIN
 
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
         BEGIN TRANSACTION;
@@ -160,24 +163,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
         COMMIT TRANSACTION;
         -------------------PHCSUBJECT
         BEGIN TRANSACTION;
@@ -322,24 +328,27 @@ BEGIN
         PRINT '1. endtime' + LEFT(CONVERT(VARCHAR, @batch_end_time, 120), 10)
 
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -403,24 +412,27 @@ BEGIN
                  LEFT JOIN NBS_ODSE.DBO.OBS_VALUE_DATE  WITH (NOLOCK) ON OBSERVATION2.OBSERVATION_UID =OBS_VALUE_DATE.OBSERVATION_UID
         WHERE OBSERVATION2.CD IN ('INV132', 'INV133') AND ACT_RELATIONSHIP.TYPE_CD ='PHCInvForm';
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -439,24 +451,27 @@ BEGIN
                  INNER JOIN NBS_ODSE.DBO.OBS_VALUE_CODED  WITH (NOLOCK) ON ACT_RELATIONSHIP2.SOURCE_ACT_UID =OBS_VALUE_CODED.OBSERVATION_UID
         WHERE OBSERVATION2.CD IN ('INV128') AND ACT_RELATIONSHIP.TYPE_CD ='PHCInvForm';
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
@@ -613,24 +628,27 @@ BEGIN
 		WHERE HOSPITALIZED_IND = LTRIM(RTRIM(''));
 */
         ALTER TABLE #TEMP_PHCINFO1 DROP column LEGACY_HSPTL_DISCHARGE_DT, LEGACY_HSPTL_ADMISSION_DT;
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
         BEGIN TRANSACTION;
@@ -662,24 +680,27 @@ BEGIN
             FROM #TEMP_PHCINFO1
         );
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -706,24 +727,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@Proc_Step_no
-               ,@Proc_Step_Name
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_Name
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -748,24 +772,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -780,24 +807,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1024,24 +1054,27 @@ BEGIN
             AND FLAG2=1; /* Optimization */
 
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1052,24 +1085,27 @@ BEGIN
 
 
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@Proc_Step_no
-               ,@Proc_Step_Name
-               ,0
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_Name
+                   ,0
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1162,24 +1198,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1220,24 +1259,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1293,24 +1335,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1444,24 +1489,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1496,24 +1544,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1625,24 +1676,27 @@ BEGIN
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = NOTIFCREATEDCOUNT-1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT>0;
         UPDATE #TEMP_MIN_MAX_NOTIFICATION set NOTIFCREATEDCOUNT = 1 where NOTIFCREATEDPENDINGSCOUNT>0 and NOTIFCREATEDCOUNT=0 and NOTIFREJECTEDCOUNT=0;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@Proc_Step_no
-               ,@Proc_Step_Name
-               ,0
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_Name
+                   ,0
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1683,24 +1737,27 @@ BEGIN
         WHERE ROWN > 1
         --IF OBJECT_ID ('TEMP_PHCFACT') IS NOT NULL DROP TABLE TEMP_PHCFACT;
         --IF OBJECT_ID ('TEMP_MIN_MAX_NOTIFICATION') IS NOT NULL DROP TABLE TEMP_MIN_MAX_NOTIFICATION;
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1746,24 +1803,27 @@ BEGIN
             AND CODE_SET_NM= 'PHC_CONF_M'
         where t.INVESTIGATION_FORM_CD NOT LIKE 'PG_%' or INVESTIGATION_FORM_CD is null
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1798,24 +1858,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1837,24 +1900,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -1970,24 +2036,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2014,24 +2083,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2090,24 +2162,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2141,24 +2216,27 @@ BEGIN
 
         -- ALTER TABLE #TEMP_PHC_FACT ADD MART_RECORD_CREATION_TIME DATETIME;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@Proc_Step_no
-               ,@Proc_Step_Name
-               ,0
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_Name
+                   ,0
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2266,24 +2344,27 @@ BEGIN
         -- UPDATE #TEMP_PHC_FACT SET cntry_cd = NULL WHERE cntry_cd = LTRIM(RTRIM(''));
 
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2357,24 +2438,27 @@ BEGIN
 		IF OBJECT_ID('tempdb..#TEMP_PHCPERSONRACE_CONCAT') IS NOT NULL
 			DROP TABLE #TEMP_PHCPERSONRACE_CONCAT;
 */
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'STEP-AVOIDED'
-               ,@Proc_Step_no
-               ,@Proc_Step_Name
-               ,0
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'STEP-AVOIDED'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_Name
+                   ,0
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2704,24 +2788,27 @@ BEGIN
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@PROC_STEP_NO
-               ,@PROC_STEP_NAME
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@PROC_STEP_NO
+                   ,@PROC_STEP_NAME
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2748,24 +2835,27 @@ BEGIN
         IF OBJECT_ID('tempdb..#TEMP_PHC_FACT') IS NOT NULL
             DROP TABLE #TEMP_PHC_FACT;
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @Batch_id
-               ,'PCHMartETL'
-               ,'PublicHealthCaseFact RTR'
-               ,'COMPLETED'
-               ,@Proc_Step_no
-               ,@Proc_Step_Name
-               ,@ROWCOUNT_NO
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @Batch_id
+                   ,'PCHMartETL'
+                   ,'PublicHealthCaseFact RTR'
+                   ,'COMPLETED'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_Name
+                   ,@ROWCOUNT_NO
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
@@ -2774,24 +2864,27 @@ BEGIN
         SET @Proc_Step_no = 999;
         SET @Proc_Step_Name = 'SP_COMPLETE';
 
-        INSERT INTO [dbo].[job_flow_log] (
-                                                        batch_id
-                                                      ,[Dataflow_Name]
-                                                      ,[package_Name]
-                                                      ,[Status_Type]
-                                                      ,[step_number]
-                                                      ,[step_name]
-                                                      ,[row_count]
-        )
-        VALUES (
-                 @batch_id
-               ,'PCHMartETL'
-               ,'PCHMartETL'
-               ,'COMPLETE'
-               ,@Proc_Step_no
-               ,@Proc_Step_name
-               ,@RowCount_no
-               );
+        IF @debug_logging = 1
+        BEGIN
+            INSERT INTO [dbo].[job_flow_log] (
+                                                            batch_id
+                                                          ,[Dataflow_Name]
+                                                          ,[package_Name]
+                                                          ,[Status_Type]
+                                                          ,[step_number]
+                                                          ,[step_name]
+                                                          ,[row_count]
+            )
+            VALUES (
+                     @batch_id
+                   ,'PCHMartETL'
+                   ,'PCHMartETL'
+                   ,'COMPLETE'
+                   ,@Proc_Step_no
+                   ,@Proc_Step_name
+                   ,@RowCount_no
+                   );
+        END;
 
         COMMIT TRANSACTION;
 
