@@ -12,12 +12,12 @@ class StoredProcCatalogTest {
 
   @Test
   void finds_every_routine_file() {
-    assertEquals(130, catalog.size());
+    assertEquals(131, catalog.size());
   }
 
   @Test
   void counts_procs_that_log_to_job_flow_log() {
-    assertEquals(128, StoredProcCatalog.loggingProcCount(catalog));
+    assertEquals(129, StoredProcCatalog.loggingProcCount(catalog));
   }
 
   @Test
@@ -27,8 +27,9 @@ class StoredProcCatalogTest {
 
   @Test
   void resolves_package_name_for_the_large_majority_of_logging_procs() {
-    // package_name is best-effort: ~113 of 128 logging procs expose a literal identifier; the
-    // remainder (pagebuilder / event-style procs) log it in a shape these patterns don't capture
+    // package_name is best-effort: ~113 of 129 logging procs expose a literal identifier; the
+    // remainder (pagebuilder / event-style/helper procs) log it in a shape these patterns don't
+    // capture
     // and can be matched on procName or via a small override map at coverage time.
     long resolved =
         catalog.stream()
