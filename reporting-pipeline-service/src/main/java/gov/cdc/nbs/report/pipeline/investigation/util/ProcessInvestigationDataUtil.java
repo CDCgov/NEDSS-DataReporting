@@ -448,7 +448,8 @@ public class ProcessInvestigationDataUtil {
       logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
     } catch (Exception e) {
       logger.error(
-          "Error processing investigation confirmation method JSON array from investigation data: {}",
+          "Error processing investigation confirmation method JSON array from investigation data:"
+              + " {}",
           e.getMessage());
     }
   }
@@ -526,16 +527,12 @@ public class ProcessInvestigationDataUtil {
   }
 
   @Transactional(isolation = Isolation.REPEATABLE_READ)
-  public void processPhcFactDatamart(String publicHealthCaseUid) {
-    processPhcFactDatamart(publicHealthCaseUid, false);
-  }
-
-  @Transactional(isolation = Isolation.REPEATABLE_READ)
   public void processPhcFactDatamart(String publicHealthCaseUid, boolean debugLogging) {
     try {
       // Calling sp_public_health_case_fact_datamart_event
       logger.info(
-          "Executing stored proc: sp_public_health_case_fact_datamart_event '{}' to populate PHС fact datamart",
+          "Executing stored proc: sp_public_health_case_fact_datamart_event '{}' to populate PHС"
+              + " fact datamart",
           publicHealthCaseUid);
       investigationRepository.populatePhcFact(publicHealthCaseUid, debugLogging);
       logger.info(
@@ -551,7 +548,8 @@ public class ProcessInvestigationDataUtil {
     try {
       // Calling sp_public_health_case_fact_datamart_update
       logger.info(
-          "Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart",
+          "Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update"
+              + " PHС fact datamart",
           objName,
           uid);
       investigationRepository.updatePhcFact(objName, uid);
@@ -609,7 +607,8 @@ public class ProcessInvestigationDataUtil {
 
     } catch (Exception e) {
       logger.error(
-          "Error processing Investigation Interview or any of the associated data from interview data: {}",
+          "Error processing Investigation Interview or any of the associated data from interview"
+              + " data: {}",
           e.getMessage());
     }
   }
