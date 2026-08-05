@@ -527,12 +527,17 @@ public class ProcessInvestigationDataUtil {
 
   @Transactional(isolation = Isolation.REPEATABLE_READ)
   public void processPhcFactDatamart(String publicHealthCaseUid) {
+    processPhcFactDatamart(publicHealthCaseUid, false);
+  }
+
+  @Transactional(isolation = Isolation.REPEATABLE_READ)
+  public void processPhcFactDatamart(String publicHealthCaseUid, boolean debugLogging) {
     try {
       // Calling sp_public_health_case_fact_datamart_event
       logger.info(
           "Executing stored proc: sp_public_health_case_fact_datamart_event '{}' to populate PHС fact datamart",
           publicHealthCaseUid);
-      investigationRepository.populatePhcFact(publicHealthCaseUid);
+      investigationRepository.populatePhcFact(publicHealthCaseUid, debugLogging);
       logger.info(
           "Stored proc execution completed: sp_public_health_case_fact_datamart_event '{}",
           publicHealthCaseUid);

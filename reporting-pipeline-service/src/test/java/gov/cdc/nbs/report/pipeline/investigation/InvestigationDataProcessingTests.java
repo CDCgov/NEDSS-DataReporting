@@ -885,12 +885,19 @@ class InvestigationDataProcessingTests {
   }
 
   @Test
+  void testProcessPhcFactDatamartPassesLoggingFlag() {
+    transformer.processPhcFactDatamart("123", true);
+
+    verify(investigationRepository).populatePhcFact("123", true);
+  }
+
+  @Test
   void testProcessPhcFactDatamartException() {
     final String ERROR_MSG = "Test Error";
 
     doThrow(new RuntimeException(ERROR_MSG))
         .when(investigationRepository)
-        .populatePhcFact(anyString());
+        .populatePhcFact(anyString(), eq(false));
     doThrow(new RuntimeException(ERROR_MSG))
         .when(investigationRepository)
         .updatePhcFact(anyString(), anyString());
