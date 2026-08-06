@@ -245,18 +245,18 @@ public class PersonService {
 
     providerData.forEach(
         provider -> {
-          ProviderReporting reporting =
+          ProviderReporting providerReporting =
               (ProviderReporting)
                   transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
 
           if (directWrite) {
-            nrtProviderRepository.save(NrtProvider.from(reporting));
+            nrtProviderRepository.save(NrtProvider.from(providerReporting));
             log.info(
                 "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
           }
 
           String reportingKey = transformer.buildProviderKey(provider);
-          String reportingData = transformer.processData(reporting);
+          String reportingData = transformer.processData(providerReporting);
           kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
           log.info(
               "Provider data (uid={}) sent to {}",
@@ -292,18 +292,18 @@ public class PersonService {
 
     patientData.forEach(
         personData -> {
-          PatientReporting reporting =
+          PatientReporting patientReporting =
               (PatientReporting)
                   transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
 
           if (directWrite) {
-            nrtPatientRepository.save(NrtPatient.from(reporting));
+            nrtPatientRepository.save(NrtPatient.from(patientReporting));
             log.info(
                 "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
           }
 
           String reportingKey = transformer.buildPatientKey(personData);
-          String reportingData = transformer.processData(reporting);
+          String reportingData = transformer.processData(patientReporting);
           kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
           log.info(
               "Patient data (uid={}) sent to {}",
