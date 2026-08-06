@@ -344,7 +344,7 @@ BEGIN
         INTO #INACTIVE_MORB
         FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
         WHERE
-            CAST(MR.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
+            EXISTS (SELECT 1 FROM #uid_obs z WHERE z.u = MR.MORB_RPT_UID)
           AND MR.RECORD_STATUS_CD = 'INACTIVE';
 
         if @debug = 'true'
