@@ -19,8 +19,8 @@ CREATE PROCEDURE dbo.sp_add_job_flow_log
     @step_number FLOAT,
     @step_name VARCHAR(199),
     @row_count INT,
-    @msg_description1 VARCHAR(500) = NULL,
-    @error_description VARCHAR(500) = NULL
+    @msg_description1 NVARCHAR(500) = NULL,
+    @error_description NVARCHAR(500) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
