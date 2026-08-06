@@ -1,24 +1,26 @@
-IF EXISTS (
-    SELECT *
-    FROM sysobjects
-    WHERE id = object_id(N'[dbo].[sp_add_job_flow_log]')
-      AND OBJECTPROPERTY(id, N'IsProcedure') = 1
-)
-BEGIN
-    DROP PROCEDURE [dbo].[sp_add_job_flow_log]
-END
+IF
+    EXISTS (
+        SELECT *
+        FROM sysobjects
+        WHERE
+            id = object_id(N'[dbo].[sp_add_job_flow_log]')
+            AND objectproperty(id, N'IsProcedure') = 1
+    )
+    BEGIN
+        DROP PROCEDURE [dbo].[sp_add_job_flow_log]
+    END
 GO
 
 CREATE PROCEDURE dbo.sp_add_job_flow_log
     @batch_id BIGINT,
-    @dataflow_name VARCHAR(200),
-    @package_name VARCHAR(200),
-    @status_type VARCHAR(20),
+    @dataflow_name VARCHAR(199),
+    @package_name VARCHAR(199),
+    @status_type VARCHAR(500),
     @step_number FLOAT,
-    @step_name VARCHAR(200),
+    @step_name VARCHAR(199),
     @row_count INT,
-    @msg_description1 VARCHAR(200) = NULL,
-    @error_description VARCHAR(8000) = NULL
+    @msg_description1 VARCHAR(500) = NULL,
+    @error_description VARCHAR(500) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -26,14 +28,14 @@ BEGIN
     INSERT INTO dbo.job_flow_log
     (
         batch_id,
-        Dataflow_Name,
-        package_Name,
-        Status_Type,
+        dataflow_name,
+        package_name,
+        status_type,
         step_number,
         step_name,
         row_count,
-        Msg_Description1,
-        Error_Description
+        msg_description1,
+        error_description
     )
     VALUES
     (
