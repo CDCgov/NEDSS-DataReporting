@@ -119,9 +119,6 @@ public class PersonService {
   @Value("${featureFlag.thread-pool-size:1}")
   private int threadPoolSize;
 
-  @Value("${featureFlag.person-service-direct-write}")
-  private boolean directWrite;
-
   private ExecutorService rtrExecutor;
   private ExecutorService prsExecutor;
 
@@ -249,11 +246,9 @@ public class PersonService {
               (ProviderReporting)
                   transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
 
-          if (directWrite) {
-            nrtProviderRepository.save(NrtProvider.from(providerReporting));
-            log.info(
-                "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
-          }
+          nrtProviderRepository.save(NrtProvider.from(providerReporting));
+          log.info(
+              "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
 
           String reportingKey = transformer.buildProviderKey(provider);
           String reportingData = transformer.processData(providerReporting);
@@ -296,11 +291,9 @@ public class PersonService {
               (PatientReporting)
                   transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
 
-          if (directWrite) {
-            nrtPatientRepository.save(NrtPatient.from(patientReporting));
-            log.info(
-                "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
-          }
+          nrtPatientRepository.save(NrtPatient.from(patientReporting));
+          log.info(
+              "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
 
           String reportingKey = transformer.buildPatientKey(personData);
           String reportingData = transformer.processData(patientReporting);
@@ -343,12 +336,10 @@ public class PersonService {
 
       authUsers.forEach(
           authUser -> {
-            if (directWrite) {
-              nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-              log.info(
-                  "Authorized user data (uid={}) directly written to nrt_patient",
-                  authUser.getUserId());
-            }
+            nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
+            log.info(
+                "Authorized user data (uid={}) directly written to nrt_patient",
+                authUser.getUserId());
             String jsonKey = transformer.buildUserKey(authUser);
             String jsonValue = transformer.processData(authUser);
             kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
