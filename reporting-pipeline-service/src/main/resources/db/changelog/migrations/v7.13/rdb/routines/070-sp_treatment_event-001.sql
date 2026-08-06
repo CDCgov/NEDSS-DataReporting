@@ -21,6 +21,8 @@ BEGIN
     BEGIN TRY
         DECLARE @batch_id BIGINT;
         SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @treatment_uids, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@treatment_uids, 199);
 
         -- Initial log entry
         IF @debug_logging = 1
@@ -31,9 +33,9 @@ BEGIN
                 @package_name = @PACKAGE_NAME,
                 @status_type = 'START',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @treatment_uids, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@treatment_uids, 199);
+                @msg_description1 = @job_flow_message;
         END;
 
         -- STEP 1: Get base UIDs
@@ -253,7 +255,7 @@ BEGIN
                 @step_number = @PROC_STEP_NO,
                 @step_name = @Proc_Step_Name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@treatment_uids, 199);
+                @msg_description1 = @job_flow_message;
         END;
     END TRY
     BEGIN CATCH
@@ -270,7 +272,7 @@ BEGIN
             @step_number = @PROC_STEP_NO,
             @step_name = @PROC_STEP_NAME,
             @row_count = 0,
-            @msg_description1 = LEFT(@treatment_uids, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @ErrorMessage;
 
         return @ErrorMessage;

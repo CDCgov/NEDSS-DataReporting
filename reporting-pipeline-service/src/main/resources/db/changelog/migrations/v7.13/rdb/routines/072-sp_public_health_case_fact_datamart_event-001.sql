@@ -19,6 +19,7 @@ BEGIN
     DECLARE @return_value INT = 0;
     DECLARE @batch_id bigint;
     SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+    DECLARE @job_flow_message VARCHAR(200) = LEFT(@phc_id_list, 199);
 
 
 
@@ -2603,7 +2604,7 @@ BEGIN
             @step_number = @Proc_Step_no,
             @step_name = @Proc_Step_name,
             @row_count = 0,
-            @msg_description1 = LEFT(@phc_id_list, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @FullErrorMessage;
 
         RETURN @FullErrorMessage;

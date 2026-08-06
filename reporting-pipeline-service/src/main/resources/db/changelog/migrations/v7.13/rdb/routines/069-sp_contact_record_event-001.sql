@@ -27,6 +27,8 @@ BEGIN
     DECLARE @batch_id BIGINT;
 
     SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+    DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @cc_uids, 199);
+    DECLARE @job_flow_message VARCHAR(200) = LEFT(@cc_uids, 199);
 
     if
             @debug = 'true'
@@ -40,9 +42,9 @@ BEGIN
             @package_name = @Package_Name,
             @status_type = 'START',
             @step_number = 0,
-            @step_name = LEFT('Pre ID-' + @cc_uids, 199),
+            @step_name = @job_flow_step_name,
             @row_count = 0,
-            @msg_description1 = LEFT(@cc_uids, 199);
+            @msg_description1 = @job_flow_message;
     END;
 
     BEGIN TRANSACTION;
@@ -1454,9 +1456,9 @@ BEGIN
             @package_name = @Package_Name,
             @status_type = 'COMPLETE',
             @step_number = 0,
-            @step_name = LEFT('Pre ID-' + @cc_uids, 199),
+            @step_name = @job_flow_step_name,
             @row_count = 0,
-            @msg_description1 = LEFT(@cc_uids, 199);
+            @msg_description1 = @job_flow_message;
     END;
 
     END TRY
@@ -1480,7 +1482,7 @@ BEGIN
             @step_number = @Proc_Step_no,
             @step_name = @Proc_Step_Name,
             @row_count = 0,
-            @msg_description1 = LEFT(@cc_uids, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @FullErrorMessage;
         return -1;
 

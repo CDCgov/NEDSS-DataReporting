@@ -25,6 +25,8 @@ BEGIN
     DECLARE @batch_id BIGINT;
 
     SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+    DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @vac_uids, 199);
+    DECLARE @job_flow_message VARCHAR(200) = LEFT(@vac_uids, 199);
 
     if
         @debug = 'true'
@@ -38,9 +40,9 @@ BEGIN
             @package_name = @Package_Name,
             @status_type = 'START',
             @step_number = 0,
-            @step_name = LEFT('Pre ID-' + @vac_uids, 199),
+            @step_name = @job_flow_step_name,
             @row_count = 0,
-            @msg_description1 = LEFT(@vac_uids, 199);
+            @msg_description1 = @job_flow_message;
     END;
 
 
@@ -1393,9 +1395,9 @@ BEGIN
              @package_name = 'sp_vaccination_record_event',
              @status_type = 'COMPLETE',
              @step_number = 0,
-             @step_name = LEFT('Pre ID-' + @vac_uids, 199),
+             @step_name = @job_flow_step_name,
              @row_count = 0,
-             @msg_description1 = LEFT(@vac_uids, 199);
+             @msg_description1 = @job_flow_message;
      END;
 
 END TRY

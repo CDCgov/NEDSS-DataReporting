@@ -13,6 +13,8 @@ BEGIN
     BEGIN TRY
 
         DECLARE @batch_id BIGINT;
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @obs_id_list, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@obs_id_list, 199);
         SET @batch_id = cast((format(getdate(),'yyMMddHHmmssffff')) AS bigint);
 
         IF @debug_logging = 1
@@ -23,9 +25,9 @@ BEGIN
                 @package_name = 'sp_observation_event',
                 @status_type = 'START',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @obs_id_list,199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@obs_id_list,199);
+                @msg_description1 = @job_flow_message;
         END;
 
         SELECT
@@ -443,9 +445,9 @@ BEGIN
                 @package_name = 'sp_observation_event',
                 @status_type = 'COMPLETE',
                 @step_number = 0,
-                @step_name = LEFT ('Pre ID-' + @obs_id_list, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT (@obs_id_list, 199);
+                @msg_description1 = @job_flow_message;
         END;
 
     END TRY
@@ -470,7 +472,7 @@ BEGIN
             @step_number = 0,
             @step_name = 'Observation PRE-Processing Event',
             @row_count = 0,
-            @msg_description1 = LEFT (@obs_id_list, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @FullErrorMessage;
 
         return @FullErrorMessage;

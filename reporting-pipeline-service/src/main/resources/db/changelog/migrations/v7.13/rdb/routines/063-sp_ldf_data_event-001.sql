@@ -15,6 +15,8 @@ begin
 		SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 		DECLARE @dataflow_name NVARCHAR(200) = 'ldf_data PRE-Processing Event';
         DECLARE @package_name NVARCHAR(200) = 'sp_ldf_data_event';
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @bus_obj_uid_list, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@bus_obj_uid_list, 199);
         
 		IF @debug_logging = 1
 		BEGIN
@@ -24,9 +26,9 @@ begin
                 @package_name = @package_name,
                 @status_type = 'START',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @bus_obj_uid_list, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@bus_obj_uid_list, 199);
+                @msg_description1 = @job_flow_message;
 		END;
 
 			if @bus_obj_nm = 'PAT'
@@ -91,9 +93,9 @@ begin
 			    @package_name = @package_name,
 			    @status_type = 'COMPLETE',
 			    @step_number = 0,
-			    @step_name = LEFT('Pre ID-' + @bus_obj_uid_list, 199),
+			    @step_name = @job_flow_step_name,
 			    @row_count = 0,
-			    @msg_description1 = LEFT(@bus_obj_uid_list, 199);
+			    @msg_description1 = @job_flow_message;
 		END;
 
 	end try
@@ -117,7 +119,7 @@ begin
             @step_number = 0,
             @step_name = @dataflow_name,
             @row_count = 0,
-            @msg_description1 = LEFT(@bus_obj_uid_list, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @FullErrorMessage;
 
         return @FullErrorMessage;

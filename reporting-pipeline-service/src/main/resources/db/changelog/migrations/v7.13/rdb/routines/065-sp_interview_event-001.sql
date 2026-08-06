@@ -23,6 +23,8 @@ BEGIN
         DECLARE @batch_id BIGINT;
 
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @ix_uids, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@ix_uids, 199);
 
         IF @debug_logging = 1
         BEGIN
@@ -32,9 +34,9 @@ BEGIN
                 @package_name = 'sp_interview_event',
                 @status_type = 'START',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @ix_uids, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@ix_uids, 199);
+                @msg_description1 = @job_flow_message;
         END;
 
         BEGIN
@@ -1443,9 +1445,9 @@ BEGIN
                 @package_name = 'sp_interview_event',
                 @status_type = 'COMPLETE',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @ix_uids, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@ix_uids, 199);
+                @msg_description1 = @job_flow_message;
         END;
 
     END TRY
@@ -1469,7 +1471,7 @@ BEGIN
             @step_number = 0,
             @step_name = 'Interview PRE-Processing Event',
             @row_count = 0,
-            @msg_description1 = LEFT(@ix_uids, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @FullErrorMessage;
         return @FullErrorMessage;
 

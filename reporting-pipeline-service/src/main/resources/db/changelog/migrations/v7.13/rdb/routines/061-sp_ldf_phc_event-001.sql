@@ -14,6 +14,8 @@ Begin
 
         DECLARE @dataflow_name NVARCHAR(200) = 'ldf_phc PRE-Processing Event';
         DECLARE @package_name NVARCHAR(200) = 'sp_ldf_phc_event';
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @bus_obj_uid_list, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@bus_obj_uid_list, 199);
         
         IF @debug_logging = 1
         BEGIN
@@ -23,9 +25,9 @@ Begin
                 @package_name = @package_name,
                 @status_type = 'START',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @bus_obj_uid_list, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@bus_obj_uid_list, 199);
+                @msg_description1 = @job_flow_message;
         END;
         /*
         select * from dbo.v_ldf_phc ldf
@@ -91,9 +93,9 @@ Begin
                 @package_name = @package_name,
                 @status_type = 'COMPLETE',
                 @step_number = 0,
-                @step_name = LEFT('Pre ID-' + @bus_obj_uid_list, 199),
+                @step_name = @job_flow_step_name,
                 @row_count = 0,
-                @msg_description1 = LEFT(@bus_obj_uid_list, 199);
+                @msg_description1 = @job_flow_message;
         END;
 
     end try
@@ -118,7 +120,7 @@ Begin
             @step_number = 0,
             @step_name = @dataflow_name,
             @row_count = 0,
-            @msg_description1 = LEFT(@bus_obj_uid_list, 199),
+            @msg_description1 = @job_flow_message,
             @error_description = @FullErrorMessage;
 
         return @FullErrorMessage;
