@@ -77,12 +77,21 @@ BEGIN
             Parse each UID param ONCE into a typed bigint temp table with a clustered PK,
             then probe with EXISTS. Replaces 7 per-row STRING_SPLIT re-parses / implicit converts.
         */
+        -- uid_obs
         IF OBJECT_ID('tempdb..#uid_obs') IS NOT NULL DROP TABLE #uid_obs;
-        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+
+        SELECT DISTINCT
+            u = TRY_CONVERT(numeric(18,0), NULLIF(TRIM(ss.value), ''))
         INTO #uid_obs
         FROM STRING_SPLIT(@obs_uids, ',') ss
-        ;
+        WHERE TRY_CONVERT(numeric(18,0), NULLIF(TRIM(ss.value), '')) IS NOT NULL;
+
+        -- we store this as numeric(18,0) because that's how mr.MORB_RPT_UID is stored
+        -- and we're joining on that later
+        ALTER TABLE #uid_obs ALTER COLUMN u numeric(18,0) NOT NULL;
+
         ALTER TABLE #uid_obs ADD PRIMARY KEY CLUSTERED (u);
+        -- 
 
         IF OBJECT_ID('tempdb..#uid_pat') IS NOT NULL DROP TABLE #uid_pat;
         SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
@@ -308,7 +317,7 @@ BEGIN
                 OR
                 EXISTS (SELECT 1 FROM #uid_org  z WHERE z.u = hsptl.ORGANIZATION_UID)
                 OR
-                EXISTS (SELECT 1 FROM #uid_obs  z WHERE z.u = CAST(mr.MORB_RPT_UID AS bigint))
+                EXISTS (SELECT 1 FROM #uid_obs  z WHERE z.u = mr.MORB_RPT_UID)
                 )
           AND MR.MORB_RPT_KEY <> 1
           AND MR.RECORD_STATUS_CD = 'ACTIVE';
