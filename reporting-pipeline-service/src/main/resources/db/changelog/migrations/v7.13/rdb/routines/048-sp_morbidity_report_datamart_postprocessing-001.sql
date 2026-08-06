@@ -425,6 +425,9 @@ BEGIN
                            on m.LAB_RPT_LOCAL_ID = lt.LAB_RPT_LOCAL_ID
         WHERE LT.LAB_TEST_TYPE = 'Result';
 
+        CREATE NONCLUSTERED INDEX IX_MORB_LAB_RESULTS_KEY_ROWNUM
+            ON #MORB_LAB_RESULTS (MORBIDITY_REPORT_KEY, row_num);
+
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_LAB_RESULTS;
 
