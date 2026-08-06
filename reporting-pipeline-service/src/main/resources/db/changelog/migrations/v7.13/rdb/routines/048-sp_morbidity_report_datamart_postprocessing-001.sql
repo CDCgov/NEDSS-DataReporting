@@ -921,7 +921,7 @@ BEGIN
             tgt.MORB_REPORT_LAST_UPDATED_BY = src.MORB_REPORT_LAST_UPDATED_BY,
             tgt.EXTERNAL_IND = src.EXTERNAL_IND
         FROM #MORB_EVENT_FINAL src
-                 LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART tgt
+                 INNER JOIN dbo.MORBIDITY_REPORT_DATAMART tgt
                            ON src.MORBIDITY_REPORT_KEY = tgt.MORBIDITY_REPORT_KEY
         WHERE src.DML_IND = 'U';
 
