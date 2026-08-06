@@ -13,6 +13,7 @@ import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationReposi
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.BackfillData;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.ArrayList;
@@ -59,8 +60,10 @@ class PostProcessingServiceRetryTest {
                 postProcRepositoryMock,
                 investigationRepositoryMock,
                 datamartProcessor,
+                new RetryTopicResolver(),
                 new CustomMetrics(new SimpleMeterRegistry())));
     postProcessingServiceMock.setMaxRetries(2);
+    PostProcessingTestUtils.configureNrtTopics(postProcessingServiceMock);
     postProcessingServiceMock.initMetrics();
     datamartProcessor.initMetrics();
     datamartProcessor.setMaxRetries(2);

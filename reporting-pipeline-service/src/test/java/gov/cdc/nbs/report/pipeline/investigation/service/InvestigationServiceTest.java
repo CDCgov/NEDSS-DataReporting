@@ -17,9 +17,12 @@ import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.*;
 import gov.cdc.nbs.report.pipeline.investigation.util.ProcessInvestigationDataUtil;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.*;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -32,6 +35,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.*;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.SendResult;
 
 class InvestigationServiceTest {
@@ -95,6 +99,7 @@ class InvestigationServiceTest {
             treatmentRepository,
             kafkaTemplate,
             transformer,
+            new RetryTopicResolver(),
             new CustomMetrics(new SimpleMeterRegistry()));
 
     investigationService.setInvestigationTopic(investigationTopic);
@@ -190,6 +195,138 @@ class InvestigationServiceTest {
   void testProcessMessageException(String topic) {
     String invalidPayload = "{\"payload\": {\"after\": }}";
     checkException(topic, invalidPayload, DataProcessingException.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Investigation_retry-0", "Investigation_retry-1"})
+  void testProcessInvestigationRetryMessage(String retryTopic) {
+    String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"1\"}}}";
+    when(investigationRepository.computeInvestigations("1")).thenReturn(Optional.empty());
+    investigationService.setPhcDatamartEnable(false);
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, investigationTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(investigationRepository).computeInvestigations("1");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Notification_retry-0", "Notification_retry-1"})
+  void testProcessNotificationRetryMessage(String retryTopic) {
+    String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"2\"}}}";
+    when(notificationRepository.computeNotifications("2")).thenReturn(Optional.empty());
+    investigationService.setPhcDatamartEnable(false);
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, notificationTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(notificationRepository).computeNotifications("2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Interview_retry-0", "Interview_retry-1"})
+  void testProcessInterviewRetryMessage(String retryTopic) {
+    String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"3\"}}}";
+    when(interviewRepository.computeInterviews("3")).thenReturn(Optional.empty());
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, interviewTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(interviewRepository).computeInterviews("3");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Contact_retry-0", "Contact_retry-1"})
+  void testProcessContactRetryMessage(String retryTopic) {
+    String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"4\"}}}";
+    when(contactRepository.computeContact("4")).thenReturn(Optional.empty());
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, contactTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(contactRepository).computeContact("4");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Vaccination_retry-0", "Vaccination_retry-1"})
+  void testProcessVaccinationRetryMessage(String retryTopic) {
+    String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"5\"}, \"op\": \"u\"}}";
+    when(vaccinationRepository.computeVaccination("5")).thenReturn(Optional.empty());
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, vaccinationTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(vaccinationRepository).computeVaccination("5");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Treatment_retry-0", "Treatment_retry-1"})
+  void testProcessTreatmentRetryMessage(String retryTopic) {
+    String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"6\"}, \"op\": \"u\"}}";
+    when(treatmentRepository.computeTreatment("6")).thenReturn(Optional.empty());
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, treatmentTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(treatmentRepository).computeTreatment("6");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Act_relationship_retry-0", "Act_relationship_retry-1"})
+  void testProcessActRelationshipRetryMessage(String retryTopic) {
+    String payload =
+        "{\"payload\": {\"after\": {\"source_act_uid\": \"7\", \"type_cd\": \"1180\"},"
+            + " \"op\": \"c\"}}";
+    when(vaccinationRepository.computeVaccination("7")).thenReturn(Optional.empty());
+
+    CompletableFuture<Void> future =
+        investigationService.processMessage(retryRecord(retryTopic, actRelationshipTopic, payload));
+
+    assertThrows(CompletionException.class, future::join);
+    verify(vaccinationRepository).computeVaccination("7");
+  }
+
+  @Test
+  void testProcessMessageRejectsUnknownTopic() {
+    ConsumerRecord<String, String> record = getRecord("unknownTopic", null);
+
+    CompletableFuture<Void> future = investigationService.processMessage(record);
+
+    CompletionException exception = assertThrows(CompletionException.class, future::join);
+    assertEquals(NoSuchElementException.class, exception.getCause().getCause().getClass());
+    verifyNoInteractions(
+        investigationRepository,
+        notificationRepository,
+        interviewRepository,
+        contactRepository,
+        vaccinationRepository,
+        treatmentRepository,
+        kafkaTemplate);
+  }
+
+  @Test
+  void testProcessMessageRejectsUnknownOriginalTopic() {
+    ConsumerRecord<String, String> record =
+        retryRecord("Investigation_retry-0", "unknownTopic", null);
+
+    CompletableFuture<Void> future = investigationService.processMessage(record);
+
+    CompletionException exception = assertThrows(CompletionException.class, future::join);
+    assertEquals(NoSuchElementException.class, exception.getCause().getCause().getClass());
+    verifyNoInteractions(
+        investigationRepository,
+        notificationRepository,
+        interviewRepository,
+        contactRepository,
+        vaccinationRepository,
+        treatmentRepository,
+        kafkaTemplate);
   }
 
   @Test
@@ -776,6 +913,15 @@ class InvestigationServiceTest {
 
   private ConsumerRecord<String, String> getRecord(String topic, String payload) {
     return new ConsumerRecord<>(topic, 0, 11L, null, payload);
+  }
+
+  private ConsumerRecord<String, String> retryRecord(
+      String retryTopic, String originalTopic, String payload) {
+    ConsumerRecord<String, String> record = getRecord(retryTopic, payload);
+    record
+        .headers()
+        .add(KafkaHeaders.ORIGINAL_TOPIC, originalTopic.getBytes(StandardCharsets.UTF_8));
+    return record;
   }
 
   private void checkException(
