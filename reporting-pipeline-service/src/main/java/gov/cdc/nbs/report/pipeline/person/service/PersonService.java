@@ -245,17 +245,18 @@ public class PersonService {
 
     providerData.forEach(
         provider -> {
+          ProviderReporting reporting =
+              (ProviderReporting)
+                  transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
+
           if (directWrite) {
-            ProviderReporting reporting =
-                (ProviderReporting)
-                    transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
             nrtProviderRepository.save(NrtProvider.from(reporting));
             log.info(
                 "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
           }
 
           String reportingKey = transformer.buildProviderKey(provider);
-          String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
+          String reportingData = transformer.processData(reporting);
           kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
           log.info(
               "Provider data (uid={}) sent to {}",
@@ -291,17 +292,18 @@ public class PersonService {
 
     patientData.forEach(
         personData -> {
+          PatientReporting reporting =
+              (PatientReporting)
+                  transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
+
           if (directWrite) {
-            PatientReporting reporting =
-                (PatientReporting)
-                    transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
             nrtPatientRepository.save(NrtPatient.from(reporting));
             log.info(
                 "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
           }
 
           String reportingKey = transformer.buildPatientKey(personData);
-          String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
+          String reportingData = transformer.processData(reporting);
           kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
           log.info(
               "Patient data (uid={}) sent to {}",
