@@ -51,24 +51,15 @@ AS
           UPDATE l
           SET record_status_cd = 'INACTIVE'
           FROM dbo.LAB100 l
-          WHERE
-              RESULTED_LAB_TEST_KEY IN (
-                  SELECT
-                      l.RESULTED_LAB_TEST_KEY
-                  FROM dbo.LAB_TEST lt
-                          INNER JOIN dbo.LAB100 l on
-                      l.RESULTED_LAB_TEST_KEY = lt.LAB_TEST_KEY
-                  WHERE
-                      ROOT_ORDERED_TEST_PNTR IN
-                      (
-                          SELECT ROOT_ORDERED_TEST_PNTR
-                          FROM dbo.LAB_TEST ltr
-                          WHERE
-                              LAB_TEST_TYPE = 'Order'
-                            AND record_status_cd = 'INACTIVE'
-                      )
-                    AND l.record_status_cd <> 'INACTIVE'
-              );
+          INNER JOIN dbo.LAB_TEST lt ON lt.LAB_TEST_KEY = l.RESULTED_LAB_TEST_KEY
+          WHERE l.record_status_cd <> 'INACTIVE'
+          AND EXISTS (
+            SELECT 1
+            FROM dbo.LAB_TEST ltr
+            WHERE ltr.ROOT_ORDERED_TEST_PNTR = lt.ROOT_ORDERED_TEST_PNTR
+                AND ltr.LAB_TEST_TYPE = 'Order'
+                AND ltr.record_status_cd = 'INACTIVE'
+          );
           
           SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
