@@ -1,6 +1,6 @@
 services:
   nbs-mssql:
-    image: ghcr.io/cdcent/nedssdb:6.0.17.0-replacement-beta
+    image: ghcr.io/cdcent/nedssdb:latest
     platform: linux/amd64
     environment:
       - DATABASE_VERSION=6.0.18.1
