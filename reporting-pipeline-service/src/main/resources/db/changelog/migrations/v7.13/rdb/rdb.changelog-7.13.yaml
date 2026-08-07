@@ -3288,19 +3288,11 @@ databaseChangeLog:
             path: db/changelog/migrations/v7.13/rdb/tables/262-alter_nrt_dead_letter_log.sql
             splitStatements: false
   - changeSet:
-      id: app-922-lab100_datamart_performance
+      id: 962
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/tables/263-lab100-index.sql
-            splitStatements: false
-  - changeSet:
-      id: app-922-lab100_datamart_performance-cleanup
-      author: liquibase
-      runOnChange: true
-      changes:
-        - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/routines/371-sp_lab100_cleanup.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/074-sp_add_job_flow_log-001.sql
             splitStatements: true
             endDelimiter: GO
