@@ -247,8 +247,6 @@ public class PersonService {
                   transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
 
           nrtProviderRepository.save(NrtProvider.from(providerReporting));
-          log.info(
-              "Provider data (uid={}) directly written to nrt_provider", provider.getPersonUid());
 
           String reportingKey = transformer.buildProviderKey(provider);
           String reportingData = transformer.processData(providerReporting);
@@ -292,8 +290,6 @@ public class PersonService {
                   transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
 
           nrtPatientRepository.save(NrtPatient.from(patientReporting));
-          log.info(
-              "Patient data (uid={}) directly written to nrt_patient", personData.getPersonUid());
 
           String reportingKey = transformer.buildPatientKey(personData);
           String reportingData = transformer.processData(patientReporting);
@@ -337,9 +333,6 @@ public class PersonService {
       authUsers.forEach(
           authUser -> {
             nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-            log.info(
-                "Authorized user data (uid={}) directly written to nrt_patient",
-                authUser.getUserId());
             String jsonKey = transformer.buildUserKey(authUser);
             String jsonValue = transformer.processData(authUser);
             kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
