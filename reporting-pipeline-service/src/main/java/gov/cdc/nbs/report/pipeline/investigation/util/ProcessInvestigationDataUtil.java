@@ -320,6 +320,12 @@ public class ProcessInvestigationDataUtil {
           continue;
         }
 
+        // Ignore synthetic or non-meaningful rows such as fallback rows with act_id_seq = 0.
+        // Only real act_id rows should be considered for downstream case-id fields.
+        if (actIdSeq <= 0) {
+          continue;
+        }
+
         // Match by type_cd (not by fixed positional seq). If multiple rows exist for the same
         // type, use the latest row by act_id_seq to mirror ODSE TOP 1 ... ORDER BY act_id_seq DESC.
         if (typeCode.equals("STATE") && actIdSeq >= stateCaseIdSeq) {
