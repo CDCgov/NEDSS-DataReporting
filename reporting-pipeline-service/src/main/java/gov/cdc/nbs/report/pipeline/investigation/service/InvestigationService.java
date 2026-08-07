@@ -492,10 +492,6 @@ public class InvestigationService {
 
     reportingModel.setBatchId(investigationTransformed.getBatchId());
     reportingModel.setNotes(investigation.getPhcNotes());
-    reportingModel.setOutbreakIndVal(
-        StringUtils.hasText(reportingModel.getOutbreakIndVal())
-            ? reportingModel.getOutbreakIndVal()
-            : null);
     return reportingModel;
   }
 }
