@@ -192,6 +192,26 @@ class InvestigationDataProcessingTests {
   }
 
   @Test
+  void testTransformActIdsIgnoresSyntheticFallbackStateRows() {
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 0, "type_cd": "STATE", "root_extension_txt": "CAS10001001GA01"},
+          {"act_id_seq": 2, "type_cd": "CITY",  "root_extension_txt": "GA-CITY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getInvStateCaseId());
+    assertEquals("GA-CITY-001", transformed.getCityCountyCaseNbr());
+    assertNull(transformed.getLegacyCaseId());
+  }
+
+  @Test
   void testTransformActIdsLegacyCaseIdNullWhenNoLegacyRow() {
     Investigation investigation = new Investigation();
     investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
