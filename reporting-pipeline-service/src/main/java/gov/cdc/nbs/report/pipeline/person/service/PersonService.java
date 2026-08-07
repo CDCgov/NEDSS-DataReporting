@@ -6,6 +6,7 @@ import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
@@ -73,6 +74,7 @@ public class PersonService {
   private final PatientRepository patientRepository;
   private final ProviderRepository providerRepository;
   private final UserRepository userRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
   private final PersonTransformers transformer;
 
   @Qualifier("personKafkaTemplate")
@@ -205,11 +207,15 @@ public class PersonService {
             String cd = payloadNode.get("cd").asText();
             switch (cd) {
               case "PAT":
-                personDataFromStoredProc = patientRepository.computePatients(personUid);
+                personDataFromStoredProc =
+                    patientRepository.computePatients(
+                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
                 processPatientData(personDataFromStoredProc);
                 break;
               case "PRV":
-                providerDataFromStoredProc = providerRepository.computeProviders(personUid);
+                providerDataFromStoredProc =
+                    providerRepository.computeProviders(
+                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
                 processProviderData(providerDataFromStoredProc);
                 break;
               default:
@@ -312,7 +318,9 @@ public class PersonService {
     try {
       userUid = extractUid(message, "auth_user_uid");
       log.info(topicDebugLog, "User", userUid, topic);
-      Optional<List<AuthUser>> userData = userRepository.computeAuthUsers(userUid);
+      Optional<List<AuthUser>> userData =
+          userRepository.computeAuthUsers(
+              userUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
       if (userData.isPresent() && !userData.get().isEmpty()) {
         userData

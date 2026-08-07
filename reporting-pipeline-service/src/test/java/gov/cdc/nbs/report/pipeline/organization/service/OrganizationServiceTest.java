@@ -12,6 +12,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.org.OrganizationSp;
 import gov.cdc.nbs.report.pipeline.organization.model.dto.place.*;
 import gov.cdc.nbs.report.pipeline.organization.repository.OrgRepository;
@@ -73,29 +74,34 @@ class OrganizationServiceTest {
   @BeforeEach
   void setUp() {
     closeable = MockitoAnnotations.openMocks(this);
-    DataTransformers transformer = new DataTransformers();
-    organizationService =
-        new OrganizationService(
-            orgRepository,
-            placeRepository,
-            transformer,
-            kafkaTemplate,
-            new RetryTopicResolver(),
-            new CustomMetrics(new SimpleMeterRegistry()));
-    organizationService.setOrgTopic(orgTopic);
-    organizationService.setPlaceTopic(placeTopic);
-    organizationService.setOrgReportingOutputTopic(orgReportingTopic);
-    organizationService.setOrgElasticSearchTopic(orgElasticTopic);
-    organizationService.setPlaceReportingOutputTopic(placeReportingTopic);
-    organizationService.setTeleOutputTopic(teleReportingTopic);
-    organizationService.setElasticSearchEnable(true);
-    organizationService.setPhcDatamartEnable(true);
-    organizationService.setThreadPoolSize(1);
-    organizationService.initMetrics();
+    organizationService = createOrganizationService(false);
 
     Logger logger = (Logger) LoggerFactory.getLogger(OrganizationService.class);
     listAppender.start();
     logger.addAppender(listAppender);
+  }
+
+  private OrganizationService createOrganizationService(boolean debugLogging) {
+    OrganizationService service =
+        new OrganizationService(
+            orgRepository,
+            placeRepository,
+            new EventProcedureLoggingProperties(debugLogging),
+            new DataTransformers(),
+            kafkaTemplate,
+            new RetryTopicResolver(),
+            new CustomMetrics(new SimpleMeterRegistry()));
+    service.setOrgTopic(orgTopic);
+    service.setPlaceTopic(placeTopic);
+    service.setOrgReportingOutputTopic(orgReportingTopic);
+    service.setOrgElasticSearchTopic(orgElasticTopic);
+    service.setPlaceReportingOutputTopic(placeReportingTopic);
+    service.setTeleOutputTopic(teleReportingTopic);
+    service.setElasticSearchEnable(true);
+    service.setPhcDatamartEnable(true);
+    service.setThreadPoolSize(1);
+    service.initMetrics();
+    return service;
   }
 
   @AfterEach
@@ -106,11 +112,29 @@ class OrganizationServiceTest {
   }
 
   @Test
+  void passesEnabledLoggingToOrganizationRepository() throws Exception {
+    OrganizationSp orgSp =
+        objectMapper.readValue(
+            readFileData("rawDataFiles/organization/orgSp.json"), OrganizationSp.class);
+    when(orgRepository.computeAllOrganizations(anyString(), Mockito.eq(true)))
+        .thenReturn(Set.of(orgSp));
+
+    organizationService = createOrganizationService(true);
+    organizationService.processMessage(
+        record(readFileData("rawDataFiles/organization/OrgChangeData.json"), orgTopic));
+
+    Awaitility.await()
+        .atMost(1, TimeUnit.SECONDS)
+        .untilAsserted(() -> verify(orgRepository).computeAllOrganizations("10036000", true));
+  }
+
+  @Test
   void testProcessOrgMessage() throws Exception {
     OrganizationSp orgSp =
         objectMapper.readValue(
             readFileData("rawDataFiles/organization/orgSp.json"), OrganizationSp.class);
-    when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
+    when(orgRepository.computeAllOrganizations(anyString(), Mockito.eq(false)))
+        .thenReturn(Set.of(orgSp));
 
     validateOrgTransformation();
     verify(orgRepository).updatePhcFact("ORG", "10036000");
@@ -120,7 +144,8 @@ class OrganizationServiceTest {
   void testProcessOrgMessageNoElasticSearch() {
     OrganizationSp orgSp = new OrganizationSp();
     orgSp.setOrganizationUid(10036000L);
-    when(orgRepository.computeAllOrganizations(anyString())).thenReturn(Set.of(orgSp));
+    when(orgRepository.computeAllOrganizations(anyString(), Mockito.eq(false)))
+        .thenReturn(Set.of(orgSp));
 
     String changeData = readFileData("rawDataFiles/organization/OrgChangeData.json");
 
@@ -143,7 +168,8 @@ class OrganizationServiceTest {
   void testProcessPlaceMessage() throws Exception {
     Place place =
         objectMapper.readValue(readFileData("rawDataFiles/organization/Place.json"), Place.class);
-    when(placeRepository.computeAllPlaces(anyString())).thenReturn(Optional.of(List.of(place)));
+    when(placeRepository.computeAllPlaces(anyString(), Mockito.eq(false)))
+        .thenReturn(Optional.of(List.of(place)));
 
     validatePlaceTransformation();
   }
@@ -155,7 +181,8 @@ class OrganizationServiceTest {
     Place place =
         objectMapper.readValue(readFileData("rawDataFiles/organization/Place.json"), Place.class);
     place.setPlaceTele(null);
-    when(placeRepository.computeAllPlaces(anyString())).thenReturn(Optional.of(List.of(place)));
+    when(placeRepository.computeAllPlaces(anyString(), Mockito.eq(false)))
+        .thenReturn(Optional.of(List.of(place)));
 
     organizationService.processMessage(record(payload, placeTopic));
 
@@ -175,7 +202,7 @@ class OrganizationServiceTest {
   void testProcessOrganizationRetryMessage(String retryTopic) {
     OrganizationSp organization = new OrganizationSp();
     organization.setOrganizationUid(10036000L);
-    when(orgRepository.computeAllOrganizations("10036000")).thenReturn(Set.of(organization));
+    when(orgRepository.computeAllOrganizations("10036000", false)).thenReturn(Set.of(organization));
     organizationService.setElasticSearchEnable(false);
     organizationService.setPhcDatamartEnable(false);
 
@@ -187,7 +214,7 @@ class OrganizationServiceTest {
                 orgTopic));
     future.join();
 
-    verify(orgRepository).computeAllOrganizations("10036000");
+    verify(orgRepository).computeAllOrganizations("10036000", false);
     verifyNoInteractions(placeRepository);
   }
 
@@ -197,13 +224,14 @@ class OrganizationServiceTest {
     String payload = "{\"payload\": {\"after\": {\"place_uid\": \"10045001\"}}}";
     Place place =
         objectMapper.readValue(readFileData("rawDataFiles/organization/Place.json"), Place.class);
-    when(placeRepository.computeAllPlaces("10045001")).thenReturn(Optional.of(List.of(place)));
+    when(placeRepository.computeAllPlaces("10045001", false))
+        .thenReturn(Optional.of(List.of(place)));
 
     CompletableFuture<Void> future =
         organizationService.processMessage(retryRecord(payload, retryTopic, placeTopic));
     future.join();
 
-    verify(placeRepository).computeAllPlaces("10045001");
+    verify(placeRepository).computeAllPlaces("10045001", false);
     verifyNoInteractions(orgRepository);
   }
 
@@ -231,7 +259,7 @@ class OrganizationServiceTest {
   void testProcessMessageException(String payload, String topic) {
     Class<?> expectedExceptionClass = NoSuchElementException.class;
     if (payload.contains("place_uid")) {
-      when(placeRepository.computeAllPlaces(anyString()))
+      when(placeRepository.computeAllPlaces(anyString(), Mockito.eq(false)))
           .thenReturn(Optional.of(List.of(new Place())));
       expectedExceptionClass = NullPointerException.class;
     }
@@ -249,11 +277,11 @@ class OrganizationServiceTest {
   void testProcessMessageNoDataException(String payload, String inputTopic) {
     if (inputTopic.equals(orgTopic)) {
       Long organizationUid = 123456789L;
-      when(orgRepository.computeAllOrganizations(String.valueOf(organizationUid)))
+      when(orgRepository.computeAllOrganizations(String.valueOf(organizationUid), false))
           .thenReturn(Collections.emptySet());
     } else if (inputTopic.equals(placeTopic)) {
       Long placeUid = 123456789L;
-      when(placeRepository.computeAllPlaces(String.valueOf(placeUid)))
+      when(placeRepository.computeAllPlaces(String.valueOf(placeUid), false))
           .thenReturn(Optional.of(Collections.emptyList()));
     }
     CompletableFuture<Void> future =

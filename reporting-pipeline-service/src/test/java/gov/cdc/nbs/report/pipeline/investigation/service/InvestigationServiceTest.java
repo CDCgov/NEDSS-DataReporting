@@ -11,6 +11,7 @@ import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.investigation.repository.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.*;
@@ -97,6 +98,7 @@ class InvestigationServiceTest {
             contactRepository,
             vaccinationRepository,
             treatmentRepository,
+            new EventProcedureLoggingProperties(false),
             kafkaTemplate,
             transformer,
             new RetryTopicResolver(),
@@ -144,7 +146,7 @@ class InvestigationServiceTest {
             + "\", \"prog_area_cd\": \"BMIRD\"}}}";
 
     final Investigation investigation = constructInvestigation(investigationUid);
-    when(investigationRepository.computeInvestigations(String.valueOf(investigationUid)))
+    when(investigationRepository.computeInvestigations(String.valueOf(investigationUid), false))
         .thenReturn(Optional.of(investigation));
     when(kafkaTemplate.send(anyString(), anyString(), isNull()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -152,8 +154,8 @@ class InvestigationServiceTest {
         .thenReturn(CompletableFuture.completedFuture(null));
     validateInvestigationData(payload, investigation);
 
-    verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid));
-    verify(investigationRepository).populatePhcFact(String.valueOf(investigationUid));
+    verify(investigationRepository).computeInvestigations(String.valueOf(investigationUid), false);
+    verify(investigationRepository).populatePhcFact(String.valueOf(investigationUid), false);
   }
 
   @Test
@@ -165,7 +167,7 @@ class InvestigationServiceTest {
             + "\", \"prog_area_cd\": \"BMIRD\"}}}";
 
     final Investigation investigation = constructInvestigation(investigationUid);
-    when(investigationRepository.computeInvestigations(String.valueOf(investigationUid)))
+    when(investigationRepository.computeInvestigations(String.valueOf(investigationUid), false))
         .thenReturn(Optional.of(investigation));
     when(kafkaTemplate.send(anyString(), anyString(), isNull()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -180,7 +182,7 @@ class InvestigationServiceTest {
         .untilAsserted(
             () ->
                 verify(investigationRepository, never())
-                    .populatePhcFact(String.valueOf(investigationUid)));
+                    .populatePhcFact(String.valueOf(investigationUid), false));
   }
 
   @ParameterizedTest
@@ -201,80 +203,80 @@ class InvestigationServiceTest {
   @ValueSource(strings = {"Investigation_retry-0", "Investigation_retry-1"})
   void testProcessInvestigationRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"public_health_case_uid\": \"1\"}}}";
-    when(investigationRepository.computeInvestigations("1")).thenReturn(Optional.empty());
+    when(investigationRepository.computeInvestigations("1", false)).thenReturn(Optional.empty());
     investigationService.setPhcDatamartEnable(false);
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, investigationTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(investigationRepository).computeInvestigations("1");
+    verify(investigationRepository).computeInvestigations("1", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Notification_retry-0", "Notification_retry-1"})
   void testProcessNotificationRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"notification_uid\": \"2\"}}}";
-    when(notificationRepository.computeNotifications("2")).thenReturn(Optional.empty());
+    when(notificationRepository.computeNotifications("2", false)).thenReturn(Optional.empty());
     investigationService.setPhcDatamartEnable(false);
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, notificationTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(notificationRepository).computeNotifications("2");
+    verify(notificationRepository).computeNotifications("2", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Interview_retry-0", "Interview_retry-1"})
   void testProcessInterviewRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"3\"}}}";
-    when(interviewRepository.computeInterviews("3")).thenReturn(Optional.empty());
+    when(interviewRepository.computeInterviews("3", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, interviewTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(interviewRepository).computeInterviews("3");
+    verify(interviewRepository).computeInterviews("3", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Contact_retry-0", "Contact_retry-1"})
   void testProcessContactRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"ct_contact_uid\": \"4\"}}}";
-    when(contactRepository.computeContact("4")).thenReturn(Optional.empty());
+    when(contactRepository.computeContact("4", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, contactTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(contactRepository).computeContact("4");
+    verify(contactRepository).computeContact("4", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Vaccination_retry-0", "Vaccination_retry-1"})
   void testProcessVaccinationRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"intervention_uid\": \"5\"}, \"op\": \"u\"}}";
-    when(vaccinationRepository.computeVaccination("5")).thenReturn(Optional.empty());
+    when(vaccinationRepository.computeVaccination("5", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, vaccinationTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(vaccinationRepository).computeVaccination("5");
+    verify(vaccinationRepository).computeVaccination("5", false);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"Treatment_retry-0", "Treatment_retry-1"})
   void testProcessTreatmentRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"treatment_uid\": \"6\"}, \"op\": \"u\"}}";
-    when(treatmentRepository.computeTreatment("6")).thenReturn(Optional.empty());
+    when(treatmentRepository.computeTreatment("6", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, treatmentTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(treatmentRepository).computeTreatment("6");
+    verify(treatmentRepository).computeTreatment("6", false);
   }
 
   @ParameterizedTest
@@ -283,13 +285,13 @@ class InvestigationServiceTest {
     String payload =
         "{\"payload\": {\"after\": {\"source_act_uid\": \"7\", \"type_cd\": \"1180\"},"
             + " \"op\": \"c\"}}";
-    when(vaccinationRepository.computeVaccination("7")).thenReturn(Optional.empty());
+    when(vaccinationRepository.computeVaccination("7", false)).thenReturn(Optional.empty());
 
     CompletableFuture<Void> future =
         investigationService.processMessage(retryRecord(retryTopic, actRelationshipTopic, payload));
 
     assertThrows(CompletionException.class, future::join);
-    verify(vaccinationRepository).computeVaccination("7");
+    verify(vaccinationRepository).computeVaccination("7", false);
   }
 
   @Test
@@ -335,7 +337,7 @@ class InvestigationServiceTest {
     String payload =
         "{\"payload\": {\"after\": {\"public_health_case_uid\": \"" + investigationUid + "\"}}}";
 
-    when(investigationRepository.computeInvestigations(String.valueOf(investigationUid)))
+    when(investigationRepository.computeInvestigations(String.valueOf(investigationUid), false))
         .thenReturn(Optional.empty());
     checkException(investigationTopic, payload, NoDataException.class);
   }
@@ -347,7 +349,7 @@ class InvestigationServiceTest {
         "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
 
     final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
-    when(notificationRepository.computeNotifications(String.valueOf(notificationUid)))
+    when(notificationRepository.computeNotifications(String.valueOf(notificationUid), false))
         .thenReturn(Optional.of(notification));
     investigationService.processMessage(getRecord(notificationTopic, payload));
 
@@ -355,7 +357,8 @@ class InvestigationServiceTest {
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              verify(notificationRepository).computeNotifications(String.valueOf(notificationUid));
+              verify(notificationRepository)
+                  .computeNotifications(String.valueOf(notificationUid), false);
               verify(kafkaTemplate).send(topicCaptor.capture(), anyString(), anyString());
               verify(investigationRepository)
                   .updatePhcFact("NOTF", String.valueOf(notificationUid));
@@ -370,7 +373,7 @@ class InvestigationServiceTest {
         "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
 
     final NotificationUpdate notification = constructNotificationUpdate(notificationUid);
-    when(notificationRepository.computeNotifications(String.valueOf(notificationUid)))
+    when(notificationRepository.computeNotifications(String.valueOf(notificationUid), false))
         .thenReturn(Optional.of(notification));
     investigationService.setPhcDatamartEnable(false);
 
@@ -391,7 +394,7 @@ class InvestigationServiceTest {
     Long notificationUid = 123456789L;
     String payload =
         "{\"payload\": {\"after\": {\"notification_uid\": \"" + notificationUid + "\"}}}";
-    when(investigationRepository.computeInvestigations(String.valueOf(notificationUid)))
+    when(investigationRepository.computeInvestigations(String.valueOf(notificationUid), false))
         .thenReturn(Optional.empty());
     checkException(notificationTopic, payload, NoDataException.class);
   }
@@ -405,7 +408,7 @@ class InvestigationServiceTest {
     interview.setRdbCols(readFileData(FILE_PATH_PREFIX + "RdbColumns.json"));
     interview.setAnswers(readFileData(FILE_PATH_PREFIX + "InterviewAnswers.json"));
     interview.setNotes(readFileData(FILE_PATH_PREFIX + "InterviewNotes.json"));
-    when(interviewRepository.computeInterviews(String.valueOf(interviewUid)))
+    when(interviewRepository.computeInterviews(String.valueOf(interviewUid), false))
         .thenReturn(Optional.of(interview));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -444,7 +447,7 @@ class InvestigationServiceTest {
     assertEquals(interviewReportingKey, actualInterviewKey);
     assertEquals(interviewReportingValue, actualInterviewValue);
 
-    verify(interviewRepository).computeInterviews(String.valueOf(interviewUid));
+    verify(interviewRepository).computeInterviews(String.valueOf(interviewUid), false);
   }
 
   @Test
@@ -452,7 +455,7 @@ class InvestigationServiceTest {
     Long interviewUid = 123456789L;
     String payload = "{\"payload\": {\"after\": {\"interview_uid\": \"" + interviewUid + "\"}}}";
 
-    when(interviewRepository.computeInterviews(String.valueOf(interviewUid)))
+    when(interviewRepository.computeInterviews(String.valueOf(interviewUid), false))
         .thenReturn(Optional.empty());
     checkException(interviewTopic, payload, NoDataException.class);
   }
@@ -465,7 +468,7 @@ class InvestigationServiceTest {
     final Contact contact = constructContact(contactUid);
     contact.setRdbCols(readFileData(FILE_PATH_PREFIX + "RdbColumns.json"));
     contact.setAnswers(readFileData(FILE_PATH_PREFIX + "ContactAnswers.json"));
-    when(contactRepository.computeContact(String.valueOf(contactUid)))
+    when(contactRepository.computeContact(String.valueOf(contactUid), false))
         .thenReturn(Optional.of(contact));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -499,7 +502,7 @@ class InvestigationServiceTest {
     assertEquals(contactReportingKey, actualContactKey);
     assertEquals(contactReportingValue, actualContactValue);
 
-    verify(contactRepository).computeContact(String.valueOf(contactUid));
+    verify(contactRepository).computeContact(String.valueOf(contactUid), false);
   }
 
   @Test
@@ -520,7 +523,7 @@ class InvestigationServiceTest {
             + "\"}}";
 
     final Vaccination vaccination = constructVaccination(vaccinationUid);
-    when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid)))
+    when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid), false))
         .thenReturn(Optional.of(vaccination));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -557,7 +560,7 @@ class InvestigationServiceTest {
     assertEquals(vaccinationReportingKey, actualVaccinationKey);
     assertEquals(vaccinationReportingValue, actualVaccinationValue);
 
-    verify(vaccinationRepository).computeVaccination(String.valueOf(vaccinationUid));
+    verify(vaccinationRepository).computeVaccination(String.valueOf(vaccinationUid), false);
   }
 
   @Test
@@ -569,7 +572,7 @@ class InvestigationServiceTest {
             + "\"}, \"op\": \"c\"}}";
 
     final Vaccination vaccination = constructVaccination(vaccinationUid);
-    when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid)))
+    when(vaccinationRepository.computeVaccination(String.valueOf(vaccinationUid), false))
         .thenReturn(Optional.of(vaccination));
 
     investigationService.processMessage(getRecord(vaccinationTopic, payload));
@@ -647,7 +650,7 @@ class InvestigationServiceTest {
 
     final Vaccination vaccination = constructVaccination(sourceActUid);
 
-    when(vaccinationRepository.computeVaccination(String.valueOf(sourceActUid)))
+    when(vaccinationRepository.computeVaccination(String.valueOf(sourceActUid), false))
         .thenReturn(Optional.of(vaccination));
 
     CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
@@ -726,7 +729,7 @@ class InvestigationServiceTest {
 
     final Treatment treatment = constructTreatment(sourceActUid);
 
-    when(treatmentRepository.computeTreatment(String.valueOf(sourceActUid)))
+    when(treatmentRepository.computeTreatment(String.valueOf(sourceActUid), false))
         .thenReturn(Optional.of(treatment));
 
     CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
@@ -749,7 +752,7 @@ class InvestigationServiceTest {
           .atMost(1, TimeUnit.SECONDS)
           .untilAsserted(
               () -> {
-                verify(treatmentRepository).computeTreatment(String.valueOf(sourceActUid));
+                verify(treatmentRepository).computeTreatment(String.valueOf(sourceActUid), false);
                 verify(kafkaTemplate)
                     .send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
               });
@@ -847,7 +850,7 @@ class InvestigationServiceTest {
 
     final Treatment treatment = constructTreatment(treatmentUid);
 
-    when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid)))
+    when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid), false))
         .thenReturn(Optional.of(treatment));
 
     CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
@@ -861,7 +864,7 @@ class InvestigationServiceTest {
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
             () -> {
-              verify(treatmentRepository).computeTreatment(String.valueOf(treatmentUid));
+              verify(treatmentRepository).computeTreatment(String.valueOf(treatmentUid), false);
               verify(kafkaTemplate)
                   .send(topicCaptor.capture(), keyCaptor.capture(), messageCaptor.capture());
             });
@@ -889,7 +892,7 @@ class InvestigationServiceTest {
         "{\"payload\": {\"after\": {\"treatment_uid\": \"" + treatmentUid + "\"}, \"op\": \"c\"}}";
 
     final Treatment treatment = constructTreatment(treatmentUid);
-    when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid)))
+    when(treatmentRepository.computeTreatment(String.valueOf(treatmentUid), false))
         .thenReturn(Optional.of(treatment));
 
     investigationService.processMessage(getRecord(treatmentTopic, payload));
