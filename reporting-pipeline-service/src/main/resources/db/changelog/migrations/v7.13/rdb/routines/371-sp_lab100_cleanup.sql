@@ -97,13 +97,13 @@ AS
           SET @PROC_STEP_NAME = 'DELETE REMOVED OBSERVATIONS FROM LAB100';
 
           /* Remove keys in LAB100 that no longer exist in LAB_TEST. */
-          DELETE FROM dbo.lab100
-          WHERE  resulted_lab_test_key IN (
-                 SELECT DISTINCT l.resulted_lab_test_key
-                 FROM   dbo.lab100 l
-                 EXCEPT
-                 SELECT lt.lab_test_key
-                 FROM   dbo.lab_test lt);
+          DELETE l
+          FROM dbo.lab100 l
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM dbo.lab_test lt
+            WHERE lt.lab_test_key = l.resulted_lab_test_key
+          );
 
           SELECT @ROWCOUNT_NO = @@ROWCOUNT;
 
