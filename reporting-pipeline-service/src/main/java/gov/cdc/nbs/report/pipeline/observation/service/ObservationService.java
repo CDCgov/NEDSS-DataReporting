@@ -64,7 +64,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ObservationService {
   private static final Logger logger = LoggerFactory.getLogger(ObservationService.class);
-  private static final String BEFORE_PATH = "before";
 
   @Value("${spring.kafka.topics.nbs.observation}")
   private String observationTopic;
@@ -106,7 +105,7 @@ public class ObservationService {
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
-    inputTopics = Set.of(observationTopic, actRelationshipTopic);
+    inputTopics = Set.of(observationTopic);
 
     msgProcessed = metrics.counter("obs_msg_processed", tags);
     msgSuccess = metrics.counter("obs_msg_success", tags);
@@ -134,10 +133,7 @@ public class ObservationService {
       },
       kafkaTemplate = "observationKafkaTemplate")
   @KafkaListener(
-      topics = {
-        "${spring.kafka.topics.nbs.observation}",
-        "${spring.kafka.topics.nbs.act-relationship}"
-      },
+      topics = {"${spring.kafka.topics.nbs.observation}"},
       containerFactory = "observationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
     TopicResolution topicResolution;
@@ -156,9 +152,6 @@ public class ObservationService {
     if (logicalTopic.equals(observationTopic)) {
       return CompletableFuture.runAsync(
           () -> processObservation(message, batchId, true, ""), obsExecutor);
-    } else if (logicalTopic.equals(actRelationshipTopic) && message != null) {
-      return CompletableFuture.runAsync(
-          () -> processActRelationship(message, batchId), obsExecutor);
     } else {
       return CompletableFuture.failedFuture(
           new DataProcessingException(
@@ -167,7 +160,7 @@ public class ObservationService {
     }
   }
 
-  private void processObservation(
+  public void processObservation(
       String value,
       long batchId,
       boolean isFromObservationTopic,
@@ -222,40 +215,6 @@ public class ObservationService {
         },
         "service",
         SERVICE_NAME);
-  }
-
-  private void processActRelationship(String value, long batchId) {
-    String sourceActUid = "";
-
-    try {
-      String typeCd;
-      String targetClassCd;
-      String operationType = extractChangeDataCaptureOperation(value);
-      if (operationType == null) {
-        // possible tombstone message, nothing to process
-        return;
-      }
-
-      if (operationType.equals("d")) {
-        sourceActUid = extractUid(value, "source_act_uid", BEFORE_PATH);
-        typeCd = extractValue(value, "type_cd", BEFORE_PATH);
-        targetClassCd = extractValue(value, "target_class_cd", BEFORE_PATH);
-      } else {
-        return;
-      }
-
-      logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
-      // For LabReport values, we only need to trigger if the relationship is deleted (not covered
-      // in updates to Observation)
-      // PHC targets are excluded from the LabReport association updates, as the LabReport will
-      // receive
-      // an update in Observation
-      if (typeCd.equals("LabReport") && targetClassCd.equals("OBS")) {
-        processObservation(value, batchId, false, sourceActUid);
-      }
-    } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
-    }
   }
 
   // This same method can be used for elastic search as well and that is why the generic model is
