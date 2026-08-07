@@ -12,12 +12,12 @@ class StoredProcCatalogTest {
 
   @Test
   void finds_every_routine_file() {
-    assertEquals(131, catalog.size());
+    assertEquals(132, catalog.size());
   }
 
   @Test
   void counts_procs_that_log_to_job_flow_log() {
-    assertEquals(129, StoredProcCatalog.loggingProcCount(catalog));
+    assertEquals(130, StoredProcCatalog.loggingProcCount(catalog));
   }
 
   @Test
