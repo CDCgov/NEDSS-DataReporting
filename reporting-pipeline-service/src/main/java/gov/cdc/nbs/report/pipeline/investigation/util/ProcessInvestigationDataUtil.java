@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.nbs.report.pipeline.investigation.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.*;
+import gov.cdc.nbs.report.pipeline.util.ReportingPipelineModelMapper;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
@@ -79,7 +80,7 @@ public class ProcessInvestigationDataUtil {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
-  private final ModelMapper modelMapper = new ModelMapper();
+  private final ModelMapper modelMapper = new ReportingPipelineModelMapper();
 
   private final InvestigationRepository investigationRepository;
 
