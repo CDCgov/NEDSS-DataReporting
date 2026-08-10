@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface ContactRepository extends JpaRepository<Contact, String> {
 
-  @Query(nativeQuery = true, value = "exec sp_contact_record_event :ct_contact_uid")
-  Optional<Contact> computeContact(@Param("ct_contact_uid") String contactUid);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_contact_record_event @cc_uids = :ct_contact_uid, @debug = 0, "
+              + "@debug_logging = :debugLogging")
+  Optional<Contact> computeContact(
+      @Param("ct_contact_uid") String contactUid, @Param("debugLogging") boolean debugLogging);
 }
