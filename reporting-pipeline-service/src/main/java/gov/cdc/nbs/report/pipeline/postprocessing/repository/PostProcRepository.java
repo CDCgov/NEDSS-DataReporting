@@ -129,4 +129,7 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
 
   @Procedure("sp_event_metric_cleanup_postprocessing")
   void executeEventMetricCleanup();
+
+  @Procedure("sp_lab100_cleanup")
+  void executeLab100Cleanup();
 }

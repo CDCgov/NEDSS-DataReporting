@@ -3304,3 +3304,20 @@ databaseChangeLog:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/263-alter_event_metric_inc.sql
             splitStatements: false
+  - changeSet:
+      id: app-922-lab100_datamart_performance
+      author: liquibase
+      runOnChange: false
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/tables/264-lab100-index.sql
+            splitStatements: false
+  - changeSet:
+      id: app-922-lab100_datamart_performance-cleanup
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/routines/371-sp_lab100_cleanup.sql
+            splitStatements: true
+            endDelimiter: GO
