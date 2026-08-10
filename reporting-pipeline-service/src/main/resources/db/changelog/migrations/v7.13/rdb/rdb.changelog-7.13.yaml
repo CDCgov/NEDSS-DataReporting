@@ -2,7 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 0
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/000-rdbmodern-db-general-001.sql
@@ -10,7 +10,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/001-create_nrt_organization-001.sql
@@ -18,7 +18,7 @@ databaseChangeLog:
   - changeSet:
       id: 2
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/002-create_nrt_organization_key-001.sql
@@ -26,7 +26,7 @@ databaseChangeLog:
   - changeSet:
       id: 3
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/003-create_nrt_provider-001.sql
@@ -34,7 +34,7 @@ databaseChangeLog:
   - changeSet:
       id: 4
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/004-create_nrt_provider_key-001.sql
@@ -42,7 +42,7 @@ databaseChangeLog:
   - changeSet:
       id: 5
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/005-create_nrt_patient-001.sql
@@ -50,7 +50,7 @@ databaseChangeLog:
   - changeSet:
       id: 6
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/006-create_nrt_patient_key-001.sql
@@ -58,7 +58,7 @@ databaseChangeLog:
   - changeSet:
       id: 7
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/007-create_nrt_investigation-001.sql
@@ -66,7 +66,7 @@ databaseChangeLog:
   - changeSet:
       id: 8
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/008-create_nrt_investigation_key-001.sql
@@ -74,7 +74,7 @@ databaseChangeLog:
   - changeSet:
       id: 9
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/009-create_nrt_investigation_confirmation-001.sql
@@ -82,7 +82,7 @@ databaseChangeLog:
   - changeSet:
       id: 10
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/010-create_nrt_confirmation_method_key-001.sql
@@ -90,7 +90,7 @@ databaseChangeLog:
   - changeSet:
       id: 11
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/011-create_nrt_investigation_observation-001.sql
@@ -98,7 +98,7 @@ databaseChangeLog:
   - changeSet:
       id: 12
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/012-create_nrt_investigation_notification-001.sql
@@ -106,7 +106,7 @@ databaseChangeLog:
   - changeSet:
       id: 14
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/013-create_nrt_notification_key-001.sql
@@ -114,7 +114,7 @@ databaseChangeLog:
   - changeSet:
       id: 15
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/014-create_nrt_page_case_answer-001.sql
@@ -122,7 +122,7 @@ databaseChangeLog:
   - changeSet:
       id: 15.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/226-create_ldf_data-001.sql
@@ -130,7 +130,7 @@ databaseChangeLog:
   - changeSet:
       id: 15.02
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/227-create_ldf_group-001.sql
@@ -138,7 +138,7 @@ databaseChangeLog:
   - changeSet:
       id: 15.03
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/228-create_patient_ldf_group-001.sql
@@ -146,7 +146,7 @@ databaseChangeLog:
   - changeSet:
       id: 15.04
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/229-create_provider_ldf_group-001.sql
@@ -154,7 +154,7 @@ databaseChangeLog:
   - changeSet:
       id: 15.05
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/230-create_organization_ldf_group-001.sql
@@ -162,7 +162,7 @@ databaseChangeLog:
   - changeSet:
       id: 15.06
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/246-create_nrt_odse_state_defined_field_metadata-001.sql
@@ -170,7 +170,7 @@ databaseChangeLog:
   - changeSet:
       id: 16
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/015-create_nrt_ldf_data_key-001.sql
@@ -178,7 +178,7 @@ databaseChangeLog:
   - changeSet:
       id: 17
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/016-create_nrt_ldf_group_key-001.sql
@@ -186,7 +186,7 @@ databaseChangeLog:
   - changeSet:
       id: 18
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation-001.sql
@@ -203,7 +203,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/028-create_nrt_srte_Condition_code-001.sql
@@ -211,7 +211,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.02
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/027-create_nrt_srte_Program_area_code-001.sql
@@ -219,7 +219,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.04
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/194-create_nrt_srte_XSS_Filter_Pattern-001.sql
@@ -227,7 +227,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.05
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/195-create_nrt_srte_Lab_coding_system-001.sql
@@ -235,7 +235,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.06
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/196-create_nrt_srte_Language_code-001.sql
@@ -243,7 +243,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.07
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/197-create_nrt_srte_LOINC_code-001.sql
@@ -251,7 +251,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.08
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/198-create_nrt_srte_State_code_backup-001.sql
@@ -259,7 +259,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.09
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/199-create_nrt_srte_Snomed_code-001.sql
@@ -267,7 +267,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.10
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/200-create_nrt_srte_Cntycity_code_value-001.sql
@@ -275,7 +275,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.11
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/201-create_nrt_srte_Country_Code_ISO-001.sql
@@ -283,7 +283,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.12
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/202-create_nrt_srte_Lab_test-001.sql
@@ -291,7 +291,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.13
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/203-create_nrt_srte_Specimen_source_code-001.sql
@@ -299,7 +299,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.14
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/204-create_nrt_srte_Investigation_code-001.sql
@@ -307,7 +307,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.15
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/205-create_nrt_srte_NAICS_Industry_code-001.sql
@@ -315,7 +315,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.16
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/206-create_nrt_srte_Occupation_code-001.sql
@@ -323,7 +323,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.17
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/207-create_nrt_srte_Participation_type-001.sql
@@ -331,7 +331,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.18
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/208-create_nrt_srte_Lab_result-001.sql
@@ -339,7 +339,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.19
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/209-create_nrt_srte_Labtest_loinc-001.sql
@@ -347,7 +347,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.20
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/210-create_nrt_srte_Loinc_condition-001.sql
@@ -355,7 +355,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.21
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/211-create_nrt_srte_Snomed_condition-001.sql
@@ -363,7 +363,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.22
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/212-create_nrt_srte_Country_XREF-001.sql
@@ -371,7 +371,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.23
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/213-create_nrt_srte_Lab_result_Snomed-001.sql
@@ -379,7 +379,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.24
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/214-create_nrt_srte_Loinc_snomed_condition-001.sql
@@ -387,7 +387,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.25
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/215-create_nrt_srte_ELR_XREF-001.sql
@@ -395,7 +395,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.26
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/216-create_nrt_srte_Labtest_Progarea_Mapping-001.sql
@@ -403,7 +403,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.27
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/217-create_nrt_srte_Standard_XREF-001.sql
@@ -411,7 +411,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.28
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/218-create_nrt_srte_Jurisdiction_participation-001.sql
@@ -419,7 +419,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.29
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/219-create_nrt_srte_State_model-001.sql
@@ -427,7 +427,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.30
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/220-create_nrt_srte_Treatment_code-001.sql
@@ -435,7 +435,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.31
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/221-create_nrt_srte_Unit_code-001.sql
@@ -443,7 +443,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.32
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/222-create_nrt_srte_LDF_page_set-001.sql
@@ -451,7 +451,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.33
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/223-create_nrt_srte_Zip_code_value-001.sql
@@ -459,7 +459,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.34
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/224-create_nrt_srte_Zipcnty_code_value-001.sql
@@ -467,7 +467,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.35
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/225-create_nrt_srte_Race_code-001.sql
@@ -475,7 +475,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.40
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/255-create_nrt_backfill-001.sql
@@ -492,7 +492,7 @@ databaseChangeLog:
   - changeSet:
       id: 20.50
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/019-create_nrt_datamart_metadata-001.sql
@@ -518,7 +518,7 @@ databaseChangeLog:
   - changeSet:
       id: 22.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/051-create_nrt_vaccination-001.sql
@@ -526,7 +526,7 @@ databaseChangeLog:
   - changeSet:
       id: 22.02
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/052-create_nrt_vaccination_key-001.sql
@@ -534,7 +534,7 @@ databaseChangeLog:
   - changeSet:
       id: 22.03
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/053-create_nrt_vaccination_answer-001.sql
@@ -560,7 +560,7 @@ databaseChangeLog:
   - changeSet:
       id: 26.00
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/029-create_nrt_srte_Codeset-001.sql
@@ -568,7 +568,7 @@ databaseChangeLog:
   - changeSet:
       id: 26.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/030-create_nrt_srte_Code_value_general-001.sql
@@ -576,7 +576,7 @@ databaseChangeLog:
   - changeSet:
       id: 26.02
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/192-create_nrt_odse_nbs_ui_metadata-001.sql
@@ -584,7 +584,7 @@ databaseChangeLog:
   - changeSet:
       id: 26.03
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/025-create_nrt_srte_totalidm-001.sql
@@ -673,7 +673,7 @@ databaseChangeLog:
   - changeSet:
       id: 35
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/018-create_nrt_ldf_data-001.sql
@@ -690,7 +690,7 @@ databaseChangeLog:
   - changeSet:
       id: 41
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_coded-001.sql
@@ -698,7 +698,7 @@ databaseChangeLog:
   - changeSet:
       id: 42
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_date-001.sql
@@ -706,7 +706,7 @@ databaseChangeLog:
   - changeSet:
       id: 43
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_edx-001.sql
@@ -714,7 +714,7 @@ databaseChangeLog:
   - changeSet:
       id: 44
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_material-001.sql
@@ -722,7 +722,7 @@ databaseChangeLog:
   - changeSet:
       id: 45
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_numeric-001.sql
@@ -730,7 +730,7 @@ databaseChangeLog:
   - changeSet:
       id: 46
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_reason-001.sql
@@ -738,7 +738,7 @@ databaseChangeLog:
   - changeSet:
       id: 47
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/017-create_nrt_observation_txt-001.sql
@@ -755,7 +755,7 @@ databaseChangeLog:
   - changeSet:
       id: 50.00
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/250-create_nrt_lab_result_comment_key-001.sql
@@ -763,7 +763,7 @@ databaseChangeLog:
   - changeSet:
       id: 50.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/251-create_nrt_lab_test_result_group_key-001.sql
@@ -780,7 +780,7 @@ databaseChangeLog:
   - changeSet:
       id: 55.00
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/248-create_nrt_lab_test_key-001.sql
@@ -788,7 +788,7 @@ databaseChangeLog:
   - changeSet:
       id: 55.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/249-create_nrt_lab_rpt_user_comment_key-001.sql
@@ -832,7 +832,7 @@ databaseChangeLog:
   - changeSet:
       id: 62
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/020-create_nrt_investigation_case_management-001.sql
@@ -840,7 +840,7 @@ databaseChangeLog:
   - changeSet:
       id: 63
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/021-create_nrt_case_management_key-001.sql
@@ -857,7 +857,7 @@ databaseChangeLog:
   - changeSet:
       id: 67
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview-001.sql
@@ -865,7 +865,7 @@ databaseChangeLog:
   - changeSet:
       id: 68
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_metadata_columns-001.sql
@@ -873,7 +873,7 @@ databaseChangeLog:
   - changeSet:
       id: 69
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_note-001.sql
@@ -881,7 +881,7 @@ databaseChangeLog:
   - changeSet:
       id: 70
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_answer-001.sql
@@ -889,7 +889,7 @@ databaseChangeLog:
   - changeSet:
       id: 70.2
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/026-create_nrt_srte_IMRDBMapping-001.sql
@@ -897,7 +897,7 @@ databaseChangeLog:
   - changeSet:
       id: 70.3
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/187-create_nrt_srte_State_code-001.sql
@@ -905,7 +905,7 @@ databaseChangeLog:
   - changeSet:
       id: 70.4
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/095-create_nrt_srte_State_county_code_value-001.sql
@@ -913,7 +913,7 @@ databaseChangeLog:
   - changeSet:
       id: 70.5
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/096-create_nrt_srte_Country_code-001.sql
@@ -921,7 +921,7 @@ databaseChangeLog:
   - changeSet:
       id: 70.6
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/097-create_nrt_srte_jurisdiction_code-001.sql
@@ -983,7 +983,7 @@ databaseChangeLog:
   - changeSet:
       id: 76
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_key-001.sql
@@ -991,7 +991,7 @@ databaseChangeLog:
   - changeSet:
       id: 77
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/022-create_nrt_interview_note_key-001.sql
@@ -1017,7 +1017,7 @@ databaseChangeLog:
   - changeSet:
       id: 81
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/023-create_std_hiv_datamart-001.sql
@@ -1025,7 +1025,7 @@ databaseChangeLog:
   - changeSet:
       id: 82
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/024-create_inv_hiv-001.sql
@@ -1042,7 +1042,7 @@ databaseChangeLog:
   - changeSet:
       id: 89.1
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/092-create_nrt_srte_Anatomic_site_code-001.sql
@@ -1050,7 +1050,7 @@ databaseChangeLog:
   - changeSet:
       id: 89.2
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/093-create_nrt_srte_City_code_value-001.sql
@@ -1058,7 +1058,7 @@ databaseChangeLog:
   - changeSet:
       id: 89.3
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/094-create_nrt_srte_Codeset_Group_Metadata-001.sql
@@ -1084,7 +1084,7 @@ databaseChangeLog:
   - changeSet:
       id: 97
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/031-create_nrt_auth_user-001.sql
@@ -1101,7 +1101,7 @@ databaseChangeLog:
   - changeSet:
       id: 99
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/032-alter_lab_test-001.sql
@@ -1109,7 +1109,7 @@ databaseChangeLog:
   - changeSet:
       id: 100
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/033-create_nrt_place-001.sql
@@ -1117,7 +1117,7 @@ databaseChangeLog:
   - changeSet:
       id: 101
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/034-create_nrt_place_tele_001.sql
@@ -1125,7 +1125,7 @@ databaseChangeLog:
   - changeSet:
       id: 102
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/035-create_nrt_place_key-001.sql
@@ -1205,7 +1205,7 @@ databaseChangeLog:
   - changeSet:
       id: 110.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/242-create_case_lab_datamart-001.sql
@@ -1231,7 +1231,7 @@ databaseChangeLog:
   - changeSet:
       id: 113
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/036-create_nrt_contact-001.sql
@@ -1239,7 +1239,7 @@ databaseChangeLog:
   - changeSet:
       id: 114
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/037-create_nrt_contact_answer-001.sql
@@ -1247,7 +1247,7 @@ databaseChangeLog:
   - changeSet:
       id: 115
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/038-create_nrt_contact_key-001.sql
@@ -1264,7 +1264,7 @@ databaseChangeLog:
   - changeSet:
       id: 117
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/253-create_nrt_odse_NBS_configuration-001.sql
@@ -1290,7 +1290,7 @@ databaseChangeLog:
   - changeSet:
       id: 120
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/040-create_nrt_hepatitis_case_group_key-001.sql
@@ -1298,7 +1298,7 @@ databaseChangeLog:
   - changeSet:
       id: 121
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/041-create_nrt_hepatitis_case_multi_val_key-001.sql
@@ -1315,7 +1315,7 @@ databaseChangeLog:
   - changeSet:
       id: 123
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/042-create_nrt_treatment-001.sql
@@ -1323,7 +1323,7 @@ databaseChangeLog:
   - changeSet:
       id: 124
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/043-create_nrt_antimicrobial_group_key-001.sql
@@ -1331,7 +1331,7 @@ databaseChangeLog:
   - changeSet:
       id: 125
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/044-create_nrt_antimicrobial_key-001.sql
@@ -1339,7 +1339,7 @@ databaseChangeLog:
   - changeSet:
       id: 126
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/045-create_nrt_bmird_multi_val_group_key-001.sql
@@ -1347,7 +1347,7 @@ databaseChangeLog:
   - changeSet:
       id: 127
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/046-create_nrt_bmird_multi_val_key-001.sql
@@ -1382,7 +1382,7 @@ databaseChangeLog:
   - changeSet:
       id: 131
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/047-create_nrt_pertussis_source_group_key-001.sql
@@ -1390,7 +1390,7 @@ databaseChangeLog:
   - changeSet:
       id: 132
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/048-create_nrt_pertussis_source_key-001.sql
@@ -1398,7 +1398,7 @@ databaseChangeLog:
   - changeSet:
       id: 133
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/049-create_nrt_pertussis_treatment_group_key-001.sql
@@ -1406,7 +1406,7 @@ databaseChangeLog:
   - changeSet:
       id: 134
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/050-create_nrt_pertussis_treatment_key-001.sql
@@ -1432,7 +1432,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.01
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/075-create_d_disease_site_group-001.sql
@@ -1440,7 +1440,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.02
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/063-create_d_tb_pam-001.sql
@@ -1448,7 +1448,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.03
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/081-create_d_addl_risk_group-001.sql
@@ -1456,7 +1456,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.04
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/098-create_d_move_cntry_group-001.sql
@@ -1464,7 +1464,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.05
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/105-create_d_gt_12_reas_group-001.sql
@@ -1472,7 +1472,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.06
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/113-create_d_move_cnty_group-001.sql
@@ -1480,7 +1480,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.07
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/121-create_d_hc_prov_ty_3_group-001.sql
@@ -1488,7 +1488,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.08
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/129-create_d_move_state_group-001.sql
@@ -1496,7 +1496,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.09
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/137-create_d_out_of_cntry_group-001.sql
@@ -1504,7 +1504,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.10
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/145-create_d_moved_where_group-001.sql
@@ -1512,7 +1512,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.11
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/153-create_d_smr_exam_ty_group-001.sql
@@ -1520,7 +1520,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.12
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/165-create_d_var_pam-001.sql
@@ -1528,7 +1528,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.13
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/175-create_d_rash_loc_gen_group-001.sql
@@ -1536,7 +1536,7 @@ databaseChangeLog:
   - changeSet:
       id: 139.14
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/183-create_d_pcr_source_group-001.sql
@@ -1544,7 +1544,7 @@ databaseChangeLog:
   - changeSet:
       id: 140
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/054-create_f_var_pam-001.sql
@@ -1552,7 +1552,7 @@ databaseChangeLog:
   - changeSet:
       id: 141
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/055-create-f_tb_pam-001.sql
@@ -1578,7 +1578,7 @@ databaseChangeLog:
   - changeSet:
       id: 144
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/056-create_treatment-001.sql
@@ -1586,7 +1586,7 @@ databaseChangeLog:
   - changeSet:
       id: 145
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/057-create_treatment_event-001.sql
@@ -1594,7 +1594,7 @@ databaseChangeLog:
   - changeSet:
       id: 146
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/058-create_nrt_treatment_key-001.sql
@@ -1602,7 +1602,7 @@ databaseChangeLog:
   - changeSet:
       id: 147
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/059-create_summary_report_group-001.sql
@@ -1610,7 +1610,7 @@ databaseChangeLog:
   - changeSet:
       id: 148
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/060-create-summary-report-case-001.sql
@@ -1618,7 +1618,7 @@ databaseChangeLog:
   - changeSet:
       id: 149
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/190-create_nrt_odse_page_cond_mapping-001.sql
@@ -1626,7 +1626,7 @@ databaseChangeLog:
   - changeSet:
       id: 150
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/191-create_nrt_odse_nbs_page-001.sql
@@ -1634,7 +1634,7 @@ databaseChangeLog:
   - changeSet:
       id: 151
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/193-create_nrt_odse_nbs_rdb_metadata-001.sql
@@ -1769,7 +1769,7 @@ databaseChangeLog:
   - changeSet:
       id: 185
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/061-create-bmird_strep_pneumo_datamart-001.sql
@@ -1786,7 +1786,7 @@ databaseChangeLog:
   - changeSet:
       id: 200
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/080-create_d_disease_site-001.sql
@@ -1794,7 +1794,7 @@ databaseChangeLog:
   - changeSet:
       id: 205
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/065-create_nrt_disease_site_group_key-001.sql
@@ -1802,7 +1802,7 @@ databaseChangeLog:
   - changeSet:
       id: 210
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/070-create_nrt_disease_site_key-001.sql
@@ -1819,7 +1819,7 @@ databaseChangeLog:
   - changeSet:
       id: 220
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/062-create_morbidity_report_datamart-001.sql
@@ -1836,7 +1836,7 @@ databaseChangeLog:
   - changeSet:
       id: 230
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/085-create_nrt_summary_case_group_key-001.sql
@@ -1853,7 +1853,7 @@ databaseChangeLog:
   - changeSet:
       id: 240
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/090-create_sr100-001.sql
@@ -1870,7 +1870,7 @@ databaseChangeLog:
   - changeSet:
       id: 255
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/064-create_nrt_d_tb_pam_key-001.sql
@@ -1887,7 +1887,7 @@ databaseChangeLog:
   - changeSet:
       id: 270
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/082-create_d_addl_risk-001.sql
@@ -1895,7 +1895,7 @@ databaseChangeLog:
   - changeSet:
       id: 275
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/083-create_nrt_addl_risk_group_key-001.sql
@@ -1903,7 +1903,7 @@ databaseChangeLog:
   - changeSet:
       id: 280
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/084-create_nrt_addl_risk_key-001.sql
@@ -1920,7 +1920,7 @@ databaseChangeLog:
   - changeSet:
       id: 290
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/086-create_d_tb_hiv-001.sql
@@ -1928,7 +1928,7 @@ databaseChangeLog:
   - changeSet:
       id: 295
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/087-create_nrt_d_tb_hiv_key-001.sql
@@ -1945,7 +1945,7 @@ databaseChangeLog:
   - changeSet:
       id: 305
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/088-create_nrt_investigation_aggregate-001.sql
@@ -1953,7 +1953,7 @@ databaseChangeLog:
   - changeSet:
       id: 310
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/091-create_aggregate_report_datamart-001.sql
@@ -1970,7 +1970,7 @@ databaseChangeLog:
   - changeSet:
       id: 355
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/099-create_d_move_cntry-001.sql
@@ -1978,7 +1978,7 @@ databaseChangeLog:
   - changeSet:
       id: 360
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/100-create_nrt_move_cntry_group_key-001.sql
@@ -1986,7 +1986,7 @@ databaseChangeLog:
   - changeSet:
       id: 365
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/101-create_nrt_move_cntry_key-001.sql
@@ -2003,7 +2003,7 @@ databaseChangeLog:
   - changeSet:
       id: 380
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/106-create_d_gt_12_reas-001.sql
@@ -2011,7 +2011,7 @@ databaseChangeLog:
   - changeSet:
       id: 385
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/107-create_nrt_d_gt_12_reas_group_key-001.sql
@@ -2019,7 +2019,7 @@ databaseChangeLog:
   - changeSet:
       id: 390
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/108-create_nrt_d_gt_12_reas_key-001.sql
@@ -2036,7 +2036,7 @@ databaseChangeLog:
   - changeSet:
       id: 405
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/114-create_d_move_cnty-001.sql
@@ -2044,7 +2044,7 @@ databaseChangeLog:
   - changeSet:
       id: 410
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/115-create_nrt_move_cnty_group_key-001.sql
@@ -2052,7 +2052,7 @@ databaseChangeLog:
   - changeSet:
       id: 415
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/116-create_nrt_move_cnty_key-001.sql
@@ -2069,7 +2069,7 @@ databaseChangeLog:
   - changeSet:
       id: 430
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/122-create_d_hc_prov_ty_3-001.sql
@@ -2077,7 +2077,7 @@ databaseChangeLog:
   - changeSet:
       id: 435
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/123-create_nrt_d_hc_prov_ty_3_group_key-001.sql
@@ -2085,7 +2085,7 @@ databaseChangeLog:
   - changeSet:
       id: 440
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/124-create_nrt_d_hc_prov_ty_3_key-001.sql
@@ -2102,7 +2102,7 @@ databaseChangeLog:
   - changeSet:
       id: 455
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/130-create_d_move_state-001.sql
@@ -2110,7 +2110,7 @@ databaseChangeLog:
   - changeSet:
       id: 460
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/131-create_nrt_move_state_group_key-001.sql
@@ -2118,7 +2118,7 @@ databaseChangeLog:
   - changeSet:
       id: 465
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/132-create_nrt_move_state_key-001.sql
@@ -2135,7 +2135,7 @@ databaseChangeLog:
   - changeSet:
       id: 480
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/138-create_d_out_of_cntry-001.sql
@@ -2143,7 +2143,7 @@ databaseChangeLog:
   - changeSet:
       id: 485
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/139-create_nrt_d_out_of_cntry_group_key-001.sql
@@ -2151,7 +2151,7 @@ databaseChangeLog:
   - changeSet:
       id: 490
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/140-create_nrt_d_out_of_cntry_key-001.sql
@@ -2168,7 +2168,7 @@ databaseChangeLog:
   - changeSet:
       id: 505
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/146-create_d_moved_where-001.sql
@@ -2176,7 +2176,7 @@ databaseChangeLog:
   - changeSet:
       id: 510
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/147-create_nrt_moved_where_group_key-001.sql
@@ -2184,7 +2184,7 @@ databaseChangeLog:
   - changeSet:
       id: 515
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/148-create_nrt_moved_where_key-001.sql
@@ -2201,7 +2201,7 @@ databaseChangeLog:
   - changeSet:
       id: 530
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/154-create_d_smr_exam_ty-001.sql
@@ -2209,7 +2209,7 @@ databaseChangeLog:
   - changeSet:
       id: 535
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/155-create_nrt_d_smr_exam_ty_group_key-001.sql
@@ -2217,7 +2217,7 @@ databaseChangeLog:
   - changeSet:
       id: 540
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/156-create_nrt_d_smr_exam_ty_key-001.sql
@@ -2270,7 +2270,7 @@ databaseChangeLog:
   - changeSet:
       id: 570
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/166-create_nrt_var_pam_key-001.sql
@@ -2314,7 +2314,7 @@ databaseChangeLog:
   - changeSet:
       id: 585
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/171-create_tb_pam_ldf-001.sql
@@ -2331,7 +2331,7 @@ databaseChangeLog:
   - changeSet:
       id: 590
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/172-create_nrt_srte_code_value_clinical-001.sql
@@ -2348,7 +2348,7 @@ databaseChangeLog:
   - changeSet:
       id: 600
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/176-create_d_rash_loc_gen-001.sql
@@ -2356,7 +2356,7 @@ databaseChangeLog:
   - changeSet:
       id: 605
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/177-create_nrt_rash_loc_gen_group_key-001.sql
@@ -2364,7 +2364,7 @@ databaseChangeLog:
   - changeSet:
       id: 610
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/178-create_nrt_rash_loc_gen_key-001.sql
@@ -2381,7 +2381,7 @@ databaseChangeLog:
   - changeSet:
       id: 620
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/184-create_d_pcr_source-001.sql
@@ -2389,7 +2389,7 @@ databaseChangeLog:
   - changeSet:
       id: 625
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/185-create_nrt_d_pcr_source_group_key-001.sql
@@ -2397,7 +2397,7 @@ databaseChangeLog:
   - changeSet:
       id: 630
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/186-create_nrt_d_pcr_source_key-001.sql
@@ -2451,7 +2451,7 @@ databaseChangeLog:
   - changeSet:
       id: 675
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/189-create_var_pam_ldf-001.sql
@@ -2477,7 +2477,7 @@ databaseChangeLog:
   - changeSet:
       id: 695
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/195-create_tb_datamart-001.sql
@@ -2494,7 +2494,7 @@ databaseChangeLog:
   - changeSet:
       id: 705
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/196-create_tb_hiv_datamart-001.sql
@@ -2520,7 +2520,7 @@ databaseChangeLog:
   - changeSet:
       id: 725
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/232-create_ldf_datamart_column_ref-001.sql
@@ -2528,7 +2528,7 @@ databaseChangeLog:
   - changeSet:
       id: 730
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/233-create_d_ldf_meta_data-001.sql
@@ -2536,7 +2536,7 @@ databaseChangeLog:
   - changeSet:
       id: 735
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/234-create_ldf_dimensional_data-001.sql
@@ -2553,7 +2553,7 @@ databaseChangeLog:
   - changeSet:
       id: 750
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/235-create_ldf_generic-001.sql
@@ -2561,7 +2561,7 @@ databaseChangeLog:
   - changeSet:
       id: 755
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/236-create_ldf_generic1-001.sql
@@ -2569,7 +2569,7 @@ databaseChangeLog:
   - changeSet:
       id: 760
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/237-create_ldf_generic2-001.sql
@@ -2604,7 +2604,7 @@ databaseChangeLog:
   - changeSet:
       id: 780
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/238-create_ldf_bmird-001.sql
@@ -2621,7 +2621,7 @@ databaseChangeLog:
   - changeSet:
       id: 790
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/239-create_ldf_foodborne-001.sql
@@ -2638,7 +2638,7 @@ databaseChangeLog:
   - changeSet:
       id: 800
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/240-create_ldf_mumps-001.sql
@@ -2655,7 +2655,7 @@ databaseChangeLog:
   - changeSet:
       id: 810
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/241-create_ldf_tetanus-001.sql
@@ -2672,7 +2672,7 @@ databaseChangeLog:
   - changeSet:
       id: 820
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/242-create_ldf_vaccine_prevent_diseases-001.sql
@@ -2698,7 +2698,7 @@ databaseChangeLog:
   - changeSet:
       id: 835
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/244-create_covid_contact_datamart-001.sql
@@ -2724,7 +2724,7 @@ databaseChangeLog:
   - changeSet:
       id: 850
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/245-create_ldf_hepatitis-001.sql
@@ -2741,7 +2741,7 @@ databaseChangeLog:
   - changeSet:
       id: 860
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/246-create_covid_lab_celr_datamart-001.sql
@@ -2758,7 +2758,7 @@ databaseChangeLog:
   - changeSet:
       id: 866
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/256-create_nrt_odse_lookup_question-001.sql
@@ -2776,7 +2776,7 @@ databaseChangeLog:
   - changeSet:
       id: 874
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/247-create_nrt_dyn_dm_column_metadata-001.sql
@@ -2793,7 +2793,7 @@ databaseChangeLog:
   - changeSet:
       id: 880
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/252-create_nrt_condition_key-001.sql
@@ -2819,7 +2819,7 @@ databaseChangeLog:
   - changeSet:
       id: 898
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/254-create_nrt_delete_job_log-001.sql
@@ -2881,7 +2881,7 @@ databaseChangeLog:
   - changeSet:
       id: 926
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/257-create_nrt_dead_letter_log-001.sql
@@ -3151,7 +3151,7 @@ databaseChangeLog:
   - changeSet:
       id: 956
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/258-create_rdb_date-001.sql
@@ -3160,7 +3160,7 @@ databaseChangeLog:
   - changeSet:
       id: 957
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/259-alter_d_vaccination_add_vaccination_administered_cd-001.sql
@@ -3204,7 +3204,7 @@ databaseChangeLog:
   - changeSet:
       id: onboarding-metadata-load
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3214,7 +3214,7 @@ databaseChangeLog:
   - changeSet:
       id: onboarding-keys-backfill
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3224,7 +3224,7 @@ databaseChangeLog:
   - changeSet:
       id: onboarding-rdb-date-seed
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3234,7 +3234,7 @@ databaseChangeLog:
   - changeSet:
       id: onboarding-unknown-member-seeds
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3244,7 +3244,7 @@ databaseChangeLog:
   - changeSet:
       id: onboarding-indexes
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3254,7 +3254,7 @@ databaseChangeLog:
   - changeSet:
       id: create_lab100
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3264,7 +3264,7 @@ databaseChangeLog:
   - changeSet:
       id: create_labtest
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       runInTransaction: false
       changes:
         - sqlFile:
@@ -3274,7 +3274,7 @@ databaseChangeLog:
   - changeSet:
       id: app-619-std-hiv-widths
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/261-alter_std_hiv_case_management_widths-001.sql
@@ -3282,7 +3282,7 @@ databaseChangeLog:
   - changeSet:
       id: app-908-original_consumer_group-nullable
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/262-alter_nrt_dead_letter_log.sql
@@ -3299,7 +3299,7 @@ databaseChangeLog:
   - changeSet:
       id: app-923-sp_case_lab_datamart_postprocessing-263
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/263-alter_event_metric_inc.sql
