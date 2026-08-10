@@ -310,10 +310,14 @@ public class PostProcessingService {
 
       if (idNode.isTextual()) {
         String cd = idNode.asText();
-        cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        synchronized (cacheLock) {
+          cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        }
       } else {
         Long id = idNode.asLong();
-        idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+        synchronized (cacheLock) {
+          idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+        }
         extractValFromMessage(id, topic, payload);
       }
 
@@ -353,7 +357,11 @@ public class PostProcessingService {
           Arrays.stream(tblNode.asText().split(","))
               .map(String::trim)
               .forEach(
-                  tbl -> pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
+                  tbl -> {
+                    synchronized (cacheLock) {
+                      pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid);
+                    }
+                  });
         }
       } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
         String actTypeCd = payloadNode.path("act_type_cd").asText();
@@ -369,7 +377,9 @@ public class PostProcessingService {
 
         if (MORB_REPORT.equals(ctrlCd)) {
           if ("Order".equals(domainCd)) {
-            obsCache.computeIfAbsent(MORB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
+            synchronized (cacheLock) {
+              obsCache.computeIfAbsent(MORB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
+            }
           }
         } else if (assertMatches(ctrlCd, LAB_REPORT, LAB_REPORT_MORB, null)
             && assertMatches(
@@ -381,7 +391,9 @@ public class PostProcessingService {
                 "I_Order",
                 "I_Result",
                 "Order_rslt")) {
-          obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
+          synchronized (cacheLock) {
+            obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(uid);
+          }
         }
 
         /*
@@ -402,7 +414,11 @@ public class PostProcessingService {
           resUidList.forEach(
               resUid -> {
                 Long ruid = Long.valueOf(resUid);
-                obsCache.computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>()).add(ruid);
+                synchronized (cacheLock) {
+                  obsCache
+                      .computeIfAbsent(LAB_REPORT, k -> new ConcurrentLinkedQueue<>())
+                      .add(ruid);
+                }
               });
         }
       }
@@ -413,10 +429,14 @@ public class PostProcessingService {
 
   private void extractSummaryCase(Long uid, String caseType) {
     if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
-      sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      synchronized (cacheLock) {
+        sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      }
     }
     if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
-      sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      synchronized (cacheLock) {
+        sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      }
     }
   }
 
@@ -463,27 +483,34 @@ public class PostProcessingService {
         return;
       }
 
-      Map<String, Queue<Long>> dmMap =
-          dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
+      synchronized (cacheLock) {
+        /* dmMap is an inner map of dmCache!
+        It is adding the queue directly into that inner map,
+        which is the same object held by dmCache. There is no separate copy being made.
+        */
+        Map<String, Queue<Long>> dmMap =
+            dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
 
-      dmMap
-          .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-          .add(dmData.getPublicHealthCaseUid());
+        dmMap
+            .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+            .add(dmData.getPublicHealthCaseUid());
 
-      Optional.ofNullable(dmData.getPatientUid())
-          .ifPresent(
-              uid ->
-                  dmMap
-                      .computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                      .add(uid));
+        Optional.ofNullable(dmData.getPatientUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
 
-      Optional.ofNullable(dmData.getObservationUid())
-          .ifPresent(
-              uid ->
-                  dmMap
-                      .computeIfAbsent(
-                          OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                      .add(uid));
+        Optional.ofNullable(dmData.getObservationUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
+      }
 
     } catch (Exception e) {
       String msg = "Error processing datamart message: " + e.getMessage();
@@ -710,16 +737,18 @@ public class PostProcessingService {
         });
 
     // Merge into the main retryCache for reprocessing, preserving batch IDs
-    retryCacheLocal.forEach(
-        (batchId, entityMap) -> {
-          Map<String, Queue<Long>> batchMap =
-              retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-          entityMap.forEach(
-              (entity, queue) ->
-                  batchMap
-                      .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
-                      .addAll(queue));
-        });
+    synchronized (cacheLock) {
+      retryCacheLocal.forEach(
+          (batchId, entityMap) -> {
+            Map<String, Queue<Long>> batchMap =
+                retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+            entityMap.forEach(
+                (entity, queue) ->
+                    batchMap
+                        .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                        .addAll(queue));
+          });
+    }
 
     logger.info("Re-queued {} backfill batch(es) into retryCache", backfills.size());
   }
@@ -754,8 +783,10 @@ public class PostProcessingService {
 
       if (processingFailed) {
         if (batchId != null) {
-          Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
-          retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+          synchronized (cacheLock) {
+            Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
+            retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+          }
         }
         continue;
       }
@@ -1330,21 +1361,23 @@ public class PostProcessingService {
 
     batchId = dmProcessor.nextBatchId(batchId, e);
 
-    Map<String, Queue<Long>> retryMap =
-        retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-    retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+    synchronized (cacheLock) {
+      Map<String, Queue<Long>> retryMap =
+          retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+      retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
 
-    pbCache.forEach(
-        (tbl, queue) ->
-            retryMap
-                .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue));
+      pbCache.forEach(
+          (tbl, queue) ->
+              retryMap
+                  .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
+                  .addAll(queue));
 
-    obsCache.forEach(
-        (key, queue) ->
-            retryMap
-                .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue));
+      obsCache.forEach(
+          (key, queue) ->
+              retryMap
+                  .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
+                  .addAll(queue));
+    }
 
     return batchId;
   }
