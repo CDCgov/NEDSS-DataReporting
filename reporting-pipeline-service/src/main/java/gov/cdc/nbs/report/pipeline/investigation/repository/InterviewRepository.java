@@ -10,6 +10,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InterviewRepository extends JpaRepository<Interview, String> {
 
-  @Query(nativeQuery = true, value = "exec sp_interview_event :interview_uids")
-  Optional<Interview> computeInterviews(@Param("interview_uids") String interviewUids);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_interview_event @ix_uids = :interview_uids, @debug = 0, "
+              + "@debug_logging = :debugLogging")
+  Optional<Interview> computeInterviews(
+      @Param("interview_uids") String interviewUids, @Param("debugLogging") boolean debugLogging);
 }

@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.investigation.service;
 
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.*;
 
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.investigation.repository.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.InvestigationKey;
@@ -95,6 +96,7 @@ public class InvestigationService {
   private final ContactRepository contactRepository;
   private final VaccinationRepository vaccinationRepository;
   private final TreatmentRepository treatmentRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
 
   @Qualifier("investigationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
@@ -224,12 +226,17 @@ public class InvestigationService {
 
             if (phcDatamartEnable) {
               CompletableFuture.runAsync(
-                  () -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
+                  () ->
+                      processDataUtil.processPhcFactDatamart(
+                          phcUid, eventProcedureLoggingProperties.eventProcedureDebugLogging()),
+                  phcExecutor);
             }
 
             logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
             Optional<Investigation> investigationData =
-                investigationRepository.computeInvestigations(publicHealthCaseUid);
+                investigationRepository.computeInvestigations(
+                    publicHealthCaseUid,
+                    eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (investigationData.isPresent()) {
               Investigation investigation = investigationData.get();
               investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
@@ -322,7 +329,8 @@ public class InvestigationService {
             logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
 
             Optional<NotificationUpdate> notificationData =
-                notificationRepository.computeNotifications(notificationUid);
+                notificationRepository.computeNotifications(
+                    notificationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (notificationData.isPresent()) {
               NotificationUpdate notification = notificationData.get();
               processDataUtil.processNotifications(notification.getInvestigationNotifications());
@@ -348,7 +356,9 @@ public class InvestigationService {
       interviewUid = extractUid(value, "interview_uid");
 
       logger.info(topicDebugLog, "Interview", interviewUid, interviewTopic);
-      Optional<Interview> interviewData = interviewRepository.computeInterviews(interviewUid);
+      Optional<Interview> interviewData =
+          interviewRepository.computeInterviews(
+              interviewUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (interviewData.isPresent()) {
         Interview interview = interviewData.get();
         processDataUtil.processInterview(interview, batchId);
@@ -370,7 +380,9 @@ public class InvestigationService {
       contactUid = extractUid(value, "ct_contact_uid");
 
       logger.info(topicDebugLog, "Contact", contactUid, contactTopic);
-      Optional<Contact> contactData = contactRepository.computeContact(contactUid);
+      Optional<Contact> contactData =
+          contactRepository.computeContact(
+              contactUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (contactData.isPresent()) {
         Contact contact = contactData.get();
         processDataUtil.processContact(contact);
@@ -400,7 +412,9 @@ public class InvestigationService {
         vaccinationUid = actRelationshipSourceActUid;
       }
       logger.info(topicDebugLog, "Vaccination", vaccinationUid, topic);
-      Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
+      Optional<Vaccination> vacData =
+          vaccinationRepository.computeVaccination(
+              vaccinationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (vacData.isPresent()) {
         Vaccination vaccination = vacData.get();
         processDataUtil.processVaccination(vaccination);
@@ -436,7 +450,9 @@ public class InvestigationService {
       }
 
       logger.info(topicDebugLog, "Treatment", treatmentUid, topic);
-      Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
+      Optional<Treatment> treatmentData =
+          treatmentRepository.computeTreatment(
+              treatmentUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (treatmentData.isPresent()) {
         Treatment treatment = treatmentData.get();
 

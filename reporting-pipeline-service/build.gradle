@@ -46,6 +46,8 @@ test {
 tasks.register("test-functional", Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+    // Functional tests capture stored-procedure coverage from job_flow_log.
+    systemProperty "EVENT_PROCEDURE_DEBUG_LOGGING", "true"
     if (System.getProperty("tests") != null) {
         systemProperty "tests", System.getProperty("tests")
     }

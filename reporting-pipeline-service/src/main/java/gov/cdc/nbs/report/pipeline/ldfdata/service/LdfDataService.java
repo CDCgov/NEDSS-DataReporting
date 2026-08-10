@@ -5,6 +5,7 @@ import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractChangeDataCaptu
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.ldfdata.model.dto.LdfData;
 import gov.cdc.nbs.report.pipeline.ldfdata.model.dto.LdfDataKey;
 import gov.cdc.nbs.report.pipeline.ldfdata.repository.LdfDataRepository;
@@ -57,6 +58,7 @@ public class LdfDataService {
   private int threadPoolSize;
 
   private final LdfDataRepository ldfDataRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
 
   @Qualifier("ldfdataKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
@@ -191,7 +193,11 @@ public class LdfDataService {
     if (opType.equals("d")) {
       return Optional.of(initializeBean(ldfUid, busObjUid, busObjNm));
     } else {
-      return ldfDataRepository.computeLdfData(busObjNm, ldfUid, busObjUid);
+      return ldfDataRepository.computeLdfData(
+          busObjNm,
+          ldfUid,
+          busObjUid,
+          eventProcedureLoggingProperties.eventProcedureDebugLogging());
     }
   }
 
