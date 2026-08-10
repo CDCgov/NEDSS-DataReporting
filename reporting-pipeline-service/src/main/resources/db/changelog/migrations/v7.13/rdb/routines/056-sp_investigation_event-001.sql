@@ -251,7 +251,7 @@ BEGIN
                      phc.hospitalized_duration_amt,
                      phc.outbreak_ind,
                      case
-                         when (phc.outbreak_ind is not null or phc.outbreak_ind != '') then
+                         when nullif(trim(phc.outbreak_ind), '') is not null then
                              COALESCE(
                                  (select * from dbo.fn_get_value_by_cd_codeset(phc.outbreak_ind, 'INV150')),
                                  phc.outbreak_ind

@@ -172,7 +172,9 @@
       "LAST_CHG_TIME": "2026-06-05T16:12:30.327",
       "PROGRAM_AREA_DESCRIPTION": "HIV",
       "RECORD_STATUS_CD": "ACTIVE",
-      "REFERRAL_BASIS": "C1- Cohort"
+      "REFERRAL_BASIS": "C1- Cohort",
+      "OUTBREAK_IND": null,
+      "OUTBREAK_NAME": null
     }
   ],
   "11": [

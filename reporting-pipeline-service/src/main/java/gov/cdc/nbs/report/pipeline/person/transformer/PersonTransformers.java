@@ -45,6 +45,10 @@ public class PersonTransformers {
     return jsonGenerator.generateStringJson(user, "auth_user_uid");
   }
 
+  public String processData(PersonExtendedProps reportingData) {
+    return jsonGenerator.generateStringJson(reportingData);
+  }
+
   public PersonExtendedProps processData(
       PatientSp patientSp, ProviderSp providerSp, PersonType personType) {
     PersonExtendedProps transformedObj =
