@@ -3297,10 +3297,18 @@ databaseChangeLog:
             splitStatements: true
             endDelimiter: GO
   - changeSet:
+      id: app-923-sp_case_lab_datamart_postprocessing-263
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/tables/263-alter_event_metric_inc.sql
+            splitStatements: false
+  - changeSet:
       id: app-926-add_ix_event_metric_event_uid
       author: liquibase
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v7.13/rdb/tables/263-add_ix_event_metric_event_uid-001.sql
+            path: db/changelog/migrations/v7.13/rdb/tables/265-add_ix_event_metric_event_uid-001.sql
             splitStatements: false
