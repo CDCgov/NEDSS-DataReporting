@@ -8,6 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface UserRepository extends JpaRepository<AuthUser, String> {
-  @Query(nativeQuery = true, value = "execute sp_auth_user_event :user_uids")
-  Optional<List<AuthUser>> computeAuthUsers(@Param("user_uids") String userUids);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_auth_user_event @user_id_list = :user_uids, "
+              + "@debug_logging = :debugLogging")
+  Optional<List<AuthUser>> computeAuthUsers(
+      @Param("user_uids") String userUids, @Param("debugLogging") boolean debugLogging);
 }

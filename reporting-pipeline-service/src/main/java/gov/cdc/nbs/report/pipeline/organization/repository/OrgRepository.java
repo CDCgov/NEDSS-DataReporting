@@ -11,8 +11,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrgRepository extends JpaRepository<OrganizationSp, String> {
 
-  @Query(nativeQuery = true, value = "execute sp_organization_event :org_uids")
-  Set<OrganizationSp> computeAllOrganizations(@Param("org_uids") String orgUids);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_organization_event @org_id_list = :org_uids, "
+              + "@debug_logging = :debugLogging")
+  Set<OrganizationSp> computeAllOrganizations(
+      @Param("org_uids") String orgUids, @Param("debugLogging") boolean debugLogging);
 
   @Procedure("sp_public_health_case_fact_datamart_update")
   void updatePhcFact(@Param("objName") String objName, @Param("uidLst") String uidLst);

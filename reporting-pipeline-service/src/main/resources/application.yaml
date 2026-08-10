@@ -120,6 +120,7 @@ lag:
   admin-timeout-ms: ${LAG_ADMIN_TIMEOUT_MS:10000}
 
 featureFlag:
+  event-procedure-debug-logging: ${EVENT_PROCEDURE_DEBUG_LOGGING:false}
   elastic-search-enable: ${FF_ES_ENABLE:false}
   seeding-enable: ${FF_SEEDING_ENABLE:true}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}

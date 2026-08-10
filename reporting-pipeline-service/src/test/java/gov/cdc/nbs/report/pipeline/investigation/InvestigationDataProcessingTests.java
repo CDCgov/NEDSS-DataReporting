@@ -215,12 +215,12 @@ class InvestigationDataProcessingTests {
     investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
     investigation.setActIds(
         """
-                [
-                    {"act_id_seq": 20, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLD"},
-                    {"act_id_seq": 10, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLDER"},
-                    {"act_id_seq": 30, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-NEWEST"}
-                ]
-                """);
+        [
+            {"act_id_seq": 20, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLD"},
+            {"act_id_seq": 10, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-OLDER"},
+            {"act_id_seq": 30, "type_cd": "LEGACY", "root_extension_txt": "LEGACY-NEWEST"}
+        ]
+        """);
 
     InvestigationTransformed transformed =
         transformer.transformInvestigationData(investigation, BATCH_ID);
@@ -885,22 +885,25 @@ class InvestigationDataProcessingTests {
   }
 
   @Test
+  void testProcessPhcFactDatamartPassesLoggingFlag() {
+    transformer.processPhcFactDatamart("123", true);
+
+    verify(investigationRepository).populatePhcFact("123", true);
+  }
+
+  @Test
   void testProcessPhcFactDatamartException() {
     final String ERROR_MSG = "Test Error";
 
     doThrow(new RuntimeException(ERROR_MSG))
         .when(investigationRepository)
-        .populatePhcFact(anyString());
+        .populatePhcFact(anyString(), eq(false));
     doThrow(new RuntimeException(ERROR_MSG))
         .when(investigationRepository)
         .updatePhcFact(anyString(), anyString());
 
-    transformer.processPhcFactDatamart("123");
-    ILoggingEvent log = listAppender.list.getLast();
-    assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
-
     transformer.processPhcFactDatamart("NOTF", "123");
-    log = listAppender.list.getLast();
+    ILoggingEvent log = listAppender.list.getLast();
     assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
   }
 

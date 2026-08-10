@@ -1,0 +1,132 @@
+{
+  "0": [
+    {
+      "procedure_name": "sp_auth_user_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_auth_user_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_investigation_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_investigation_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_notification_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_notification_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_observation_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_observation_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_organization_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_organization_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_patient_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_patient_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_place_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_place_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    },
+    {
+      "procedure_name": "sp_provider_event",
+      "debug_logging": "off",
+      "start_count": 0,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 0
+    },
+    {
+      "procedure_name": "sp_provider_event",
+      "debug_logging": "on",
+      "start_count": 1,
+      "complete_count": 1,
+      "error_count": 0,
+      "total_count": 2
+    }
+  ]
+}

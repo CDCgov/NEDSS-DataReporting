@@ -1,0 +1,46 @@
+{
+  "0": [
+    {
+      "procedure_name": "sp_contact_record_event",
+      "start_count": 48,
+      "complete_count": 2,
+      "error_count": 0,
+      "total_count": 50
+    },
+    {
+      "procedure_name": "sp_interview_event",
+      "start_count": 2,
+      "complete_count": 2,
+      "error_count": 0,
+      "total_count": 4
+    },
+    {
+      "procedure_name": "nrt_interview",
+      "start_count": 50,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 50
+    },
+    {
+      "procedure_name": "sp_treatment_event",
+      "start_count": 10,
+      "complete_count": 2,
+      "error_count": 0,
+      "total_count": 12
+    },
+    {
+      "procedure_name": "sp_vaccination_event",
+      "start_count": 48,
+      "complete_count": 0,
+      "error_count": 0,
+      "total_count": 48
+    },
+    {
+      "procedure_name": "sp_vaccination_record_event",
+      "start_count": 0,
+      "complete_count": 2,
+      "error_count": 0,
+      "total_count": 2
+    }
+  ]
+}

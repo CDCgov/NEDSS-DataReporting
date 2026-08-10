@@ -1,0 +1,25 @@
+{
+  "0": [
+    {
+      "procedure_name": "PCHMartETL",
+      "Status_Type": "COMPLETE",
+      "status_count": 2,
+      "minimum_row_count": 0,
+      "maximum_row_count": 0
+    },
+    {
+      "procedure_name": "PublicHealthCaseFact RTR",
+      "Status_Type": "COMPLETED",
+      "status_count": 58,
+      "minimum_row_count": 0,
+      "maximum_row_count": 12553
+    },
+    {
+      "procedure_name": "PublicHealthCaseFact RTR",
+      "Status_Type": "STEP-AVOIDED",
+      "status_count": 2,
+      "minimum_row_count": 0,
+      "maximum_row_count": 0
+    }
+  ]
+}
