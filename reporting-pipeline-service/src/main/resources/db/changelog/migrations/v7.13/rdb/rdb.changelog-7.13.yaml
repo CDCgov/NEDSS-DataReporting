@@ -3345,3 +3345,11 @@ databaseChangeLog:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/267-app_924_inv_summary_datamart_indexes.sql
             splitStatements: false
+  - changeSet:
+      id: app-973-drop_legacy_l_patient_fk-268
+      author: liquibase
+      runOnChange: false
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/tables/268-drop_legacy_l_patient_fk.sql
+            splitStatements: false
