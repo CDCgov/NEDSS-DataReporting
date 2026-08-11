@@ -1,6 +1,7 @@
 package gov.cdc.nbs.report.pipeline;
 
 import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
+import gov.cdc.nbs.report.pipeline.config.PostProcessingProperties;
 import gov.cdc.nbs.report.pipeline.connector.ConnectorProperties;
 import gov.cdc.nbs.report.pipeline.lag.LagProperties;
 import org.springframework.boot.SpringApplication;
@@ -15,7 +16,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties({
   ConnectorProperties.class,
   LagProperties.class,
-  EventProcedureLoggingProperties.class
+  EventProcedureLoggingProperties.class,
+  PostProcessingProperties.class
 })
 public class ReportingPipelineServiceApplication {
 
