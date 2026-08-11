@@ -3329,3 +3329,11 @@ databaseChangeLog:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/265-add_ix_event_metric_event_uid-001.sql
             splitStatements: false
+  - changeSet:
+      id: app-925-add_ix_lab_test_type_status_root
+      author: liquibase
+      runOnChange: false
+      changes:
+        - sqlFile:
+            path: db/changelog/migrations/v7.13/rdb/tables/266-add_ix_lab_test_type_status_root-001.sql
+            splitStatements: false
