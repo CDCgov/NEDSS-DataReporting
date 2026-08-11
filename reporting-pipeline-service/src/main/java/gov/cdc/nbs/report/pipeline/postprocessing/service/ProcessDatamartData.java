@@ -888,15 +888,24 @@ public class ProcessDatamartData {
       String ids,
       Consumer<List<T>> checkResult) {
     if (!ids.isEmpty()) {
-      logger.info(
-          PROCESSING_MESSAGE_TOPIC_LOG_MSG,
-          dmEntity.getEntityName(),
-          dmEntity.getStoredProcedure(),
-          ids);
-      List<T> result = repositoryMethod.apply(ids);
-      checkResult.accept(result);
-      logExecutionCompleted(dmEntity.getStoredProcedure());
+      UidChunker.chunkDistinct(parseUidParameter(ids), postProcessingProperties.maxBatchSize())
+          .forEach(
+              chunk -> {
+                String chunkIds = listToParameterString(chunk);
+                logger.info(
+                    PROCESSING_MESSAGE_TOPIC_LOG_MSG,
+                    dmEntity.getEntityName(),
+                    dmEntity.getStoredProcedure(),
+                    chunkIds);
+                List<T> result = repositoryMethod.apply(chunkIds);
+                checkResult.accept(result);
+                logExecutionCompleted(dmEntity.getStoredProcedure());
+              });
     }
+  }
+
+  private List<Long> parseUidParameter(String ids) {
+    return Arrays.stream(ids.split(",")).map(String::trim).map(Long::valueOf).toList();
   }
 
   private <T> void executeDmProc(
