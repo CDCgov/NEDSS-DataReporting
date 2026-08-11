@@ -10,6 +10,7 @@ import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
@@ -60,28 +61,60 @@ class ObservationServiceTest {
   @BeforeEach
   void setUp() {
     closeable = MockitoAnnotations.openMocks(this);
+    observationService = createObservationService(false);
+  }
+
+  private ObservationService createObservationService(boolean debugLogging) {
     ProcessObservationDataUtil transformer = new ProcessObservationDataUtil(kafkaTemplate);
     transformer.setMaterialTopicName("materialTopic");
-    observationService =
+    ObservationService service =
         new ObservationService(
             observationRepository,
+            new EventProcedureLoggingProperties(debugLogging),
             kafkaTemplate,
             transformer,
             new RetryTopicResolver(),
             new CustomMetrics(new SimpleMeterRegistry()));
-    observationService.setObservationTopic(inputTopicNameObservation);
-    observationService.setObservationTopicOutputReporting(outputTopicNameObservation);
-    observationService.setThreadPoolSize(1);
-    observationService.initMetrics();
+    service.setObservationTopic(inputTopicNameObservation);
+    service.setObservationTopicOutputReporting(outputTopicNameObservation);
+    service.setThreadPoolSize(1);
+    service.initMetrics();
 
     transformer.setCodedTopicName("ObservationCoded");
     transformer.setReasonTopicName("ObservationReason");
     transformer.setTxtTopicName("ObservationTxt");
+    return service;
   }
 
   @AfterEach
   void closeService() throws Exception {
     closeable.close();
+  }
+
+  @Test
+  void passesEnabledLoggingToObservationRepository() throws JsonProcessingException {
+    Long observationUid = 123456789L;
+    Observation observation = constructObservation(observationUid, "Order");
+    when(observationRepository.computeObservations(String.valueOf(observationUid), true))
+        .thenReturn(Optional.of(observation));
+    when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+
+    observationService = createObservationService(true);
+    observationService.processMessage(
+        new ConsumerRecord<>(
+            inputTopicNameObservation,
+            0,
+            0L,
+            null,
+            "{\"payload\": {\"after\": {\"observation_uid\": \"123456789\"}}}"));
+
+    Awaitility.await()
+        .atMost(1, TimeUnit.SECONDS)
+        .untilAsserted(
+            () ->
+                verify(observationRepository)
+                    .computeObservations(String.valueOf(observationUid), true));
   }
 
   @Test
@@ -93,7 +126,7 @@ class ObservationServiceTest {
         "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
 
     Observation observation = constructObservation(observationUid, obsDomainCdSt);
-    when(observationRepository.computeObservations(String.valueOf(observationUid)))
+    when(observationRepository.computeObservations(String.valueOf(observationUid), false))
         .thenReturn(Optional.of(observation));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -102,7 +135,7 @@ class ObservationServiceTest {
 
     validateData(getRecord(payload, inputTopicNameObservation), observation);
 
-    verify(observationRepository).computeObservations(String.valueOf(observationUid));
+    verify(observationRepository).computeObservations(String.valueOf(observationUid), false);
   }
 
   @ParameterizedTest
@@ -112,7 +145,7 @@ class ObservationServiceTest {
     String payload =
         "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
     Observation observation = constructObservation(observationUid, "Order");
-    when(observationRepository.computeObservations(String.valueOf(observationUid)))
+    when(observationRepository.computeObservations(String.valueOf(observationUid), false))
         .thenReturn(Optional.of(observation));
     when(kafkaTemplate.send(anyString(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(null));
@@ -121,7 +154,7 @@ class ObservationServiceTest {
 
     validateData(getRetryRecord(payload, retryTopic, inputTopicNameObservation), observation);
 
-    verify(observationRepository).computeObservations(String.valueOf(observationUid));
+    verify(observationRepository).computeObservations(String.valueOf(observationUid), false);
   }
 
   @Test
@@ -170,7 +203,7 @@ class ObservationServiceTest {
         "{\"payload\": {\"after\": {\"observation_uid\": \"" + observationUid + "\"}}}";
     ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameObservation);
 
-    when(observationRepository.computeObservations(String.valueOf(observationUid)))
+    when(observationRepository.computeObservations(String.valueOf(observationUid), false))
         .thenReturn(Optional.empty());
     CompletableFuture<Void> future = observationService.processMessage(rec);
     CompletionException ex = assertThrows(CompletionException.class, future::join);
@@ -229,14 +262,14 @@ class ObservationServiceTest {
         }
         """;
     Observation observation = constructObservation(Long.parseLong(actRelationshipUid), "Order");
-    when(observationRepository.computeObservations(actRelationshipUid))
+    when(observationRepository.computeObservations(actRelationshipUid, false))
         .thenReturn(Optional.of(observation));
 
     // when the message is processed
     observationService.processObservation(payload, 0, false, actRelationshipUid);
 
     // then the proper id is used
-    verify(observationRepository).computeObservations(actRelationshipUid);
+    verify(observationRepository).computeObservations(actRelationshipUid, false);
   }
 
   private Observation constructObservation(Long observationUid, String obsDomainCdSt1) {

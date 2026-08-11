@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface VaccinationRepository extends JpaRepository<Vaccination, String> {
 
-  @Query(nativeQuery = true, value = "exec sp_vaccination_event :vaccination_uid")
-  Optional<Vaccination> computeVaccination(@Param("vaccination_uid") String vaccinationUid);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_vaccination_event @vac_uids = :vaccination_uid, "
+              + "@debug = 0, @debug_logging = :debugLogging")
+  Optional<Vaccination> computeVaccination(
+      @Param("vaccination_uid") String vaccinationUid, @Param("debugLogging") boolean debugLogging);
 }
