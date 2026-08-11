@@ -4,6 +4,7 @@ import static gov.cdc.nbs.report.pipeline.postprocessing.service.Entity.*;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.errorMessage;
 
 import com.google.common.base.Strings;
+import gov.cdc.nbs.report.pipeline.config.PostProcessingProperties;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.BackfillData;
@@ -57,6 +58,8 @@ public class ProcessDatamartData {
 
   @Qualifier("ppInvestigationRepository")
   private final InvestigationRepository invRepository;
+
+  private final PostProcessingProperties postProcessingProperties;
 
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
   private final ModelMapper modelMapper = new ModelMapper();
@@ -601,35 +604,104 @@ public class ProcessDatamartData {
   }
 
   void processMetricEventDatamart(Map<String, Queue<Long>> dmMulti) {
-    String invString = listToParameterString(dmMulti.get(INVESTIGATION.getEntityName()));
-    String obsString = listToParameterString(dmMulti.get(OBSERVATION.getEntityName()));
-    String notifString = listToParameterString(dmMulti.get(NOTIFICATION.getEntityName()));
-    String ctrString = listToParameterString(dmMulti.get(CONTACT.getEntityName()));
-    String vaxString = listToParameterString(dmMulti.get(VACCINATION.getEntityName()));
+    List<Long> invUids =
+        new ArrayList<>(
+            dmMulti.getOrDefault(INVESTIGATION.getEntityName(), new ConcurrentLinkedQueue<>()));
+    List<Long> obsUids =
+        new ArrayList<>(
+            dmMulti.getOrDefault(OBSERVATION.getEntityName(), new ConcurrentLinkedQueue<>()));
+    List<Long> notifUids =
+        new ArrayList<>(
+            dmMulti.getOrDefault(NOTIFICATION.getEntityName(), new ConcurrentLinkedQueue<>()));
+    List<Long> contactUids =
+        new ArrayList<>(
+            dmMulti.getOrDefault(CONTACT.getEntityName(), new ConcurrentLinkedQueue<>()));
+    List<Long> vaxUids =
+        new ArrayList<>(
+            dmMulti.getOrDefault(VACCINATION.getEntityName(), new ConcurrentLinkedQueue<>()));
 
-    int totalLengthEventMetric =
-        invString.length()
-            + obsString.length()
-            + notifString.length()
-            + ctrString.length()
-            + vaxString.length();
+    int totalUidCount =
+        distinctCount(invUids)
+            + distinctCount(obsUids)
+            + distinctCount(notifUids)
+            + distinctCount(contactUids)
+            + distinctCount(vaxUids);
 
-    if (totalLengthEventMetric > 0) {
-      Timer.Sample sample = metrics.startSample();
-      logger.info(
-          "Executing stored proc: sp_event_metric_datamart_postprocessing '{}', '{}', '{}', '{}',"
-              + " '{}'",
-          invString,
-          obsString,
-          notifString,
-          ctrString,
-          vaxString);
-      procRepository.executeStoredProcForEventMetric(
-          invString, obsString, notifString, ctrString, vaxString);
-      logExecutionCompleted("sp_event_metric_datamart_postprocessing");
+    if (totalUidCount == 0) {
+      return;
+    }
+
+    Timer.Sample sample = metrics.startSample();
+    try {
+      int maxBatchSize = postProcessingProperties.maxBatchSize();
+      if (maxBatchSize == 0 || totalUidCount <= maxBatchSize) {
+        processMetricEventChunk(invUids, obsUids, notifUids, contactUids, vaxUids);
+      } else {
+        processMetricEventChunks(INVESTIGATION, invUids);
+        processMetricEventChunks(OBSERVATION, obsUids);
+        processMetricEventChunks(NOTIFICATION, notifUids);
+        processMetricEventChunks(CONTACT, contactUids);
+        processMetricEventChunks(VACCINATION, vaxUids);
+      }
       incrementIf(ppDmSuccess, true);
+    } finally {
       metrics.stopSample(sample, processTimer);
     }
+  }
+
+  private int distinctCount(Collection<Long> ids) {
+    return (int) ids.stream().distinct().count();
+  }
+
+  private void processMetricEventChunks(Entity entity, Collection<Long> ids) {
+    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
+        .forEach(
+            chunk -> {
+              switch (entity) {
+                case INVESTIGATION:
+                  processMetricEventChunk(chunk, List.of(), List.of(), List.of(), List.of());
+                  break;
+                case OBSERVATION:
+                  processMetricEventChunk(List.of(), chunk, List.of(), List.of(), List.of());
+                  break;
+                case NOTIFICATION:
+                  processMetricEventChunk(List.of(), List.of(), chunk, List.of(), List.of());
+                  break;
+                case CONTACT:
+                  processMetricEventChunk(List.of(), List.of(), List.of(), chunk, List.of());
+                  break;
+                case VACCINATION:
+                  processMetricEventChunk(List.of(), List.of(), List.of(), List.of(), chunk);
+                  break;
+                default:
+                  throw new IllegalArgumentException("Unsupported event metric entity: " + entity);
+              }
+            });
+  }
+
+  private void processMetricEventChunk(
+      Collection<Long> invUids,
+      Collection<Long> obsUids,
+      Collection<Long> notifUids,
+      Collection<Long> contactUids,
+      Collection<Long> vaxUids) {
+    String invString = listToParameterString(invUids);
+    String obsString = listToParameterString(obsUids);
+    String notifString = listToParameterString(notifUids);
+    String contactString = listToParameterString(contactUids);
+    String vaxString = listToParameterString(vaxUids);
+
+    logger.info(
+        "Executing stored proc: sp_event_metric_datamart_postprocessing '{}', '{}', '{}', '{}',"
+            + " '{}'",
+        invString,
+        obsString,
+        notifString,
+        contactString,
+        vaxString);
+    procRepository.executeStoredProcForEventMetric(
+        invString, obsString, notifString, contactString, vaxString);
+    logExecutionCompleted("sp_event_metric_datamart_postprocessing");
   }
 
   /**

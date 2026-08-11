@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.nbs.report.pipeline.config.PostProcessingProperties;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
@@ -54,6 +55,7 @@ class DatamartProcessingTest {
             kafkaTemplate,
             postProcRepositoryMock,
             investigationRepositoryMock,
+            new PostProcessingProperties(0),
             new CustomMetrics(new SimpleMeterRegistry()));
     datamartProcessor.initMetrics();
   }

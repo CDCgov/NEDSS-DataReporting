@@ -45,6 +45,7 @@ class Lab100CleanupTest {
             kafkaTemplate,
             postProcRepository,
             investigationRepository,
+            new PostProcessingProperties(0),
             new CustomMetrics(new SimpleMeterRegistry()));
     service =
         spy(

@@ -54,6 +54,7 @@ class PostProcessingServiceRetryTest {
             kafkaTemplate,
             postProcRepositoryMock,
             investigationRepositoryMock,
+            new PostProcessingProperties(0),
             new CustomMetrics(new SimpleMeterRegistry()));
     postProcessingServiceMock =
         spy(
