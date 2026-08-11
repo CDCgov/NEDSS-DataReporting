@@ -24,6 +24,10 @@
 --              - @batch_id is derived from the current timestamp
 --                (format yyMMddHHmmssffff) and is used to correlate all
 --                job_flow_log entries for a single execution.
+--              - Use of fn_get_user_name, fn_get_value_by_cvg, fn_get_value_by_cd_ques
+--                were removed as this caused a large hit to performance due to the
+--                inability of the optimizer to provide accurate cardinality estimates
+--                and triggering a row-by-row execution.
 -- =============================================================================
 
 -- Drop the existing version of the procedure (if present) so it can be recreated.
