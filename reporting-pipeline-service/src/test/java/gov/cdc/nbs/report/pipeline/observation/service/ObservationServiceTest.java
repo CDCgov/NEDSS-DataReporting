@@ -213,6 +213,32 @@ class ObservationServiceTest {
     assertEquals(reportingModel, actualReporting);
   }
 
+  @Test
+  void testProcessObservationUsesTheProperId() {
+    // given a message from an act_relationship
+    String actRelationshipUid = "321";
+    String payload =
+        """
+        {
+          "payload": {
+            "after": {
+              "source_act_uid": "321"
+            },
+            "op": "c"
+          }
+        }
+        """;
+    Observation observation = constructObservation(Long.parseLong(actRelationshipUid), "Order");
+    when(observationRepository.computeObservations(actRelationshipUid))
+        .thenReturn(Optional.of(observation));
+
+    // when the message is processed
+    observationService.processObservation(payload, 0, false, actRelationshipUid);
+
+    // then the proper id is used
+    verify(observationRepository).computeObservations(actRelationshipUid);
+  }
+
   private Observation constructObservation(Long observationUid, String obsDomainCdSt1) {
     String filePathPrefix = "rawDataFiles/observation/";
     Observation observation = new Observation();
