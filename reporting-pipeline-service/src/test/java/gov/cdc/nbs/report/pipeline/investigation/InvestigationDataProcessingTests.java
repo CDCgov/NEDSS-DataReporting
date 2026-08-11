@@ -192,6 +192,26 @@ class InvestigationDataProcessingTests {
   }
 
   @Test
+  void testTransformActIdsIgnoresSyntheticFallbackStateRows() {
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 0, "type_cd": "STATE", "root_extension_txt": "CAS10001001GA01"},
+          {"act_id_seq": 2, "type_cd": "CITY",  "root_extension_txt": "GA-CITY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getInvStateCaseId());
+    assertEquals("GA-CITY-001", transformed.getCityCountyCaseNbr());
+    assertNull(transformed.getLegacyCaseId());
+  }
+
+  @Test
   void testTransformActIdsLegacyCaseIdNullWhenNoLegacyRow() {
     Investigation investigation = new Investigation();
     investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
@@ -226,6 +246,169 @@ class InvestigationDataProcessingTests {
         transformer.transformInvestigationData(investigation, BATCH_ID);
 
     assertEquals("LEGACY-NEWEST", transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsEmptyArrayAllFieldsNull() {
+    // Contact investigations created via add-contact flow often have no act_id rows.
+    // All identifier fields should be NULL.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds("[]");
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getInvStateCaseId());
+    assertNull(transformed.getCityCountyCaseNbr());
+    assertNull(transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsStateNullWhenNoStateRow() {
+    // Only CITY and LEGACY present, no STATE row.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 1, "type_cd": "CITY",   "root_extension_txt": "GA-CITY-001"},
+          {"act_id_seq": 2, "type_cd": "LEGACY", "root_extension_txt": "FULTON-LEGACY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getInvStateCaseId());
+    assertEquals("GA-CITY-001", transformed.getCityCountyCaseNbr());
+    assertEquals("FULTON-LEGACY-001", transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsCityNullWhenNoCityRow() {
+    // Only STATE and LEGACY present, no CITY row.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 1, "type_cd": "STATE",  "root_extension_txt": "GA-STATE-001"},
+          {"act_id_seq": 3, "type_cd": "LEGACY", "root_extension_txt": "FULTON-LEGACY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertEquals("GA-STATE-001", transformed.getInvStateCaseId());
+    assertNull(transformed.getCityCountyCaseNbr());
+    assertEquals("FULTON-LEGACY-001", transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsMultipleStateRowsUsesHighestSequence() {
+    // Multiple STATE rows; should use the one with highest act_id_seq.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 5,  "type_cd": "STATE", "root_extension_txt": "GA-STATE-OLD"},
+          {"act_id_seq": 15, "type_cd": "STATE", "root_extension_txt": "GA-STATE-NEWEST"},
+          {"act_id_seq": 8,  "type_cd": "STATE", "root_extension_txt": "GA-STATE-MIDDLE"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertEquals("GA-STATE-NEWEST", transformed.getInvStateCaseId());
+  }
+
+  @Test
+  void testTransformActIdsMultipleCityRowsUsesHighestSequence() {
+    // Multiple CITY rows; should use the one with highest act_id_seq.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 4,  "type_cd": "CITY", "root_extension_txt": "GA-CITY-OLD"},
+          {"act_id_seq": 12, "type_cd": "CITY", "root_extension_txt": "GA-CITY-NEWEST"},
+          {"act_id_seq": 7,  "type_cd": "CITY", "root_extension_txt": "GA-CITY-MIDDLE"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertEquals("GA-CITY-NEWEST", transformed.getCityCountyCaseNbr());
+  }
+
+  @Test
+  void testTransformActIdsBlankRootExtensionTxtIgnored() {
+    // Rows with blank/empty root_extension_txt should be skipped and not populate the field.
+    // Only the CITY row with valid value should be used.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 1, "type_cd": "STATE",  "root_extension_txt": "   "},
+          {"act_id_seq": 2, "type_cd": "CITY",   "root_extension_txt": "GA-CITY-001"},
+          {"act_id_seq": 3, "type_cd": "LEGACY", "root_extension_txt": "   "}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getInvStateCaseId());
+    assertEquals("GA-CITY-001", transformed.getCityCountyCaseNbr());
+    assertNull(transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsAllTypesAbsentAllFieldsNull() {
+    // Only unknown/other types present, no STATE, CITY, or LEGACY.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 1, "type_cd": "UNKNOWN", "root_extension_txt": "SOME-VALUE"},
+          {"act_id_seq": 2, "type_cd": "OTHER",   "root_extension_txt": "ANOTHER-VALUE"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertNull(transformed.getInvStateCaseId());
+    assertNull(transformed.getCityCountyCaseNbr());
+    assertNull(transformed.getLegacyCaseId());
+  }
+
+  @Test
+  void testTransformActIdsMixedPresenceAndAbsence() {
+    // STATE and CITY present, LEGACY absent; verify only present fields populated.
+    Investigation investigation = new Investigation();
+    investigation.setPublicHealthCaseUid(INVESTIGATION_UID);
+    investigation.setActIds(
+        """
+        [
+          {"act_id_seq": 1, "type_cd": "STATE", "root_extension_txt": "GA-STATE-001"},
+          {"act_id_seq": 2, "type_cd": "CITY",  "root_extension_txt": "GA-CITY-001"}
+        ]
+        """);
+
+    InvestigationTransformed transformed =
+        transformer.transformInvestigationData(investigation, BATCH_ID);
+
+    assertEquals("GA-STATE-001", transformed.getInvStateCaseId());
+    assertEquals("GA-CITY-001", transformed.getCityCountyCaseNbr());
+    assertNull(transformed.getLegacyCaseId());
   }
 
   @Test
