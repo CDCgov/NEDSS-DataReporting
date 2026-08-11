@@ -177,6 +177,7 @@ public class PostProcessingService {
 
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
   private final Object cacheLock = new Object();
+  private final Object retryCacheLock = new Object();
 
   @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopic;
@@ -639,7 +640,10 @@ public class PostProcessingService {
       final Map<String, List<Long>> pbCacheSnapshot;
       final Map<String, List<Long>> obsCacheSnapshot;
 
-      synchronized (cacheLock) {
+      /* we can use a separate lock for the retry cache to
+      avoid locking up the other caches during a scheduled retry
+       */
+      synchronized (retryCacheLock) {
         idCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(entry -> !entry.getKey().contains("^"))
