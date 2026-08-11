@@ -543,6 +543,56 @@ class InvestigationServiceTest {
   }
 
   @Test
+  void testProcessVaccinationMessageUpdateOtherTopic() {
+    // given an update message from an act_relationship
+    String actRelationshipId = "321";
+    String payload =
+        """
+        {
+          "payload": {
+            "after": {
+              "intervention_uid": 123
+            },
+            "op": "u"
+          }
+        }
+        """;
+
+    // when the message is processed
+    investigationService.processVaccination(payload, false, actRelationshipId);
+
+    // then no action is taken
+    verifyNoInteractions(vaccinationRepository);
+  }
+
+  @Test
+  void testProcessVaccinationMessageCreateOtherTopic() {
+    // given a message from an act_relationship
+    String actRelationshipId = "321";
+    String payload =
+        """
+        {
+          "payload": {
+            "after": {
+              "source_act_uid": "321"
+            },
+            "op": "c"
+          }
+        }
+        """;
+
+    final Vaccination vaccination = constructVaccination(Long.parseLong(actRelationshipId));
+    when(vaccinationRepository.computeVaccination(actRelationshipId))
+        .thenReturn(Optional.of(vaccination));
+
+    // when the message is processed
+    investigationService.processVaccination(payload, false, actRelationshipId);
+
+    // then the proper id is used
+    verify(vaccinationRepository).computeVaccination(actRelationshipId);
+  }
+
+  @Test
   void testProcessVaccinationNonUpdate() {
     Long vaccinationUid = 234567890L;
     String payload =
@@ -677,6 +727,35 @@ class InvestigationServiceTest {
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
             () -> verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString()));
+  }
+
+  @Test
+  void testProcessTreatmentMessageCreateOtherTopic() {
+    // given a message from an act_relationship
+    String actRelationshipId = "321";
+    String payload =
+        """
+        {
+          "payload": {
+            "after": {
+              "source_act_uid": "321"
+            },
+            "op": "c"
+          }
+        }
+        """;
+
+    final Treatment treatment = constructTreatment(Long.parseLong(actRelationshipId));
+    when(treatmentRepository.computeTreatment(actRelationshipId))
+        .thenReturn(Optional.of(treatment));
+    CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+    when(kafkaTemplate.send(anyString(), anyString(), anyString())).thenReturn(future);
+
+    // when the message is processed
+    investigationService.processTreatment(payload, false, actRelationshipId);
+
+    // then the proper id is used
+    verify(treatmentRepository).computeTreatment(actRelationshipId);
   }
 
   @Test

@@ -126,7 +126,7 @@ class ActRelationshipProcessorTest {
         """
         {
         "payload": {
-        "before": {
+          "before": {
             "source_act_uid": "3",
             "type_cd": "%s"
           },
@@ -172,7 +172,7 @@ class ActRelationshipProcessorTest {
         """
         {
         "payload": {
-        "before": {
+          "before": {
             "source_act_uid": "3",
             "type_cd": "%s",
             "target_class_cd": "%s"
@@ -236,12 +236,12 @@ class ActRelationshipProcessorTest {
         """
         {
         "payload": {
-        "before": {
-            "source_act_uid": "2"
-          },
-        "after": {
-            "source_act_uid": "3"
-          },
+          "before": {
+              "source_act_uid": "2"
+            },
+          "after": {
+              "source_act_uid": "3"
+            },
           "op": "%s"
           }
         }
