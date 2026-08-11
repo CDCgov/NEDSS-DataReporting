@@ -39,7 +39,7 @@ BEGIN
 END
 GO 
 
-CREATE PROCEDURE dbo.sp_patient_event @user_id_list nvarchar(max)
+CREATE PROCEDURE dbo.sp_patient_event @user_id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
@@ -51,27 +51,22 @@ BEGIN
         -- correlate all log rows written by this run.
         -- ---------------------------------------------------------------
         DECLARE @batch_id BIGINT;
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @user_id_list, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@user_id_list, 199);
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        -- Log a START event before any processing begins, capturing the
-        -- incoming person_uid list (truncated to 199 chars for storage).
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[Msg_Description1])
-        VALUES (@batch_id
-               ,'Patient PRE-Processing Event'
-               ,'sp_patient_event'
-               ,'START'
-               ,0
-               ,LEFT('Pre ID-' + @user_id_list, 199)
-               ,0
-               ,LEFT(@user_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = 'Patient PRE-Processing Event',
+                @package_name = 'sp_patient_event',
+                @status_type = 'START',
+                @step_number = 0,
+                @step_name = @job_flow_step_name,
+                @row_count = 0,
+                @msg_description1 = @job_flow_message;
+        END;
 
         -- ---------------------------------------------------------------
         -- Temp table used to capture the detailed race calculation output
@@ -581,24 +576,18 @@ BEGIN
                                            WHERE ei.entity_uid = p.person_uid
                                            FOR json path, INCLUDE_NULL_VALUES) AS entity_id) AS entity_id) AS nested;
 
-        -- Log a COMPLETE event once the result set has been successfully produced.
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[Msg_Description1])
-        VALUES (@batch_id
-               ,'Patient PRE-Processing Event'
-               ,'sp_patient_event'
-               ,'COMPLETE'
-               ,0
-               ,LEFT('Pre ID-' + @user_id_list, 199)
-               ,0
-               ,LEFT(@user_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = 'Patient PRE-Processing Event',
+                @package_name = 'sp_patient_event',
+                @status_type = 'COMPLETE',
+                @step_number = 0,
+                @step_name = @job_flow_step_name,
+                @row_count = 0,
+                @msg_description1 = @job_flow_message;
+        END;
 
     END TRY
     BEGIN CATCH
@@ -614,30 +603,16 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        -- Log the ERROR event with full diagnostic details for troubleshooting,
-        -- correlated to the same @batch_id as the START/COMPLETE log rows.
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id
-        ,[Dataflow_Name]
-        ,[package_Name]
-        ,[Status_Type]
-        ,[step_number]
-        ,[step_name]
-        ,[row_count]
-        ,[Msg_Description1]
-        ,[Error_Description]
-        )
-        VALUES (@batch_id
-               ,'Patient PRE-Processing Event'
-               ,'sp_patient_event'
-               ,'ERROR'
-               ,0
-               ,'Patient PRE-Processing Event'
-               ,0
-               ,LEFT(@user_id_list, 199)
-               ,@FullErrorMessage
-        );
-        -- Return the error message to the caller instead of a result set.
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = 'Patient PRE-Processing Event',
+            @package_name = 'sp_patient_event',
+            @status_type = 'ERROR',
+            @step_number = 0,
+            @step_name = 'Patient PRE-Processing Event',
+            @row_count = 0,
+            @msg_description1 = @job_flow_message,
+            @error_description = @FullErrorMessage;
         return @FullErrorMessage;
 
     END CATCH

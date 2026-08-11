@@ -11,12 +11,21 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InvestigationRepository extends JpaRepository<Investigation, String> {
 
-  @Query(nativeQuery = true, value = "execute sp_investigation_event :investigation_uids")
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_investigation_event @phc_id_list = :investigation_uids, "
+              + "@debug_logging = :debugLogging")
   Optional<Investigation> computeInvestigations(
-      @Param("investigation_uids") String investigationUids);
+      @Param("investigation_uids") String investigationUids,
+      @Param("debugLogging") boolean debugLogging);
 
-  @Procedure("sp_public_health_case_fact_datamart_event")
-  void populatePhcFact(@Param("investigation_uids") String phcIds);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_public_health_case_fact_datamart_event "
+              + "@phc_id_list = :phcIds, @debug = 0, @debug_logging = :debugLogging")
+  void populatePhcFact(@Param("phcIds") String phcIds, @Param("debugLogging") boolean debugLogging);
 
   @Procedure("sp_public_health_case_fact_datamart_update")
   void updatePhcFact(@Param("objName") String objName, @Param("uidLst") String uidLst);

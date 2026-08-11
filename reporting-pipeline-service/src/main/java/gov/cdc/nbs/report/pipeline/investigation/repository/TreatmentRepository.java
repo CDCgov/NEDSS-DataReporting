@@ -8,6 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface TreatmentRepository extends JpaRepository<Treatment, String> {
 
-  @Query(nativeQuery = true, value = "exec sp_treatment_event :treatment_uid")
-  Optional<Treatment> computeTreatment(@Param("treatment_uid") String treatmentUid);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_treatment_event @treatment_uids = :treatment_uid, "
+              + "@debug = 0, @debug_logging = :debugLogging")
+  Optional<Treatment> computeTreatment(
+      @Param("treatment_uid") String treatmentUid, @Param("debugLogging") boolean debugLogging);
 }

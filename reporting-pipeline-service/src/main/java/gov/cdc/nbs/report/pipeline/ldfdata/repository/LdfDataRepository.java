@@ -12,9 +12,12 @@ public interface LdfDataRepository extends JpaRepository<LdfData, Long> {
 
   @Query(
       nativeQuery = true,
-      value = "execute sp_ldf_data_event :bus_obj_nm, :ldf_uid, :bus_obj_uids")
+      value =
+          "execute sp_ldf_data_event @bus_obj_nm = :bus_obj_nm, @ldf_uid = :ldf_uid, "
+              + "@bus_obj_uid_list = :bus_obj_uids, @debug_logging = :debugLogging")
   Optional<LdfData> computeLdfData(
       @Param("bus_obj_nm") String busObjNm,
       @Param("ldf_uid") String ldfUid,
-      @Param("bus_obj_uids") String busObjUids);
+      @Param("bus_obj_uids") String busObjUids,
+      @Param("debugLogging") boolean debugLogging);
 }

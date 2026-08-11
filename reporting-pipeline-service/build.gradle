@@ -40,18 +40,32 @@ test {
       excludeTags 'Functional'
       excludeTags 'Unit'
     }
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 5005
+    }
     finalizedBy jacocoTestReport
 }
 
 tasks.register("test-functional", Test) {
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+    // Functional tests capture stored-procedure coverage from job_flow_log.
+    systemProperty "EVENT_PROCEDURE_DEBUG_LOGGING", "true"
     if (System.getProperty("tests") != null) {
         systemProperty "tests", System.getProperty("tests")
     }
 
     useJUnitPlatform {
         includeTags "Functional"
+    }
+    debugOptions {
+        enabled = true
+        server = true
+        suspend = false
+        port = 5005
     }
     finalizedBy jacocoTestReport
 }
@@ -66,6 +80,23 @@ tasks.register("test-unit", Test) {
         includeTags "Unit"
     }
     finalizedBy jacocoTestReport
+}
+
+// Add a listener to capture test summary counts after the suite finishes
+tasks.withType(Test).configureEach {
+    addTestListener(new TestListener() {
+        @Override
+        void afterSuite(TestDescriptor suite, TestResult result) {
+            if (suite.parent == null) {
+                println(
+                        "Tests: ${result.testCount}, " +
+                        "passed: ${result.successfulTestCount}, " +
+                        "failed: ${result.failedTestCount}, " +
+                        "skipped: ${result.skippedTestCount}"
+                )
+            }
+        }
+    })
 }
 
 jacoco {
@@ -136,6 +167,7 @@ dependencies {
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    testImplementation 'org.springframework.kafka:spring-kafka-test:3.3.16'
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
     testImplementation 'org.testcontainers:testcontainers:2.0.5'
     testImplementation 'org.testcontainers:testcontainers-kafka:2.0.5'
