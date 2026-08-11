@@ -101,7 +101,20 @@ BEGIN
         FROM #TMP_S_PERSON_RACE
         WHERE RACE_CATEGORY_CD IN ('1002-5', '2054-5', '2106-3', '2028-9', '2076-8')
           AND RACE_CD <> RACE_CATEGORY_CD
-        ;
+        ;WITH race_category_map AS (
+            SELECT '1002-5' AS race_category_cd, 'AMER_IND' AS race_category_tag
+            UNION ALL SELECT '2054-5', 'BLACK'
+            UNION ALL SELECT '2106-3', 'WHITE'
+            UNION ALL SELECT '2028-9', 'ASIAN'
+            UNION ALL SELECT '2076-8', 'NAT_HI'
+        )
+        SELECT sr.*, 
+               m.race_category_tag AS RACE_CATEGORY_TAG
+        INTO #TMP_S_PERSON_RACE_CAT
+        FROM #TMP_S_PERSON_RACE sr
+                 JOIN race_category_map m
+                      ON sr.RACE_CATEGORY_CD = m.race_category_cd
+        WHERE sr.RACE_CD <> sr.RACE_CATEGORY_CD;
 
         CREATE CLUSTERED INDEX IX_TMP_PERSON_RACE_CAT_UID_TAG
             ON #TMP_S_PERSON_RACE_CAT (PATIENT_UID, RACE_CATEGORY_TAG);
