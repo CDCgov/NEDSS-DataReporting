@@ -144,7 +144,21 @@ BEGIN
          race_white_all,
          patient_uid_race_out)
             exec dbo.sp_patient_race_event @user_id_list, @batch_id;
+        -- ---------------------------------------------------------------
+        -- Materialize the incoming person_uid list into a temp table so
+        -- the subsequent Person lookup can use a relational join instead
+        -- of a string-splitting subquery. This is generally more efficient
+        -- for larger Person tables and keeps the filtering plan simpler.
+        -- ---------------------------------------------------------------
+        CREATE TABLE #requested_person_ids
+        (
+            person_uid BIGINT NOT NULL PRIMARY KEY
+        );
 
+        INSERT INTO #requested_person_ids (person_uid)
+        SELECT CAST(value AS BIGINT) AS person_uid
+        FROM STRING_SPLIT(@user_id_list, ',')
+        WHERE TRY_CAST(value AS BIGINT) IS NOT NULL;
         -- ---------------------------------------------------------------
         -- Pull the base Person records for only the requested person_uid
         -- values, restricted to cd = 'PAT' (patient-type Person entities).
