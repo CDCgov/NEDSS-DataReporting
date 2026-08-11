@@ -50,6 +50,21 @@ BEGIN
     BEGIN TRY
 
         -- -----------------------------------------------------------------
+        -- Materialize the incoming person_uid list into a temp table so the
+        -- subsequent PERSON_RACE lookup can use a relational join instead
+        -- of comparing bigint values against string-split output.
+        -- -----------------------------------------------------------------
+        CREATE TABLE #requested_person_ids
+        (
+            person_uid BIGINT NOT NULL PRIMARY KEY
+        );
+
+        INSERT INTO #requested_person_ids (person_uid)
+        SELECT TRY_CAST(value AS BIGINT) AS person_uid
+        FROM STRING_SPLIT(@user_id_list, ',')
+        WHERE TRY_CAST(value AS BIGINT) IS NOT NULL;
+
+        -- -----------------------------------------------------------------
         -- Pull all race rows for the requested patients, resolving the
         -- description text for the reported RACE_CD and the parent-level
         -- (ROOT vs. category) classification for RACE_CATEGORY_CD.
@@ -61,9 +76,9 @@ BEGIN
                RACE_CODE.PARENT_IS_CD
         into #TMP_S_PERSON_RACE
         from NBS_ODSE.dbo.PERSON_RACE pr with (nolock)
+                 JOIN #requested_person_ids rpi ON rpi.person_uid = pr.person_uid
                  LEFT OUTER JOIN NBS_SRTE.dbo.RACE_CODE with (nolock) ON pr.RACE_CD = RACE_CODE.CODE
                  LEFT OUTER JOIN NBS_SRTE.dbo.RACE_CODE RT with (nolock) ON pr.RACE_CATEGORY_CD = RT.CODE
-        where pr.person_uid in (SELECT value FROM STRING_SPLIT(@user_id_list, ','))
         ORDER BY PATIENT_UID, CODE_DESC_TXT;
 
         CREATE CLUSTERED INDEX IX_TMP_S_PERSON_RACE_UID
