@@ -169,7 +169,7 @@ BEGIN
         SELECT p.*
         INTO #filtered_person
         FROM nbs_odse.dbo.Person p WITH (NOLOCK)
-        WHERE p.person_uid IN (SELECT CAST(value AS BIGINT) FROM STRING_SPLIT(@user_id_list, ','))
+                 JOIN #requested_person_ids rpi ON rpi.person_uid = p.person_uid
           AND p.cd = 'PAT';
 
         CREATE UNIQUE CLUSTERED INDEX IX_filtered_person_uid ON #filtered_person(person_uid);
