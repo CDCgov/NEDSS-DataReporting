@@ -89,24 +89,12 @@ BEGIN
         IF OBJECT_ID('tempdb..#TMP_S_PERSON_RACE_CAT', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_RACE_CAT;
 
-        SELECT *,
-               CASE RACE_CATEGORY_CD
-                   WHEN '1002-5' THEN 'AMER_IND'  -- American Indian / Alaska Native
-                   WHEN '2054-5' THEN 'BLACK'     -- Black or African American
-                   WHEN '2106-3' THEN 'WHITE'     -- White
-                   WHEN '2028-9' THEN 'ASIAN'     -- Asian
-                   WHEN '2076-8' THEN 'NAT_HI'    -- Native Hawaiian / Other Pacific Islander
-                   END AS RACE_CATEGORY_TAG
-        into #TMP_S_PERSON_RACE_CAT
-        FROM #TMP_S_PERSON_RACE
-        WHERE RACE_CATEGORY_CD IN ('1002-5', '2054-5', '2106-3', '2028-9', '2076-8')
-          AND RACE_CD <> RACE_CATEGORY_CD
-        ;WITH race_category_map AS (
-            SELECT '1002-5' AS race_category_cd, 'AMER_IND' AS race_category_tag
-            UNION ALL SELECT '2054-5', 'BLACK'
-            UNION ALL SELECT '2106-3', 'WHITE'
-            UNION ALL SELECT '2028-9', 'ASIAN'
-            UNION ALL SELECT '2076-8', 'NAT_HI'
+        WITH race_category_map AS (
+            SELECT '1002-5' AS race_category_cd, 'AMER_IND' AS race_category_tag -- American Indian / Alaska Native
+            UNION ALL SELECT '2054-5', 'BLACK'                                   -- Black or African American
+            UNION ALL SELECT '2106-3', 'WHITE'                                   -- White
+            UNION ALL SELECT '2028-9', 'ASIAN'                                   -- Asian
+            UNION ALL SELECT '2076-8', 'NAT_HI'                                  -- Native Hawaiian / Other Pacific Islander
         )
         SELECT sr.*, 
                m.race_category_tag AS RACE_CATEGORY_TAG

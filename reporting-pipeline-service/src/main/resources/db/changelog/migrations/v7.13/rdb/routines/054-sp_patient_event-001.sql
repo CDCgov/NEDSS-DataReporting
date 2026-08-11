@@ -357,8 +357,9 @@ BEGIN
                  LEFT JOIN person_code_pivot pcp ON pcp.person_uid = p.person_uid
 
                  -- Resolve preferred_gender_cd against the NBS_STD_GENDER_PARPT
-                 -- code set using the shared helper function. TOP 1 + ORDER BY
-                 -- guards against duplicate code entries returning multiple rows.
+                 -- code set. TOP 1 + ORDER BY guards against duplicate code
+                 -- entries returning multiple rows. fn_get_value_by_cvg is purposely
+                 -- avoided due to performance issues
                  OUTER APPLY (
                      SELECT TOP 1 cvg.code_short_desc_txt
                      FROM nbs_srte.dbo.code_value_general cvg WITH (NOLOCK)
@@ -369,6 +370,8 @@ BEGIN
 
                  -- Resolve the user who created the record ("Last, First").
                  -- Guards against add_user_id <= 0 (system/no user) before joining.
+                 -- fn_get_user_name is purposely avoided due to it triggering
+                 -- row by row execution and improper cardinality estimation
                  OUTER APPLY (
                      SELECT TOP 1 CAST((RTRIM(LTRIM(au.user_last_nm)) + ', ' +
                                         RTRIM(LTRIM(au.user_first_nm))) AS VARCHAR(150)) AS user_full_name
@@ -379,6 +382,8 @@ BEGIN
                  ) AS add_user_lookup(add_user_name)
 
                  -- Resolve the user who last modified the record ("Last, First").
+                 -- fn_get_user_name is purposely avoided due to it triggering
+                 -- row by row execution and improper cardinality estimation
                  OUTER APPLY (
                      SELECT TOP 1 CAST((RTRIM(LTRIM(au.user_last_nm)) + ', ' +
                                         RTRIM(LTRIM(au.user_first_nm))) AS VARCHAR(150)) AS user_full_name
@@ -486,6 +491,8 @@ BEGIN
                                   -- Soundex codes computed for first/last name (for fuzzy
                                   -- matching downstream) and the name suffix resolved via
                                   -- the DEM107 code set.
+                                  -- fn_get_value_by_cd_ques is purposely avoided due to it triggering
+                                  -- row by row execution and improper cardinality estimation
                                   -- -----------------------------------------------------
                                   (SELECT (SELECT pn.person_uid                                        AS [pn_person_uid],
                                                   STRING_ESCAPE(REPLACE(pn.last_nm, '-', ' '), 'json') AS [lastNm],
