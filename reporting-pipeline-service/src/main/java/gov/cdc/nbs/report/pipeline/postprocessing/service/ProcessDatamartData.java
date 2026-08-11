@@ -379,8 +379,8 @@ public class ProcessDatamartData {
         executeDmProc(
             COVID_VACCINATION_DATAMART,
             invRepository::executeStoredProcForCovidVacDatamart,
-            cases,
-            pats,
+            uids,
+            patUids,
             this::checkResult);
         break;
       case COVID_LAB_DATAMART:
@@ -490,13 +490,6 @@ public class ProcessDatamartData {
       BatchProcessingState state, Map<String, List<Long>> dmMulti, List<Long> caseLabInvUids) {
     Map<String, List<Long>> multi = (dmMulti == null) ? Map.of() : dmMulti;
 
-    String invString = listToParameterString(multi.get(INVESTIGATION.getEntityName()));
-    String obsString = listToParameterString(multi.get(OBSERVATION.getEntityName()));
-    String notifString = listToParameterString(multi.get(NOTIFICATION.getEntityName()));
-    String patString = listToParameterString(multi.get(PATIENT.getEntityName()));
-    String provString = listToParameterString(multi.get(PROVIDER.getEntityName()));
-    String orgString = listToParameterString(multi.get(ORGANIZATION.getEntityName()));
-
     // INV_SUMM additionally covers investigations whose CASE_LAB_DATAMART was rebuilt this batch.
     List<Long> invSummaryUids =
         new ArrayList<>(
@@ -504,45 +497,64 @@ public class ProcessDatamartData {
     invSummaryUids.addAll(caseLabInvUids);
     String invSummaryInvString = listToParameterString(invSummaryUids);
 
-    int totalLengthInvSummary =
-        invSummaryInvString.length() + notifString.length() + obsString.length();
-    int totalLengthMorbReportDM =
-        obsString.length()
-            + patString.length()
-            + provString.length()
-            + orgString.length()
-            + invString.length();
+    Map<String, Collection<Long>> invSummaryInputs = new LinkedHashMap<>();
+    invSummaryInputs.put(INVESTIGATION.getEntityName(), invSummaryUids);
+    invSummaryInputs.put(NOTIFICATION.getEntityName(), multi.get(NOTIFICATION.getEntityName()));
+    invSummaryInputs.put(OBSERVATION.getEntityName(), multi.get(OBSERVATION.getEntityName()));
+
+    Map<String, Collection<Long>> morbidityInputs = new LinkedHashMap<>();
+    morbidityInputs.put(OBSERVATION.getEntityName(), multi.get(OBSERVATION.getEntityName()));
+    morbidityInputs.put(PATIENT.getEntityName(), multi.get(PATIENT.getEntityName()));
+    morbidityInputs.put(PROVIDER.getEntityName(), multi.get(PROVIDER.getEntityName()));
+    morbidityInputs.put(ORGANIZATION.getEntityName(), multi.get(ORGANIZATION.getEntityName()));
+    morbidityInputs.put(INVESTIGATION.getEntityName(), multi.get(INVESTIGATION.getEntityName()));
 
     try {
-      if (totalLengthInvSummary > 0) {
-        // reusing the same DTO class for Dynamic Marts
-        logger.info(
-            "Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'",
-            invSummaryInvString,
-            notifString,
-            obsString);
-        List<DatamartData> dmDataList =
-            procRepository.executeStoredProcForInvSummaryDatamart(
-                invSummaryInvString, notifString, obsString);
-        logExecutionCompleted("sp_inv_summary_datamart_postprocessing");
-        processDynDatamart(state, dmDataList);
+      List<Map<String, List<Long>>> summaryBatches = chunkUidMap(invSummaryInputs);
+      if (!summaryBatches.isEmpty()) {
+        // Reusing the same DTO class for Dynamic Marts. Collect all chunks before dispatching
+        // dynamic datamarts so their prerequisite ordering remains unchanged.
+        List<DatamartData> dmData = new ArrayList<>();
+        for (Map<String, List<Long>> batch : summaryBatches) {
+          String invString = listToParameterString(batch.get(INVESTIGATION.getEntityName()));
+          String notifString = listToParameterString(batch.get(NOTIFICATION.getEntityName()));
+          String obsString = listToParameterString(batch.get(OBSERVATION.getEntityName()));
+          logger.info(
+              "Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'",
+              invString,
+              notifString,
+              obsString);
+          dmData.addAll(
+              procRepository.executeStoredProcForInvSummaryDatamart(
+                  invString, notifString, obsString));
+          logExecutionCompleted("sp_inv_summary_datamart_postprocessing");
+        }
+        processDynDatamart(state, dmData);
         incrementIf(ppDmSuccess, !state.isRetry);
       } else {
         logger.info("No updates to INV_SUMMARY Datamart");
       }
 
-      if (totalLengthMorbReportDM > 0) {
-        logger.info(
-            "Executing stored proc: sp_morbidity_report_datamart_postprocessing '{}', '{}', '{}',"
-                + " '{}', '{}'",
-            obsString,
-            patString,
-            provString,
-            orgString,
-            invString);
-        procRepository.executeStoredProcForMorbidityReportDatamart(
-            obsString, patString, provString, orgString, invString);
-        logExecutionCompleted("sp_morbidity_report_datamart_postprocessing");
+      List<Map<String, List<Long>>> morbidityBatches = chunkUidMap(morbidityInputs);
+      if (!morbidityBatches.isEmpty()) {
+        for (Map<String, List<Long>> batch : morbidityBatches) {
+          String obsString = listToParameterString(batch.get(OBSERVATION.getEntityName()));
+          String patString = listToParameterString(batch.get(PATIENT.getEntityName()));
+          String provString = listToParameterString(batch.get(PROVIDER.getEntityName()));
+          String orgString = listToParameterString(batch.get(ORGANIZATION.getEntityName()));
+          String invString = listToParameterString(batch.get(INVESTIGATION.getEntityName()));
+          logger.info(
+              "Executing stored proc: sp_morbidity_report_datamart_postprocessing '{}', '{}',"
+                  + " '{}', '{}', '{}'",
+              obsString,
+              patString,
+              provString,
+              orgString,
+              invString);
+          procRepository.executeStoredProcForMorbidityReportDatamart(
+              obsString, patString, provString, orgString, invString);
+          logExecutionCompleted("sp_morbidity_report_datamart_postprocessing");
+        }
         incrementIf(ppDmSuccess, !state.isRetry);
       } else {
         logger.info("No updates to MORBIDITY_REPORT_DATAMART");
@@ -572,31 +584,37 @@ public class ProcessDatamartData {
 
       List<CompletableFuture<Void>> futures = new ArrayList<>();
       datamartPhcIdMap.forEach(
-          (datamart, phcIds) -> {
-            String phcIdsString =
-                phcIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-            futures.add(
-                CompletableFuture.runAsync(
-                    () -> {
-                      logger.info(
-                          "Executing stored proc: sp_dyn_datamart_postprocessing '{}', '{}'",
-                          datamart,
-                          phcIdsString);
-                      try {
-                        procRepository.executeStoredProcForDynDatamart(datamart, phcIdsString);
-                        logExecutionCompleted("sp_dyn_datamart_postprocessing");
-                        incrementIf(ppDmSuccess, !state.isRetry);
-                      } catch (Exception e) {
-                        incrementIf(ppDmFailure, !state.isRetry);
-                        logger.error("Error processing dynamic datamart: {}", datamart, e);
-                        state.registerFailure(
-                            datamart,
-                            Collections.singletonMap(INVESTIGATION.getEntityName(), phcIds),
-                            e);
-                      }
-                    },
-                    dynDmExecutor));
-          });
+          (datamart, phcIds) ->
+              UidChunker.chunkDistinct(phcIds, postProcessingProperties.maxBatchSize())
+                  .forEach(
+                      chunk -> {
+                        String phcIdsString = listToParameterString(chunk);
+                        futures.add(
+                            CompletableFuture.runAsync(
+                                () -> {
+                                  logger.info(
+                                      "Executing stored proc: sp_dyn_datamart_postprocessing '{}',"
+                                          + " '{}'",
+                                      datamart,
+                                      phcIdsString);
+                                  try {
+                                    procRepository.executeStoredProcForDynDatamart(
+                                        datamart, phcIdsString);
+                                    logExecutionCompleted("sp_dyn_datamart_postprocessing");
+                                    incrementIf(ppDmSuccess, !state.isRetry);
+                                  } catch (Exception e) {
+                                    incrementIf(ppDmFailure, !state.isRetry);
+                                    logger.error(
+                                        "Error processing dynamic datamart: {}", datamart, e);
+                                    state.registerFailure(
+                                        datamart,
+                                        Collections.singletonMap(
+                                            INVESTIGATION.getEntityName(), chunk),
+                                        e);
+                                  }
+                                },
+                                dynDmExecutor));
+                      }));
 
       // Wait for all async tasks to complete before returning
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -911,20 +929,69 @@ public class ProcessDatamartData {
   private <T> void executeDmProc(
       Entity dmEntity,
       BiFunction<String, String, List<T>> repositoryMethod,
-      String ids,
-      String pids,
+      Collection<Long> ids,
+      Collection<Long> pids,
       Consumer<List<T>> checkResult) {
-    if (!ids.isEmpty() && !pids.isEmpty()) {
-      logger.info(
-          PROCESSING_MESSAGE_TOPIC_LOG_MSG_2,
-          dmEntity.getEntityName(),
-          dmEntity.getStoredProcedure(),
-          ids,
-          pids);
-      List<T> result = repositoryMethod.apply(ids, pids);
-      checkResult.accept(result);
-      logExecutionCompleted(dmEntity.getStoredProcedure());
+    Map<String, Collection<Long>> inputLists = new LinkedHashMap<>();
+    inputLists.put("ids", ids);
+    inputLists.put("pids", pids);
+
+    chunkUidMap(inputLists)
+        .forEach(
+            chunk -> {
+              String chunkIds = listToParameterString(chunk.get("ids"));
+              String chunkPids = listToParameterString(chunk.get("pids"));
+              logger.info(
+                  PROCESSING_MESSAGE_TOPIC_LOG_MSG_2,
+                  dmEntity.getEntityName(),
+                  dmEntity.getStoredProcedure(),
+                  chunkIds,
+                  chunkPids);
+              List<T> result = repositoryMethod.apply(chunkIds, chunkPids);
+              checkResult.accept(result);
+              logExecutionCompleted(dmEntity.getStoredProcedure());
+            });
+  }
+
+  private List<Map<String, List<Long>>> chunkUidMap(
+      Map<String, ? extends Collection<Long>> valuesByType) {
+    Map<String, List<Long>> distinctValues = new LinkedHashMap<>();
+    valuesByType.forEach(
+        (key, values) -> {
+          if (values == null) {
+            return;
+          }
+          List<List<Long>> distinctChunks = UidChunker.chunkDistinct(values, 0);
+          if (!distinctChunks.isEmpty()) {
+            distinctValues.put(key, distinctChunks.get(0));
+          }
+        });
+
+    if (distinctValues.isEmpty()) {
+      return List.of();
     }
+    if (postProcessingProperties.maxBatchSize() == 0) {
+      return List.of(distinctValues);
+    }
+
+    List<Map<String, List<Long>>> batches = new ArrayList<>();
+    Map<String, List<Long>> currentBatch = new LinkedHashMap<>();
+    int currentSize = 0;
+    for (Map.Entry<String, List<Long>> entry : distinctValues.entrySet()) {
+      for (Long uid : entry.getValue()) {
+        if (currentSize == postProcessingProperties.maxBatchSize()) {
+          batches.add(currentBatch);
+          currentBatch = new LinkedHashMap<>();
+          currentSize = 0;
+        }
+        currentBatch.computeIfAbsent(entry.getKey(), key -> new ArrayList<>()).add(uid);
+        currentSize++;
+      }
+    }
+    if (currentSize > 0) {
+      batches.add(currentBatch);
+    }
+    return batches;
   }
 
   private void logExecutionCompleted(String spName) {
