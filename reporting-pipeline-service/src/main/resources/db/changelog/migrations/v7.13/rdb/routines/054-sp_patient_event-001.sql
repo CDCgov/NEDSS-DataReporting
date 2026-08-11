@@ -358,8 +358,8 @@ BEGIN
                  LEFT JOIN person_code_pivot pcp ON pcp.person_uid = p.person_uid
 
                  -- Resolve preferred_gender_cd against the NBS_STD_GENDER_PARPT
-                 -- code set. TOP 1 + ORDER BY guards against duplicate code
-                 -- entries returning multiple rows.
+                 -- code set using the shared helper function. TOP 1 + ORDER BY
+                 -- guards against duplicate code entries returning multiple rows.
                  OUTER APPLY (
                      SELECT TOP 1 cvg.code_short_desc_txt
                      FROM nbs_srte.dbo.code_value_general cvg WITH (NOLOCK)
