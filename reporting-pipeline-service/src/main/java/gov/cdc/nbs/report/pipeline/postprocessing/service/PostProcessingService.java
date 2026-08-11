@@ -1500,27 +1500,31 @@ public class PostProcessingService {
       Consumer<String> repositoryMethod,
       String... names) {
     String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
-    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
-        .forEach(
-            chunk -> {
-              String idsString = listToParameterString(chunk);
-              prepareAndLog(keyTopic, idsString, entity.getEntityName(), spName);
-              repositoryMethod.accept(idsString);
-              completeLog(spName);
-            });
+    List<List<Long>> chunks =
+        UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize());
+    for (int index = 0; index < chunks.size(); index++) {
+      List<Long> chunk = chunks.get(index);
+      String idsString = listToParameterString(chunk);
+      prepareAndLog(
+          keyTopic, entity.getEntityName(), spName, index + 1, chunks.size(), chunk.size());
+      repositoryMethod.accept(idsString);
+      completeLog(spName);
+    }
   }
 
   private void processTopic(
       String keyTopic, Entity entity, Collection<String> cds, Consumer<String> repositoryMethod) {
     String spName = entity.getStoredProcedure();
-    UidChunker.chunkDistinct(cds, postProcessingProperties.maxBatchSize())
-        .forEach(
-            chunk -> {
-              String cdString = listToParameterString(chunk);
-              prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
-              repositoryMethod.accept(cdString);
-              completeLog(spName);
-            });
+    List<List<String>> chunks =
+        UidChunker.chunkDistinct(cds, postProcessingProperties.maxBatchSize());
+    for (int index = 0; index < chunks.size(); index++) {
+      List<String> chunk = chunks.get(index);
+      String cdString = listToParameterString(chunk);
+      prepareAndLog(
+          keyTopic, entity.getEntityName(), spName, index + 1, chunks.size(), chunk.size());
+      repositoryMethod.accept(cdString);
+      completeLog(spName);
+    }
   }
 
   private <T> List<T> processTopic(
@@ -1532,16 +1536,18 @@ public class PostProcessingService {
       String... names) {
     String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
     List<T> result = new ArrayList<>();
-    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
-        .forEach(
-            chunk -> {
-              String idString = listToParameterString(chunk);
-              prepareAndLog(keyTopic, idString, entity.getEntityName(), spName);
-              List<T> chunkResult = repositoryMethod.apply(idString);
-              checkResult.accept(chunkResult);
-              result.addAll(chunkResult);
-              completeLog(spName);
-            });
+    List<List<Long>> chunks =
+        UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize());
+    for (int index = 0; index < chunks.size(); index++) {
+      List<Long> chunk = chunks.get(index);
+      String idString = listToParameterString(chunk);
+      prepareAndLog(
+          keyTopic, entity.getEntityName(), spName, index + 1, chunks.size(), chunk.size());
+      List<T> chunkResult = repositoryMethod.apply(idString);
+      checkResult.accept(chunkResult);
+      result.addAll(chunkResult);
+      completeLog(spName);
+    }
     return result;
   }
 
@@ -1554,31 +1560,46 @@ public class PostProcessingService {
       Consumer<List<T>> checkResult) {
     String name = entity.getEntityName();
     String displayName = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
-    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
-        .forEach(
-            chunk -> {
-              String idString = listToParameterString(chunk);
-              logger.info(
-                  "Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'",
-                  displayName,
-                  keyTopic,
-                  entity.getStoredProcedure(),
-                  idString,
-                  vals);
-              List<T> result = repositoryMethod.apply(idString, vals);
-              checkResult.accept(result);
-              completeLog(entity.getStoredProcedure());
-            });
+    List<List<Long>> chunks =
+        UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize());
+    for (int index = 0; index < chunks.size(); index++) {
+      List<Long> chunk = chunks.get(index);
+      String idString = listToParameterString(chunk);
+      logger.info(
+          "Processing {} for topic: {}. Calling stored proc: {} (chunk {}/{}, distinct UIDs: {},"
+              + " max batch size: {}, table: '{}')",
+          displayName,
+          keyTopic,
+          entity.getStoredProcedure(),
+          index + 1,
+          chunks.size(),
+          chunk.size(),
+          postProcessingProperties.maxBatchSize(),
+          vals);
+      List<T> result = repositoryMethod.apply(idString, vals);
+      checkResult.accept(result);
+      completeLog(entity.getStoredProcedure());
+    }
   }
 
-  private void prepareAndLog(String keyTopic, String idString, String name, String spName) {
+  private void prepareAndLog(
+      String keyTopic,
+      String name,
+      String spName,
+      int chunkNumber,
+      int totalChunks,
+      int distinctCount) {
     name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
     logger.info(
-        "Processing {} for topic: {}. Calling stored proc: {} '{}'",
+        "Processing {} for topic: {}. Calling stored proc: {} (chunk {}/{}, distinct values: {},"
+            + " max batch size: {})",
         name,
         keyTopic,
         spName,
-        idString);
+        chunkNumber,
+        totalChunks,
+        distinctCount,
+        postProcessingProperties.maxBatchSize());
   }
 
   private void completeLog(String sp) {

@@ -76,11 +76,6 @@ public class ProcessDatamartData {
 
   static final String MULTI_ID_DATAMART = "MultiId_Datamart";
   static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
-  static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG =
-      "Processing {} message topic. Calling stored proc: {} '{}'";
-  static final String PROCESSING_MESSAGE_TOPIC_LOG_MSG_2 =
-      "Processing {} message topic. Calling stored proc: {} '{}', '{}'";
-
   static final String STATUS_READY = "READY";
   static final String STATUS_COMPLETE = "COMPLETE";
   static final String STATUS_SUSPENDED = "SUSPENDED";
@@ -515,15 +510,18 @@ public class ProcessDatamartData {
         // Reusing the same DTO class for Dynamic Marts. Collect all chunks before dispatching
         // dynamic datamarts so their prerequisite ordering remains unchanged.
         List<DatamartData> dmData = new ArrayList<>();
-        for (Map<String, List<Long>> batch : summaryBatches) {
+        for (int index = 0; index < summaryBatches.size(); index++) {
+          Map<String, List<Long>> batch = summaryBatches.get(index);
           String invString = listToParameterString(batch.get(INVESTIGATION.getEntityName()));
           String notifString = listToParameterString(batch.get(NOTIFICATION.getEntityName()));
           String obsString = listToParameterString(batch.get(OBSERVATION.getEntityName()));
-          logger.info(
-              "Executing stored proc: sp_inv_summary_datamart_postprocessing '{}', '{}', '{}'",
-              invString,
-              notifString,
-              obsString);
+          logDatamartChunk(
+              "INV_SUMMARY_DATAMART",
+              "sp_inv_summary_datamart_postprocessing",
+              index + 1,
+              summaryBatches.size(),
+              batch.values().stream().mapToInt(List::size).sum(),
+              postProcessingProperties.maxBatchSize());
           dmData.addAll(
               procRepository.executeStoredProcForInvSummaryDatamart(
                   invString, notifString, obsString));
@@ -537,20 +535,20 @@ public class ProcessDatamartData {
 
       List<Map<String, List<Long>>> morbidityBatches = chunkUidMap(morbidityInputs);
       if (!morbidityBatches.isEmpty()) {
-        for (Map<String, List<Long>> batch : morbidityBatches) {
+        for (int index = 0; index < morbidityBatches.size(); index++) {
+          Map<String, List<Long>> batch = morbidityBatches.get(index);
           String obsString = listToParameterString(batch.get(OBSERVATION.getEntityName()));
           String patString = listToParameterString(batch.get(PATIENT.getEntityName()));
           String provString = listToParameterString(batch.get(PROVIDER.getEntityName()));
           String orgString = listToParameterString(batch.get(ORGANIZATION.getEntityName()));
           String invString = listToParameterString(batch.get(INVESTIGATION.getEntityName()));
-          logger.info(
-              "Executing stored proc: sp_morbidity_report_datamart_postprocessing '{}', '{}',"
-                  + " '{}', '{}', '{}'",
-              obsString,
-              patString,
-              provString,
-              orgString,
-              invString);
+          logDatamartChunk(
+              "MORBIDITY_REPORT_DATAMART",
+              "sp_morbidity_report_datamart_postprocessing",
+              index + 1,
+              morbidityBatches.size(),
+              batch.values().stream().mapToInt(List::size).sum(),
+              postProcessingProperties.maxBatchSize());
           procRepository.executeStoredProcForMorbidityReportDatamart(
               obsString, patString, provString, orgString, invString);
           logExecutionCompleted("sp_morbidity_report_datamart_postprocessing");
@@ -584,37 +582,39 @@ public class ProcessDatamartData {
 
       List<CompletableFuture<Void>> futures = new ArrayList<>();
       datamartPhcIdMap.forEach(
-          (datamart, phcIds) ->
-              UidChunker.chunkDistinct(phcIds, postProcessingProperties.maxBatchSize())
-                  .forEach(
-                      chunk -> {
-                        String phcIdsString = listToParameterString(chunk);
-                        futures.add(
-                            CompletableFuture.runAsync(
-                                () -> {
-                                  logger.info(
-                                      "Executing stored proc: sp_dyn_datamart_postprocessing '{}',"
-                                          + " '{}'",
-                                      datamart,
-                                      phcIdsString);
-                                  try {
-                                    procRepository.executeStoredProcForDynDatamart(
-                                        datamart, phcIdsString);
-                                    logExecutionCompleted("sp_dyn_datamart_postprocessing");
-                                    incrementIf(ppDmSuccess, !state.isRetry);
-                                  } catch (Exception e) {
-                                    incrementIf(ppDmFailure, !state.isRetry);
-                                    logger.error(
-                                        "Error processing dynamic datamart: {}", datamart, e);
-                                    state.registerFailure(
-                                        datamart,
-                                        Collections.singletonMap(
-                                            INVESTIGATION.getEntityName(), chunk),
-                                        e);
-                                  }
-                                },
-                                dynDmExecutor));
-                      }));
+          (datamart, phcIds) -> {
+            List<List<Long>> chunks =
+                UidChunker.chunkDistinct(phcIds, postProcessingProperties.maxBatchSize());
+            for (int index = 0; index < chunks.size(); index++) {
+              List<Long> chunk = chunks.get(index);
+              String phcIdsString = listToParameterString(chunk);
+              int chunkNumber = index + 1;
+              futures.add(
+                  CompletableFuture.runAsync(
+                      () -> {
+                        logDatamartChunk(
+                            datamart,
+                            "sp_dyn_datamart_postprocessing",
+                            chunkNumber,
+                            chunks.size(),
+                            chunk.size(),
+                            postProcessingProperties.maxBatchSize());
+                        try {
+                          procRepository.executeStoredProcForDynDatamart(datamart, phcIdsString);
+                          logExecutionCompleted("sp_dyn_datamart_postprocessing");
+                          incrementIf(ppDmSuccess, !state.isRetry);
+                        } catch (Exception e) {
+                          incrementIf(ppDmFailure, !state.isRetry);
+                          logger.error("Error processing dynamic datamart: {}", datamart, e);
+                          state.registerFailure(
+                              datamart,
+                              Collections.singletonMap(INVESTIGATION.getEntityName(), chunk),
+                              e);
+                        }
+                      },
+                      dynDmExecutor));
+            }
+          });
 
       // Wait for all async tasks to complete before returning
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -653,6 +653,13 @@ public class ProcessDatamartData {
     try {
       int maxBatchSize = postProcessingProperties.maxBatchSize();
       if (maxBatchSize == 0 || totalUidCount <= maxBatchSize) {
+        logDatamartChunk(
+            "EVENT_METRIC_DATAMART",
+            "sp_event_metric_datamart_postprocessing",
+            1,
+            1,
+            totalUidCount,
+            maxBatchSize);
         processMetricEventChunk(invUids, obsUids, notifUids, contactUids, vaxUids);
       } else {
         processMetricEventChunks(INVESTIGATION, invUids);
@@ -672,29 +679,37 @@ public class ProcessDatamartData {
   }
 
   private void processMetricEventChunks(Entity entity, Collection<Long> ids) {
-    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
-        .forEach(
-            chunk -> {
-              switch (entity) {
-                case INVESTIGATION:
-                  processMetricEventChunk(chunk, List.of(), List.of(), List.of(), List.of());
-                  break;
-                case OBSERVATION:
-                  processMetricEventChunk(List.of(), chunk, List.of(), List.of(), List.of());
-                  break;
-                case NOTIFICATION:
-                  processMetricEventChunk(List.of(), List.of(), chunk, List.of(), List.of());
-                  break;
-                case CONTACT:
-                  processMetricEventChunk(List.of(), List.of(), List.of(), chunk, List.of());
-                  break;
-                case VACCINATION:
-                  processMetricEventChunk(List.of(), List.of(), List.of(), List.of(), chunk);
-                  break;
-                default:
-                  throw new IllegalArgumentException("Unsupported event metric entity: " + entity);
-              }
-            });
+    List<List<Long>> chunks =
+        UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize());
+    for (int index = 0; index < chunks.size(); index++) {
+      List<Long> chunk = chunks.get(index);
+      logDatamartChunk(
+          "EVENT_METRIC_DATAMART",
+          "sp_event_metric_datamart_postprocessing",
+          index + 1,
+          chunks.size(),
+          chunk.size(),
+          postProcessingProperties.maxBatchSize());
+      switch (entity) {
+        case INVESTIGATION:
+          processMetricEventChunk(chunk, List.of(), List.of(), List.of(), List.of());
+          break;
+        case OBSERVATION:
+          processMetricEventChunk(List.of(), chunk, List.of(), List.of(), List.of());
+          break;
+        case NOTIFICATION:
+          processMetricEventChunk(List.of(), List.of(), chunk, List.of(), List.of());
+          break;
+        case CONTACT:
+          processMetricEventChunk(List.of(), List.of(), List.of(), chunk, List.of());
+          break;
+        case VACCINATION:
+          processMetricEventChunk(List.of(), List.of(), List.of(), List.of(), chunk);
+          break;
+        default:
+          throw new IllegalArgumentException("Unsupported event metric entity: " + entity);
+      }
+    }
   }
 
   private void processMetricEventChunk(
@@ -709,14 +724,6 @@ public class ProcessDatamartData {
     String contactString = listToParameterString(contactUids);
     String vaxString = listToParameterString(vaxUids);
 
-    logger.info(
-        "Executing stored proc: sp_event_metric_datamart_postprocessing '{}', '{}', '{}', '{}',"
-            + " '{}'",
-        invString,
-        obsString,
-        notifString,
-        contactString,
-        vaxString);
     procRepository.executeStoredProcForEventMetric(
         invString, obsString, notifString, contactString, vaxString);
     logExecutionCompleted("sp_event_metric_datamart_postprocessing");
@@ -906,19 +913,22 @@ public class ProcessDatamartData {
       String ids,
       Consumer<List<T>> checkResult) {
     if (!ids.isEmpty()) {
-      UidChunker.chunkDistinct(parseUidParameter(ids), postProcessingProperties.maxBatchSize())
-          .forEach(
-              chunk -> {
-                String chunkIds = listToParameterString(chunk);
-                logger.info(
-                    PROCESSING_MESSAGE_TOPIC_LOG_MSG,
-                    dmEntity.getEntityName(),
-                    dmEntity.getStoredProcedure(),
-                    chunkIds);
-                List<T> result = repositoryMethod.apply(chunkIds);
-                checkResult.accept(result);
-                logExecutionCompleted(dmEntity.getStoredProcedure());
-              });
+      List<List<Long>> chunks =
+          UidChunker.chunkDistinct(parseUidParameter(ids), postProcessingProperties.maxBatchSize());
+      for (int index = 0; index < chunks.size(); index++) {
+        List<Long> chunk = chunks.get(index);
+        String chunkIds = listToParameterString(chunk);
+        logDatamartChunk(
+            dmEntity.getEntityName(),
+            dmEntity.getStoredProcedure(),
+            index + 1,
+            chunks.size(),
+            chunk.size(),
+            postProcessingProperties.maxBatchSize());
+        List<T> result = repositoryMethod.apply(chunkIds);
+        checkResult.accept(result);
+        logExecutionCompleted(dmEntity.getStoredProcedure());
+      }
     }
   }
 
@@ -936,21 +946,22 @@ public class ProcessDatamartData {
     inputLists.put("ids", ids);
     inputLists.put("pids", pids);
 
-    chunkUidMap(inputLists)
-        .forEach(
-            chunk -> {
-              String chunkIds = listToParameterString(chunk.get("ids"));
-              String chunkPids = listToParameterString(chunk.get("pids"));
-              logger.info(
-                  PROCESSING_MESSAGE_TOPIC_LOG_MSG_2,
-                  dmEntity.getEntityName(),
-                  dmEntity.getStoredProcedure(),
-                  chunkIds,
-                  chunkPids);
-              List<T> result = repositoryMethod.apply(chunkIds, chunkPids);
-              checkResult.accept(result);
-              logExecutionCompleted(dmEntity.getStoredProcedure());
-            });
+    List<Map<String, List<Long>>> chunks = chunkUidMap(inputLists);
+    for (int index = 0; index < chunks.size(); index++) {
+      Map<String, List<Long>> chunk = chunks.get(index);
+      String chunkIds = listToParameterString(chunk.get("ids"));
+      String chunkPids = listToParameterString(chunk.get("pids"));
+      logDatamartChunk(
+          dmEntity.getEntityName(),
+          dmEntity.getStoredProcedure(),
+          index + 1,
+          chunks.size(),
+          chunk.values().stream().mapToInt(List::size).sum(),
+          postProcessingProperties.maxBatchSize());
+      List<T> result = repositoryMethod.apply(chunkIds, chunkPids);
+      checkResult.accept(result);
+      logExecutionCompleted(dmEntity.getStoredProcedure());
+    }
   }
 
   private List<Map<String, List<Long>>> chunkUidMap(
@@ -992,6 +1003,24 @@ public class ProcessDatamartData {
       batches.add(currentBatch);
     }
     return batches;
+  }
+
+  private void logDatamartChunk(
+      String datamart,
+      String storedProcedure,
+      int chunkNumber,
+      int totalChunks,
+      int distinctCount,
+      int maxBatchSize) {
+    logger.info(
+        "Processing datamart {} with stored proc {} (chunk {}/{}, distinct UIDs: {}, max batch"
+            + " size: {})",
+        datamart,
+        storedProcedure,
+        chunkNumber,
+        totalChunks,
+        distinctCount,
+        maxBatchSize);
   }
 
   private void logExecutionCompleted(String spName) {
