@@ -1,0 +1,20 @@
+{
+  "0": [
+    {
+      "CASE_STATUS": null,
+      "EXTERNAL_IND": "No",
+      "HOSPITAL_FAC_NAME": null,
+      "INVESTIGATION_CREATED_IND": "No",
+      "INVESTIGATION_KEY": null,
+      "JURISDICTION_NAME": "Multi County",
+      "MORBIDITY_REPORT_KEY": 9267001,
+      "MORBIDITY_REPORT_LOCAL_ID": "MOR9267001",
+      "PATIENT_LOCAL_ID": "PATMULTI",
+      "PROGRAM_AREA_DESCRIPTION": "Enteric",
+      "PROVIDER_LAST_NAME": null,
+      "REPORTER_LAST_NAME": null,
+      "REPORTING_FACILITY_UID": null,
+      "REPORT_FAC_NAME": null
+    }
+  ]
+}
