@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import gov.cdc.nbs.report.pipeline.config.PostProcessingProperties;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
@@ -52,6 +53,7 @@ class Lab100CleanupTest {
                 investigationRepository,
                 datamartProcessor,
                 new RetryTopicResolver(),
+                new PostProcessingProperties(0),
                 new CustomMetrics(new SimpleMeterRegistry())));
     PostProcessingTestUtils.configureNrtTopics(service);
     service.initMetrics();

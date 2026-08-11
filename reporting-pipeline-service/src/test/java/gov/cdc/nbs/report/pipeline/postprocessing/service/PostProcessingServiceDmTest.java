@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import gov.cdc.nbs.report.pipeline.config.PostProcessingProperties;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
@@ -60,6 +61,7 @@ class PostProcessingServiceDmTest {
                 investigationRepositoryMock,
                 datamartProcessor,
                 new RetryTopicResolver(),
+                new PostProcessingProperties(0),
                 new CustomMetrics(new SimpleMeterRegistry())));
     PostProcessingTestUtils.configureNrtTopics(postProcessingServiceMock);
     postProcessingServiceMock.initMetrics();

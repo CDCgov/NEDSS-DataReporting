@@ -42,6 +42,7 @@ import static gov.cdc.nbs.report.pipeline.util.UtilHelper.errorMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.nbs.report.pipeline.config.PostProcessingProperties;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.BackfillData;
@@ -163,6 +164,7 @@ public class PostProcessingService {
 
   private final ProcessDatamartData dmProcessor;
   private final RetryTopicResolver retryTopicResolver;
+  private final PostProcessingProperties postProcessingProperties;
 
   static final String PAYLOAD = "payload";
   static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
@@ -1497,22 +1499,28 @@ public class PostProcessingService {
       Collection<Long> ids,
       Consumer<String> repositoryMethod,
       String... names) {
-    if (!ids.isEmpty()) {
-      String idsString = listToParameterString(ids);
-      String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
-      prepareAndLog(keyTopic, idsString, entity.getEntityName(), spName);
-      repositoryMethod.accept(idsString);
-      completeLog(spName);
-    }
+    String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
+    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
+        .forEach(
+            chunk -> {
+              String idsString = listToParameterString(chunk);
+              prepareAndLog(keyTopic, idsString, entity.getEntityName(), spName);
+              repositoryMethod.accept(idsString);
+              completeLog(spName);
+            });
   }
 
   private void processTopic(
       String keyTopic, Entity entity, Collection<String> cds, Consumer<String> repositoryMethod) {
-    String cdString = cds.stream().distinct().collect(Collectors.joining(","));
     String spName = entity.getStoredProcedure();
-    prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
-    repositoryMethod.accept(cdString);
-    completeLog(spName);
+    UidChunker.chunkDistinct(cds, postProcessingProperties.maxBatchSize())
+        .forEach(
+            chunk -> {
+              String cdString = chunk.stream().collect(Collectors.joining(","));
+              prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
+              repositoryMethod.accept(cdString);
+              completeLog(spName);
+            });
   }
 
   private <T> List<T> processTopic(
@@ -1523,11 +1531,17 @@ public class PostProcessingService {
       Consumer<List<T>> checkResult,
       String... names) {
     String spName = names.length > 0 ? names[0] : entity.getStoredProcedure();
-    String idString = listToParameterString(ids);
-    prepareAndLog(keyTopic, idString, entity.getEntityName(), spName);
-    List<T> result = repositoryMethod.apply(idString);
-    checkResult.accept(result);
-    completeLog(spName);
+    List<T> result = new ArrayList<>();
+    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
+        .forEach(
+            chunk -> {
+              String idString = listToParameterString(chunk);
+              prepareAndLog(keyTopic, idString, entity.getEntityName(), spName);
+              List<T> chunkResult = repositoryMethod.apply(idString);
+              checkResult.accept(chunkResult);
+              result.addAll(chunkResult);
+              completeLog(spName);
+            });
     return result;
   }
 
@@ -1539,18 +1553,22 @@ public class PostProcessingService {
       BiFunction<String, String, List<T>> repositoryMethod,
       Consumer<List<T>> checkResult) {
     String name = entity.getEntityName();
-    name = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
-    String idString = listToParameterString(ids);
-    logger.info(
-        "Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'",
-        name,
-        keyTopic,
-        entity.getStoredProcedure(),
-        idString,
-        vals);
-    List<T> result = repositoryMethod.apply(idString, vals);
-    checkResult.accept(result);
-    completeLog(entity.getStoredProcedure());
+    String displayName = logger.isInfoEnabled() ? StringUtils.capitalize(name) : name;
+    UidChunker.chunkDistinct(ids, postProcessingProperties.maxBatchSize())
+        .forEach(
+            chunk -> {
+              String idString = listToParameterString(chunk);
+              logger.info(
+                  "Processing {} for topic: {}. Calling stored proc: {} '{}', '{}'",
+                  displayName,
+                  keyTopic,
+                  entity.getStoredProcedure(),
+                  idString,
+                  vals);
+              List<T> result = repositoryMethod.apply(idString, vals);
+              checkResult.accept(result);
+              completeLog(entity.getStoredProcedure());
+            });
   }
 
   private void prepareAndLog(String keyTopic, String idString, String name, String spName) {
