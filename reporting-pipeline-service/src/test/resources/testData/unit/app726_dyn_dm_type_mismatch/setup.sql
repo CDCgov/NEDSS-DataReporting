@@ -2,6 +2,9 @@
 -- by dropping/re-adding target columns with the source type metadata before UPDATE.
 -- This fixture forces mismatches for float, datetime2, datetimeoffset, time,
 -- nvarchar, and varbinary and verifies the run completes without Operand type clash.
+
+-- Base context and test identifiers.
+-- Uses a fixed batch/datamart name so all generated tmp_DynDm_* objects are deterministic.
 USE RDB_MODERN;
 
 DECLARE @batch_id BIGINT = 726001;
@@ -9,9 +12,12 @@ DECLARE @datamart_name VARCHAR(100) = 'APP726';
 DECLARE @suffix VARCHAR(100) = @datamart_name + '_' + CAST(@batch_id AS VARCHAR(50));
 DECLARE @sql NVARCHAR(MAX);
 
+-- Clear prior job log rows for this package_name to isolate this run's assertions.
 DELETE FROM dbo.job_flow_log
 WHERE package_name = 'sp_dyn_dm_createdm_postprocessing: APP726';
 
+-- Recreate the target datamart table with intentionally WRONG types.
+-- The procedure under test should detect and correct these mismatches.
 IF OBJECT_ID('dbo.DM_INV_APP726', 'U') IS NOT NULL
     DROP TABLE dbo.DM_INV_APP726;
 
@@ -25,6 +31,7 @@ CREATE TABLE dbo.DM_INV_APP726 (
     SRC_BIN VARCHAR(10) NULL
 );
 
+-- Seed one row in the target table. The values themselves are less important than the type mismatch.
 INSERT INTO dbo.DM_INV_APP726
 (
     INVESTIGATION_KEY,
@@ -46,6 +53,8 @@ VALUES
     'old'
 );
 
+-- Create all tmp_DynDm_* staging tables expected by the procedure.
+-- Only two tables need test data, but the procedure references this broader set by naming convention.
 DECLARE @tables TABLE (name SYSNAME NOT NULL);
 INSERT INTO @tables(name)
 VALUES
@@ -89,6 +98,7 @@ DECLARE @name SYSNAME;
 DECLARE table_cursor CURSOR LOCAL FAST_FORWARD FOR
 SELECT name FROM @tables;
 
+-- For each required staging table, drop any prior copy and recreate with INVESTIGATION_KEY.
 OPEN table_cursor;
 FETCH NEXT FROM table_cursor INTO @name;
 WHILE @@FETCH_STATUS = 0
@@ -106,6 +116,8 @@ END;
 CLOSE table_cursor;
 DEALLOCATE table_cursor;
 
+-- Add source columns to Investigation staging with the CORRECT source-side types.
+-- The procedure should align DM_INV_APP726 column definitions to these types.
 SET @sql = N'
 ALTER TABLE dbo.' + QUOTENAME('tmp_DynDm_Investigation_Data_' + @suffix) + N'
 ADD
@@ -117,11 +129,13 @@ ADD
     SRC_BIN VARBINARY(12) NULL;';
 EXEC sp_executesql @sql;
 
+-- Seed the minimum staging rows used by postprocessing joins/updates.
 SET @sql = N'
 INSERT INTO dbo.' + QUOTENAME('tmp_DynDm_INV_SUMM_DATAMART_' + @suffix) + N' (INVESTIGATION_KEY)
 VALUES (1);';
 EXEC sp_executesql @sql;
 
+-- Insert one source row with representative values across all mismatched data types.
 SET @sql = N'
 INSERT INTO dbo.' + QUOTENAME('tmp_DynDm_Investigation_Data_' + @suffix) + N'
 (
@@ -145,6 +159,8 @@ VALUES
 );';
 EXEC sp_executesql @sql;
 
+-- Execute procedure under test.
+-- Success criteria are validated in query.sql / expected.json (job_flow_log first, schema second).
 EXEC dbo.sp_dyn_dm_createdm_postprocessing
     @batch_id = @batch_id,
     @DATAMART_NAME = @datamart_name,
