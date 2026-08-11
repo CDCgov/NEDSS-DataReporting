@@ -6,6 +6,7 @@ import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
@@ -16,6 +17,8 @@ import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonType;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
+import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
@@ -24,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +35,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,9 +44,7 @@ import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
@@ -71,10 +74,13 @@ public class PersonService {
   private final PatientRepository patientRepository;
   private final ProviderRepository providerRepository;
   private final UserRepository userRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
   private final PersonTransformers transformer;
 
   @Qualifier("personKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
+
+  private final RetryTopicResolver retryTopicResolver;
 
   @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
@@ -120,10 +126,12 @@ public class PersonService {
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
+  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
+    inputTopics = Set.of(personTopic, userTopic);
 
     msgProcessed = metrics.counter("person_msg_processed", tags);
     msgSuccess = metrics.counter("person_msg_success", tags);
@@ -155,16 +163,28 @@ public class PersonService {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(
-      String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-    if (topic.equals(personTopic)) {
-      return CompletableFuture.runAsync(() -> processPerson(message, topic), prsExecutor);
-    } else if (topic.equals(userTopic)) {
-      return CompletableFuture.runAsync(() -> processUser(message, topic), prsExecutor);
+  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> record) {
+    TopicResolution topicResolution;
+    try {
+      topicResolution = retryTopicResolver.resolve(record, inputTopics);
+    } catch (NoSuchElementException exception) {
+      return CompletableFuture.failedFuture(
+          new DataProcessingException(exception.getMessage(), exception));
+    }
+
+    String physicalTopic = topicResolution.physicalTopic();
+    String logicalTopic = topicResolution.logicalTopic();
+    String message = record.value();
+
+    if (logicalTopic.equals(personTopic)) {
+      return CompletableFuture.runAsync(() -> processPerson(message, physicalTopic), prsExecutor);
+    } else if (logicalTopic.equals(userTopic)) {
+      return CompletableFuture.runAsync(() -> processUser(message, physicalTopic), prsExecutor);
     } else {
       return CompletableFuture.failedFuture(
           new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+              "Received data from an unknown topic: " + physicalTopic,
+              new NoSuchElementException()));
     }
   }
 
@@ -187,11 +207,15 @@ public class PersonService {
             String cd = payloadNode.get("cd").asText();
             switch (cd) {
               case "PAT":
-                personDataFromStoredProc = patientRepository.computePatients(personUid);
+                personDataFromStoredProc =
+                    patientRepository.computePatients(
+                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
                 processPatientData(personDataFromStoredProc);
                 break;
               case "PRV":
-                providerDataFromStoredProc = providerRepository.computeProviders(personUid);
+                providerDataFromStoredProc =
+                    providerRepository.computeProviders(
+                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
                 processProviderData(providerDataFromStoredProc);
                 break;
               default:
@@ -294,7 +318,9 @@ public class PersonService {
     try {
       userUid = extractUid(message, "auth_user_uid");
       log.info(topicDebugLog, "User", userUid, topic);
-      Optional<List<AuthUser>> userData = userRepository.computeAuthUsers(userUid);
+      Optional<List<AuthUser>> userData =
+          userRepository.computeAuthUsers(
+              userUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
       if (userData.isPresent() && !userData.get().isEmpty()) {
         userData

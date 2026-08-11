@@ -7,7 +7,7 @@ END
 GO
 
 CREATE PROCEDURE [dbo].[sp_contact_record_event] @cc_uids nvarchar(max),
-                                                     @debug bit = 'false'
+                                                     @debug bit = 0, @debug_logging bit = 0
 AS
 BEGIN
 
@@ -27,28 +27,25 @@ BEGIN
     DECLARE @batch_id BIGINT;
 
     SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
+    DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @cc_uids, 199);
+    DECLARE @job_flow_message VARCHAR(200) = LEFT(@cc_uids, 199);
 
     if
             @debug = 'true'
             select @batch_id as Batch_id;
 
-    INSERT INTO [dbo].[job_flow_log]
-    ( batch_id
-    , [Dataflow_Name]
-    , [package_Name]
-    , [Status_Type]
-    , [step_number]
-    , [step_name]
-    , [row_count]
-    , [Msg_Description1])
-    VALUES ( @batch_id
-           , @Dataflow_Name
-           , @Package_Name
-           , 'START'
-           , 0
-           , LEFT('Pre ID-' + @cc_uids, 199)
-           , 0
-           , LEFT(@cc_uids, 199));
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = 0,
+            @step_name = @job_flow_step_name,
+            @row_count = 0,
+            @msg_description1 = @job_flow_message;
+    END;
 
     BEGIN TRANSACTION;
     SET
@@ -166,10 +163,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -249,10 +253,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -293,10 +304,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -336,10 +354,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -400,10 +425,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -440,10 +472,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -485,10 +524,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -532,10 +578,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -579,10 +632,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -637,10 +697,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -678,10 +745,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -711,10 +785,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -756,10 +837,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -808,10 +896,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -867,10 +962,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -906,10 +1008,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -946,10 +1055,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
     COMMIT TRANSACTION;
 
@@ -992,10 +1108,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
     COMMIT TRANSACTION;
 
@@ -1024,10 +1147,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
     COMMIT TRANSACTION;
 
@@ -1076,10 +1206,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -1131,10 +1268,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -1174,10 +1318,17 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
@@ -1281,32 +1432,34 @@ BEGIN
 
     SELECT @RowCount_no = @@ROWCOUNT;
 
-    INSERT INTO [dbo].[job_flow_log]
-    (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-    VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name,
-            @RowCount_no);
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'START',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = @RowCount_no;
+    END;
 
 
     COMMIT TRANSACTION;
 
 
-    INSERT INTO [dbo].[job_flow_log]
-    ( batch_id
-    , [Dataflow_Name]
-    , [package_Name]
-    , [Status_Type]
-    , [step_number]
-    , [step_name]
-    , [row_count]
-    , [Msg_Description1])
-    VALUES ( @batch_id
-           , @Dataflow_Name
-           , @Package_Name
-           , 'COMPLETE'
-           , 0
-           , LEFT('Pre ID-' + @cc_uids, 199)
-           , 0
-           , LEFT(@cc_uids, 199));
+    IF @debug_logging = 1
+    BEGIN
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'COMPLETE',
+            @step_number = 0,
+            @step_name = @job_flow_step_name,
+            @row_count = 0,
+            @msg_description1 = @job_flow_message;
+    END;
 
     END TRY
     BEGIN CATCH
@@ -1321,26 +1474,16 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1]
-        , [Error_Description])
-        VALUES ( @batch_id
-               , @Dataflow_Name
-               , @Package_Name
-               , 'ERROR'
-               , @Proc_Step_no
-               , @Proc_Step_Name
-               , 0
-               , LEFT(@cc_uids, 199)
-               ,@FullErrorMessage
-        );
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @Dataflow_Name,
+            @package_name = @Package_Name,
+            @status_type = 'ERROR',
+            @step_number = @Proc_Step_no,
+            @step_name = @Proc_Step_Name,
+            @row_count = 0,
+            @msg_description1 = @job_flow_message,
+            @error_description = @FullErrorMessage;
         return -1;
 
     END CATCH

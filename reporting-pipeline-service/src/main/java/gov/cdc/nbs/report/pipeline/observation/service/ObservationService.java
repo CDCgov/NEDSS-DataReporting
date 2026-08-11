@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.observation.service;
 
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.*;
 
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.Observation;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationKey;
 import gov.cdc.nbs.report.pipeline.observation.model.dto.observation.ObservationReporting;
@@ -11,12 +12,15 @@ import gov.cdc.nbs.report.pipeline.observation.transformer.ProcessObservationDat
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
+import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -76,11 +80,13 @@ public class ObservationService {
   private int threadPoolSize;
 
   private final ObservationRepository observationRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
 
   @Qualifier("observationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final ProcessObservationDataUtil processObservationDataUtil;
+  private final RetryTopicResolver retryTopicResolver;
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
@@ -97,10 +103,12 @@ public class ObservationService {
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
+  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
+    inputTopics = Set.of(observationTopic, actRelationshipTopic);
 
     msgProcessed = metrics.counter("obs_msg_processed", tags);
     msgSuccess = metrics.counter("obs_msg_success", tags);
@@ -134,22 +142,30 @@ public class ObservationService {
       },
       containerFactory = "observationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
+    TopicResolution topicResolution;
+    try {
+      topicResolution = retryTopicResolver.resolve(rec, inputTopics);
+    } catch (NoSuchElementException exception) {
+      return CompletableFuture.failedFuture(
+          new DataProcessingException(exception.getMessage(), exception));
+    }
 
     long batchId = toBatchId.applyAsLong(rec);
-    String topic = rec.topic();
+    String physicalTopic = topicResolution.physicalTopic();
+    String logicalTopic = topicResolution.logicalTopic();
     String message = rec.value();
-    logger.debug(topicDebugLog, message, topic);
 
-    if (topic.equals(observationTopic)) {
+    if (logicalTopic.equals(observationTopic)) {
       return CompletableFuture.runAsync(
           () -> processObservation(message, batchId, true, ""), obsExecutor);
-    } else if (topic.equals(actRelationshipTopic) && message != null) {
+    } else if (logicalTopic.equals(actRelationshipTopic) && message != null) {
       return CompletableFuture.runAsync(
           () -> processActRelationship(message, batchId), obsExecutor);
     } else {
       return CompletableFuture.failedFuture(
           new DataProcessingException(
-              "Received data from an unknown topic: " + topic, new NoSuchElementException()));
+              "Received data from an unknown topic: " + physicalTopic,
+              new NoSuchElementException()));
     }
   }
 
@@ -172,7 +188,8 @@ public class ObservationService {
             observationKey.setObservationUid(Long.valueOf(observationUid));
             logger.info(topicDebugLog, observationUid, observationTopic);
             Optional<Observation> observationData =
-                observationRepository.computeObservations(observationUid);
+                observationRepository.computeObservations(
+                    observationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (observationData.isPresent()) {
               ObservationReporting reportingModel =
                   modelMapper.map(observationData.get(), ObservationReporting.class);
@@ -217,6 +234,10 @@ public class ObservationService {
       String typeCd;
       String targetClassCd;
       String operationType = extractChangeDataCaptureOperation(value);
+      if (operationType == null) {
+        // possible tombstone message, nothing to process
+        return;
+      }
 
       if (operationType.equals("d")) {
         sourceActUid = extractUid(value, "source_act_uid", BEFORE_PATH);

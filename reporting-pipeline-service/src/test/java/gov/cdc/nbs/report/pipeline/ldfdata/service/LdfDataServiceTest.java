@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.ldfdata.model.dto.LdfData;
 import gov.cdc.nbs.report.pipeline.ldfdata.model.dto.LdfDataKey;
 import gov.cdc.nbs.report.pipeline.ldfdata.repository.LdfDataRepository;
@@ -54,7 +55,10 @@ class LdfDataServiceTest {
 
     ldfDataService =
         new LdfDataService(
-            ldfDataRepository, kafkaTemplate, new CustomMetrics(new SimpleMeterRegistry()));
+            ldfDataRepository,
+            new EventProcedureLoggingProperties(false),
+            kafkaTemplate,
+            new CustomMetrics(new SimpleMeterRegistry()));
     ldfDataService.setThreadPoolSize(1);
     ldfDataService.initMetrics();
 
@@ -90,13 +94,13 @@ class LdfDataServiceTest {
 
     final LdfData ldfData = constructLdfData(busObjNm, ldfUid, busObjUid);
     when(ldfDataRepository.computeLdfData(
-            busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
+            busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid), false))
         .thenReturn(Optional.of(ldfData));
 
     validateData(ldfTopic, ldfTopicOutput, payload, ldfData);
 
     verify(ldfDataRepository)
-        .computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid));
+        .computeLdfData(busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid), false);
   }
 
   @Test
@@ -142,6 +146,43 @@ class LdfDataServiceTest {
     testEmptyMessage(ldfTopic, ldfTopicOutput, "");
   }
 
+  @Test
+  void testProcessEmptyTombstone() {
+    String ldfTopic = "LdfData";
+    String payload =
+        """
+        {
+          "payload": null
+        }
+        """;
+    ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
+    ldfDataService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
+  @Test
+  void testProcessEmptyTombstoneEmpty() {
+    String ldfTopic = "LdfData";
+    String payload =
+        """
+        {
+        }
+        """;
+    ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
+    ldfDataService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
+  @Test
+  void testProcessEmptyTombstoneNull() {
+    String ldfTopic = "LdfData";
+    String payload = null;
+
+    ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
+    ldfDataService.processMessage(rec);
+    verifyNoInteractions(kafkaTemplate);
+  }
+
   private void testEmptyMessage(String ldfTopic, String ldfTopicOutput, String payload) {
     ConsumerRecord<String, String> rec = getRecord(payload, ldfTopic);
     setupLdfService(ldfTopic, ldfTopicOutput);
@@ -178,7 +219,7 @@ class LdfDataServiceTest {
             + "\"}}}";
 
     when(ldfDataRepository.computeLdfData(
-            busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid)))
+            busObjNm, String.valueOf(ldfUid), String.valueOf(busObjUid), false))
         .thenReturn(Optional.empty());
     setupLdfService(ldfTopic, ldfTopicOutput);
     CompletableFuture<Void> future = ldfDataService.processMessage(getRecord(payload, ldfTopic));

@@ -66,6 +66,20 @@ When a user or process changes data in the NBS ODSE database, Debezium captures 
       RDBProcs->>RDBTables: MORBIDITY_REPORT_DATAMART
 ```
 
+### Kafka Retry Topic Routing
+
+Spring Kafka republishes failed records to generated retry topics and invokes the original
+listener again. RTR routes those records through the same business path as their main-topic
+records by using the preserved `KafkaHeaders.ORIGINAL_TOPIC` header. The physical received topic
+is retained for diagnostics, while the configured logical main topic is used for entity routing
+and post-processing cache keys.
+
+Main-topic deliveries normally have no original-topic header and route directly by their physical
+topic. Retry deliveries must contain an allowed original topic; unknown or malformed routing is
+rejected rather than acknowledged without processing. Spring preserves the first original topic
+across subsequent retry levels, so repeated retries continue to resolve to the main topic. This
+behavior requires no additional `application.yaml` configuration.
+
 ## Documentation and Related Repositories
 
 - Please refer to the full setup documentation in the [System Admin Guide](https://cdcgov.github.io/NEDSS-SystemAdminGuide/docs/7_feature_preview/0_rtr.html)
@@ -108,6 +122,26 @@ Specific `functional` and `unit` tests can be executed using the `tests` argumen
 
 ### Adding MasterEtl-level Validation for Functional Tests
 Review [FuncationTestValidation.md](./documentation/FunctionalTestValidation.md) for more details.
+
+### Event-procedure execution logging
+
+Event-procedure routine logging is controlled by
+`EVENT_PROCEDURE_DEBUG_LOGGING` and defaults to `false`:
+
+| Value | Routine `job_flow_log` rows | `ERROR` rows |
+|---|---|---|
+| `false` (default) | Suppressed | Always retained |
+| `true` | Written | Always retained |
+
+Enable it temporarily when investigating stored-procedure execution:
+
+```sh
+EVENT_PROCEDURE_DEBUG_LOGGING=true ./gradlew :reporting-pipeline-service:bootRun
+```
+
+This setting does not enable diagnostic `@debug` result sets. See
+[`documentation/EventProcedureJobFlowLogging.md`](documentation/EventProcedureJobFlowLogging.md)
+for operational guidance and stored-procedure coverage behavior.
 
 ### Windows Note (Testcontainers EOF Error)
 
