@@ -58,8 +58,6 @@ class ObservationServiceTest {
   private final String inputTopicNameObservation = "Observation";
   private final String outputTopicNameObservation = "ObservationOutput";
 
-  private final String inputTopicNameActRelationship = "Act_relationship";
-
   @BeforeEach
   void setUp() {
     closeable = MockitoAnnotations.openMocks(this);
@@ -78,7 +76,6 @@ class ObservationServiceTest {
             new RetryTopicResolver(),
             new CustomMetrics(new SimpleMeterRegistry()));
     service.setObservationTopic(inputTopicNameObservation);
-    service.setActRelationshipTopic(inputTopicNameActRelationship);
     service.setObservationTopicOutputReporting(outputTopicNameObservation);
     service.setThreadPoolSize(1);
     service.initMetrics();
@@ -158,106 +155,6 @@ class ObservationServiceTest {
     validateData(getRetryRecord(payload, retryTopic, inputTopicNameObservation), observation);
 
     verify(observationRepository).computeObservations(String.valueOf(observationUid), false);
-  }
-
-  @ParameterizedTest
-  @CsvSource({
-    "d,LabReport,OBS",
-    "d,LabReport,OTHER",
-    "c,LabReport,OBS",
-    "c,LabReport,OTHER",
-    "d,OTHER,OBS",
-    "d,OTHER,OTHER"
-  })
-  void testProcessActRelationship(String op, String typeCd, String targetClassCd)
-      throws JsonProcessingException {
-    Long sourceActUid = 123456789L;
-    String obsDomainCdSt = "Order";
-    String payload = actRelationshipPayload(sourceActUid, op, typeCd, targetClassCd);
-
-    if (typeCd.equals("OTHER") || !op.equals("d") || targetClassCd.equals("OTHER")) {
-      ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
-
-      observationService.processMessage(rec);
-      verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
-    } else {
-      Observation observation = constructObservation(sourceActUid, obsDomainCdSt);
-      when(observationRepository.computeObservations(String.valueOf(sourceActUid), false))
-          .thenReturn(Optional.of(observation));
-      when(kafkaTemplate.send(anyString(), anyString(), anyString()))
-          .thenReturn(CompletableFuture.completedFuture(null));
-      when(kafkaTemplate.send(anyString(), anyString(), isNull()))
-          .thenReturn(CompletableFuture.completedFuture(null));
-
-      validateData(getRecord(payload, inputTopicNameActRelationship), observation);
-
-      verify(observationRepository).computeObservations(String.valueOf(sourceActUid), false);
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"Act_relationship_retry-0", "Act_relationship_retry-1"})
-  void testProcessActRelationshipRetryMessage(String retryTopic) throws JsonProcessingException {
-    Long sourceActUid = 123456789L;
-    String payload = actRelationshipPayload(sourceActUid, "d", "LabReport", "OBS");
-    Observation observation = constructObservation(sourceActUid, "Order");
-    when(observationRepository.computeObservations(String.valueOf(sourceActUid), false))
-        .thenReturn(Optional.of(observation));
-    when(kafkaTemplate.send(anyString(), anyString(), anyString()))
-        .thenReturn(CompletableFuture.completedFuture(null));
-    when(kafkaTemplate.send(anyString(), anyString(), isNull()))
-        .thenReturn(CompletableFuture.completedFuture(null));
-
-    validateData(getRetryRecord(payload, retryTopic, inputTopicNameActRelationship), observation);
-
-    verify(observationRepository).computeObservations(String.valueOf(sourceActUid), false);
-  }
-
-  @Test
-  void testProcessActRelationshipNullPayload() {
-    ConsumerRecord<String, String> rec = getRecord(null, inputTopicNameActRelationship);
-
-    observationService.processMessage(rec);
-
-    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
-  }
-
-  @Test
-  void testProcessActRelationshipTombstone() {
-    String payload =
-        """
-        {
-          "payload": null
-        }
-        """;
-    ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
-
-    observationService.processMessage(rec);
-
-    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
-  }
-
-  @Test
-  void testProcessActRelationshipTombstoneNoPayload() {
-    String payload =
-        """
-        {
-        }
-        """;
-    ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
-
-    observationService.processMessage(rec);
-
-    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
-  }
-
-  @Test
-  void testProcessActRelationshipTombstoneNull() {
-    String payload = null;
-
-    ConsumerRecord<String, String> rec = getRecord(payload, inputTopicNameActRelationship);
-    observationService.processMessage(rec);
-    verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
   }
 
   @Test
@@ -349,6 +246,32 @@ class ObservationServiceTest {
     assertEquals(reportingModel, actualReporting);
   }
 
+  @Test
+  void testProcessObservationUsesTheProperId() {
+    // given a message from an act_relationship
+    String actRelationshipUid = "321";
+    String payload =
+        """
+        {
+          "payload": {
+            "after": {
+              "source_act_uid": "321"
+            },
+            "op": "c"
+          }
+        }
+        """;
+    Observation observation = constructObservation(Long.parseLong(actRelationshipUid), "Order");
+    when(observationRepository.computeObservations(actRelationshipUid, false))
+        .thenReturn(Optional.of(observation));
+
+    // when the message is processed
+    observationService.processObservation(payload, 0, false, actRelationshipUid);
+
+    // then the proper id is used
+    verify(observationRepository).computeObservations(actRelationshipUid, false);
+  }
+
   private Observation constructObservation(Long observationUid, String obsDomainCdSt1) {
     String filePathPrefix = "rawDataFiles/observation/";
     Observation observation = new Observation();
@@ -421,31 +344,16 @@ class ObservationServiceTest {
     return observation;
   }
 
-  private String actRelationshipPayload(
-      Long sourceActUid, String operation, String typeCd, String targetClassCd) {
-    return "{\"payload\": {\"before\": {\"source_act_uid\": \""
-        + sourceActUid
-        + "\", \"type_cd\": \""
-        + typeCd
-        + "\", \"target_class_cd\": \""
-        + targetClassCd
-        + "\"},"
-        + "\"after\": {\"source_act_uid\": \"123\"},"
-        + "\"op\": \""
-        + operation
-        + "\"}}";
-  }
-
   private ConsumerRecord<String, String> getRecord(String payload, String inputTopic) {
     return new ConsumerRecord<>(inputTopic, 0, 11L, null, payload);
   }
 
   private ConsumerRecord<String, String> getRetryRecord(
       String payload, String retryTopic, String originalTopic) {
-    ConsumerRecord<String, String> record = getRecord(payload, retryTopic);
-    record
+    ConsumerRecord<String, String> kafkaMessage = getRecord(payload, retryTopic);
+    kafkaMessage
         .headers()
         .add(KafkaHeaders.ORIGINAL_TOPIC, originalTopic.getBytes(StandardCharsets.UTF_8));
-    return record;
+    return kafkaMessage;
   }
 }

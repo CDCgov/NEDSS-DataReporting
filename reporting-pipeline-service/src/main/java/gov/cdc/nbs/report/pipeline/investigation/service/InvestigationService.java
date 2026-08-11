@@ -133,8 +133,7 @@ public class InvestigationService {
             interviewTopic,
             contactTopic,
             vaccinationTopic,
-            treatmentTopic,
-            actRelationshipTopic);
+            treatmentTopic);
 
     msgProcessed = metrics.counter("inv_msg_processed", tags);
     msgSuccess = metrics.counter("inv_msg_success", tags);
@@ -170,8 +169,7 @@ public class InvestigationService {
         "${spring.kafka.topics.nbs.interview}",
         "${spring.kafka.topics.nbs.ct-contact}",
         "${spring.kafka.topics.nbs.intervention}",
-        "${spring.kafka.topics.nbs.treatment}",
-        "${spring.kafka.topics.nbs.act-relationship}"
+        "${spring.kafka.topics.nbs.treatment}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
@@ -202,10 +200,6 @@ public class InvestigationService {
             processVaccination(message, true, "");
           } else if (logicalTopic.equals(treatmentTopic)) {
             processTreatment(message, true, "");
-          } else if (logicalTopic.equals(actRelationshipTopic)) {
-            if (message != null) {
-              processActRelationship(message);
-            }
           } else {
             throw new DataProcessingException(
                 "Received data from an unknown topic: " + physicalTopic,
@@ -278,39 +272,6 @@ public class InvestigationService {
         },
         SERVICE_TAG,
         SERVICE_NAME);
-  }
-
-  private void processActRelationship(String value) {
-    String sourceActUid = "";
-
-    try {
-      String typeCd;
-      String operationType = extractChangeDataCaptureOperation(value);
-
-      if (operationType == null) {
-        // possible tombstone message, nothing to process
-        return;
-      }
-
-      if (operationType.equals("d")) {
-        sourceActUid = extractUid(value, "source_act_uid", "before");
-        typeCd = extractValue(value, "type_cd", "before");
-      } else {
-        sourceActUid = extractUid(value, "source_act_uid");
-        typeCd = extractValue(value, "type_cd");
-      }
-
-      logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
-
-      if (typeCd.equals("1180")) {
-        processVaccination(value, false, sourceActUid);
-      }
-      if (typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) {
-        processTreatment(value, false, sourceActUid);
-      }
-    } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
-    }
   }
 
   public void processNotification(String value) {
@@ -397,7 +358,7 @@ public class InvestigationService {
     }
   }
 
-  private void processVaccination(
+  public void processVaccination(
       String value, boolean isFromVaccinationTopic, String actRelationshipSourceActUid) {
     String vaccinationUid = "";
     String topic = (isFromVaccinationTopic) ? vaccinationTopic : actRelationshipTopic;
@@ -430,7 +391,7 @@ public class InvestigationService {
     }
   }
 
-  private void processTreatment(
+  public void processTreatment(
       String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
     String treatmentUid = "";
     String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
