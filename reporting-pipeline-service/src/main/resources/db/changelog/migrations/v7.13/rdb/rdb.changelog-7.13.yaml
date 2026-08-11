@@ -3299,7 +3299,7 @@ databaseChangeLog:
   - changeSet:
       id: app-925-add_ix_lab_test_type_status_root
       author: liquibase
-      runOnChange: true
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.13/rdb/tables/264-add_ix_lab_test_type_status_root-001.sql
