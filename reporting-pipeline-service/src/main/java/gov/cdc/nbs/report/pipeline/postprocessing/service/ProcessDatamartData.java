@@ -505,7 +505,8 @@ public class ProcessDatamartData {
     morbidityInputs.put(INVESTIGATION.getEntityName(), multi.get(INVESTIGATION.getEntityName()));
 
     try {
-      List<Map<String, List<Long>>> summaryBatches = chunkUidMap(invSummaryInputs);
+      List<Map<String, List<Long>>> summaryBatches =
+          UidChunker.chunkDistinct(invSummaryInputs, postProcessingProperties.maxBatchSize());
       if (!summaryBatches.isEmpty()) {
         // Reusing the same DTO class for Dynamic Marts. Collect all chunks before dispatching
         // dynamic datamarts so their prerequisite ordering remains unchanged.
@@ -533,7 +534,8 @@ public class ProcessDatamartData {
         logger.info("No updates to INV_SUMMARY Datamart");
       }
 
-      List<Map<String, List<Long>>> morbidityBatches = chunkUidMap(morbidityInputs);
+      List<Map<String, List<Long>>> morbidityBatches =
+          UidChunker.chunkDistinct(morbidityInputs, postProcessingProperties.maxBatchSize());
       if (!morbidityBatches.isEmpty()) {
         for (int index = 0; index < morbidityBatches.size(); index++) {
           Map<String, List<Long>> batch = morbidityBatches.get(index);
@@ -946,7 +948,8 @@ public class ProcessDatamartData {
     inputLists.put("ids", ids);
     inputLists.put("pids", pids);
 
-    List<Map<String, List<Long>>> chunks = chunkUidMap(inputLists);
+    List<Map<String, List<Long>>> chunks =
+        UidChunker.chunkDistinct(inputLists, postProcessingProperties.maxBatchSize());
     for (int index = 0; index < chunks.size(); index++) {
       Map<String, List<Long>> chunk = chunks.get(index);
       String chunkIds = listToParameterString(chunk.get("ids"));
@@ -962,47 +965,6 @@ public class ProcessDatamartData {
       checkResult.accept(result);
       logExecutionCompleted(dmEntity.getStoredProcedure());
     }
-  }
-
-  private List<Map<String, List<Long>>> chunkUidMap(
-      Map<String, ? extends Collection<Long>> valuesByType) {
-    Map<String, List<Long>> distinctValues = new LinkedHashMap<>();
-    valuesByType.forEach(
-        (key, values) -> {
-          if (values == null) {
-            return;
-          }
-          List<List<Long>> distinctChunks = UidChunker.chunkDistinct(values, 0);
-          if (!distinctChunks.isEmpty()) {
-            distinctValues.put(key, distinctChunks.get(0));
-          }
-        });
-
-    if (distinctValues.isEmpty()) {
-      return List.of();
-    }
-    if (postProcessingProperties.maxBatchSize() == 0) {
-      return List.of(distinctValues);
-    }
-
-    List<Map<String, List<Long>>> batches = new ArrayList<>();
-    Map<String, List<Long>> currentBatch = new LinkedHashMap<>();
-    int currentSize = 0;
-    for (Map.Entry<String, List<Long>> entry : distinctValues.entrySet()) {
-      for (Long uid : entry.getValue()) {
-        if (currentSize == postProcessingProperties.maxBatchSize()) {
-          batches.add(currentBatch);
-          currentBatch = new LinkedHashMap<>();
-          currentSize = 0;
-        }
-        currentBatch.computeIfAbsent(entry.getKey(), key -> new ArrayList<>()).add(uid);
-        currentSize++;
-      }
-    }
-    if (currentSize > 0) {
-      batches.add(currentBatch);
-    }
-    return batches;
   }
 
   private void logDatamartChunk(
