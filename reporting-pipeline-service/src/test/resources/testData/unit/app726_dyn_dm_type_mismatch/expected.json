@@ -3,18 +3,13 @@
     {
       "OPERAND_TYPE_CLASH_COUNT": 0,
       "COMPLETE_COUNT": 1,
+      "DM_INV_APP726_EXISTS": 1,
       "SRC_FLOAT_TYPE": "float",
       "SRC_DT2_TYPE": "datetime2",
       "SRC_DTO_TYPE": "datetimeoffset",
       "SRC_TM_TYPE": "time",
       "SRC_NVC_TYPE": "nvarchar",
-      "SRC_BIN_TYPE": "varbinary",
-      "SRC_FLOAT_VALUE": "123.5",
-      "SRC_DT2_VALUE": "2026-08-11T12:34:56.789",
-      "SRC_DTO_VALUE": "2026-08-11T12:34:56.78Z",
-      "SRC_TM_VALUE": "12:34:56.1234",
-      "SRC_NVC_VALUE": "Widened text value",
-      "SRC_BIN_VALUE": "0x01020304"
+      "SRC_BIN_TYPE": "varbinary"
     }
   ]
 }
