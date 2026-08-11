@@ -178,6 +178,7 @@ public class PostProcessingService {
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
   private final Object cacheLock = new Object();
   private final Object retryCacheLock = new Object();
+  private final Object dmCacheLock = new Object();
 
   @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopic;
@@ -484,7 +485,7 @@ public class PostProcessingService {
         return;
       }
 
-      synchronized (cacheLock) {
+      synchronized (dmCacheLock) {
         /* dmMap is an inner map of dmCache!
         It is adding the queue directly into that inner map,
         which is the same object held by dmCache. There is no separate copy being made.
@@ -741,7 +742,7 @@ public class PostProcessingService {
         });
 
     // Merge into the main retryCache for reprocessing, preserving batch IDs
-    synchronized (cacheLock) {
+    synchronized (retryCacheLock) {
       retryCacheLocal.forEach(
           (batchId, entityMap) -> {
             Map<String, Queue<Long>> batchMap =
@@ -787,7 +788,7 @@ public class PostProcessingService {
 
       if (processingFailed) {
         if (batchId != null) {
-          synchronized (cacheLock) {
+          synchronized (retryCacheLock) {
             Map<String, Queue<Long>> retryMap = retryCache.get(batchId);
             retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
           }
@@ -823,7 +824,7 @@ public class PostProcessingService {
     dmProcessor.process(dmData);
 
     // merge entity IDs collections from temporary map newDmMulti into main datamart cache
-    synchronized (cacheLock) {
+    synchronized (dmCacheLock) {
       Map<String, Queue<Long>> dmMulti =
           dmCache.computeIfAbsent(MULTI_ID_DATAMART, k -> new ConcurrentHashMap<>());
       newDmMulti.forEach(
@@ -1365,7 +1366,7 @@ public class PostProcessingService {
 
     batchId = dmProcessor.nextBatchId(batchId, e);
 
-    synchronized (cacheLock) {
+    synchronized (retryCacheLock) {
       Map<String, Queue<Long>> retryMap =
           retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
       retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
@@ -1409,7 +1410,7 @@ public class PostProcessingService {
   protected void processDatamartIds() {
 
     Map<String, Map<String, List<Long>>> dmCacheSnapshot;
-    synchronized (cacheLock) {
+    synchronized (dmCacheLock) {
       dmCacheSnapshot = new HashMap<>();
       for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
         Map<String, List<Long>> idMap = new HashMap<>();
