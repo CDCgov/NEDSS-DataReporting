@@ -11,7 +11,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 
-@Configuration
+@Configuration("actRelationshipKafkaConsumerConfig")
 public class KafkaConsumerConfig {
 
   @Value("${spring.kafka.group-id}")
