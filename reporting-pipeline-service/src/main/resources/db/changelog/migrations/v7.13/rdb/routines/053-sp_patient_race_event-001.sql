@@ -221,7 +221,7 @@ BEGIN
         set RACE_GT3_IND =
                 case
                     when RACE_4 is not null then 'TRUE'
-                    when RACE_4 is null then 'FALSE'
+                    else 'FALSE'
                     end;
 
 
