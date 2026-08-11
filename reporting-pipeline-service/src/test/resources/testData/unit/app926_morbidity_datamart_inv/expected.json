@@ -1,0 +1,20 @@
+{
+  "0": [
+    {
+      "CASE_STATUS": "C",
+      "EXTERNAL_IND": "No",
+      "HOSPITAL_FAC_NAME": null,
+      "INVESTIGATION_CREATED_IND": "Yes",
+      "INVESTIGATION_KEY": 9265010,
+      "JURISDICTION_NAME": "Inv County",
+      "MORBIDITY_REPORT_KEY": 9265001,
+      "MORBIDITY_REPORT_LOCAL_ID": "MOR9265001",
+      "PATIENT_LOCAL_ID": null,
+      "PROGRAM_AREA_DESCRIPTION": "Enteric",
+      "PROVIDER_LAST_NAME": null,
+      "REPORTER_LAST_NAME": null,
+      "REPORTING_FACILITY_UID": null,
+      "REPORT_FAC_NAME": null
+    }
+  ]
+}

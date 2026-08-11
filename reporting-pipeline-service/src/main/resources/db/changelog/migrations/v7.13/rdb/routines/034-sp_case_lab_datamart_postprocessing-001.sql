@@ -20,7 +20,6 @@ BEGIN
 
         SET @Proc_Step_no = 1;
         SET @Proc_Step_Name = 'SP_Start';
-
         SELECT @ROWCOUNT_NO = 0;
 
         INSERT
@@ -45,6 +44,42 @@ BEGIN
 -------------------------------------------------------------------------------------------------------------------------------------------
 
         SET @Proc_Step_no = @Proc_Step_no + 1;
+        SET @Proc_Step_Name = 'Creating tempdb..#PHC_IDS';
+
+        IF OBJECT_ID('tempdb..#PHC_IDS') IS NOT NULL DROP TABLE #PHC_IDS;
+
+        SELECT DISTINCT CASE_UID
+        INTO #PHC_IDS
+        FROM (
+                SELECT TRY_CONVERT(bigint, value) AS CASE_UID
+                FROM STRING_SPLIT(@phc_id, ',')
+        ) phc
+        WHERE CASE_UID IS NOT NULL;
+
+        CREATE UNIQUE CLUSTERED INDEX IX_PHC_IDS
+                ON #PHC_IDS (CASE_UID);
+
+        SELECT @RowCount_no = @@ROWCOUNT;
+        INSERT
+        INTO [dbo].[JOB_FLOW_LOG]
+        (BATCH_ID,
+         [DATAFLOW_NAME],
+         [PACKAGE_NAME],
+         [STATUS_TYPE],
+         [STEP_NUMBER],
+         [STEP_NAME],
+         [ROW_COUNT])
+        VALUES (@batch_id,
+                'CASE_LAB_DATAMART',
+                'CASE_LAB_DATAMART',
+                'START',
+                @PROC_STEP_NO,
+                @PROC_STEP_NAME,
+                @ROWCOUNT_NO);
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+        SET @Proc_Step_no = @Proc_Step_no + 1;
         SET @Proc_Step_Name = 'Creating LAB_INV_MAP';
 
         SELECT map.INVESTIGATION_KEY, map.LAB_TEST_KEY
@@ -52,7 +87,8 @@ BEGIN
         FROM LAB_TEST_RESULT map
                  JOIN INVESTIGATION inv
                       ON inv.INVESTIGATION_KEY = map.INVESTIGATION_KEY
-                          AND inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@phc_id, ','));
+                 INNER JOIN #PHC_IDS phc
+                         ON phc.CASE_UID = inv.CASE_UID;
 
         SELECT @RowCount_no = @@ROWCOUNT;
         INSERT
@@ -79,7 +115,7 @@ BEGIN
 
         SET @PROC_STEP_NAME = 'GENERATING INCREMENTAL TMP_CLDM_All_Case';
 
-        SELECT INVESTIGATION.INVESTIGATION_KEY,
+        SELECT inv.INVESTIGATION_KEY,
                RPT_SRC_ORG_KEY,
                INV_LOCAL_ID    AS INVESTIGATION_LOCAL_ID,
                CONDITION_KEY,
@@ -87,16 +123,14 @@ BEGIN
                PATIENT_key,
                PHYSICIAN_KEY
         INTO #TMP_CLDM_All_Case
-        FROM dbo.INVESTIGATION with (nolock)
-                 LEFT OUTER JOIN dbo.CASE_COUNT with (nolock)
-                                 ON INVESTIGATION.INVESTIGATION_KEY = CASE_COUNT.INVESTIGATION_KEY
+        FROM dbo.INVESTIGATION inv with (nolock)
+                 INNER JOIN #PHC_IDS phc
+                         ON phc.CASE_UID = inv.CASE_UID
+                 LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
+                                 ON inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE
 --case_uid instead of investigation_key
             CASE_TYPE = 'I'
-          AND INVESTIGATION.case_uid in (SELECT value
-                                         FROM
-                                             STRING_SPLIT(@phc_id,
-                                                          ','))
         UNION
 
         SELECT inv.INVESTIGATION_KEY,
@@ -129,15 +163,15 @@ BEGIN
                                  ON
                                      inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select distinct(INVESTIGATION_KEY)
-                                        FROM dbo.LAB_TEST_RESULT
-                                        where LAB_TEST_KEY in (select lab_test_key
-                                                               FROM dbo.LAB_TEST
-                                                               where case_uid in (SELECT value
-                                                                                  FROM
-                                                                                      STRING_SPLIT(@phc_id,
-                                                                                                   ',')))
-                                          and INVESTIGATION_KEY <> 1)
+          AND inv.INVESTIGATION_KEY in (
+                select distinct ltr.INVESTIGATION_KEY
+                FROM dbo.LAB_TEST_RESULT ltr
+                INNER JOIN dbo.INVESTIGATION inv2
+                        ON inv2.INVESTIGATION_KEY = ltr.INVESTIGATION_KEY
+                INNER JOIN #PHC_IDS phc
+                        ON phc.CASE_UID = inv2.CASE_UID
+                WHERE ltr.INVESTIGATION_KEY <> 1
+        )
         UNION
 
         SELECT inv.INVESTIGATION_KEY,
@@ -148,19 +182,19 @@ BEGIN
                PATIENT_key,
                PHYSICIAN_KEY
         FROM dbo.INVESTIGATION inv with (nolock)
-                 LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
-                                 ON
-                                     inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
+                LEFT OUTER JOIN dbo.CASE_COUNT cc with (nolock)
+                        ON inv.INVESTIGATION_KEY = cc.INVESTIGATION_KEY
         WHERE CASE_TYPE = 'I'
-          AND inv.INVESTIGATION_KEY in (select INVESTIGATION_KEY
-                                        from dbo.MORBIDITY_REPORT mr
-                                                 inner join dbo.MORBIDITY_REPORT_EVENT mre
-                                                            on
-                                                                mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
-                                        where case_uid in (SELECT value
-                                                           FROM
-                                                               STRING_SPLIT(@phc_id,
-                                                                            ',')))
+          AND inv.INVESTIGATION_KEY in (
+                select distinct mre.INVESTIGATION_KEY
+                from dbo.MORBIDITY_REPORT mr
+                inner join dbo.MORBIDITY_REPORT_EVENT mre
+                        on mr.MORB_RPT_KEY = mre.MORB_RPT_KEY
+                inner join dbo.INVESTIGATION inv2
+                        ON inv2.INVESTIGATION_KEY = mre.INVESTIGATION_KEY
+                inner join #PHC_IDS phc
+                        ON phc.CASE_UID = inv2.CASE_UID
+        )
         /*  UNION
 
           SELECT inv.INVESTIGATION_KEY,
@@ -316,13 +350,14 @@ BEGIN
                i.record_status_cd
         into #TMP_CLDM_GEN_PAT_ADD_INV
         from #TMP_CLDM_GEN_PATIENT_ADD as GPA with (nolock)
-                 left join dbo.investigation as i with (nolock)
-                           ON GPA.investigation_key = i.investigation_key
-                 left join dbo.EVENT_METRIC_INC as em with (nolock)
-                           ON em.event_uid = i.case_uid
-                               and i.investigation_key <> 1
-        WHERE (I.RECORD_STATUS_CD <> 'INACTIVE')
-          AND (I.CASE_TYPE <> 'S');
+                INNER JOIN dbo.INVESTIGATION AS i with (nolock)
+                        ON GPA.INVESTIGATION_KEY = i.INVESTIGATION_KEY
+                        AND i.INVESTIGATION_KEY <> 1
+                        AND i.RECORD_STATUS_CD <> 'INACTIVE'
+                        AND i.CASE_TYPE <> 'S'
+                LEFT JOIN dbo.EVENT_METRIC_INC AS em
+                        ON em.EVENT_UID = i.CASE_UID
+        ;
 
         if @debug = 'true'
             select '#TMP_CLDM_GEN_PAT_ADD_INV', * from #TMP_CLDM_GEN_PAT_ADD_INV;
@@ -657,16 +692,30 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = 'GENERATING TMP_CLDM_morbResults';
 
-        select *
+        SELECT dbo.lab100.MORB_RPT_KEY,
+                mr.MORB_RPT_LOCAL_ID,
+                dbo.lab100.RESULTED_LAB_TEST_KEY,
+                dbo.lab100.LAB_RPT_RECEIVED_BY_PH_DT,
+                dbo.lab100.SPECIMEN_COLLECTION_DT,
+                dbo.lab100.RESULTED_LAB_TEST_CD_DESC,
+                dbo.lab100.RESULTEDTEST_VAL_CD_DESC,
+                dbo.lab100.NUMERIC_RESULT_WITHUNITS,
+                dbo.lab100.LAB_RESULT_TXT_VAL,
+                dbo.lab100.LAB_RESULT_COMMENTS
         into #TMP_CLDM_morbResults
         from dbo.lab100 with (nolock)
-        where morb_rpt_key in (SELECT ME.MORB_RPT_KEY
-                               FROM dbo.MORBIDITY_REPORT_EVENT ME with (nolock)
-                                        INNER JOIN dbo.INVESTIGATION I with (nolock)
-                                                   ON ME.INVESTIGATION_KEY = I.INVESTIGATION_KEY
-                                                       AND I.INVESTIGATION_KEY in
-                                                           (select INVESTIGATION_KEY from #TMP_CLDM_All_Case)
-                               WHERE (I.RECORD_STATUS_CD = 'ACTIVE'));
+                inner join dbo.MORBIDITY_REPORT mr with (nolock)
+                        ON mr.MORB_RPT_KEY = dbo.lab100.MORB_RPT_KEY
+        where dbo.lab100.MORB_RPT_KEY in (
+                SELECT ME.MORB_RPT_KEY
+                FROM dbo.MORBIDITY_REPORT_EVENT ME with (nolock)
+                INNER JOIN dbo.INVESTIGATION I with (nolock)
+                        ON ME.INVESTIGATION_KEY = I.INVESTIGATION_KEY
+                                AND I.INVESTIGATION_KEY in (
+                                        select INVESTIGATION_KEY from #TMP_CLDM_All_Case
+                                )
+                        WHERE (I.RECORD_STATUS_CD = 'ACTIVE')
+                );
 
         SELECT @RowCount_no = @@ROWCOUNT;
 

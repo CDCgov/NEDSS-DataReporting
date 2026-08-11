@@ -1,0 +1,36 @@
+{
+  "0": [
+    {
+      "CASE_STATUS": null,
+      "EXTERNAL_IND": "No",
+      "HOSPITAL_FAC_NAME": null,
+      "INVESTIGATION_CREATED_IND": "No",
+      "INVESTIGATION_KEY": null,
+      "JURISDICTION_NAME": "Prov County",
+      "MORBIDITY_REPORT_KEY": 9263001,
+      "MORBIDITY_REPORT_LOCAL_ID": "MOR9263001",
+      "PATIENT_LOCAL_ID": null,
+      "PROGRAM_AREA_DESCRIPTION": "Enteric",
+      "PROVIDER_LAST_NAME": "DocPhys",
+      "REPORTER_LAST_NAME": null,
+      "REPORTING_FACILITY_UID": null,
+      "REPORT_FAC_NAME": null
+    },
+    {
+      "CASE_STATUS": null,
+      "EXTERNAL_IND": "No",
+      "HOSPITAL_FAC_NAME": null,
+      "INVESTIGATION_CREATED_IND": "No",
+      "INVESTIGATION_KEY": null,
+      "JURISDICTION_NAME": "Prov County",
+      "MORBIDITY_REPORT_KEY": 9263002,
+      "MORBIDITY_REPORT_LOCAL_ID": "MOR9263002",
+      "PATIENT_LOCAL_ID": null,
+      "PROGRAM_AREA_DESCRIPTION": "Enteric",
+      "PROVIDER_LAST_NAME": null,
+      "REPORTER_LAST_NAME": "DocRep",
+      "REPORTING_FACILITY_UID": null,
+      "REPORT_FAC_NAME": null
+    }
+  ]
+}
