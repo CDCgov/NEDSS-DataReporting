@@ -1466,7 +1466,7 @@ public class PostProcessingService {
     }
   }
 
-  private String listToParameterString(Collection<Long> inputList) {
+  private String listToParameterString(Collection<?> inputList) {
     return Optional.ofNullable(inputList)
         .map(list -> list.stream().map(String::valueOf).distinct().collect(Collectors.joining(",")))
         .orElse("");
@@ -1516,7 +1516,7 @@ public class PostProcessingService {
     UidChunker.chunkDistinct(cds, postProcessingProperties.maxBatchSize())
         .forEach(
             chunk -> {
-              String cdString = chunk.stream().collect(Collectors.joining(","));
+              String cdString = listToParameterString(chunk);
               prepareAndLog(keyTopic, cdString, entity.getEntityName(), spName);
               repositoryMethod.accept(cdString);
               completeLog(spName);
