@@ -13,6 +13,20 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
+/**
+ * Kafka listener responsible for consuming act-relationship messages from the configured NBS topic
+ * and dispatching them to the {@link ActRelationshipProcessor} for asynchronous processing.
+ *
+ * <p>Each incoming message is processed on a dedicated thread pool (sized via the {@code
+ * featureFlag.thread-pool-size} property) so that message handling does not block the Kafka
+ * consumer thread. A batch identifier is derived from the record's timestamp, offset, and partition
+ * to support downstream tracking.
+ *
+ * <p>Failed messages are automatically retried using an exponential backoff strategy (configured
+ * via {@link RetryableTopic}), with retries routed to suffixed retry topics and, upon exhausting
+ * retry attempts, sent to a dead-letter topic (DLT). {@link RuntimeException}s are excluded from
+ * the retry/DLT flow.
+ */
 @Service
 public class ActRelationshipListener {
 
