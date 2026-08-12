@@ -21,6 +21,7 @@ BEGIN
 	DECLARE @Package_Name VARCHAR(200) = 'sp_event_metric_cleanup_postprocessing';
     DECLARE @lock_resource NVARCHAR(255) = N'RTR:scheduled:event-metric-cleanup';
     DECLARE @lock_result INT;
+    DECLARE @lock_acquired BIT = 0;
 
     BEGIN TRY
 
@@ -35,6 +36,7 @@ BEGIN
             RETURN -2;
         END;
 
+        SET @lock_acquired = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
         INSERT INTO dbo.job_flow_log ( batch_id
@@ -231,6 +233,13 @@ BEGIN
     BEGIN CATCH
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+
+        IF @lock_acquired = 1
+        BEGIN
+            EXEC sys.sp_releaseapplock
+                @Resource = @lock_resource,
+                @LockOwner = N'Session';
+        END;
 
         -- Construct the error message string with all details:
             DECLARE @FullErrorMessage VARCHAR(8000) =
