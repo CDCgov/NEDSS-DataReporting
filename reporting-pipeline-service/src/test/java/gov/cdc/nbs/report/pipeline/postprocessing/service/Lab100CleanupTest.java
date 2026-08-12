@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -57,6 +58,7 @@ class Lab100CleanupTest {
     service.initMetrics();
     datamartProcessor.initMetrics();
     service.setServiceEnable(true);
+    when(postProcRepository.executeLab100Cleanup()).thenReturn(1);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
     listAppender.start();
@@ -88,6 +90,26 @@ class Lab100CleanupTest {
   }
 
   @Test
+  void lab100Cleanup_logsAlreadyRunningSkipWithoutCompletion() {
+    when(postProcRepository.executeLab100Cleanup()).thenReturn(-2);
+
+    service.lab100Cleanup();
+
+    assertTrue(
+        listAppender.list.stream()
+            .anyMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .contains("Skipped sp_lab100_cleanup because it's already running")));
+    assertTrue(
+        listAppender.list.stream()
+            .noneMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .contains("Stored proc execution completed: sp_lab100_cleanup")));
+  }
+
+  @Test
   void lab100Cleanup_isScheduledWithCorrectCronProperty() throws NoSuchMethodException {
     Method method = PostProcessingService.class.getDeclaredMethod("lab100Cleanup");
     Scheduled scheduled = method.getAnnotation(Scheduled.class);
@@ -97,6 +119,14 @@ class Lab100CleanupTest {
         "${service.schedule.lab100-cleanup}",
         scheduled.cron(),
         "cron must reference the lab100-cleanup property");
+  }
+
+  @Test
+  void lab100Cleanup_throwsWhenProcedureReportsFailure() {
+    when(postProcRepository.executeLab100Cleanup()).thenReturn(-1);
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        RuntimeException.class, () -> service.lab100Cleanup());
   }
 
   @Test

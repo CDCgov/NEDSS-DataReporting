@@ -127,9 +127,14 @@ public interface PostProcRepository extends JpaRepository<DatamartData, Long> {
   @Query(value = "EXEC sp_nrt_backfill_event :statusCd", nativeQuery = true)
   List<BackfillData> executeBackfillEvent(@Param("statusCd") String statusCd);
 
-  @Procedure("sp_event_metric_cleanup_postprocessing")
-  void executeEventMetricCleanup();
+  @Query(
+      value =
+          "DECLARE @status int; EXEC @status = dbo.sp_event_metric_cleanup_postprocessing; SELECT @status",
+      nativeQuery = true)
+  Integer executeEventMetricCleanup();
 
-  @Procedure("sp_lab100_cleanup")
-  void executeLab100Cleanup();
+  @Query(
+      value = "DECLARE @status int; EXEC @status = dbo.sp_lab100_cleanup; SELECT @status",
+      nativeQuery = true)
+  Integer executeLab100Cleanup();
 }

@@ -49,7 +49,7 @@ public class ActRelationshipProcessor {
       // extract uid and relationship type from message
       sourceActUid = getSourceActUid(message, operation);
       String typeCd = getTypeCd(message, operation);
-      
+
       // call the relevant handler based on the relationship type
       if (isVaccinationRelationship(typeCd)) {
         investigationService.processVaccination(message, false, sourceActUid);

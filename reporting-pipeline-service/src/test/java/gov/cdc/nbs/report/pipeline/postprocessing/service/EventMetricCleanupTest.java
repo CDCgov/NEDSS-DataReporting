@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -57,6 +58,7 @@ class EventMetricCleanupTest {
     service.initMetrics();
     datamartProcessor.initMetrics();
     service.setServiceEnable(true);
+    when(postProcRepository.executeEventMetricCleanup()).thenReturn(1);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
     listAppender.start();
@@ -90,6 +92,27 @@ class EventMetricCleanupTest {
   }
 
   @Test
+  void eventMetricCleanup_logsAlreadyRunningSkipWithoutCompletion() {
+    when(postProcRepository.executeEventMetricCleanup()).thenReturn(-2);
+
+    service.eventMetricCleanup();
+
+    assertTrue(
+        listAppender.list.stream()
+            .anyMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .contains(
+                            "Skipped sp_event_metric_cleanup_postprocessing because it's already running")));
+    assertTrue(
+        listAppender.list.stream()
+            .noneMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .contains("Stored proc execution completed: sp_event_metric_cleanup")));
+  }
+
+  @Test
   void eventMetricCleanup_isScheduledWithCorrectCronProperty() throws NoSuchMethodException {
     Method method = PostProcessingService.class.getDeclaredMethod("eventMetricCleanup");
     Scheduled scheduled = method.getAnnotation(Scheduled.class);
@@ -99,6 +122,14 @@ class EventMetricCleanupTest {
         "${service.schedule.event-metric-cleanup}",
         scheduled.cron(),
         "cron must reference the event-metric-cleanup property");
+  }
+
+  @Test
+  void eventMetricCleanup_throwsWhenProcedureReportsFailure() {
+    when(postProcRepository.executeEventMetricCleanup()).thenReturn(-1);
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        RuntimeException.class, () -> service.eventMetricCleanup());
   }
 
   @Test

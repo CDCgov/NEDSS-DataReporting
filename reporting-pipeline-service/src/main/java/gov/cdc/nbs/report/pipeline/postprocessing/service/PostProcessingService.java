@@ -76,6 +76,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -1569,15 +1570,22 @@ public class PostProcessingService {
 
   @Scheduled(cron = "${service.schedule.event-metric-cleanup}")
   protected void eventMetricCleanup() {
-    logger.info("Running event metric cleanup...");
-    postProcRepository.executeEventMetricCleanup();
-    logger.info(SP_EXECUTION_COMPLETED, "sp_event_metric_cleanup_postprocessing");
+    processScheduledProcedure(
+        "sp_event_metric_cleanup_postprocessing", postProcRepository::executeEventMetricCleanup);
   }
 
   @Scheduled(cron = "${service.schedule.lab100-cleanup}")
   protected void lab100Cleanup() {
-    logger.info("Running lab100 cleanup...");
-    postProcRepository.executeLab100Cleanup();
-    logger.info(SP_EXECUTION_COMPLETED, "sp_lab100_cleanup");
+    processScheduledProcedure("sp_lab100_cleanup", postProcRepository::executeLab100Cleanup);
+  }
+
+  private void processScheduledProcedure(String name, Supplier<Integer> scheduledProcedure) {
+    logger.info("Running {}...", name);
+    switch (ScheduledExecutionStatus.fromReturnCode(scheduledProcedure.get())) {
+      case COMPLETED, LEGACY_COMPLETED -> logger.info(SP_EXECUTION_COMPLETED, name);
+      case SKIPPED -> logger.info("Skipped {} because it's already running", name);
+      case FAILED -> throw new DataProcessingException(name + " reported a cleanup failure");
+      default -> throw new DataProcessingException(name + " encountered an unknown status");
+    }
   }
 }
