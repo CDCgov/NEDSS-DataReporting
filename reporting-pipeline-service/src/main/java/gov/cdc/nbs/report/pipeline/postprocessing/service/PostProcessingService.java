@@ -699,16 +699,15 @@ public class PostProcessingService {
       final Map<String, List<Long>> idCacheSnapshot;
       final Map<String, List<Long>> pbCacheSnapshot;
       final Map<String, List<Long>> obsCacheSnapshot;
-
-      synchronized (retryCacheLock) {
-        idCacheSnapshot =
+      
+      idCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(entry -> !entry.getKey().contains("^"))
                 .collect(
                     Collectors.toMap(
                         Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
-
-        pbCacheSnapshot =
+      
+      pbCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(e -> e.getKey().startsWith("PB^"))
                 .collect(
@@ -716,7 +715,7 @@ public class PostProcessingService {
                         e -> e.getKey().substring("PB^".length()),
                         e -> new ArrayList<>(e.getValue())));
 
-        obsCacheSnapshot =
+      obsCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(e -> e.getKey().startsWith("OBS^"))
                 .collect(
@@ -724,8 +723,7 @@ public class PostProcessingService {
                         e -> e.getKey().substring("OBS^".length()),
                         e -> new ArrayList<>(e.getValue())));
 
-        retryCache.remove(batchId);
-      }
+      retryCache.remove(batchId);
 
       boolean processed =
           processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, batchId);
