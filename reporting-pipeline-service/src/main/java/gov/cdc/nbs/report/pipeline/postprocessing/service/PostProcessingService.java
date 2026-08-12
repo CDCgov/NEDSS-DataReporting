@@ -431,11 +431,8 @@ public class PostProcessingService {
           Arrays.stream(tblNode.asText().split(","))
               .map(String::trim)
               .forEach(
-                  tbl -> {
-                    synchronized (cacheLock) {
-                      pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid);
-                    }
-                  });
+                  tbl ->
+                      pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
         }
       } else if (entity == NOTIFICATION) {
         String actTypeCd = payloadNode.path("act_type_cd").asText();
@@ -495,14 +492,10 @@ public class PostProcessingService {
 
   private void extractSummaryCase(Long uid, String caseType) {
     if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
-      synchronized (cacheLock) {
         sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
-      }
     }
     if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
-      synchronized (cacheLock) {
         sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
-      }
     }
   }
 
