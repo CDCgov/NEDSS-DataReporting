@@ -11,8 +11,8 @@ class CleanupStatusRepositoryTest extends UnitTest {
   @Autowired private PostProcRepository postProcRepository;
 
   @Test
-  void returnsLegacySuccessForEventMetricCleanup() {
-    assertEquals(0, postProcRepository.executeEventMetricCleanup());
+  void returnsExplicitSuccessForEventMetricCleanup() {
+    assertEquals(1, postProcRepository.executeEventMetricCleanup());
   }
 
   @Test
