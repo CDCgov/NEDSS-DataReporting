@@ -73,6 +73,95 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #MORB_EVENT_INIT';
 
+        /*
+            Parse each UID param ONCE into a typed bigint temp table with a clustered PK,
+            then probe with EXISTS. Replaces 7 per-row STRING_SPLIT re-parses / implicit converts.
+        */
+        -- uid_obs
+        IF OBJECT_ID('tempdb..#uid_obs') IS NOT NULL DROP TABLE #uid_obs;
+
+        SELECT DISTINCT
+            u = TRY_CONVERT(numeric(18,0), NULLIF(TRIM(ss.value), ''))
+        INTO #uid_obs
+        FROM STRING_SPLIT(@obs_uids, ',') ss
+        WHERE TRY_CONVERT(numeric(18,0), NULLIF(TRIM(ss.value), '')) IS NOT NULL;
+
+        -- we store this as numeric(18,0) because that's how mr.MORB_RPT_UID is stored
+        -- and we're joining on that later
+        ALTER TABLE #uid_obs ALTER COLUMN u numeric(18,0) NOT NULL;
+
+        ALTER TABLE #uid_obs ADD PRIMARY KEY CLUSTERED (u);
+        -- 
+
+        IF OBJECT_ID('tempdb..#uid_pat') IS NOT NULL DROP TABLE #uid_pat;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_pat
+        FROM STRING_SPLIT(@pat_uids, ',') ss
+        ;
+        ALTER TABLE #uid_pat ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_prov') IS NOT NULL DROP TABLE #uid_prov;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_prov
+        FROM STRING_SPLIT(@prov_uids, ',') ss
+        ;
+        ALTER TABLE #uid_prov ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_org') IS NOT NULL DROP TABLE #uid_org;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_org
+        FROM STRING_SPLIT(@org_uids, ',') ss
+        ;
+        ALTER TABLE #uid_org ADD PRIMARY KEY CLUSTERED (u);
+
+        IF OBJECT_ID('tempdb..#uid_inv') IS NOT NULL DROP TABLE #uid_inv;
+        SELECT DISTINCT u = ISNULL(CAST(ss.value AS bigint), 0)
+        INTO #uid_inv
+        FROM STRING_SPLIT(@inv_uids, ',') ss
+        ;
+        ALTER TABLE #uid_inv ADD PRIMARY KEY CLUSTERED (u);
+
+        /*
+            Candidate pre-filter (equivalence-safe batch scoping).
+            Collect a SUPERSET of MORB_RPT_KEYs that could pass the #MORB_EVENT_INIT
+            filter, via seek-driven UNION branches each driven by a small #uid_* temp.
+            This lets the main projection seek the ~250 candidate reports instead of
+            scanning every ACTIVE report. The original WHERE below is left UNCHANGED,
+            so it still decides per (MR,MRE) row -> output is byte-identical even when
+            a report has multiple MRE rows (some matching, some not). #cand may contain
+            keys the final WHERE then drops (e.g. inactive); that's fine, it's a superset.
+        */
+        IF OBJECT_ID('tempdb..#cand') IS NOT NULL DROP TABLE #cand;
+        SELECT MORB_RPT_KEY INTO #cand FROM (
+            SELECT MR.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
+              WHERE EXISTS (SELECT 1 FROM #uid_obs z WHERE z.u = MR.MORB_RPT_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.INVESTIGATION inv WITH (NOLOCK) ON inv.INVESTIGATION_KEY = MRE.INVESTIGATION_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_inv z WHERE z.u = inv.CASE_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_PATIENT pat WITH (NOLOCK) ON pat.PATIENT_KEY = MRE.PATIENT_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_pat z WHERE z.u = pat.PATIENT_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_PROVIDER prov WITH (NOLOCK) ON prov.PROVIDER_KEY = MRE.PHYSICIAN_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = prov.PROVIDER_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_PROVIDER rep WITH (NOLOCK) ON rep.PROVIDER_KEY = MRE.REPORTER_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = rep.PROVIDER_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_ORGANIZATION o WITH (NOLOCK) ON o.ORGANIZATION_KEY = MRE.MORB_RPT_SRC_ORG_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_org z WHERE z.u = o.ORGANIZATION_UID)
+            UNION
+            SELECT MRE.MORB_RPT_KEY FROM dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
+              JOIN dbo.D_ORGANIZATION h WITH (NOLOCK) ON h.ORGANIZATION_KEY = MRE.HSPTL_KEY
+              WHERE EXISTS (SELECT 1 FROM #uid_org z WHERE z.u = h.ORGANIZATION_UID)
+        ) q;
+        ALTER TABLE #cand ADD PRIMARY KEY CLUSTERED (MORB_RPT_KEY);
+
         SELECT
             MR.MORB_RPT_KEY AS MORBIDITY_REPORT_KEY,
             MRE.PATIENT_KEY AS PERSON_KEY,
@@ -195,6 +284,8 @@ BEGIN
             IIF(MRD.MORBIDITY_REPORT_KEY IS NULL, 'I', 'U') AS DML_IND
         INTO #MORB_EVENT_INIT
         FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
+                 INNER JOIN #cand cnd
+                           ON cnd.MORB_RPT_KEY = MR.MORB_RPT_KEY
                  LEFT JOIN dbo.MORBIDITY_REPORT_EVENT MRE WITH (NOLOCK)
                            ON MR.MORB_RPT_KEY = MRE.MORB_RPT_KEY
                  LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART MRD WITH (NOLOCK)
@@ -214,19 +305,19 @@ BEGIN
                  LEFT JOIN dbo.EVENT_METRIC EM WITH (NOLOCK)
                            ON MR.MORB_RPT_UID = EM.EVENT_UID
         WHERE
-            (inv.CASE_UID IN (SELECT value FROM STRING_SPLIT(@inv_uids, ','))
+            (   EXISTS (SELECT 1 FROM #uid_inv  z WHERE z.u = inv.CASE_UID)
                 OR
-             pat.PATIENT_UID IN (SELECT value FROM STRING_SPLIT(@pat_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_pat  z WHERE z.u = pat.PATIENT_UID)
                 OR
-             prov.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = prov.PROVIDER_UID)
                 OR
-             rep.PROVIDER_UID IN (SELECT value FROM STRING_SPLIT(@prov_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_prov z WHERE z.u = rep.PROVIDER_UID)
                 OR
-             rep_fac.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_org  z WHERE z.u = rep_fac.ORGANIZATION_UID)
                 OR
-             hsptl.ORGANIZATION_UID IN (SELECT value FROM STRING_SPLIT(@org_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_org  z WHERE z.u = hsptl.ORGANIZATION_UID)
                 OR
-             CAST(mr.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
+                EXISTS (SELECT 1 FROM #uid_obs  z WHERE z.u = mr.MORB_RPT_UID)
                 )
           AND MR.MORB_RPT_KEY <> 1
           AND MR.RECORD_STATUS_CD = 'ACTIVE';
@@ -253,7 +344,7 @@ BEGIN
         INTO #INACTIVE_MORB
         FROM dbo.MORBIDITY_REPORT MR WITH (NOLOCK)
         WHERE
-            CAST(MR.MORB_RPT_UID AS bigint) IN (SELECT value FROM STRING_SPLIT(@obs_uids, ','))
+            EXISTS (SELECT 1 FROM #uid_obs z WHERE z.u = MR.MORB_RPT_UID)
           AND MR.RECORD_STATUS_CD = 'INACTIVE';
 
         if @debug = 'true'
@@ -279,6 +370,9 @@ BEGIN
              dbo.LAB_TEST_RESULT LTR WITH (NOLOCK) ON M.MORBIDITY_REPORT_KEY = LTR.MORB_RPT_KEY INNER JOIN
              dbo.LAB_TEST LT WITH (NOLOCK) ON LTR.LAB_TEST_KEY = LT.LAB_TEST_KEY
         WHERE M.MORBIDITY_REPORT_KEY != 1 AND M.RECORD_STATUS_CD = 'ACTIVE';
+
+        CREATE NONCLUSTERED INDEX IX_MORB_TO_LAB_KEYS_LAB_RPT_LOCAL_ID
+            ON #MORB_TO_LAB_KEYS (LAB_RPT_LOCAL_ID);
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_TO_LAB_KEYS;
@@ -330,6 +424,9 @@ BEGIN
                 INNER JOIN #MORB_TO_LAB_KEYS m
                            on m.LAB_RPT_LOCAL_ID = lt.LAB_RPT_LOCAL_ID
         WHERE LT.LAB_TEST_TYPE = 'Result';
+
+        CREATE NONCLUSTERED INDEX IX_MORB_LAB_RESULTS_KEY_ROWNUM
+            ON #MORB_LAB_RESULTS (MORBIDITY_REPORT_KEY, row_num);
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_LAB_RESULTS;
@@ -415,6 +512,9 @@ BEGIN
                  INNER JOIN #MORB_EVENT_INIT M ON TE.MORB_RPT_KEY = M.MORBIDITY_REPORT_KEY
                  INNER JOIN dbo.TREATMENT T WITH (NOLOCK) ON TE.TREATMENT_KEY = T.TREATMENT_KEY
                  INNER JOIN dbo.RDB_DATE RD WITH (NOLOCK) ON TE.TREATMENT_DT_KEY = RD.DATE_KEY;
+
+        CREATE NONCLUSTERED INDEX IX_MORB_TREATMENTS_KEY_ROWNUM
+            ON #MORB_TREATMENTS (MORBIDITY_REPORT_KEY, row_num);
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_TREATMENTS;
@@ -645,7 +745,8 @@ BEGIN
                   LEFT JOIN dbo.RDB_DATE d2 WITH (NOLOCK)
                             ON src.ILLNESS_ONSET_DT_KEY = d2.DATE_KEY
                   LEFT JOIN dbo.RDB_DATE d3 WITH (NOLOCK)
-                            ON src.HSPTL_DISCHARGE_DT_KEY = d3.DATE_KEY;
+                            ON src.HSPTL_DISCHARGE_DT_KEY = d3.DATE_KEY
+        OPTION (MAXDOP 1);
 
         if @debug = 'true'
             SELECT @Proc_Step_Name, * from #MORB_EVENT_FINAL;
@@ -820,7 +921,7 @@ BEGIN
             tgt.MORB_REPORT_LAST_UPDATED_BY = src.MORB_REPORT_LAST_UPDATED_BY,
             tgt.EXTERNAL_IND = src.EXTERNAL_IND
         FROM #MORB_EVENT_FINAL src
-                 LEFT JOIN dbo.MORBIDITY_REPORT_DATAMART tgt
+                 INNER JOIN dbo.MORBIDITY_REPORT_DATAMART tgt
                            ON src.MORBIDITY_REPORT_KEY = tgt.MORBIDITY_REPORT_KEY
         WHERE src.DML_IND = 'U';
 
