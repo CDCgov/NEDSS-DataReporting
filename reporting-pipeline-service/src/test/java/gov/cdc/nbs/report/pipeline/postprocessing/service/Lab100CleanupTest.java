@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.postprocessing.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
@@ -14,6 +15,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
+import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -80,13 +82,15 @@ class Lab100CleanupTest {
   }
 
   @Test
-  void lab100CleanupCleanup_logsCompletion() {
+  void lab100Cleanup_logsCompletion() {
     service.lab100Cleanup();
 
-    boolean completionLogged =
+    assertTrue(
         listAppender.list.stream()
-            .anyMatch(e -> e.getFormattedMessage().contains("sp_lab100_cleanup"));
-    assertTrue(completionLogged, "Expected completion log for sp_lab100_cleanup");
+            .anyMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .equals("Stored proc execution completed: sp_lab100_cleanup")));
   }
 
   @Test
@@ -107,6 +111,7 @@ class Lab100CleanupTest {
                 e ->
                     e.getFormattedMessage()
                         .contains("Stored proc execution completed: sp_lab100_cleanup")));
+    verify(postProcRepository).executeLab100Cleanup();
   }
 
   @Test
@@ -125,15 +130,15 @@ class Lab100CleanupTest {
   void lab100Cleanup_throwsWhenProcedureReportsFailure() {
     when(postProcRepository.executeLab100Cleanup()).thenReturn(-1);
 
-    org.junit.jupiter.api.Assertions.assertThrows(
-        RuntimeException.class, () -> service.lab100Cleanup());
+    assertThrows(DataProcessingException.class, () -> service.lab100Cleanup());
+    verify(postProcRepository).executeLab100Cleanup();
   }
 
   @Test
   void lab100Cleanup_propagatesRepositoryException() {
     doThrow(new RuntimeException("proc failed")).when(postProcRepository).executeLab100Cleanup();
 
-    org.junit.jupiter.api.Assertions.assertThrows(
-        RuntimeException.class, () -> service.lab100Cleanup());
+    assertThrows(RuntimeException.class, () -> service.lab100Cleanup());
+    verify(postProcRepository).executeLab100Cleanup();
   }
 }

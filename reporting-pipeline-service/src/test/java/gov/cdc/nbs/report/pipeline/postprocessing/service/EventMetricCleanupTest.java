@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.postprocessing.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
@@ -14,6 +15,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
+import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -83,12 +85,14 @@ class EventMetricCleanupTest {
   void eventMetricCleanup_logsCompletion() {
     service.eventMetricCleanup();
 
-    boolean completionLogged =
+    assertTrue(
         listAppender.list.stream()
             .anyMatch(
-                e -> e.getFormattedMessage().contains("sp_event_metric_cleanup_postprocessing"));
-    assertTrue(
-        completionLogged, "Expected completion log for sp_event_metric_cleanup_postprocessing");
+                e ->
+                    e.getFormattedMessage()
+                        .equals(
+                            "Stored proc execution completed:"
+                                + " sp_event_metric_cleanup_postprocessing")));
   }
 
   @Test
@@ -110,6 +114,7 @@ class EventMetricCleanupTest {
                 e ->
                     e.getFormattedMessage()
                         .contains("Stored proc execution completed: sp_event_metric_cleanup")));
+    verify(postProcRepository).executeEventMetricCleanup();
   }
 
   @Test
@@ -128,8 +133,8 @@ class EventMetricCleanupTest {
   void eventMetricCleanup_throwsWhenProcedureReportsFailure() {
     when(postProcRepository.executeEventMetricCleanup()).thenReturn(-1);
 
-    org.junit.jupiter.api.Assertions.assertThrows(
-        RuntimeException.class, () -> service.eventMetricCleanup());
+    assertThrows(DataProcessingException.class, () -> service.eventMetricCleanup());
+    verify(postProcRepository).executeEventMetricCleanup();
   }
 
   @Test
@@ -138,7 +143,7 @@ class EventMetricCleanupTest {
         .when(postProcRepository)
         .executeEventMetricCleanup();
 
-    org.junit.jupiter.api.Assertions.assertThrows(
-        RuntimeException.class, () -> service.eventMetricCleanup());
+    assertThrows(RuntimeException.class, () -> service.eventMetricCleanup());
+    verify(postProcRepository).executeEventMetricCleanup();
   }
 }
