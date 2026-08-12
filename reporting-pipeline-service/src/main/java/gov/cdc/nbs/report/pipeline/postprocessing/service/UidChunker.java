@@ -20,7 +20,7 @@ final class UidChunker {
     if (distinctValues.isEmpty()) {
       return List.of();
     }
-    if (maxSize == 0) {
+    if (maxSize == 0 || distinctValues.size() <= maxSize) {
       return List.of(distinctValues);
     }
 
@@ -52,7 +52,7 @@ final class UidChunker {
     if (distinctValues.isEmpty()) {
       return List.of();
     }
-    if (maxSize == 0) {
+    if (maxSize == 0 || distinctValues.size() <= maxSize) {
       return List.of(copyMap(distinctValues));
     }
 
