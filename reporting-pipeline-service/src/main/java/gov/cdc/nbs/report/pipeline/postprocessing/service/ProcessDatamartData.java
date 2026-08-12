@@ -705,16 +705,11 @@ public class ProcessDatamartData {
   }
 
   private void processMetricEventChunk(Map<Entity, List<Long>> idsByEntity) {
-    String invString =
-        listToParameterString(idsByEntity.get(Entity.INVESTIGATION));
-    String obsString =
-        listToParameterString(idsByEntity.get(Entity.OBSERVATION));
-    String notifString =
-        listToParameterString(idsByEntity.get(Entity.NOTIFICATION));
-    String contactString =
-        listToParameterString(idsByEntity.get(Entity.CONTACT));
-    String vaxString =
-        listToParameterString(idsByEntity.get(Entity.VACCINATION));
+    String invString = listToParameterString(idsByEntity.get(Entity.INVESTIGATION));
+    String obsString = listToParameterString(idsByEntity.get(Entity.OBSERVATION));
+    String notifString = listToParameterString(idsByEntity.get(Entity.NOTIFICATION));
+    String contactString = listToParameterString(idsByEntity.get(Entity.CONTACT));
+    String vaxString = listToParameterString(idsByEntity.get(Entity.VACCINATION));
 
     procRepository.executeStoredProcForEventMetric(
         invString, obsString, notifString, contactString, vaxString);

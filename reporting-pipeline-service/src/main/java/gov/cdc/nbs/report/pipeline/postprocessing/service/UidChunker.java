@@ -52,7 +52,8 @@ final class UidChunker {
     if (distinctValues.isEmpty()) {
       return List.of();
     }
-    if (maxSize == 0 || distinctValues.size() <= maxSize) {
+    int distinctValueCount = distinctValues.values().stream().mapToInt(List::size).sum();
+    if (maxSize == 0 || distinctValueCount <= maxSize) {
       return List.of(copyMap(distinctValues));
     }
 
