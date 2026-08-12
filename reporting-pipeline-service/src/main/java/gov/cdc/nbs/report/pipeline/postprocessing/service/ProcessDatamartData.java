@@ -923,7 +923,6 @@ public class ProcessDatamartData {
     }
 
     private void updateRetryCache(String dmKey, Map<String, List<Long>> idMap) {
-
       Map<String, Queue<Long>> dmMap =
           retryCache
               .computeIfAbsent(batchId, k -> new ConcurrentHashMap<>())

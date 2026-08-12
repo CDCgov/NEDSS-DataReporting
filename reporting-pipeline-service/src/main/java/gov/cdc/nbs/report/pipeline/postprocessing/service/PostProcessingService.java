@@ -389,8 +389,8 @@ public class PostProcessingService {
       } else {
         Long id = idNode.asLong();
         synchronized (cacheLock) {
-            idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-            extractValFromMessage(id, topic, payload, entity);
+          idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+          extractValFromMessage(id, topic, payload, entity);
         }
       }
 
@@ -432,9 +432,9 @@ public class PostProcessingService {
               .map(String::trim)
               .forEach(
                   tbl -> {
-                      synchronized (cacheLock) {
-                          pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid);
-                      }
+                    synchronized (cacheLock) {
+                      pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid);
+                    }
                   });
         }
       } else if (entity == NOTIFICATION) {
@@ -495,14 +495,14 @@ public class PostProcessingService {
 
   private void extractSummaryCase(Long uid, String caseType) {
     if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
-        synchronized (cacheLock) {
-            sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
-        }
+      synchronized (cacheLock) {
+        sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      }
     }
     if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
-        synchronized (cacheLock) {
-            sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
-        }
+      synchronized (cacheLock) {
+        sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      }
     }
   }
 
@@ -550,33 +550,33 @@ public class PostProcessingService {
       }
 
       /* dmMap is an inner map of dmCache!
-        It is adding the queue directly into that inner map,
-        which is the same object held by dmCache. There is no separate copy being made.
-        */
+      It is adding the queue directly into that inner map,
+      which is the same object held by dmCache. There is no separate copy being made.
+      */
       synchronized (dmCacheLock) {
-          Map<String, Queue<Long>> dmMap =
-                  dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
+        Map<String, Queue<Long>> dmMap =
+            dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
 
-          dmMap
-                  .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                  .add(dmData.getPublicHealthCaseUid());
+        dmMap
+            .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+            .add(dmData.getPublicHealthCaseUid());
 
-          Optional.ofNullable(dmData.getPatientUid())
-                  .ifPresent(
-                          uid ->
-                                  dmMap
-                                          .computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                                          .add(uid));
+        Optional.ofNullable(dmData.getPatientUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
 
-          Optional.ofNullable(dmData.getObservationUid())
-                  .ifPresent(
-                          uid ->
-                                  dmMap
-                                          .computeIfAbsent(
-                                                  OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                                          .add(uid));
+        Optional.ofNullable(dmData.getObservationUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
       }
-
 
     } catch (Exception e) {
       String msg = "Error processing datamart message: " + e.getMessage();
@@ -803,18 +803,18 @@ public class PostProcessingService {
         });
 
     // Merge into the main retryCache for reprocessing, preserving batch IDs
-      synchronized (retryCacheLock) {
-          retryCacheLocal.forEach(
-                  (batchId, entityMap) -> {
-                      Map<String, Queue<Long>> batchMap =
-                              retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-                      entityMap.forEach(
-                              (entity, queue) ->
-                                      batchMap
-                                              .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
-                                              .addAll(queue));
-                  });
-      }
+    synchronized (retryCacheLock) {
+      retryCacheLocal.forEach(
+          (batchId, entityMap) -> {
+            Map<String, Queue<Long>> batchMap =
+                retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+            entityMap.forEach(
+                (entity, queue) ->
+                    batchMap
+                        .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                        .addAll(queue));
+          });
+    }
     logger.info("Re-queued {} backfill batch(es) into retryCache", backfills.size());
   }
 
@@ -1425,21 +1425,21 @@ public class PostProcessingService {
     batchId = dmProcessor.nextBatchId(batchId, e);
 
     synchronized (retryCacheLock) {
-        Map<String, Queue<Long>> retryMap =
-                retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-        retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+      Map<String, Queue<Long>> retryMap =
+          retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+      retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
 
-        pbCache.forEach(
-                (tbl, queue) ->
-                        retryMap
-                                .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
-                                .addAll(queue));
+      pbCache.forEach(
+          (tbl, queue) ->
+              retryMap
+                  .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
+                  .addAll(queue));
 
-        obsCache.forEach(
-                (key, queue) ->
-                        retryMap
-                                .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
-                                .addAll(queue));
+      obsCache.forEach(
+          (key, queue) ->
+              retryMap
+                  .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
+                  .addAll(queue));
     }
 
     return batchId;
