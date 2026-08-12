@@ -385,7 +385,9 @@ public class PostProcessingService {
 
       if (idNode.isTextual()) {
         String cd = idNode.asText();
-        cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        synchronized (cacheLock) {
+          cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        }
       } else {
         Long id = idNode.asLong();
         synchronized (cacheLock) {
