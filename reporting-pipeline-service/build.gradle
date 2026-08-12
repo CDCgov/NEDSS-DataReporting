@@ -21,6 +21,14 @@ ext['commons-lang3.version'] = '3.20.0'
 // jackson-bom.version controls all Jackson modules (databind, core, annotations, dataformats)
 ext['jackson-bom.version'] = '2.21.5'
 
+// Override the Spring Boot managed Micrometer version to address CVE-2026-40984.
+// Keep all Micrometer modules aligned on the patched 1.15.x release.
+ext['micrometer.version'] = '1.15.12'
+
+// Override the Spring Data release train to address GHSA-88fw-v6x4-3f58.
+// This keeps Spring Data modules aligned on the patched 2025.0.12 train.
+ext['spring-data-bom.version'] = '2025.0.12'
+
 group = 'gov.cdc.etldatapipeline'
 version = '0.0.1-SNAPSHOT'
 
