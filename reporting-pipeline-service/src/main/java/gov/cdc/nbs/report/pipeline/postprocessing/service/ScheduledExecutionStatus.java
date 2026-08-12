@@ -4,7 +4,6 @@ import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 
 enum ScheduledExecutionStatus {
   COMPLETED(1),
-  LEGACY_COMPLETED(0),
   SKIPPED(-2),
   FAILED(-1);
 

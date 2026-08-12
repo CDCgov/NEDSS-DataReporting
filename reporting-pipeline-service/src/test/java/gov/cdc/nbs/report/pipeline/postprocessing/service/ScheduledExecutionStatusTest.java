@@ -16,13 +16,8 @@ class ScheduledExecutionStatusTest {
   }
 
   @Test
-  void treatsZeroAsCompletionForLegacyProcedures() {
-    assertEquals(
-        ScheduledExecutionStatus.LEGACY_COMPLETED, ScheduledExecutionStatus.fromReturnCode(0));
-  }
-
-  @Test
-  void rejectsMissingAndUnexpectedReturnCodes() {
+  void rejectsZeroAndMissingOrUnexpectedReturnCodes() {
+    assertThrows(DataProcessingException.class, () -> ScheduledExecutionStatus.fromReturnCode(0));
     assertThrows(
         DataProcessingException.class, () -> ScheduledExecutionStatus.fromReturnCode(null));
     assertThrows(DataProcessingException.class, () -> ScheduledExecutionStatus.fromReturnCode(2));

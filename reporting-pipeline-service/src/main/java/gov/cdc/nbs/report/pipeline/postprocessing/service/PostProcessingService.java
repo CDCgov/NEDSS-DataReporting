@@ -1582,7 +1582,7 @@ public class PostProcessingService {
   private void processScheduledProcedure(String name, Supplier<Integer> scheduledProcedure) {
     logger.info("Running {}...", name);
     switch (ScheduledExecutionStatus.fromReturnCode(scheduledProcedure.get())) {
-      case COMPLETED, LEGACY_COMPLETED -> logger.info(SP_EXECUTION_COMPLETED, name);
+      case COMPLETED -> logger.info(SP_EXECUTION_COMPLETED, name);
       case SKIPPED -> logger.info("Skipped {} because it's already running", name);
       case FAILED -> throw new DataProcessingException(name + " reported a cleanup failure");
       default -> throw new DataProcessingException(name + " encountered an unknown status");
