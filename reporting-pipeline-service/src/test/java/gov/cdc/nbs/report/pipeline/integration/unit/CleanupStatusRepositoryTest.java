@@ -16,7 +16,7 @@ class CleanupStatusRepositoryTest extends UnitTest {
   }
 
   @Test
-  void returnsLegacySuccessForLab100Cleanup() {
-    assertEquals(0, postProcRepository.executeLab100Cleanup());
+  void returnsExplicitSuccessForLab100Cleanup() {
+    assertEquals(1, postProcRepository.executeLab100Cleanup());
   }
 }
