@@ -246,7 +246,8 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
                     snt.data_type as col_data_type, 
                     snt.character_maximum_length as col_CHARACTER_MAXIMUM_LENGTH, 
                     snt.numeric_precision AS col_NUMERIC_PRECISION, 
-                    snt.numeric_scale AS col_NUMERIC_SCALE 
+                    snt.numeric_scale AS col_NUMERIC_SCALE,
+                    snt.datetime_precision AS col_DATETIME_PRECISION 
                 from 
                 ( 
                 select * from INFORMATION_SCHEMA.columns 
@@ -258,9 +259,12 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
                 select @altercolsOUT = STRING_AGG(CAST( col_nm + '' '' +  col_data_type + 
                     CASE 
                         WHEN col_data_type IN (''decimal'', ''numeric'') THEN ''('' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + '','' + CAST(col_NUMERIC_SCALE AS NVARCHAR) + '')'' 
-                        WHEN col_data_type = ''varchar'' THEN ''('' + 
+                        WHEN col_data_type = ''float'' THEN ''('' + CAST(col_NUMERIC_PRECISION AS NVARCHAR) + '')''
+                        WHEN col_data_type IN (''varchar'', ''nvarchar'', ''varbinary'') THEN ''('' + 
                             CASE WHEN col_CHARACTER_MAXIMUM_LENGTH = -1 THEN ''MAX'' ELSE CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) END 
                         + '') '' 
+                        WHEN col_data_type IN (''char'', ''nchar'', ''binary'') THEN ''('' + CAST(col_CHARACTER_MAXIMUM_LENGTH AS NVARCHAR) + '') ''
+                        WHEN col_data_type IN (''datetime2'', ''datetimeoffset'', ''time'') THEN ''('' + CAST(col_DATETIME_PRECISION AS NVARCHAR) + '')''
                         ELSE '''' 
                     END AS NVARCHAR(MAX)), '', '') from col_cte';
 
@@ -300,7 +304,8 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
                         src.DATA_TYPE                  AS src_data_type,
                         src.CHARACTER_MAXIMUM_LENGTH   AS src_char_max_len,
                         src.NUMERIC_PRECISION          AS src_num_prec,
-                        src.NUMERIC_SCALE              AS src_num_scale
+                        src.NUMERIC_SCALE              AS src_num_scale,
+                        src.DATETIME_PRECISION         AS src_datetime_precision
                     FROM INFORMATION_SCHEMA.COLUMNS src
                     INNER JOIN INFORMATION_SCHEMA.COLUMNS tgt
                         ON  src.COLUMN_NAME   = tgt.COLUMN_NAME
@@ -318,8 +323,14 @@ LEFT JOIN dbo.tmp_DynDm_REPEAT_BLOCK_NUMERIC_ALL_' + @datamart_suffix + '   with
                         CASE
                             WHEN src_data_type IN (''decimal'', ''numeric'')
                                 THEN ''('' + CAST(src_num_prec AS NVARCHAR) + '','' + CAST(src_num_scale AS NVARCHAR) + '')''
-                            WHEN src_data_type = ''varchar''
+                            WHEN src_data_type = ''float''
+                                THEN ''('' + CAST(src_num_prec AS NVARCHAR) + '')''
+                            WHEN src_data_type IN (''varchar'', ''nvarchar'', ''varbinary'')
                                 THEN ''('' + CASE WHEN src_char_max_len = -1 THEN ''MAX'' ELSE CAST(src_char_max_len AS NVARCHAR) END + '')''
+                            WHEN src_data_type IN (''char'', ''nchar'', ''binary'')
+                                THEN ''('' + CAST(src_char_max_len AS NVARCHAR) + '')''
+                            WHEN src_data_type IN (''datetime2'', ''datetimeoffset'', ''time'')
+                                THEN ''('' + CAST(src_datetime_precision AS NVARCHAR) + '')''
                             ELSE ''''
                         END + '' NULL''
                         AS NVARCHAR(MAX)
