@@ -662,7 +662,13 @@ public class ProcessDatamartData {
             1,
             totalUidCount,
             maxBatchSize);
-        processMetricEventChunk(invUids, obsUids, notifUids, contactUids, vaxUids);
+        Map<Entity, List<Long>> inputMap = new EnumMap<>(Entity.class);
+        inputMap.put(Entity.INVESTIGATION, invUids);
+        inputMap.put(Entity.OBSERVATION, obsUids);
+        inputMap.put(Entity.NOTIFICATION, notifUids);
+        inputMap.put(Entity.CONTACT, contactUids);
+        inputMap.put(Entity.VACCINATION, vaxUids);
+        processMetricEventChunk(inputMap);
       } else {
         processMetricEventChunks(INVESTIGATION, invUids);
         processMetricEventChunks(OBSERVATION, obsUids);
@@ -692,39 +698,23 @@ public class ProcessDatamartData {
           chunks.size(),
           chunk.size(),
           postProcessingProperties.maxBatchSize());
-      switch (entity) {
-        case INVESTIGATION:
-          processMetricEventChunk(chunk, List.of(), List.of(), List.of(), List.of());
-          break;
-        case OBSERVATION:
-          processMetricEventChunk(List.of(), chunk, List.of(), List.of(), List.of());
-          break;
-        case NOTIFICATION:
-          processMetricEventChunk(List.of(), List.of(), chunk, List.of(), List.of());
-          break;
-        case CONTACT:
-          processMetricEventChunk(List.of(), List.of(), List.of(), chunk, List.of());
-          break;
-        case VACCINATION:
-          processMetricEventChunk(List.of(), List.of(), List.of(), List.of(), chunk);
-          break;
-        default:
-          throw new IllegalArgumentException("Unsupported event metric entity: " + entity);
-      }
+      Map<Entity, List<Long>> inputMap = new EnumMap<>(Entity.class);
+      inputMap.put(entity, chunk);
+      processMetricEventChunk(inputMap);
     }
   }
 
-  private void processMetricEventChunk(
-      Collection<Long> invUids,
-      Collection<Long> obsUids,
-      Collection<Long> notifUids,
-      Collection<Long> contactUids,
-      Collection<Long> vaxUids) {
-    String invString = listToParameterString(invUids);
-    String obsString = listToParameterString(obsUids);
-    String notifString = listToParameterString(notifUids);
-    String contactString = listToParameterString(contactUids);
-    String vaxString = listToParameterString(vaxUids);
+  private void processMetricEventChunk(Map<Entity, List<Long>> idsByEntity) {
+    String invString =
+        listToParameterString(idsByEntity.get(Entity.INVESTIGATION));
+    String obsString =
+        listToParameterString(idsByEntity.get(Entity.OBSERVATION));
+    String notifString =
+        listToParameterString(idsByEntity.get(Entity.NOTIFICATION));
+    String contactString =
+        listToParameterString(idsByEntity.get(Entity.CONTACT));
+    String vaxString =
+        listToParameterString(idsByEntity.get(Entity.VACCINATION));
 
     procRepository.executeStoredProcForEventMetric(
         invString, obsString, notifString, contactString, vaxString);
