@@ -60,7 +60,7 @@ public class ProcessDatamartData {
 
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
   private final ModelMapper modelMapper = new ModelMapper();
-  private final Object cacheLock = new Object();
+  private final Object retryCacheLock = new Object();
 
   // set of caches for retrying failed datamarts/IDs and tracking retry attempts
   final Map<Long, Map<String, Map<String, Queue<Long>>>> retryCache = new ConcurrentHashMap<>();
@@ -660,7 +660,7 @@ public class ProcessDatamartData {
       // creates a deep copy of cache into snapshot
       final Map<String, Map<String, List<Long>>> retryCacheSnapshot;
 
-      synchronized (cacheLock) {
+      synchronized (retryCacheLock) {
         retryCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .collect(
