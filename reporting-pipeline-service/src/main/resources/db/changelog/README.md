@@ -7,7 +7,7 @@ The reporting pipeline service uses Liquibase to manage the `RDB/RDB_MODERN` SQL
 - Put the migration in the directory for the first release that needs it, such as `v7.13.1` or `v7.14`.
 - Treat merged or shared migrations as immutable; create a new migration instead of editing one that may have run.
 - Make migrations idempotent whenever possible.
-- Leave `runOnChange` unset so it retains the default value of `false`.
+- `runOnChange` should be set to `true` for views and procedures (functions and routines), and `false` otherwise (onboarding, remove, tables).
 - Add the SQL file and register it with a unique changeset in the target release's `rdb.changelog-<version>.yaml`.
 - For a stored procedure update, `git mv` the old definition into the new release, increment its revision suffix (for example, `001` to `002`), and leave a commented placeholder at the old path.
 - Check root changelog ordering when adding a release because `includeAll` sorts lexically rather than by semantic version.
