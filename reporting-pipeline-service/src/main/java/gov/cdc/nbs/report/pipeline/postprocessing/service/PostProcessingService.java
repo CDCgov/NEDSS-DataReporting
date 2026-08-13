@@ -1422,17 +1422,18 @@ public class PostProcessingService {
           retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
       retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
 
-      pbCache.forEach(
+      synchronized (cacheLock) {
+        pbCache.forEach(
           (tbl, queue) ->
               retryMap
                   .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
                   .addAll(queue));
-
-      obsCache.forEach(
+        obsCache.forEach(
           (key, queue) ->
               retryMap
                   .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
                   .addAll(queue));
+      }
     }
 
     return batchId;
