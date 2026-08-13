@@ -119,10 +119,6 @@ Set `runOnChange` to `true` for views, functions, and routines, including stored
 
 The repository commonly uses `splitStatements: false` for SQL files containing one complete SQL Server definition. For files containing `GO` batch separators, set `splitStatements: true` and configure the matching `endDelimiter` (for example, `endDelimiter: GO`). Keep the delimiter on its own line and verify that the resulting batches execute correctly through Liquibase.
 
-## Rollbacks
-
-Rollback is not supported or validated for these migrations. Do not rely on Liquibase automatic rollback or add rollback logic unless this policy changes. Correct deployed database behavior with a new forward migration; use the approved database backup and restore process for operational recovery when necessary.
-
 ## Updating an existing stored procedure
 
 Update an existing stored procedure in its current SQL file and keep its existing changelog entry and file path. The procedure changeset must have `runOnChange: true`, so Liquibase reapplies the changeset when the procedure definition changes. Do not move the file, replace it with a placeholder, or create a duplicate release-specific changeset solely to update the procedure.
@@ -148,3 +144,7 @@ databaseChangeLog:
 ```
 
 On a fresh database, Liquibase applies the procedure definition once. On an existing database, Liquibase detects the changed SQL and reapplies the `runOnChange` changeset so the procedure is updated.
+
+## Rollbacks
+
+Rollback is not supported or validated for these migrations. Do not rely on Liquibase automatic rollback or add rollback logic unless this policy changes. Correct deployed database behavior with a new forward migration; use the approved database backup and restore process for operational recovery when necessary.
