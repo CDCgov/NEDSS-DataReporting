@@ -1,0 +1,11 @@
+{
+  "0": [
+    {
+      "Step_Number": 18.0,
+      "Step_Name": " INSERTING INTO COVID_CASE_DATAMART",
+      "Status_Type": "ERROR",
+      "ERROR_NUMBER": 120,
+      "IS_COLUMN_COUNT_MISMATCH": 1
+    }
+  ]
+}
