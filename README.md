@@ -143,6 +143,22 @@ This setting does not enable diagnostic `@debug` result sets. See
 [`documentation/EventProcedureJobFlowLogging.md`](documentation/EventProcedureJobFlowLogging.md)
 for operational guidance and stored-procedure coverage behavior.
 
+### Scheduled cleanup coordination
+
+The scheduled event-metric and LAB100 cleanup procedures use separate SQL
+Server application locks to prevent duplicate execution by multiple service
+pods. A pod that cannot acquire its procedure's exclusive session lock returns
+immediately and logs `Skipped <procedure> because it's already running`; the
+next cron occurrence retries it. A successful execution logs `Stored proc
+execution completed: <procedure>`. A `-1` procedure result raises a scheduler
+error rather than a completion log.
+
+The lock resources are `RTR:scheduled:event-metric-cleanup` and
+`RTR:scheduled:lab100-cleanup`. They use zero timeout, so contention does not
+block the scheduler, and the resources are independent, so the two cleanup
+jobs can run concurrently. This is duplicate-execution coordination only, not
+a distributed work queue or post-processing-cache coordinator.
+
 ### Windows Note (Testcontainers EOF Error)
 
 If you see `unexpected EOF` while running containerized tests on Windows, this is usually caused by Testcontainers trying to copy the entire project directory into a container and hitting a locked file.

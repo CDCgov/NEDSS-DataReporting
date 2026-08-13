@@ -22,8 +22,23 @@ AS
       DECLARE @Proc_Step_Name VARCHAR(200)= '';
       DECLARE @Dataflow_Name VARCHAR(200) = 'Lab 100 Cleanup';
       DECLARE @Package_Name VARCHAR(200) = 'sp_lab100_cleanup';
+      DECLARE @lock_resource NVARCHAR(255) = N'RTR:scheduled:lab100-cleanup';
+      DECLARE @lock_result INT;
+      DECLARE @lock_acquired BIT = 0;
 
       BEGIN try
+          EXEC @lock_result = sys.sp_getapplock
+              @Resource = @lock_resource,
+              @LockMode = N'Exclusive',
+              @LockOwner = N'Session',
+              @LockTimeout = 0;
+
+          IF @lock_result < 0
+          BEGIN
+              RETURN -2;
+          END;
+
+          SET @lock_acquired = 1;
           SET @Proc_Step_Name = 'SP_Start';
 
           INSERT INTO dbo.job_flow_log
@@ -139,12 +154,25 @@ AS
 
 
         COMMIT TRANSACTION;
+
+        EXEC sys.sp_releaseapplock
+            @Resource = @lock_resource,
+            @LockOwner = N'Session';
+
+        RETURN 1;
       ---------------------------------------------------------------------------------------------------------
       END try
 
       BEGIN catch
           IF @@TRANCOUNT > 0
             ROLLBACK TRANSACTION;
+
+          IF @lock_acquired = 1
+          BEGIN
+              EXEC sys.sp_releaseapplock
+                  @Resource = @lock_resource,
+                  @LockOwner = N'Session';
+          END;
 
           -- Construct the error message string with all details:
           DECLARE @FullErrorMessage VARCHAR(8000) = 'Error Number: '

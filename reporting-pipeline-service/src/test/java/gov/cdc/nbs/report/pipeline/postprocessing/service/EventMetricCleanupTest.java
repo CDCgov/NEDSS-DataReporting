@@ -2,17 +2,20 @@ package gov.cdc.nbs.report.pipeline.postprocessing.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.InvestigationRepository;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.PostProcRepository;
+import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -57,6 +60,7 @@ class EventMetricCleanupTest {
     service.initMetrics();
     datamartProcessor.initMetrics();
     service.setServiceEnable(true);
+    when(postProcRepository.executeEventMetricCleanup()).thenReturn(1);
 
     Logger logger = (Logger) LoggerFactory.getLogger(PostProcessingService.class);
     listAppender.start();
@@ -81,12 +85,36 @@ class EventMetricCleanupTest {
   void eventMetricCleanup_logsCompletion() {
     service.eventMetricCleanup();
 
-    boolean completionLogged =
+    assertTrue(
         listAppender.list.stream()
             .anyMatch(
-                e -> e.getFormattedMessage().contains("sp_event_metric_cleanup_postprocessing"));
+                e ->
+                    e.getFormattedMessage()
+                        .equals(
+                            "Stored proc execution completed:"
+                                + " sp_event_metric_cleanup_postprocessing")));
+  }
+
+  @Test
+  void eventMetricCleanup_logsAlreadyRunningSkipWithoutCompletion() {
+    when(postProcRepository.executeEventMetricCleanup()).thenReturn(-2);
+
+    service.eventMetricCleanup();
+
     assertTrue(
-        completionLogged, "Expected completion log for sp_event_metric_cleanup_postprocessing");
+        listAppender.list.stream()
+            .anyMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .contains(
+                            "Skipped sp_event_metric_cleanup_postprocessing because it's already running")));
+    assertTrue(
+        listAppender.list.stream()
+            .noneMatch(
+                e ->
+                    e.getFormattedMessage()
+                        .contains("Stored proc execution completed: sp_event_metric_cleanup")));
+    verify(postProcRepository).executeEventMetricCleanup();
   }
 
   @Test
@@ -102,12 +130,20 @@ class EventMetricCleanupTest {
   }
 
   @Test
+  void eventMetricCleanup_throwsWhenProcedureReportsFailure() {
+    when(postProcRepository.executeEventMetricCleanup()).thenReturn(-1);
+
+    assertThrows(DataProcessingException.class, () -> service.eventMetricCleanup());
+    verify(postProcRepository).executeEventMetricCleanup();
+  }
+
+  @Test
   void eventMetricCleanup_propagatesRepositoryException() {
     doThrow(new RuntimeException("proc failed"))
         .when(postProcRepository)
         .executeEventMetricCleanup();
 
-    org.junit.jupiter.api.Assertions.assertThrows(
-        RuntimeException.class, () -> service.eventMetricCleanup());
+    assertThrows(RuntimeException.class, () -> service.eventMetricCleanup());
+    verify(postProcRepository).executeEventMetricCleanup();
   }
 }
