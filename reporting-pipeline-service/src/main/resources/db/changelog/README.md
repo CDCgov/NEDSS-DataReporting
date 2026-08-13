@@ -43,9 +43,14 @@ db/changelog/
   - `onboarding/`: initial data, backfills, and indexes needed when onboarding
   - `remove/`: cleanup and object removal
 
-## Choose a release directory
+## Choose where to maintain the migration
 
-Put a migration in the directory for the **first application release that must apply it**. Confirm the target release before opening the PR.
+| Migration type | Where to maintain it |
+|---|---|
+| Ordinary migration | Directory for the **first application release that needs it** |
+| View, function, or routine with `runOnChange: true` | Existing release file; update the changeset in place |
+
+For ordinary migrations, confirm the target release before opening the PR.
 
 | Target release | Directory | Changelog |
 |---|---|---|
@@ -79,7 +84,7 @@ Treat ordinary migrations as immutable after they have been merged or applied to
 - the change is for a later patch or minor release and is not an update to a `runOnChange: true` object definition; or
 - the new work corrects or extends previously released database behavior outside the existing `runOnChange: true` object definition.
 
-Changing an applied changeset can produce a checksum error. A new changeset preserves an auditable upgrade path and ensures both fresh and existing databases reach the same state.
+Changing an ordinary applied changeset can produce a checksum error. A new changeset preserves an auditable upgrade path and ensures both fresh and existing databases reach the same state.
 
 ## Create a migration
 
