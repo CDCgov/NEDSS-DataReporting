@@ -115,7 +115,7 @@ Changeset IDs must be unique within their changelog. Continue the established or
 
 Set `runOnChange` to `true` for views, functions, and routines, including stored procedures. Set it to `false` for all other changesets. Changesets for views, functions, and routines may rerun when their SQL changes and should be updated in place; create a new changeset for later changes to all other migrations.
 
-The repository uses `splitStatements: false` for SQL files containing complete SQL Server definitions. Follow that convention, especially when the file contains procedure bodies or `GO` batch separators.
+The repository commonly uses `splitStatements: false` for SQL files containing one complete SQL Server definition. For files containing `GO` batch separators, set `splitStatements: true` and configure the matching `endDelimiter` (for example, `endDelimiter: GO`). Keep the delimiter on its own line and verify that the resulting batches execute correctly through Liquibase.
 
 ## Updating an existing stored procedure
 
