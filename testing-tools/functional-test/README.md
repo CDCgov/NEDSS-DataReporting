@@ -140,6 +140,7 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
 | `--max-retry` | `40` | Maximum polls per query before failing. |
 | `--retry-delay` | `6` | Seconds between polls. |
 | `--skip-query` | off | Run each step's `setup.sql` but skip the query/expected polling — just load the test data without waiting for the pipeline to process it. |
+| `--refresh-last-chg-time` | off | Replace literal `LAST_CHG_TIME` values in `setup.sql` with `GETDATE()` so an external ETL process sees freshly loaded rows as changed. |
 | `--bulk` | — | Generate MSSQL bulk-load files instead of running tests: COPIES shifted copies of every selected test's final setup rows (see below). Requires `--bulk-out`. |
 | `--bulk-out` | — | Output directory for `--bulk`. |
 | `--bulk-workers` | `min(8, CPUs)` | Parallel worker processes for `--bulk` generation; the copies are sharded across workers (each shard also loads in parallel via `load.sh`). |

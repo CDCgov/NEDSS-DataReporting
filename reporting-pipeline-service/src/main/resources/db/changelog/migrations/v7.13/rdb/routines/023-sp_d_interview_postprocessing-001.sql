@@ -104,7 +104,8 @@ BEGIN
         FROM dbo.nrt_interview ix
             LEFT JOIN dbo.nrt_interview_key ixk
                 ON ix.interview_uid = ixk.interview_uid
-        WHERE ix.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
+        WHERE ix.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','))
+        OPTION (MAXDOP 1);
 
         if
             @debug = 'true'

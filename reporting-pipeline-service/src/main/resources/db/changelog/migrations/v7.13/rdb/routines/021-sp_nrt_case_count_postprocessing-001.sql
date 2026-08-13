@@ -84,8 +84,7 @@ BEGIN
                  left outer join dbo.RDB_DATE rd4 with(nolock) on cc.rpt_form_cmplt_time = rd4.DATE_MM_DD_YYYY
         where cc.public_health_case_uid in (
             SELECT value FROM STRING_SPLIT(@phc_id_list, ',')
-        )
-        ;
+        ) OPTION (MAXDOP 1);
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;

@@ -209,6 +209,12 @@ def build_parser(defaults: dict[str, str] | None = None) -> argparse.ArgumentPar
         "useful for just loading test data without waiting for the pipeline to process it.",
     )
     parser.add_argument(
+        "--refresh-last-chg-time",
+        action="store_true",
+        help="Replace literal LAST_CHG_TIME values in setup.sql with GETDATE() so "
+        "an external ETL process sees freshly loaded rows as changed.",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Live-print each query's SQL and its expected vs actual results on every poll "
@@ -435,6 +441,7 @@ def main(argv: list[str] | None = None) -> int:
                 on_poll=on_poll,
                 on_step_complete=on_step_complete,
                 skip_query=args.skip_query,
+                refresh_last_chg_time=args.refresh_last_chg_time,
             )
             results.append(result)
             _print_test_result(result)

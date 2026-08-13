@@ -142,7 +142,8 @@ BEGIN
         FROM dbo.NRT_CONTACT ix
             LEFT JOIN dbo.NRT_CONTACT_KEY ixk
                 ON ix.contact_uid = ixk.contact_uid
-        WHERE ix.contact_uid in (SELECT value FROM STRING_SPLIT(@contact_uids, ','));
+        WHERE ix.contact_uid in (SELECT value FROM STRING_SPLIT(@contact_uids, ','))
+        OPTION (MAXDOP 1);
 
         if
             @debug = 'true'
