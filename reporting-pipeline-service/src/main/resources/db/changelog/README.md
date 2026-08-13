@@ -57,7 +57,7 @@ A fix released in 7.13.1 belongs in `v7.13.1`, not `v7.13`. A feature first rele
 
 ## Edit an existing migration or create a new one?
 
-Treat ordinary migrations as immutable after they have been merged or applied to a shared database. View, function, and routine changesets that use `runOnChange: true` are the intentional exception and may be updated in place so Liquibase reapplies them when their definitions change.
+Treat ordinary migrations as immutable after they have been merged or applied to a shared database. View, function, and routine changesets that use `runOnChange: true` are the intentional exception: they are designed to be safely replaceable and are intentionally treated as mutable so Liquibase can reapply them when their definitions change.
 
 **Edit an ordinary migration only when all of the following are true:**
 
@@ -69,6 +69,7 @@ Treat ordinary migrations as immutable after they have been merged or applied to
 
 - it defines a view, function, or routine;
 - its changeset has `runOnChange: true`; and
+- its SQL safely replaces the existing object; and
 - the change updates that object's definition in place rather than adding unrelated migration work.
 
 **Create a new migration when:**
