@@ -77,6 +77,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
@@ -183,6 +184,8 @@ public class PostProcessingService {
 
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
   private final Object cacheLock = new Object();
+  private final Object retryCacheLock = new Object();
+  private final Object dmCacheLock = new Object();
 
   @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopic;
@@ -385,11 +388,15 @@ public class PostProcessingService {
 
       if (idNode.isTextual()) {
         String cd = idNode.asText();
-        cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        synchronized (cacheLock) {
+          cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        }
       } else {
         Long id = idNode.asLong();
-        idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-        extractValFromMessage(id, topic, payload, entity);
+        synchronized (cacheLock) {
+          idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+          extractValFromMessage(id, topic, payload, entity);
+        }
       }
 
     } catch (Exception e) {
@@ -429,7 +436,8 @@ public class PostProcessingService {
           Arrays.stream(tblNode.asText().split(","))
               .map(String::trim)
               .forEach(
-                  tbl -> pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
+                  tbl ->
+                      pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
         }
       } else if (entity == NOTIFICATION) {
         String actTypeCd = payloadNode.path("act_type_cd").asText();
@@ -489,10 +497,10 @@ public class PostProcessingService {
 
   private void extractSummaryCase(Long uid, String caseType) {
     if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
-      sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+        sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
     }
     if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
-      sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
+        sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
     }
   }
 
@@ -539,27 +547,34 @@ public class PostProcessingService {
         return;
       }
 
-      Map<String, Queue<Long>> dmMap =
-          dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
+      /* dmMap is an inner map of dmCache!
+      It is adding the queue directly into that inner map,
+      which is the same object held by dmCache. There is no separate copy being made.
+      */
+      synchronized (dmCacheLock) {
+        Map<String, Queue<Long>> dmMap =
+            dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
 
-      dmMap
-          .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-          .add(dmData.getPublicHealthCaseUid());
+        dmMap
+            .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+            .add(dmData.getPublicHealthCaseUid());
 
-      Optional.ofNullable(dmData.getPatientUid())
-          .ifPresent(
-              uid ->
-                  dmMap
-                      .computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                      .add(uid));
+        Optional.ofNullable(dmData.getPatientUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
 
-      Optional.ofNullable(dmData.getObservationUid())
-          .ifPresent(
-              uid ->
-                  dmMap
-                      .computeIfAbsent(
-                          OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                      .add(uid));
+        Optional.ofNullable(dmData.getObservationUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
+      }
 
     } catch (Exception e) {
       String msg = "Error processing datamart message: " + e.getMessage();
@@ -687,16 +702,15 @@ public class PostProcessingService {
       final Map<String, List<Long>> idCacheSnapshot;
       final Map<String, List<Long>> pbCacheSnapshot;
       final Map<String, List<Long>> obsCacheSnapshot;
-
-      synchronized (cacheLock) {
-        idCacheSnapshot =
+      
+      idCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(entry -> !entry.getKey().contains("^"))
                 .collect(
                     Collectors.toMap(
                         Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
-
-        pbCacheSnapshot =
+      
+      pbCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(e -> e.getKey().startsWith("PB^"))
                 .collect(
@@ -704,7 +718,7 @@ public class PostProcessingService {
                         e -> e.getKey().substring("PB^".length()),
                         e -> new ArrayList<>(e.getValue())));
 
-        obsCacheSnapshot =
+      obsCacheSnapshot =
             retryEntry.getValue().entrySet().stream()
                 .filter(e -> e.getKey().startsWith("OBS^"))
                 .collect(
@@ -712,8 +726,7 @@ public class PostProcessingService {
                         e -> e.getKey().substring("OBS^".length()),
                         e -> new ArrayList<>(e.getValue())));
 
-        retryCache.remove(batchId);
-      }
+      retryCache.remove(batchId);
 
       boolean processed =
           processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, batchId);
@@ -786,17 +799,18 @@ public class PostProcessingService {
         });
 
     // Merge into the main retryCache for reprocessing, preserving batch IDs
-    retryCacheLocal.forEach(
-        (batchId, entityMap) -> {
-          Map<String, Queue<Long>> batchMap =
-              retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-          entityMap.forEach(
-              (entity, queue) ->
-                  batchMap
-                      .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
-                      .addAll(queue));
-        });
-
+    synchronized (retryCacheLock) {
+      retryCacheLocal.forEach(
+          (batchId, entityMap) -> {
+            Map<String, Queue<Long>> batchMap =
+                retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+            entityMap.forEach(
+                (entity, queue) ->
+                    batchMap
+                        .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                        .addAll(queue));
+          });
+    }
     logger.info("Re-queued {} backfill batch(es) into retryCache", backfills.size());
   }
 
@@ -1406,21 +1420,24 @@ public class PostProcessingService {
 
     batchId = dmProcessor.nextBatchId(batchId, e);
 
-    Map<String, Queue<Long>> retryMap =
-        retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-    retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+    synchronized (retryCacheLock) {
+      Map<String, Queue<Long>> retryMap =
+          retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+      retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
 
-    pbCache.forEach(
-        (tbl, queue) ->
-            retryMap
-                .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue));
-
-    obsCache.forEach(
-        (key, queue) ->
-            retryMap
-                .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue));
+      synchronized (cacheLock) {
+        pbCache.forEach(
+          (tbl, queue) ->
+              retryMap
+                  .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
+                  .addAll(queue));
+        obsCache.forEach(
+          (key, queue) ->
+              retryMap
+                  .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
+                  .addAll(queue));
+      }
+    }
 
     return batchId;
   }
@@ -1448,7 +1465,7 @@ public class PostProcessingService {
   protected void processDatamartIds() {
 
     Map<String, Map<String, List<Long>>> dmCacheSnapshot;
-    synchronized (cacheLock) {
+    synchronized (dmCacheLock) {
       dmCacheSnapshot = new HashMap<>();
       for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
         Map<String, List<Long>> idMap = new HashMap<>();
@@ -1608,15 +1625,22 @@ public class PostProcessingService {
 
   @Scheduled(cron = "${service.schedule.event-metric-cleanup}")
   protected void eventMetricCleanup() {
-    logger.info("Running event metric cleanup...");
-    postProcRepository.executeEventMetricCleanup();
-    logger.info(SP_EXECUTION_COMPLETED, "sp_event_metric_cleanup_postprocessing");
+    processScheduledProcedure(
+        "sp_event_metric_cleanup_postprocessing", postProcRepository::executeEventMetricCleanup);
   }
 
   @Scheduled(cron = "${service.schedule.lab100-cleanup}")
   protected void lab100Cleanup() {
-    logger.info("Running lab100 cleanup...");
-    postProcRepository.executeLab100Cleanup();
-    logger.info(SP_EXECUTION_COMPLETED, "sp_lab100_cleanup");
+    processScheduledProcedure("sp_lab100_cleanup", postProcRepository::executeLab100Cleanup);
+  }
+
+  private void processScheduledProcedure(String name, Supplier<Integer> scheduledProcedure) {
+    logger.info("Running {}...", name);
+    switch (ScheduledExecutionStatus.fromReturnCode(scheduledProcedure.get())) {
+      case COMPLETED -> logger.info(SP_EXECUTION_COMPLETED, name);
+      case SKIPPED -> logger.info("Skipped {} because it's already running", name);
+      case FAILED -> throw new DataProcessingException(name + " reported a cleanup failure");
+      default -> throw new DataProcessingException(name + " encountered an unknown status");
+    }
   }
 }

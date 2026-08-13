@@ -1,0 +1,13 @@
+{
+  "0": [
+    {
+      "INVESTIGATION_KEY": 9924001,
+      "DISEASE": "Test Condition",
+      "DISEASE_CD": "10999",
+      "CONFIRMATION_METHOD": "Lab confirmed",
+      "CONFIRMATION_DT": "2024-01-15",
+      "EARLIEST_SPECIMEN_COLLECT_DATE": "2024-01-10",
+      "LABORATORY_INFORMATION": "LabInfoXYZ"
+    }
+  ]
+}
