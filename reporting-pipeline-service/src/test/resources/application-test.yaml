@@ -41,3 +41,7 @@ connector:
   kafka-connect:
     enabled: true
     url: http://localhost:8083
+
+service:
+  post-processing:
+    max-batch-size: 1
