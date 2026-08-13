@@ -109,7 +109,8 @@ databaseChangeLog:
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.14/rdb/tables/001-add_example_column-001.sql
-            splitStatements: false
+            splitStatements: true
+            endDelimiter: GO
 ```
 
 Changeset IDs must be unique within their changelog. Continue the established ordering in the release changelog; do not reuse an ID already present there. Paths are classpath-relative and start with `db/changelog/`.
