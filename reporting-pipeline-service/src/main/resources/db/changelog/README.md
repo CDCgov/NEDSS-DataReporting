@@ -53,7 +53,7 @@ Put a migration in the directory for the **first application release that must a
 | 7.13.1 patch | `migrations/v7.13.1/rdb/` | `rdb.changelog-7.13.1.yaml` |
 | 7.14 | `migrations/v7.14/rdb/` | `rdb.changelog-7.14.yaml` |
 
-A fix released in 7.13.1 belongs in `v7.13.1`, not `v7.13`. A feature first released in 7.14 belongs in `v7.14`, even if development started while 7.13 was current. When a release-branch migration is merged forward, preserve the migration rather than recreating it under a different identity.
+A fix released in 7.13.1 belongs in `v7.13.1`, not `v7.13`. A feature first released in 7.14 belongs in `v7.14`, even if development started while 7.13 was current. When a release-branch migration is merged forward, preserve the migration rather than recreating it under a different identity. Stored procedure definitions are maintained in the original release file indefinitely; later definition changes update that file's `runOnChange: true` changeset in place.
 
 ## Edit an existing migration or create a new one?
 
@@ -75,8 +75,8 @@ Treat ordinary migrations as immutable after they have been merged or applied to
 
 - the existing migration has been merged;
 - the existing migration may have run in CI, test, staging, or production;
-- the change is for a later patch or minor release; or
-- the new work corrects or extends previously released database behavior.
+- the change is for a later patch or minor release and is not an update to a `runOnChange: true` object definition; or
+- the new work corrects or extends previously released database behavior outside the existing `runOnChange: true` object definition.
 
 Changing an applied changeset can produce a checksum error. A new changeset preserves an auditable upgrade path and ensures both fresh and existing databases reach the same state.
 
