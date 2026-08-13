@@ -98,6 +98,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
+      runOnChange: false
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.14/rdb/tables/001-add_example_column-001.sql
@@ -132,7 +133,7 @@ Then:
 
 1. Edit the procedure at the **new** path.
 2. Leave the existing 7.13 changelog entry unchanged; it continues to reference the placeholder at the old path.
-3. Add a changeset to `rdb.changelog-7.14.yaml` that references the moved procedure at its new path. Leave `runOnChange` unset so it retains the default value of `false`.
+3. Add a changeset to `rdb.changelog-7.14.yaml` that references the moved procedure at its new path. Set `runOnChange: true` for the procedure changeset.
 4. Use `git diff --find-renames` to verify that Git presents the procedure as a rename plus the focused edits.
 
 Example new changeset:
@@ -142,6 +143,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: db/changelog/migrations/v7.14/rdb/routines/056-sp_investigation_event-002.sql
