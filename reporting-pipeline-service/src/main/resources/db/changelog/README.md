@@ -9,7 +9,7 @@ The reporting pipeline service uses Liquibase to manage the `RDB/RDB_MODERN` SQL
 - Make migrations idempotent whenever possible.
 - `runOnChange` should be set to `true` for views and procedures (functions and routines), and `false` otherwise (onboarding, remove, tables).
 - Add the SQL file and register it with a unique changeset in the target release's `rdb.changelog-<version>.yaml`.
-- For a stored procedure update, `git mv` the old definition into the new release, increment its revision suffix (for example, `001` to `002`), and leave a commented placeholder at the old path.
+- For a stored procedure update, edit the existing definition in place and use a changeset with `runOnChange: true`.
 - Check root changelog ordering when adding a release because `includeAll` sorts lexically rather than by semantic version.
 - Test both a fresh database and an upgrade from the previous release.
 
@@ -107,36 +107,21 @@ databaseChangeLog:
 
 Changeset IDs must be unique within their changelog. Continue the established ordering in the release changelog; do not reuse an ID already present there. Paths are classpath-relative and start with `db/changelog/`.
 
-Set `runOnChange` to `true` for views, functions, and routines, including stored procedures. Set it to `false` for all other changesets. Changesets for views, functions, and routines may rerun when their SQL changes; keep merged migrations immutable and put later versioned updates in a new changeset.
+Set `runOnChange` to `true` for views, functions, and routines, including stored procedures. Set it to `false` for all other changesets. Changesets for views, functions, and routines may rerun when their SQL changes and should be updated in place; create a new changeset for later changes to all other migrations.
 
 The repository uses `splitStatements: false` for SQL files containing complete SQL Server definitions. Follow that convention, especially when the file contains procedure bodies or `GO` batch separators.
 
 ## Updating an existing stored procedure
 
-A stored procedure update must be a new changeset in the target release. To avoid presenting the entire procedure as deleted and added in a PR, move its definition with Git, leave a documented placeholder at the old path, and modify the moved file.
+Update an existing stored procedure in its current SQL file and keep its existing changelog entry and file path. The procedure changeset must have `runOnChange: true`, so Liquibase reapplies the changeset when the procedure definition changes. Do not move the file, replace it with a placeholder, or create a duplicate release-specific changeset solely to update the procedure.
 
-For example, to update a procedure from 7.13 for 7.14:
+For example, to update a procedure already defined in 7.13:
 
-```sh
-old=reporting-pipeline-service/src/main/resources/db/changelog/migrations/v7.13/rdb/routines/056-sp_investigation_event-001.sql
-new=reporting-pipeline-service/src/main/resources/db/changelog/migrations/v7.14/rdb/routines/056-sp_investigation_event-002.sql
+1. Edit the procedure definition at its existing path, such as `migrations/v7.13/rdb/routines/056-sp_investigation_event-001.sql`.
+2. Leave the existing changelog entry pointing to that file and ensure the changeset includes `runOnChange: true`.
+3. Use `git diff` to verify that the pull request contains only the intended procedure changes.
 
-mkdir -p "$(dirname "$new")"
-git mv "$old" "$new"
-cat > "$old" <<'SQL'
--- The procedure definition moved to the v7.14 migration directory.
--- This placeholder preserves the v7.13 changeset path and history.
-SQL
-```
-
-Then:
-
-1. Edit the procedure at the **new** path.
-2. Leave the existing 7.13 changelog entry unchanged; it continues to reference the placeholder at the old path.
-3. Add a changeset to `rdb.changelog-7.14.yaml` that references the moved procedure at its new path. Set `runOnChange: true` for the procedure changeset.
-4. Use `git diff --find-renames` to verify that Git presents the procedure as a rename plus the focused edits.
-
-Example new changeset:
+Example changeset:
 
 ```yaml
 databaseChangeLog:
@@ -146,13 +131,8 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: db/changelog/migrations/v7.14/rdb/routines/056-sp_investigation_event-002.sql
+            path: db/changelog/migrations/v7.13/rdb/routines/056-sp_investigation_event-001.sql
             splitStatements: false
 ```
 
-This approach has two important effects:
-
-- A fresh database first runs the old placeholder and later creates the current procedure from the new release.
-- An existing database receives the new release changeset and replaces its current procedure definition.
-
-Do not delete the old file or change the old changelog to point at the new path. Either action rewrites the identity or contents of migration history instead of adding an upgrade.
+On a fresh database, Liquibase applies the procedure definition once. On an existing database, Liquibase detects the changed SQL and reapplies the `runOnChange` changeset so the procedure is updated.
