@@ -44,4 +44,4 @@ connector:
 
 service:
   post-processing:
-    max-batch-size: 1
+    max-batch-size: 100
