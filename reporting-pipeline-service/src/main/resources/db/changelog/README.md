@@ -107,7 +107,7 @@ databaseChangeLog:
 
 Changeset IDs must be unique within their changelog. Continue the established ordering in the release changelog; do not reuse an ID already present there. Paths are classpath-relative and start with `db/changelog/`.
 
-Set `runOnChange` to `true` for views, functions, and routines, including stored procedures. Set it to `false` for all other changesets. A versioned migration should run once; later changes, including stored procedure and view updates, belong in a new changeset.
+Set `runOnChange` to `true` for views, functions, and routines, including stored procedures. Set it to `false` for all other changesets. Changesets for views, functions, and routines may rerun when their SQL changes; keep merged migrations immutable and put later versioned updates in a new changeset.
 
 The repository uses `splitStatements: false` for SQL files containing complete SQL Server definitions. Follow that convention, especially when the file contains procedure bodies or `GO` batch separators.
 
