@@ -10,6 +10,7 @@ import gov.cdc.nbs.report.pipeline.observation.repository.ObservationRepository;
 import gov.cdc.nbs.report.pipeline.observation.transformer.ProcessObservationDataUtil;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.ReportingPipelineModelMapper;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
@@ -81,7 +82,7 @@ public class ObservationService {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final ProcessObservationDataUtil processObservationDataUtil;
-  private final ModelMapper modelMapper = new ModelMapper();
+  private final ModelMapper modelMapper = new ReportingPipelineModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
   private ExecutorService obsExecutor;

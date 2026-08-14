@@ -10,6 +10,7 @@ import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.Trea
 import gov.cdc.nbs.report.pipeline.investigation.util.ProcessInvestigationDataUtil;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import gov.cdc.nbs.report.pipeline.util.ReportingPipelineModelMapper;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
@@ -96,7 +97,10 @@ public class InvestigationService {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final ProcessInvestigationDataUtil processDataUtil;
-  private final ModelMapper modelMapper = new ModelMapper();
+  // old
+  // private final ModelMapper modelMapper = new ModelMapper();
+  // new
+  private final ModelMapper modelMapper = new ReportingPipelineModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
   private static String topicDebugLog = "Received {} with id: {} from topic: {}";

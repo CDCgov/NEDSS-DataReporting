@@ -11,6 +11,7 @@ import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.dto.Datamart;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.dto.DatamartKey;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
+import gov.cdc.nbs.report.pipeline.util.ReportingPipelineModelMapper;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
@@ -59,7 +60,7 @@ public class ProcessDatamartData {
   private final InvestigationRepository invRepository;
 
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
-  private final ModelMapper modelMapper = new ModelMapper();
+  private final ModelMapper modelMapper = new ReportingPipelineModelMapper();
   private final Object cacheLock = new Object();
 
   // set of caches for retrying failed datamarts/IDs and tracking retry attempts
