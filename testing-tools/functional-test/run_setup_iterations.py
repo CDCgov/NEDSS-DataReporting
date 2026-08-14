@@ -23,8 +23,9 @@ tests under ``-d`` and picks a step that clears the entire span; pass
 
 Running the script twice with the same ``-s`` against a persistent database
 will also collide with rows left behind by the first run. If ``-s`` is
-omitted, a base shift is derived from the current time so each invocation
-gets a fresh, never-before-used ID range automatically.
+omitted, the next safe shift is read from a local state file (written after
+every run) so repeated invocations never reuse IDs; the very first run, with
+no state yet, falls back to a value derived from the current time.
 
 Per-iteration failures are summarized; the process exits non-zero if any
 iteration failed.
@@ -33,6 +34,7 @@ iteration failed.
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 import time
@@ -40,6 +42,22 @@ from pathlib import Path
 
 from functional_test.remapper import BLOCK_SIZE, _detect_block_start
 from functional_test.runner import discover_tests
+
+STATE_FILE = Path(__file__).resolve().parent / ".run_setup_iterations_state.json"
+
+
+def _load_next_shift(state_file: Path) -> int | None:
+    """Return the next safe shift recorded by a previous run, if any."""
+    try:
+        data = json.loads(state_file.read_text())
+    except (OSError, ValueError):
+        return None
+    value = data.get("next_shift")
+    return int(value) if isinstance(value, int) else None
+
+
+def _save_next_shift(state_file: Path, value: int) -> None:
+    state_file.write_text(json.dumps({"next_shift": value}))
 
 
 def _auto_shift_id() -> int:
@@ -137,8 +155,10 @@ def main() -> int:
         default=None,
         help=(
             "Shift every test's UIDs by this integer delta on the first iteration. "
-            "Defaults to a value derived from the current time, so each invocation "
-            "gets a fresh ID range that won't collide with a previous run's leftover rows."
+            "Defaults to the next safe shift recorded in --state-file, or (with no "
+            "state yet) a value derived from the current time — either way, each "
+            "invocation gets a fresh ID range that won't collide with a previous run's "
+            "leftover rows."
         ),
     )
     parser.add_argument(
@@ -180,14 +200,36 @@ def main() -> int:
         default=None,
         help="Initial database for the connection.",
     )
+    parser.add_argument(
+        "--state-file",
+        dest="state_file",
+        type=Path,
+        default=STATE_FILE,
+        help=(
+            "Local file tracking the next safe --shift-id across invocations "
+            "(not shared/committed — add to .gitignore if you point this elsewhere)."
+        ),
+    )
+    parser.add_argument(
+        "--no-state",
+        dest="use_state",
+        action="store_false",
+        default=True,
+        help="Ignore and don't update --state-file; fall back to the time-based shift.",
+    )
     args = parser.parse_args()
 
     if args.iterations < 1:
         parser.error("--iterations must be >= 1")
 
     if args.shift_id is None:
-        args.shift_id = _auto_shift_id()
-        print(f"Auto-computed --shift-id={args.shift_id} from the current time")
+        state_shift = _load_next_shift(args.state_file) if args.use_state else None
+        if state_shift is not None:
+            args.shift_id = state_shift
+            print(f"Using --shift-id={args.shift_id} from {args.state_file}")
+        else:
+            args.shift_id = _auto_shift_id()
+            print(f"Auto-computed --shift-id={args.shift_id} from the current time (no prior state)")
 
     if args.shift_step is None:
         args.shift_step = _auto_shift_step(args.data_dir)
@@ -198,6 +240,11 @@ def main() -> int:
         code = _run_once(args, i)
         if code != 0:
             failures += 1
+
+    if args.use_state:
+        next_shift = _effective_shift(args, args.iterations + 1)
+        _save_next_shift(args.state_file, next_shift)
+        print(f"Recorded next safe --shift-id={next_shift} in {args.state_file}")
 
     print("\n=== Summary ===")
     print(f"Completed {args.iterations} iteration(s); {failures} failed.")
