@@ -94,7 +94,7 @@ BEGIN
     VALUES
         (@phc_uid, @ts, @superuser_id, N'I',
          N'C', N'10100', N'Hepatitis B, acute', N'NND', N'NND',
-         N'O', @ts, @superuser_id, N'CAS22046000GA01',
+         N'O', CAST(GETDATE() AS DATE), @superuser_id, N'CAS22046000GA01',
          N'OPEN', @ts, N'A', @ts,
          N'T', 1, N'HEP', N'130001',
          @phc_uid, N'N', NULL,
@@ -109,7 +109,7 @@ BEGIN
     VALUES
         (@phc_uid, 1, @ts, @superuser_id,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @ts, @superuser_id, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE',
          @ts, N'CAS22046000GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @ts);
 
@@ -120,7 +120,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @phc_uid, N'SubjOfPHC', N'CASE', @ts, @superuser_id,
-         @ts, @superuser_id, N'ACTIVE', @ts, N'A', @ts, N'PSN',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', @ts, N'A', @ts, N'PSN',
          N'Subject of Public Health Case');
 
     -- ----- 85 page-builder answers on PG_Hepatitis_B_and_C_Acute_Investigation -----

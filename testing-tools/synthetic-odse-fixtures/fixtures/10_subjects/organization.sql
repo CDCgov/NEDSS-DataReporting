@@ -87,7 +87,7 @@ INSERT INTO [dbo].[entity_id]
 VALUES
     (@foundation_org_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'CLIA', N'Clinical Laboratory Improvement Amendments',
-     '2026-04-01T00:00:00', @superuser_id,
+     CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'11D2030855', N'FI', N'Facility identifier', '2026-04-01T00:00:00');
 
@@ -104,7 +104,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_org_fax, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-0399',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-0399',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 INSERT INTO [dbo].[entity_locator_participation]
@@ -115,7 +115,7 @@ INSERT INTO [dbo].[entity_locator_participation]
 VALUES
     (@foundation_org_uid, @dbo_Tele_locator_org_fax,
      '2026-04-01T00:00:00', @superuser_id, N'FAX',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'Foundation Organization work fax',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'Foundation Organization work fax',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00');
 
@@ -139,7 +139,7 @@ INSERT INTO [dbo].[organization]
 VALUES
     (@dbo_Entity_organization_v2_uid, '2026-04-01T00:00:00', @superuser_id,
      N'Tier 1 fully-attributed organization variant',
-     '2026-04-01T00:00:00', @superuser_id, N'ORG20030010GA01',
+     CAST(GETDATE() AS DATE), @superuser_id, N'ORG20030010GA01',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'Variant Hospital', 1, N'Y',
      N'622110', N'General Medical and Surgical Hospitals',
@@ -165,7 +165,7 @@ INSERT INTO [dbo].[entity_id]
 VALUES
     (@dbo_Entity_organization_v2_uid, 1, '2026-04-01T00:00:00', @superuser_id,
      N'CLIA', N'Clinical Laboratory Improvement Amendments',
-     '2026-04-01T00:00:00', @superuser_id,
+     CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'22D9999999', N'FI', N'Facility identifier', '2026-04-01T00:00:00');
 
@@ -180,7 +180,7 @@ INSERT INTO [dbo].[postal_locator]
      [street_addr1], [street_addr2], [zip_cd])
 VALUES
     (@dbo_Postal_locator_org_v2, '2026-04-01T00:00:00', @superuser_id, N'Atlanta',
-     N'840', N'13121', '2026-04-01T00:00:00', @superuser_id,
+     N'840', N'13121', CAST(GETDATE() AS DATE), @superuser_id,
      N'ACTIVE', '2026-04-01T00:00:00', N'13',
      N'3010 Variant Hospital Way', N'Building B', N'30303');
 
@@ -192,7 +192,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_org_v2_phone, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-3010', N'8765',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-3010', N'8765',
      N'variant.org@nbs.test',
      N'ACTIVE', '2026-04-01T00:00:00');
 
@@ -203,7 +203,7 @@ INSERT INTO [dbo].[tele_locator]
      [record_status_cd], [record_status_time])
 VALUES
     (@dbo_Tele_locator_org_v2_fax, '2026-04-01T00:00:00', @superuser_id, N'1',
-     '2026-04-01T00:00:00', @superuser_id, N'404-555-3099',
+     CAST(GETDATE() AS DATE), @superuser_id, N'404-555-3099',
      N'ACTIVE', '2026-04-01T00:00:00');
 
 -- v2 entity_locator_participation rows.
@@ -219,19 +219,19 @@ VALUES
     -- v2 Org work address (PST/WP/O).
     (@dbo_Entity_organization_v2_uid, @dbo_Postal_locator_org_v2,
      '2026-04-01T00:00:00', @superuser_id, N'O',
-     N'PST', '2026-04-01T00:00:00', @superuser_id, N'v2 Organization work address',
+     N'PST', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Organization work address',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     -- v2 Org work phone (TELE/WP/PH).
     (@dbo_Entity_organization_v2_uid, @dbo_Tele_locator_org_v2_phone,
      '2026-04-01T00:00:00', @superuser_id, N'PH',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'v2 Organization work phone',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Organization work phone',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00'),
     -- v2 Org work fax (TELE/WP/FAX).
     (@dbo_Entity_organization_v2_uid, @dbo_Tele_locator_org_v2_fax,
      '2026-04-01T00:00:00', @superuser_id, N'FAX',
-     N'TELE', '2026-04-01T00:00:00', @superuser_id, N'v2 Organization work fax',
+     N'TELE', CAST(GETDATE() AS DATE), @superuser_id, N'v2 Organization work fax',
      N'ACTIVE', '2026-04-01T00:00:00', N'A', '2026-04-01T00:00:00',
      N'WP', 1, '2026-04-01T00:00:00');
 

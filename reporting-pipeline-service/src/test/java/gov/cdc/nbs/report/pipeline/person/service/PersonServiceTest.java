@@ -17,6 +17,9 @@ import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUserKey;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtAuthUserRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtPatientRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.PatientRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
@@ -54,6 +57,12 @@ class PersonServiceTest {
   @Mock ProviderRepository providerRepository;
 
   @Mock UserRepository userRepository;
+
+  @Mock NrtPatientRepository nrtPatientRepository;
+
+  @Mock NrtProviderRepository nrtProviderRepository;
+
+  @Mock NrtAuthUserRepository nrtAuthUserRepository;
 
   @Mock private KafkaTemplate<String, String> kafkaTemplate;
 
@@ -93,6 +102,9 @@ class PersonServiceTest {
             providerRepository,
             userRepository,
             new EventProcedureLoggingProperties(debugLogging),
+            nrtPatientRepository,
+            nrtProviderRepository,
+            nrtAuthUserRepository,
             new PersonTransformers(),
             kafkaTemplate,
             new RetryTopicResolver(),

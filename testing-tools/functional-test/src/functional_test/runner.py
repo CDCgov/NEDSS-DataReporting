@@ -14,11 +14,13 @@ This mirrors ``DataDrivenFunctionalTests`` from the Java reporting-pipeline-serv
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from .bulkgen import _split_commas
 from .compare import lenient_match, normalize_rows
 from .remapper import IdRemapper, build_id_remapper, build_shift_remapper
 
@@ -28,6 +30,103 @@ EXPECTED_FILE = "expected.json"
 
 DEFAULT_MAX_RETRY = 40
 DEFAULT_RETRY_DELAY = 6.0
+
+_LAST_CHG_TIME_ASSIGN = re.compile(
+    r"(\[?LAST_CHG_TIME\]?\s*=\s*)N?'[^']*'", re.IGNORECASE
+)
+_INSERT_HEADER = re.compile(
+    r"(INSERT\s+INTO\s+(?:\[?\w+\]?\.)*\[?\w+\]?\s*\()([^)]*)(\)\s*VALUES\s*)",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _rewrite_values_clause(values_sql: str, col_idx: int) -> str:
+    """Replace the ``col_idx``-th value in every VALUES tuple with GETDATE()."""
+    tuples = _split_commas(values_sql)
+    rewritten: list[str] = []
+    for tup in tuples:
+        tup = tup.strip()
+        if not (tup.startswith("(") and tup.endswith(")")):
+            rewritten.append(tup)
+            continue
+        vals = _split_commas(tup[1:-1])
+        if col_idx < len(vals):
+            vals[col_idx] = "GETDATE()"
+        rewritten.append("(" + ", ".join(v.strip() for v in vals) + ")")
+    return ", ".join(rewritten)
+
+
+def _refresh_last_chg_time(sql: str) -> str:
+    """Replace literal ``LAST_CHG_TIME`` values with ``GETDATE()``.
+
+    Handles both ``UPDATE ... SET [LAST_CHG_TIME] = N'...'`` and
+    ``INSERT INTO ... (..., LAST_CHG_TIME, ...) VALUES (..., N'...', ...)``.
+    Replacements only happen outside string literals so embedded quotes in
+    payloads are left untouched. This lets an external ETL process pick up
+    freshly loaded rows by giving them a current timestamp instead of the
+    static dates recorded in the test fixtures.
+    """
+    result: list[str] = []
+    i, n = 0, len(sql)
+    in_string = False
+    while i < n:
+        ch = sql[i]
+        if in_string:
+            result.append(ch)
+            if ch == "'":
+                if i + 1 < n and sql[i + 1] == "'":
+                    result.append(sql[i + 1])
+                    i += 2
+                    continue
+                in_string = False
+            i += 1
+        elif ch == "'":
+            in_string = True
+            result.append(ch)
+            i += 1
+        else:
+            m = _LAST_CHG_TIME_ASSIGN.match(sql, i)
+            if m:
+                result.append(m.group(1))
+                result.append("GETDATE()")
+                i = m.end()
+                continue
+            m = _INSERT_HEADER.match(sql, i)
+            if m:
+                cols = [c.strip().strip("[]") for c in _split_commas(m.group(2))]
+                col_names = [c.upper() for c in cols]
+                if "LAST_CHG_TIME" in col_names:
+                    col_idx = col_names.index("LAST_CHG_TIME")
+                    result.append(m.group(1))
+                    result.append(m.group(2))
+                    result.append(m.group(3))
+                    i = m.end()
+                    # Find the matching closing paren for the VALUES list.
+                    depth = 0
+                    start = i
+                    while i < n:
+                        ch2 = sql[i]
+                        if in_string:
+                            if ch2 == "'" and (i + 1 >= n or sql[i + 1] != "'"):
+                                in_string = False
+                            elif ch2 == "'" and i + 1 < n and sql[i + 1] == "'":
+                                i += 2
+                                continue
+                        elif ch2 == "'":
+                            in_string = True
+                        elif ch2 == "(":
+                            depth += 1
+                        elif ch2 == ")":
+                            depth -= 1
+                            if depth == 0:
+                                i += 1
+                                break
+                        i += 1
+                    result.append(_rewrite_values_clause(sql[start:i], col_idx))
+                    continue
+            result.append(ch)
+            i += 1
+    return "".join(result)
 
 
 def split_statements(sql: str) -> list[str]:
@@ -225,6 +324,8 @@ def run_step(
     remapper: Optional[IdRemapper] = None,
     on_query: Optional[Callable[["QueryResult"], None]] = None,
     on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
+    skip_query: bool = False,
+    refresh_last_chg_time: bool = False,
 ) -> StepResult:
     result = StepResult(name=step_dir.name)
 
@@ -232,27 +333,37 @@ def run_step(
     query_path = step_dir / QUERY_FILE
     expected_path = step_dir / EXPECTED_FILE
 
-    for path in (setup_path, query_path, expected_path):
+    # With skip_query only the setup matters: the step just seeds data, so the
+    # query/expected files are neither required nor read.
+    required = (setup_path,) if skip_query else (setup_path, query_path, expected_path)
+    for path in required:
         if not path.is_file():
             result.setup_error = f"Missing required file: {path.name}"
             return result
 
     setup_sql = setup_path.read_text()
-    query_text = query_path.read_text()
-    expected_text = expected_path.read_text()
     if remapper is not None:
         setup_sql = remapper.apply(setup_sql)
-        query_text = remapper.apply(query_text)
-        expected_text = remapper.apply(expected_text)
-
-    queries = split_statements(query_text)
-    expected_map = json.loads(expected_text)
+    if refresh_last_chg_time:
+        setup_sql = _refresh_last_chg_time(setup_sql)
 
     try:
         db.execute_setup(setup_sql)
     except Exception as exc:  # noqa: BLE001 - surface any DB error to the report
         result.setup_error = f"{type(exc).__name__}: {exc}"
         return result
+
+    if skip_query:
+        return result
+
+    query_text = query_path.read_text()
+    expected_text = expected_path.read_text()
+    if remapper is not None:
+        query_text = remapper.apply(query_text)
+        expected_text = remapper.apply(expected_text)
+
+    queries = split_statements(query_text)
+    expected_map = json.loads(expected_text)
 
     for i, query in enumerate(queries):
         if on_event:
@@ -322,6 +433,8 @@ def run_test(
     on_query: Optional[Callable[["QueryResult"], None]] = None,
     on_poll: Optional[Callable[[int, str, Any, int, Any, bool], None]] = None,
     on_step_complete: Optional[Callable[["StepResult"], None]] = None,
+    skip_query: bool = False,
+    refresh_last_chg_time: bool = False,
 ) -> TestResult:
     result = TestResult(name=test_dir.name)
     try:
@@ -354,7 +467,9 @@ def run_test(
         if on_event:
             on_event(f"    step {step_dir.name}")
         step_result = run_step(
-            db, step_dir, max_retry, retry_delay, on_event, remapper, on_query, on_poll
+            db, step_dir, max_retry, retry_delay, on_event, remapper, on_query, on_poll,
+            skip_query=skip_query,
+            refresh_last_chg_time=refresh_last_chg_time,
         )
         result.steps.append(step_result)
         # Give callers a chance to pause/inspect after each step (e.g. --pause).

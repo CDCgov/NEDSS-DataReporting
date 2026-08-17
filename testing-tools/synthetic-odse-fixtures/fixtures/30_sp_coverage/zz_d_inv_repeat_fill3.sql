@@ -155,7 +155,7 @@ BEGIN
     VALUES
         (@tbr, @t, @su, N'I',
          N'C', N'10250', N'Spotted Fever Rickettsiosis', N'NND', N'NND',
-         N'O', @t, @su, N'CAS22060000GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22060000GA01',
          N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @tbr, N'N', NULL,
@@ -170,7 +170,7 @@ BEGIN
     VALUES
         (@tbr, 1, @t, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @t, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @t, N'CAS22060000GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @t);
 
@@ -180,7 +180,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @tbr, N'SubjOfPHC', N'CASE', @t, @su,
-         @t, @su, N'ACTIVE', @t, N'A', @t, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, N'A', @t, N'PSN',
          N'Subject of Public Health Case');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[case_management] WHERE public_health_case_uid = @tbr)
@@ -206,41 +206,41 @@ INSERT INTO [dbo].[nbs_case_answer]
      [answer_group_seq_nbr])
 VALUES
     -- TRT_TREATMENT_RX_DT (q 10007145, DATE)
-    (@tbr,@t,@su,N'2026-03-01',10007145,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'2026-03-03',10007145,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'2026-03-05',10007145,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'2026-03-01',10007145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'2026-03-03',10007145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'2026-03-05',10007145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_ORGANS_TRANSPLNTD_TXT (q 10007148, TEXT)
-    (@tbr,@t,@su,N'Kidney (left)',10007148,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'Liver lobe',10007148,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'Cornea',10007148,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'Kidney (left)',10007148,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'Liver lobe',10007148,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'Cornea',10007148,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_DT_OF_BLD_TRANSFUSION (q 10007149, DATE)
-    (@tbr,@t,@su,N'2026-02-10',10007149,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'2026-02-12',10007149,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'2026-02-14',10007149,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'2026-02-10',10007149,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'2026-02-12',10007149,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'2026-02-14',10007149,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_TRNSPLNT_ASSOC_INFCTN (q 10007150, CODED YNU csg 4150)
-    (@tbr,@t,@su,N'N',10007150,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'Y',10007150,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'N',10007150,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'N',10007150,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'Y',10007150,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'N',10007150,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_LABORATORY_STATE (q 10007152, CODED STATE_CCD csg 3920)
-    (@tbr,@t,@su,N'13',10007152,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'01',10007152,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'12',10007152,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'13',10007152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'01',10007152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'12',10007152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_TICK_BITE_LOCATION (q 10006152, TEXT)
-    (@tbr,@t,@su,N'Right calf',10006152,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'Left forearm',10006152,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'Scalp',10006152,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'Right calf',10006152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'Left forearm',10006152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'Scalp',10006152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_TICK_BITE_DT (q 10006153, DATE)
-    (@tbr,@t,@su,N'2026-02-01',10006153,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'2026-02-03',10006153,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'2026-02-05',10006153,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'2026-02-01',10006153,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'2026-02-03',10006153,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'2026-02-05',10006153,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_BLOOD_TRANSFUSION_DT (q 10006145, DATE)
-    (@tbr,@t,@su,N'2026-01-20',10006145,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'2026-01-22',10006145,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'2026-01-24',10006145,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@tbr,@t,@su,N'2026-01-20',10006145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'2026-01-22',10006145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'2026-01-24',10006145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_BLOOD_DONATION_DT (q 10006147, DATE)
-    (@tbr,@t,@su,N'2026-01-10',10006147,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@tbr,@t,@su,N'2026-01-12',10006147,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@tbr,@t,@su,N'2026-01-14',10006147,1,@t,@su,N'ACTIVE',@t,3,3);
+    (@tbr,@t,@su,N'2026-01-10',10006147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@tbr,@t,@su,N'2026-01-12',10006147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@tbr,@t,@su,N'2026-01-14',10006147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3);
 END
 GO
 
@@ -267,7 +267,7 @@ BEGIN
     VALUES
         (@mpx, @t, @su, N'I',
          N'C', N'11801', N'Monkeypox', N'NND', N'NND',
-         N'O', @t, @su, N'CAS22060200GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22060200GA01',
          N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @mpx, N'N', NULL,
@@ -282,7 +282,7 @@ BEGIN
     VALUES
         (@mpx, 1, @t, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @t, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @t, N'CAS22060200GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @t);
 
@@ -292,7 +292,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @mpx, N'SubjOfPHC', N'CASE', @t, @su,
-         @t, @su, N'ACTIVE', @t, N'A', @t, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, N'A', @t, N'PSN',
          N'Subject of Public Health Case');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[case_management] WHERE public_health_case_uid = @mpx)
@@ -318,29 +318,29 @@ INSERT INTO [dbo].[nbs_case_answer]
      [answer_group_seq_nbr])
 VALUES
     -- TRV_FLIGHT_NUMBER (q 10011189, TEXT)
-    (@mpx,@t,@su,N'DL1234',10011189,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@mpx,@t,@su,N'AA5678',10011189,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@mpx,@t,@su,N'UA9012',10011189,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@mpx,@t,@su,N'DL1234',10011189,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@mpx,@t,@su,N'AA5678',10011189,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@mpx,@t,@su,N'UA9012',10011189,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRV_SEAT_NUMBER (q 10011190, TEXT)
-    (@mpx,@t,@su,N'14C',10011190,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@mpx,@t,@su,N'22A',10011190,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@mpx,@t,@su,N'3F',10011190,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@mpx,@t,@su,N'14C',10011190,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@mpx,@t,@su,N'22A',10011190,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@mpx,@t,@su,N'3F',10011190,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRV_TRAVEL_SEX_CONTACT (q 10011191, CODED YNU csg 4150)
-    (@mpx,@t,@su,N'N',10011191,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@mpx,@t,@su,N'Y',10011191,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@mpx,@t,@su,N'N',10011191,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@mpx,@t,@su,N'N',10011191,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@mpx,@t,@su,N'Y',10011191,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@mpx,@t,@su,N'N',10011191,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_MASK_WORN_TRAVELING (q 10011192, CODED YNU csg 4150)
-    (@mpx,@t,@su,N'Y',10011192,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@mpx,@t,@su,N'N',10011192,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@mpx,@t,@su,N'Y',10011192,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@mpx,@t,@su,N'Y',10011192,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@mpx,@t,@su,N'N',10011192,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@mpx,@t,@su,N'Y',10011192,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_MASK_WORN_FREQUENCY (q 10011193, CODED MASK_USAGE csg 117480)
-    (@mpx,@t,@su,N'ALWAYS',10011193,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@mpx,@t,@su,N'SOMETIMES',10011193,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@mpx,@t,@su,N'RARELY',10011193,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@mpx,@t,@su,N'ALWAYS',10011193,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@mpx,@t,@su,N'SOMETIMES',10011193,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@mpx,@t,@su,N'RARELY',10011193,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- LAB_SPECIMEN_TEST_DATE (q 10011198, DATE)
-    (@mpx,@t,@su,N'2026-03-08',10011198,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@mpx,@t,@su,N'2026-03-10',10011198,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@mpx,@t,@su,N'2026-03-12',10011198,1,@t,@su,N'ACTIVE',@t,3,3);
+    (@mpx,@t,@su,N'2026-03-08',10011198,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@mpx,@t,@su,N'2026-03-10',10011198,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@mpx,@t,@su,N'2026-03-12',10011198,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3);
 END
 GO
 
@@ -367,7 +367,7 @@ BEGIN
     VALUES
         (@bab, @t, @su, N'I',
          N'C', N'12010', N'Babesiosis', N'NND', N'NND',
-         N'O', @t, @su, N'CAS22060400GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22060400GA01',
          N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @bab, N'N', NULL,
@@ -382,7 +382,7 @@ BEGIN
     VALUES
         (@bab, 1, @t, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @t, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @t, N'CAS22060400GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @t);
 
@@ -392,7 +392,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @bab, N'SubjOfPHC', N'CASE', @t, @su,
-         @t, @su, N'ACTIVE', @t, N'A', @t, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, N'A', @t, N'PSN',
          N'Subject of Public Health Case');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[case_management] WHERE public_health_case_uid = @bab)
@@ -418,27 +418,27 @@ INSERT INTO [dbo].[nbs_case_answer]
      [answer_group_seq_nbr])
 VALUES
     -- RSK_TICK_BITE_LOCATION (q 10006152, TEXT)
-    (@bab,@t,@su,N'Left ankle',10006152,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@bab,@t,@su,N'Right thigh',10006152,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@bab,@t,@su,N'Neck',10006152,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@bab,@t,@su,N'Left ankle',10006152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@bab,@t,@su,N'Right thigh',10006152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@bab,@t,@su,N'Neck',10006152,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- RSK_TICK_BITE_DT (q 10006153, DATE)
-    (@bab,@t,@su,N'2026-02-02',10006153,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@bab,@t,@su,N'2026-02-04',10006153,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@bab,@t,@su,N'2026-02-06',10006153,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@bab,@t,@su,N'2026-02-02',10006153,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@bab,@t,@su,N'2026-02-04',10006153,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@bab,@t,@su,N'2026-02-06',10006153,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_BLOOD_TRANSFUSION_DT (q 10006145, DATE)
-    (@bab,@t,@su,N'2026-01-21',10006145,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@bab,@t,@su,N'2026-01-23',10006145,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@bab,@t,@su,N'2026-01-25',10006145,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@bab,@t,@su,N'2026-01-21',10006145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@bab,@t,@su,N'2026-01-23',10006145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@bab,@t,@su,N'2026-01-25',10006145,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_BLOOD_DONATION_DT (q 10006147, DATE)
-    (@bab,@t,@su,N'2026-01-11',10006147,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@bab,@t,@su,N'2026-01-13',10006147,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@bab,@t,@su,N'2026-01-15',10006147,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@bab,@t,@su,N'2026-01-11',10006147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@bab,@t,@su,N'2026-01-13',10006147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@bab,@t,@su,N'2026-01-15',10006147,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRV_DURATION_OUTSIDE_US (q 10006160, NUMERIC unit_type_cd=CODED ->
     --   SP-gated, likely WON'T pivot; authored for completeness, NOT
     --   counted in the 18 expected cols)
-    (@bab,@t,@su,N'10',10006160,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@bab,@t,@su,N'18',10006160,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@bab,@t,@su,N'5',10006160,1,@t,@su,N'ACTIVE',@t,3,3);
+    (@bab,@t,@su,N'10',10006160,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@bab,@t,@su,N'18',10006160,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@bab,@t,@su,N'5',10006160,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3);
 END
 GO
 
@@ -465,7 +465,7 @@ BEGIN
     VALUES
         (@com, @t, @su, N'I',
          N'C', N'32016', N'Carbon Monoxide Poisoning', N'NND', N'NND',
-         N'O', @t, @su, N'CAS22060600GA01',
+         N'O', CAST(GETDATE() AS DATE), @su, N'CAS22060600GA01',
          N'OPEN', @t, N'A', @t,
          N'T', 1, N'GCD', N'130001',
          @com, N'N', NULL,
@@ -480,7 +480,7 @@ BEGIN
     VALUES
         (@com, 1, @t, @su,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         @t, @su, N'ACTIVE',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE',
          @t, N'CAS22060600GA01', N'PHC_LOCAL_ID',
          N'Local Public Health Case Identifier', N'A', @t);
 
@@ -490,7 +490,7 @@ BEGIN
          status_cd, status_time, subject_class_cd, type_desc_txt)
     VALUES
         (20000000, @com, N'SubjOfPHC', N'CASE', @t, @su,
-         @t, @su, N'ACTIVE', @t, N'A', @t, N'PSN',
+         CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, N'A', @t, N'PSN',
          N'Subject of Public Health Case');
 
     IF NOT EXISTS (SELECT 1 FROM [dbo].[case_management] WHERE public_health_case_uid = @com)
@@ -516,20 +516,20 @@ INSERT INTO [dbo].[nbs_case_answer]
      [answer_group_seq_nbr])
 VALUES
     -- EPI_CO_LEVEL_IN_AIR (q 10011155, NUMERIC unit_type_cd NULL -> LITERAL, pivots)
-    (@com,@t,@su,N'35',10011155,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@com,@t,@su,N'70',10011155,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@com,@t,@su,N'120',10011155,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@com,@t,@su,N'35',10011155,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@com,@t,@su,N'70',10011155,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@com,@t,@su,N'120',10011155,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_PSN_ORG_TKNG_CO_REDNG (q 10011156, CODED PHVS_PERSONORGTAKINGREADING_CO csg 116350)
-    (@com,@t,@su,N'PHC630',10011156,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@com,@t,@su,N'PHC2174',10011156,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@com,@t,@su,N'C0085098',10011156,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@com,@t,@su,N'PHC630',10011156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@com,@t,@su,N'PHC2174',10011156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@com,@t,@su,N'C0085098',10011156,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- EPI_DATE_OF_READING (q 10011157, DATE)
-    (@com,@t,@su,N'2026-03-02',10011157,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@com,@t,@su,N'2026-03-04',10011157,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@com,@t,@su,N'2026-03-06',10011157,1,@t,@su,N'ACTIVE',@t,3,3),
+    (@com,@t,@su,N'2026-03-02',10011157,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@com,@t,@su,N'2026-03-04',10011157,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@com,@t,@su,N'2026-03-06',10011157,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3),
     -- TRT_TREATMENT_LOCATION (q 10011164, CODED PHVS_TREATMENTLOCATION_CO csg 116650)
-    (@com,@t,@su,N'257622000',10011164,1,@t,@su,N'ACTIVE',@t,1,1),
-    (@com,@t,@su,N'PHC2175',10011164,1,@t,@su,N'ACTIVE',@t,2,2),
-    (@com,@t,@su,N'257622000',10011164,1,@t,@su,N'ACTIVE',@t,3,3);
+    (@com,@t,@su,N'257622000',10011164,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,1),
+    (@com,@t,@su,N'PHC2175',10011164,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,2),
+    (@com,@t,@su,N'257622000',10011164,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,3);
 END
 GO

@@ -105,11 +105,11 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- LAB_TEST_RESULT_OTH (q 10001371, LAB_INTERPRETIVE)
-        (22003000,@t,@su,N'OTH^Presumptive positive',10001371,1,@t,@su,N'ACTIVE',@t,1,5),
+        (22003000,@t,@su,N'OTH^Presumptive positive',10001371,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,5),
         -- LAB_PERFORMING_LAB_TYP_OTH (q 10001374, LAB_INTERPRETIVE)
-        (22003000,@t,@su,N'OTH^Point-of-care site',10001374,1,@t,@su,N'ACTIVE',@t,2,5),
+        (22003000,@t,@su,N'OTH^Point-of-care site',10001374,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,5),
         -- LAB_SPECIMEN_SOURCE_OTH (q 10002114, LAB_INTERPRETIVE)
-        (22003000,@t,@su,N'OTH^Anterior nares (self-collected)',10002114,1,@t,@su,N'ACTIVE',@t,3,5);
+        (22003000,@t,@su,N'OTH^Anterior nares (self-collected)',10002114,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,3,5);
 END
 GO
 
@@ -126,9 +126,9 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- LAB_MOLE_SUSC_SPEC_TY_OTH (q 10012210, MOLE_DRG_SUSCEP)
-        (22047000,@t,@su,N'OTH^Pleural fluid',10012210,1,@t,@su,N'ACTIVE',@t,1,5),
+        (22047000,@t,@su,N'OTH^Pleural fluid',10012210,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,5),
         -- LAB_MOLE_SUSC_TST_MTHD_OTH (q 10012215, MOLE_DRG_SUSCEP)
-        (22047000,@t,@su,N'OTH^Whole-genome sequencing',10012215,1,@t,@su,N'ACTIVE',@t,2,5);
+        (22047000,@t,@su,N'OTH^Whole-genome sequencing',10012215,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,2,5);
 END
 GO
 
@@ -145,7 +145,7 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- LAB_TEST_METHOD_OTH (q 10010294, LAB_BLOCK)
-        (22049000,@t,@su,N'OTH^Shiga toxin EIA',10010294,1,@t,@su,N'ACTIVE',@t,1,5);
+        (22049000,@t,@su,N'OTH^Shiga toxin EIA',10010294,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,5);
 END
 GO
 
@@ -162,7 +162,7 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- EPI_SUSPECTED_SOURCE_R_OTH (q 10009214, BLOCK_8)
-        (22007000,@t,@su,N'OTH^Household childcare provider',10009214,1,@t,@su,N'ACTIVE',@t,1,5);
+        (22007000,@t,@su,N'OTH^Household childcare provider',10009214,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,5);
 END
 GO
 
@@ -179,7 +179,7 @@ BEGIN
          [answer_group_seq_nbr])
     VALUES
         -- LAB_AST_COLLECTION_SIT_OTH (q 10002148, BLOCK_14)
-        (22004000,@t,@su,N'OTH^Rectal swab',10002148,1,@t,@su,N'ACTIVE',@t,1,5);
+        (22004000,@t,@su,N'OTH^Rectal swab',10002148,1,CAST(GETDATE() AS DATE),@su,N'ACTIVE',@t,1,5);
 END
 GO
 

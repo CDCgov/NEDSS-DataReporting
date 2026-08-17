@@ -127,7 +127,7 @@ BEGIN
          N'86592-1', N'Rapid plasma reagin (RPR) test',
          N'2.16.840.1.113883.6.1', N'LN', N'ALT-RPR-1', N'RPR Card (Locally Coded)',
          N'L', N'Local',
-         '2026-04-22T08:00:00', @superuser_id, N'OBS22021010GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22021010GA01',
          N'Order', N'Order', N'LabReport',
          N'ACTIVE', '2026-04-22T08:00:00', N'A', '2026-04-22T08:00:00',
          @pat_uid, N'T', 1,
@@ -140,7 +140,7 @@ BEGIN
          N'5048-4', N'ANA — antinuclear antibody titer',
          N'2.16.840.1.113883.6.1', N'LN', N'ALT-ANA-1', N'ANA Titer (Locally Coded)',
          N'L', N'Local',
-         '2026-04-23T08:00:00', @superuser_id, N'OBS22021020GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22021020GA01',
          N'Order', N'Order', N'LabReport',
          N'ACTIVE', '2026-04-23T08:00:00', N'A', '2026-04-23T08:00:00',
          @pat_uid, N'T', 1,
@@ -166,7 +166,7 @@ BEGIN
         (@rpr_result, '2026-04-22T09:00:00', @superuser_id,
          N'86592-1', N'Rapid plasma reagin (RPR) test',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-22T09:00:00', @superuser_id, N'OBS22021011GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22021011GA01',
          N'Result', N'Result', N'LabReport',
          N'ACTIVE', '2026-04-22T09:00:00', N'A', '2026-04-22T09:00:00',
          @pat_uid, N'T', 1,
@@ -175,7 +175,7 @@ BEGIN
         (@ana_result, '2026-04-23T09:00:00', @superuser_id,
          N'5048-4', N'ANA — antinuclear antibody titer',
          N'2.16.840.1.113883.6.1', N'LN',
-         '2026-04-23T09:00:00', @superuser_id, N'OBS22021021GA01',
+         CAST(GETDATE() AS DATE), @superuser_id, N'OBS22021021GA01',
          N'Result', N'Result', N'LabReport',
          N'ACTIVE', '2026-04-23T09:00:00', N'A', '2026-04-23T09:00:00',
          @pat_uid, N'T', 1,
@@ -192,10 +192,10 @@ BEGIN
          [type_desc_txt])
     VALUES
         (@rpr_result, @rpr_order, N'COMP', '2026-04-22T09:00:00', @superuser_id,
-         '2026-04-22T09:00:00', @superuser_id, N'ACTIVE', '2026-04-22T09:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T09:00:00',
          1, N'OBS', N'OBS', N'A', '2026-04-22T09:00:00', N'Component'),
         (@ana_result, @ana_order, N'COMP', '2026-04-23T09:00:00', @superuser_id,
-         '2026-04-23T09:00:00', @superuser_id, N'ACTIVE', '2026-04-23T09:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T09:00:00',
          1, N'OBS', N'OBS', N'A', '2026-04-23T09:00:00', N'Component');
 
     -- =================================================================
@@ -211,10 +211,10 @@ BEGIN
          [type_desc_txt])
     VALUES
         (@rpr_order, 22004000, N'LabReport', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          1, N'OBS', N'CASE', N'A', '2026-04-22T08:00:00', N'Lab Report'),
         (@ana_order, 22004000, N'LabReport', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          1, N'OBS', N'CASE', N'A', '2026-04-23T08:00:00', N'Lab Report');
 
         -- Bump observation change time after wiring LabReport edges so CDC emits
@@ -234,19 +234,19 @@ BEGIN
     VALUES
         (@rpr_order, 1, '2026-04-22T08:00:00', @superuser_id,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'OBS22021010GA01', N'OBS_LOCAL_ID', N'Local Observation Identifier', N'A', '2026-04-22T08:00:00'),
         (@rpr_order, 2, '2026-04-22T08:00:00', @superuser_id,
          N'2.16.840.1.113883.4.6', N'NPI Filler',
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'ACC-V2-22021010', N'FILLER', N'Filler Order Number', N'A', '2026-04-22T08:00:00'),
         (@ana_order, 1, '2026-04-23T08:00:00', @superuser_id,
          N'2.16.840.1.114222.4.5.1.1', N'NEDSS_LOCAL',
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'OBS22021020GA01', N'OBS_LOCAL_ID', N'Local Observation Identifier', N'A', '2026-04-23T08:00:00'),
         (@ana_order, 2, '2026-04-23T08:00:00', @superuser_id,
          N'2.16.840.1.113883.4.6', N'NPI Filler',
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'ACC-V2-22021020', N'FILLER', N'Filler Order Number', N'A', '2026-04-23T08:00:00');
 
     -- =================================================================
@@ -314,41 +314,41 @@ BEGIN
     VALUES
         -- RPR Order
         (@pat_uid,  @rpr_order, N'PATSBJ', N'OBS', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'A', '2026-04-22T08:00:00', N'PSN', N'Patient Subject'),
         (@prov_uid, @rpr_order, N'ORD',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'A', '2026-04-22T08:00:00', N'PSN', N'Ordering Provider'),
         (@prov_uid, @rpr_order, N'VRF',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'A', '2026-04-22T08:00:00', N'PSN', N'Result Interpreter'),
         (@org_uid,  @rpr_order, N'AUT',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'A', '2026-04-22T08:00:00', N'ORG', N'Author/Reporting Organization'),
         (@org_uid,  @rpr_order, N'ORD',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'A', '2026-04-22T08:00:00', N'ORG', N'Ordering Organization'),
         (@prov_uid, @rpr_order, N'SPP',    N'OBS', '2026-04-22T08:00:00', @superuser_id,
-         '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
          N'A', '2026-04-22T08:00:00', N'PROV', N'Specimen Collector'),
         -- ANA Order
         (@pat_uid,  @ana_order, N'PATSBJ', N'OBS', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'A', '2026-04-23T08:00:00', N'PSN', N'Patient Subject'),
         (@prov_uid, @ana_order, N'ORD',    N'OBS', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'A', '2026-04-23T08:00:00', N'PSN', N'Ordering Provider'),
         (@prov_uid, @ana_order, N'VRF',    N'OBS', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'A', '2026-04-23T08:00:00', N'PSN', N'Result Interpreter'),
         (@org_uid,  @ana_order, N'AUT',    N'OBS', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'A', '2026-04-23T08:00:00', N'ORG', N'Author/Reporting Organization'),
         (@org_uid,  @ana_order, N'ORD',    N'OBS', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'A', '2026-04-23T08:00:00', N'ORG', N'Ordering Organization'),
         (@prov_uid, @ana_order, N'SPP',    N'OBS', '2026-04-23T08:00:00', @superuser_id,
-         '2026-04-23T08:00:00', @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T08:00:00',
          N'A', '2026-04-23T08:00:00', N'PROV', N'Specimen Collector');
 
     -- Performing org (PRF) on each RESULT
@@ -358,10 +358,10 @@ BEGIN
          [status_cd],[status_time],[subject_class_cd],[type_desc_txt])
     VALUES
         (@org_uid, @rpr_result, N'PRF', N'OBS', '2026-04-22T09:00:00', @superuser_id,
-         '2026-04-22T09:00:00', @superuser_id, N'ACTIVE', '2026-04-22T09:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T09:00:00',
          N'A', '2026-04-22T09:00:00', N'ORG', N'Performing Organization'),
         (@org_uid, @ana_result, N'PRF', N'OBS', '2026-04-23T09:00:00', @superuser_id,
-         '2026-04-23T09:00:00', @superuser_id, N'ACTIVE', '2026-04-23T09:00:00',
+         CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-23T09:00:00',
          N'A', '2026-04-23T09:00:00', N'ORG', N'Performing Organization');
 
     -- Specimen-collector role (SPP scoping PSN). ProcessObservationDataUtil
@@ -374,7 +374,7 @@ BEGIN
              [scoping_class_cd],[scoping_entity_uid],[status_cd],[status_time],[subject_class_cd])
         VALUES
             (@prov_uid, N'SPP', 1, '2026-04-22T08:00:00', @superuser_id, N'Specimen Collector',
-             '2026-04-22T08:00:00', @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
+             CAST(GETDATE() AS DATE), @superuser_id, N'ACTIVE', '2026-04-22T08:00:00',
              N'PSN', @pat_uid, N'A', '2026-04-22T08:00:00', N'PROV');
 END
 GO

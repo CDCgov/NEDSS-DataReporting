@@ -7,9 +7,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
+import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientReporting;
 import gov.cdc.nbs.report.pipeline.person.model.dto.patient.PatientSp;
+import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderReporting;
 import gov.cdc.nbs.report.pipeline.person.model.dto.provider.ProviderSp;
 import gov.cdc.nbs.report.pipeline.person.model.dto.user.AuthUser;
+import gov.cdc.nbs.report.pipeline.person.model.entity.NrtAuthUser;
+import gov.cdc.nbs.report.pipeline.person.model.entity.NrtPatient;
+import gov.cdc.nbs.report.pipeline.person.model.entity.NrtProvider;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtAuthUserRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtPatientRepository;
+import gov.cdc.nbs.report.pipeline.person.repository.NrtProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.PatientRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
@@ -48,6 +56,7 @@ import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service class for processing Person-related change events in the Real Time Reporting (RTR)
@@ -75,6 +84,10 @@ public class PersonService {
   private final ProviderRepository providerRepository;
   private final UserRepository userRepository;
   private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
+  private final NrtPatientRepository nrtPatientRepository;
+  private final NrtProviderRepository nrtProviderRepository;
+  private final NrtAuthUserRepository nrtAuthUserRepository;
+
   private final PersonTransformers transformer;
 
   @Qualifier("personKafkaTemplate")
@@ -253,8 +266,14 @@ public class PersonService {
 
     providerData.forEach(
         provider -> {
+          ProviderReporting providerReporting =
+              (ProviderReporting)
+                  transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
+
+          nrtProviderRepository.save(NrtProvider.from(providerReporting));
+
           String reportingKey = transformer.buildProviderKey(provider);
-          String reportingData = transformer.processData(provider, PersonType.PROVIDER_REPORTING);
+          String reportingData = transformer.processData(providerReporting);
           kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
           log.info(
               "Provider data (uid={}) sent to {}",
@@ -290,8 +309,14 @@ public class PersonService {
 
     patientData.forEach(
         personData -> {
+          PatientReporting patientReporting =
+              (PatientReporting)
+                  transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
+
+          nrtPatientRepository.save(NrtPatient.from(patientReporting));
+
           String reportingKey = transformer.buildPatientKey(personData);
-          String reportingData = transformer.processData(personData, PersonType.PATIENT_REPORTING);
+          String reportingData = transformer.processData(patientReporting);
           kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
           log.info(
               "Patient data (uid={}) sent to {}",
@@ -313,6 +338,7 @@ public class PersonService {
         });
   }
 
+  @Transactional
   private void processUser(String message, String topic) {
     String userUid = "";
     try {
@@ -322,22 +348,25 @@ public class PersonService {
           userRepository.computeAuthUsers(
               userUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
+      List<AuthUser> authUsers = new ArrayList<>();
+
       if (userData.isPresent() && !userData.get().isEmpty()) {
-        userData
-            .get()
-            .forEach(
-                authUser -> {
-                  String jsonKey = transformer.buildUserKey(authUser);
-                  String jsonValue = transformer.processData(authUser);
-                  kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
-                  log.info(
-                      "User data (uid={}) sent to {}",
-                      authUser.getAuthUserUid(),
-                      userReportingOutputTopic);
-                });
+        authUsers = userData.get();
       } else {
         throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUid);
       }
+
+      authUsers.forEach(
+          authUser -> {
+            nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
+            String jsonKey = transformer.buildUserKey(authUser);
+            String jsonValue = transformer.processData(authUser);
+            kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
+            log.info(
+                "User data (uid={}) sent to {}",
+                authUser.getAuthUserUid(),
+                userReportingOutputTopic);
+          });
     } catch (EntityNotFoundException ex) {
       throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {

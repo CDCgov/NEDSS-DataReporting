@@ -125,11 +125,11 @@ BEGIN
          [record_status_cd], [record_status_time], [seq_nbr])
     VALUES
     -- TUB115 PRIMARY_GUARD_1_BIRTH_COUNTRY (codeset 4260 PHVS_TB_BIRTH_CNTRY; 'IND' = INDIA)
-    (@tb_phc, '2026-04-01T00:00:00', @user, N'IND', 1042, 1, '2026-04-01T00:00:00', @user, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (@tb_phc, '2026-04-01T00:00:00', @user, N'IND', 1042, 1, CAST(GETDATE() AS DATE), @user, N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB116 PRIMARY_GUARD_2_BIRTH_COUNTRY (codeset 4260; 'CAN' = CANADA)
-    (@tb_phc, '2026-04-01T00:00:00', @user, N'CAN', 1320, 1, '2026-04-01T00:00:00', @user, N'ACTIVE', '2026-04-01T00:00:00', 0),
+    (@tb_phc, '2026-04-01T00:00:00', @user, N'CAN', 1320, 1, CAST(GETDATE() AS DATE), @user, N'ACTIVE', '2026-04-01T00:00:00', 0),
     -- TUB170 INIT_REGIMEN_START_DATE (date answer; no codeset)
-    (@tb_phc, '2026-04-01T00:00:00', @user, N'2026-04-08', 1001, 1, '2026-04-01T00:00:00', @user, N'ACTIVE', '2026-04-01T00:00:00', 0);
+    (@tb_phc, '2026-04-01T00:00:00', @user, N'2026-04-08', 1001, 1, CAST(GETDATE() AS DATE), @user, N'ACTIVE', '2026-04-01T00:00:00', 0);
 END
 GO
 

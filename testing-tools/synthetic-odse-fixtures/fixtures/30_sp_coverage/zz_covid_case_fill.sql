@@ -109,156 +109,156 @@ VALUES
     -- LAB / SPECIMEN repeating block
     -- =================================================================
     -- TEST_TYPE (INV290 q=10001370, coded TEST_TYPE_COVID)
-    (@phc, @t, @su, N'94309-2', 10001370, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'94307-6', 10001370, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'94308-4', 10001370, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'94309-2', 10001370, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'94307-6', 10001370, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'94308-4', 10001370, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- TEST_RESULT (INV291 q=10001371, coded PHVS_LABTESTINTERPRETATION_VPD_COVID19)
-    (@phc, @t, @su, N'10828004',  10001371, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'10828004',  10001371, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'255370002', 10001371, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'10828004',  10001371, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'10828004',  10001371, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'255370002', 10001371, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- TEST_RESULT_COMMENTS (8251_1 q=10004226, free text 1009)
-    (@phc, @t, @su, N'Detected, CT 24',          10004226, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Detected, CT 27',          10004226, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'Specimen unsatisfactory',  10004226, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Detected, CT 24',          10004226, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Detected, CT 27',          10004226, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'Specimen unsatisfactory',  10004226, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- PERFORMING_LAB_TYPE (LAB606 q=10001374, coded PHVS_PERFORMINGLABORATORYTYPE_VPD_COVID19)
-    (@phc, @t, @su, N'PHC1317', 10001374, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'PHC1316', 10001374, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'OTH',     10001374, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'PHC1317', 10001374, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'PHC1316', 10001374, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'OTH',     10001374, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- SPECIMEN_SOURCE (LAB165 q=10002114, coded SPECIMEN_TYPE_COVID)
-    (@phc, @t, @su, N'258500001', 10002114, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'258411007', 10002114, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'119297000', 10002114, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'258500001', 10002114, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'258411007', 10002114, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'119297000', 10002114, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- SPCMN_COLLECTION_DT (LAB163 q=10002108, date 1008)
-    (@phc, @t, @su, N'2026-03-28', 10002108, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'2026-03-30', 10002108, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'2026-04-01', 10002108, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2026-03-28', 10002108, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'2026-03-30', 10002108, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'2026-04-01', 10002108, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- SPECIMEN_ID (NBS674 q=10004225, text 1008)
-    (@phc, @t, @su, N'SPEC-22003000-A', 10004225, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'SPEC-22003000-B', 10004225, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'SPEC-22003000-C', 10004225, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'SPEC-22003000-A', 10004225, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'SPEC-22003000-B', 10004225, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'SPEC-22003000-C', 10004225, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- ADDL_SPECIMEN_ID (NBS670 q=10004233, text 1008)
-    (@phc, @t, @su, N'ADDL-A1', 10004233, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'ADDL-B1', 10004233, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'ADDL-C1', 10004233, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'ADDL-A1', 10004233, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'ADDL-B1', 10004233, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'ADDL-C1', 10004233, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- CDC_SPECIMEN_ID (INV965 q=10004232, text 1008)
-    (@phc, @t, @su, N'CDC-SPEC-001', 10004232, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'CDC-SPEC-002', 10004232, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'CDC-SPEC-003', 10004232, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'CDC-SPEC-001', 10004232, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'CDC-SPEC-002', 10004232, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'CDC-SPEC-003', 10004232, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- STATE_ISOLATE_ID (FDD_Q_1141 q=10004229, text 1008)
-    (@phc, @t, @su, N'STATE-ISO-01', 10004229, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'STATE-ISO-02', 10004229, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'STATE-ISO-03', 10004229, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'STATE-ISO-01', 10004229, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'STATE-ISO-02', 10004229, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'STATE-ISO-03', 10004229, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- WGS_ID_NBR (INV949 q=10010279, text 1008)
-    (@phc, @t, @su, N'WGS-EPI-ISL-1', 10010279, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'WGS-EPI-ISL-2', 10010279, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'WGS-EPI-ISL-3', 10010279, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'WGS-EPI-ISL-1', 10010279, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'WGS-EPI-ISL-2', 10010279, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'WGS-EPI-ISL-3', 10010279, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- ISOLTE_SENT_STATE_LAB (LAB331 q=10004227, coded YNU)
-    (@phc, @t, @su, N'Y', 10004227, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Y', 10004227, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'N', 10004227, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Y', 10004227, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Y', 10004227, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'N', 10004227, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- SPEC_SENT_TO_SPHL_DT (NBS564 q=10004228, date 1008)
-    (@phc, @t, @su, N'2026-03-29', 10004228, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'2026-03-31', 10004228, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'2026-04-02', 10004228, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2026-03-29', 10004228, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'2026-03-31', 10004228, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'2026-04-02', 10004228, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- SPCMN_SENT_TO_CDC_IND (LAB515 q=10004230, coded YNU)
-    (@phc, @t, @su, N'Y', 10004230, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'N', 10004230, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'Y', 10004230, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Y', 10004230, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'N', 10004230, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'Y', 10004230, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- SPCMN_SENT_TO_CDC_DT (LAB516 q=10004231, date 1008)
-    (@phc, @t, @su, N'2026-03-30', 10004231, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'2026-04-01', 10004231, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'2026-04-03', 10004231, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2026-03-30', 10004231, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'2026-04-01', 10004231, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'2026-04-03', 10004231, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- LAB_RESULT_NUM_UNIT (LAB115 q=10002097, coded UNIT_ISO)
-    (@phc, @t, @su, N'/mL', 10002097, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'/mL', 10002097, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'%',   10002097, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'/mL', 10002097, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'/mL', 10002097, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'%',   10002097, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- QUANT_TEST_RESULT (LAB628 q=10002143, numeric/text 1008)
-    (@phc, @t, @su, N'24.5', 10002143, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'27.1', 10002143, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'0',    10002143, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'24.5', 10002143, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'27.1', 10002143, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'0',    10002143, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- OTH_PATHOGEN_TST (NBS669 q=10004253, text 1008)
-    (@phc, @t, @su, N'Influenza A',  10004253, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Influenza B',  10004253, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'RSV',          10004253, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Influenza A',  10004253, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Influenza B',  10004253, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'RSV',          10004253, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- OTH_PATHOGEN_TST_RSLT (NBS668 q=10004254, coded TEST_RESULT_RDT_COVID)
-    (@phc, @t, @su, N'260385009', 10004254, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'260385009', 10004254, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'10828004',  10004254, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'260385009', 10004254, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'260385009', 10004254, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'10828004',  10004254, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
 
     -- =================================================================
     -- TRAVEL repeating block
     -- =================================================================
     -- INTL_DESTINATIONS (TRAVEL05 q=10004154, coded PSL_CNTRY)
-    (@phc, @t, @su, N'124', 10004154, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'840', 10004154, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'100', 10004154, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'124', 10004154, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'840', 10004154, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'100', 10004154, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- TRAVEL_STATE (82754_3 q=10004152, coded STATE_CCD)
-    (@phc, @t, @su, N'13', 10004152, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'06', 10004152, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'01', 10004152, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'13', 10004152, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'06', 10004152, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'01', 10004152, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- TRAVEL_MODE (NBS453 q=10006157, coded PHVS_TRAVELMODE_CDC_COVID19)
-    (@phc, @t, @su, N'21753002', 10006157, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'22674006', 10006157, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'21753002', 10006157, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'21753002', 10006157, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'22674006', 10006157, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'21753002', 10006157, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- ARRIVAL_TRVL_DEST_DT (TRAVEL06 q=10006158, date 1008)
-    (@phc, @t, @su, N'2026-03-10', 10006158, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'2026-03-15', 10006158, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'2026-03-20', 10006158, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2026-03-10', 10006158, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'2026-03-15', 10006158, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'2026-03-20', 10006158, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- DEPART_TRVL_DEST_DT (TRAVEL07 q=10006159, date 1008)
-    (@phc, @t, @su, N'2026-03-12', 10006159, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'2026-03-18', 10006159, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'2026-03-22', 10006159, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2026-03-12', 10006159, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'2026-03-18', 10006159, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'2026-03-22', 10006159, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- DURATION_OUTSIDE_US (82310_4 q=10006160, numeric/text 1008)
-    (@phc, @t, @su, N'2',  10006160, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'3',  10006160, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'2',  10006160, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2',  10006160, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'3',  10006160, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'2',  10006160, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- TRAVEL_INFORMATION (TRAVEL23 q=10006161, free text 1009)
-    (@phc, @t, @su, N'Conference travel to Toronto', 10006161, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Domestic flight to Atlanta',   10006161, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'Family visit',                 10006161, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Conference travel to Toronto', 10006161, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Domestic flight to Atlanta',   10006161, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'Family visit',                 10006161, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- VHF_TRAVEL_REASON (TRAVEL16 q=10001082, coded PHVS_TRAVELREASON_MALARIA)
-    (@phc, @t, @su, N'2',  10001082, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'3',  10001082, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'10', 10001082, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'2',  10001082, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'3',  10001082, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'10', 10001082, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
 
     -- =================================================================
     -- EXPOSURE-LOCATION repeating block
     -- =================================================================
     -- CNTRY_OF_EXP (INV502 q=10001008, coded PSL_CNTRY)
-    (@phc, @t, @su, N'840', 10001008, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'124', 10001008, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'840', 10001008, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'840', 10001008, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'124', 10001008, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'840', 10001008, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- ST_OR_PROV_OF_EXP (INV503 q=10001009, coded PHVS_STATEPROVINCEOFEXPOSURE_CDC)
-    (@phc, @t, @su, N'13', 10001009, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'06', 10001009, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'13', 10001009, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'13', 10001009, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'06', 10001009, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'13', 10001009, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- CITY_OF_EXP (INV504 q=10001010, free text 1008)
-    (@phc, @t, @su, N'Atlanta',   10001010, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Toronto',   10001010, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'Savannah',  10001010, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Atlanta',   10001010, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Toronto',   10001010, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'Savannah',  10001010, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- CNTY_OF_EXP (INV505 q=10001011, coded COUNTY_CCD)
-    (@phc, @t, @su, N'13121', 10001011, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'13089', 10001011, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'13051', 10001011, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'13121', 10001011, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'13089', 10001011, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'13051', 10001011, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
 
     -- =================================================================
     -- OCCUPATION / INDUSTRY repeating block
     -- =================================================================
     -- CURRENT_OCCUPATION (85659_1 q=10005132, coded PHVS_OCCUPATION_CDC_CENSUS2010)
-    (@phc, @t, @su, N'3255', 10005132, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'3258', 10005132, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'9140', 10005132, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'3255', 10005132, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'3258', 10005132, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'9140', 10005132, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- CUR_OCCUPATION_TXT (85658_3 q=10005133, free text 1009)
-    (@phc, @t, @su, N'Registered nurse',    10005133, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Nurse practitioner',  10005133, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'Driver',              10005133, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'Registered nurse',    10005133, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Nurse practitioner',  10005133, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'Driver',              10005133, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- CURRENT_INDUSTRY (85657_5 q=10005134, coded PHVS_INDUSTRY_CDC_CENSUS2010)
-    (@phc, @t, @su, N'8190', 10005134, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'8190', 10005134, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'0170', 10005134, 1, @t, @su, N'ACTIVE', @t, 3, 3),
+    (@phc, @t, @su, N'8190', 10005134, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'8190', 10005134, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'0170', 10005134, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3),
     -- CURRENT_INDUSTRY_TXT (85078_4 q=10005135, free text 1009)
-    (@phc, @t, @su, N'Hospital',           10005135, 1, @t, @su, N'ACTIVE', @t, 1, 1),
-    (@phc, @t, @su, N'Hospital system',    10005135, 1, @t, @su, N'ACTIVE', @t, 2, 2),
-    (@phc, @t, @su, N'Agriculture',        10005135, 1, @t, @su, N'ACTIVE', @t, 3, 3);
+    (@phc, @t, @su, N'Hospital',           10005135, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 1, 1),
+    (@phc, @t, @su, N'Hospital system',    10005135, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 2, 2),
+    (@phc, @t, @su, N'Agriculture',        10005135, 1, CAST(GETDATE() AS DATE), @su, N'ACTIVE', @t, 3, 3);
 END
 GO

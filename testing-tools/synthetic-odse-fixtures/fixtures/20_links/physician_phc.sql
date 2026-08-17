@@ -185,7 +185,7 @@ VALUES
      '2026-04-01T00:00:00',              -- from_time (datamart projects this for INVESTIGATORASSIGNEDDATE — Physician's value is unused, but populated for parity)
      '2026-04-01T00:00:00',              -- add_time
      @superuser_id,                      -- add_user_id
-     '2026-04-01T00:00:00',              -- last_chg_time
+     CAST(GETDATE() AS DATE),              -- last_chg_time
      @superuser_id,                      -- last_chg_user_id
      N'ACTIVE',                          -- record_status_cd (datamart SPs filter on this)
      '2026-04-01T00:00:00',              -- record_status_time
@@ -201,7 +201,7 @@ VALUES
      '2026-04-04T00:00:00',              -- from_time
      '2026-04-04T00:00:00',              -- add_time
      @superuser_id,                      -- add_user_id
-     '2026-04-04T00:00:00',              -- last_chg_time
+     CAST(GETDATE() AS DATE),              -- last_chg_time
      @superuser_id,                      -- last_chg_user_id
      N'ACTIVE',                          -- record_status_cd
      '2026-04-04T00:00:00',              -- record_status_time
@@ -217,7 +217,7 @@ VALUES
      '2026-04-01T00:00:00',              -- from_time (event SP line 848 projects this as investigator_assigned_datetime; datamart SP 072:1959-1962 projects same as INVESTIGATORASSIGNEDDATE)
      '2026-04-01T00:00:00',              -- add_time
      @superuser_id,                      -- add_user_id
-     '2026-04-01T00:00:00',              -- last_chg_time
+     CAST(GETDATE() AS DATE),              -- last_chg_time
      @superuser_id,                      -- last_chg_user_id
      N'ACTIVE',                          -- record_status_cd
      '2026-04-01T00:00:00',              -- record_status_time
@@ -233,7 +233,7 @@ VALUES
      '2026-04-02T00:00:00',              -- from_time (matches Tier 1 hand-authored nrt_investigation.investigator_assigned_datetime on v2)
      '2026-04-04T00:00:00',              -- add_time
      @superuser_id,                      -- add_user_id
-     '2026-04-04T00:00:00',              -- last_chg_time
+     CAST(GETDATE() AS DATE),              -- last_chg_time
      @superuser_id,                      -- last_chg_user_id
      N'ACTIVE',                          -- record_status_cd
      '2026-04-04T00:00:00',              -- record_status_time

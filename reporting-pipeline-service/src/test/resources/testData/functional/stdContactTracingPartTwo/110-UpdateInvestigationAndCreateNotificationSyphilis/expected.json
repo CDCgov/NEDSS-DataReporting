@@ -131,7 +131,6 @@
       "CTT_SHARED_IND": "T",
       "CTT_SYMP_NOTES": "",
       "CTT_TRT_NOTES": "",
-      "D_CONTACT_RECORD_KEY": 2.0,
       "LAST_CHG_TIME": "2026-05-06T22:43:44.773",
       "LAST_CHG_USER_ID": 10009282,
       "LOCAL_ID": "CON1000009027GA01",
@@ -702,8 +701,7 @@
     }
   ],
   "33": [
-    {
-    },
+    {},
     {
       "HIV_900_TEST_IND": "No",
       "HIV_900_TEST_REFERRAL_DT": "2026-04-24",
@@ -863,7 +861,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "LAST_CHG_TIME": "2026-05-06T23:20:57.140",
-      "OUTBREAK_IND": "",
+      "OUTBREAK_IND": null,
       "PATIENT_AGE_AT_ONSET": 41,
       "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_PREGNANT_IND": "Yes",
@@ -895,7 +893,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "LAST_CHG_TIME": "2026-05-06T22:51:40.267",
-      "OUTBREAK_IND": "",
+      "OUTBREAK_IND": null,
       "PROGRAM_AREA_DESCRIPTION": "STD",
       "RECORD_STATUS_CD": "ACTIVE",
       "REFERRAL_BASIS": "P1 - Partner, Sex"
@@ -1189,7 +1187,7 @@
       "JURISDICTION_NM": "Fulton County",
       "MDH_PREV_STD_HIST": "No",
       "ORDERING_FACILITY_KEY": 4,
-      "OUTBREAK_IND": "",
+      "OUTBREAK_IND": null,
       "PATIENT_AGE_AT_ONSET": 41,
       "PATIENT_AGE_AT_ONSET_UNIT": "Years",
       "PATIENT_AGE_REPORTED": "          41 Years",
@@ -1284,7 +1282,7 @@
       "JURISDICTION_CD": "130001",
       "JURISDICTION_NM": "Fulton County",
       "ORDERING_FACILITY_KEY": 1,
-      "OUTBREAK_IND": "",
+      "OUTBREAK_IND": null,
       "PATIENT_AGE_REPORTED": "           .",
       "PATIENT_CURRENT_SEX": "Male",
       "PATIENT_DECEASED_INDICATOR": "No",

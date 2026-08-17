@@ -139,6 +139,13 @@ uv run functional-test -S localhost:3433 -U rtr_admin \
 | `--database` | `NBS_ODSE` | Initial database for the connection. |
 | `--max-retry` | `40` | Maximum polls per query before failing. |
 | `--retry-delay` | `6` | Seconds between polls. |
+| `--skip-query` | off | Run each step's `setup.sql` but skip the query/expected polling — just load the test data without waiting for the pipeline to process it. |
+| `--refresh-last-chg-time` | off | Replace literal `LAST_CHG_TIME` values in `setup.sql` with `GETDATE()` so an external ETL process sees freshly loaded rows as changed. |
+| `--bulk` | — | Generate MSSQL bulk-load files instead of running tests: COPIES shifted copies of every selected test's final setup rows (see below). Requires `--bulk-out`. |
+| `--bulk-out` | — | Output directory for `--bulk`. |
+| `--bulk-workers` | `min(8, CPUs)` | Parallel worker processes for `--bulk` generation; the copies are sharded across workers (each shard also loads in parallel via `load.sh`). |
+| `--manage-indexes` | off | With `--bulk`: emit load-script sections that disable non-unique nonclustered indexes on the target tables during the load and rebuild them after. |
+| `--identity-base` | `500000000` | First synthetic value for identity columns in `--bulk` output (loaded with `KEEPIDENTITY`). |
 | `--fail-fast` | off | Stop after the first failing test. |
 | `--pause` | off | Pause and wait for Enter after each step completes (Ctrl-C to abort), so you can inspect the database between steps. |
 | `--debug` | off | Live-print each query's SQL and its expected vs actual results on every poll attempt. |
@@ -156,6 +163,123 @@ the fastest way to see *why* a query isn't matching.
 The process exits `0` when all tests pass, `1` when any test fails, and `2` on
 a usage/connection error.
 
+## Running every setup repeatedly (`run_setup_iterations.py`)
+
+To just load every test's seed data — repeatedly, without waiting for the
+reporting pipeline to process it — use the `run_setup_iterations.py` wrapper
+at the project root. It runs `functional-test --skip-query
+--refresh-last-chg-time` once per iteration, across all tests, which is
+useful when an external ETL process is what needs to observe the freshly
+loaded rows (see `--refresh-last-chg-time` above).
+
+```sh
+uv run run_setup_iterations.py \
+    -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
+    -i 3 \
+    -S localhost:3433 -U rtr_admin -P rtr_admin
+```
+
+| Flag | Long form | Default | Description |
+| ---- | --------- | ------- | ----------- |
+| `-d` | `--data-dir` | required | The `testData/functional` directory. |
+| `-i` | `--iterations` | `1` | How many times to run all test setups. |
+| `-s` | `--shift-id` | next value from `--state-file`, or current time (ms since epoch) if there's no state yet | Base UID shift for the first iteration. Leave unset so each invocation gets a fresh, never-before-used ID range automatically — passing your own value means you're responsible for it not colliding with a previous run's leftover rows (and it's still recorded to `--state-file` for future auto-runs). |
+| — | `--shift-step` | auto (spans every test's ID block) | Extra shift added on each iteration after the first, so repeat iterations never reuse the same IDs. Auto-computed from the test blocks found under `-d`; only override this if you understand the block layout in `testData/functional/README.md`. |
+| `-S` | `--server` | — | Passed straight through to `functional-test`. |
+| `-U` | `--user` | — | Passed straight through to `functional-test`. |
+| `-P` | `--password` | — | Passed straight through to `functional-test`. |
+| — | `--database` | — | Passed straight through to `functional-test`. |
+| — | `--state-file` | `.run_setup_iterations_state.json` next to the script | Local file recording the next safe `--shift-id`. Not committed (it's in `.gitignore`) and specific to whatever database this machine has been running against. |
+| — | `--no-state` | off | Don't read or update `--state-file`; always fall back to the current-time shift. |
+
+If `-S`/`-U`/`-P` are omitted, the underlying `functional-test` invocation
+still falls back to `.env` (see above) — the wrapper itself has no `.env`
+handling of its own. It always runs **every** test (no `-t` selection) and
+always applies `--skip-query --refresh-last-chg-time`; there's no way to
+opt out of either from the wrapper.
+
+Each run, regardless of pass/fail, records the next never-before-used shift
+(`shift_id + iterations * shift_step`) to `--state-file`, so the *next*
+invocation on the same machine — auto or explicit — starts past every ID this
+one touched. The current-time fallback only kicks in once, before any state
+file exists (or when `--no-state` is passed); after that, the state file is
+the source of truth, since a clock-derived shift can't guarantee it won't
+repeat across back-to-back runs.
+
+Per-iteration failures are printed live and summarized at the end; the
+process exits non-zero if any iteration failed.
+
+## Bulk data generation (`--bulk`)
+
+To mass-generate data (e.g. for volume/performance testing), `--bulk` turns the
+setup scripts into MSSQL bulk-load files instead of executing them:
+
+```sh
+uv run functional-test -d ../../reporting-pipeline-service/src/test/resources/testData/functional \
+    --bulk 10000 --bulk-out out/bulkdata --manage-indexes
+```
+
+Use `--manage-indexes` for any sizable load — inserting through the tables'
+non-unique nonclustered indexes slows the bulk path badly, and
+disabling/rebuilding them is much faster at volume.
+
+(`out/` is bind-mounted read-only into the local mssql container at `/staging`
+— see `docker-compose.yaml` — so output written there is immediately readable
+by the server as `/staging/bulkdata`.)
+
+No database connection is made. The setup scripts are *evaluated* offline by a
+small T-SQL interpreter (variables, `OUTPUT INSERTED` identity captures,
+UPDATEs and DELETEs are all applied), producing each test's **final-state
+rows**. Those rows are then written `COPIES` times, each copy shifted to a
+fresh UID range using a collision-free pattern derived from the tests' ID
+blocks (tile each 1000-wide block in strides of the widest test, then jump
+past the whole occupied range and repeat) — so any number of copies can be
+loaded next to the original data and next to each other. `-s` offsets the
+whole series, e.g. past data from earlier normal runs.
+
+Generation is sharded over `--bulk-workers` processes (default `min(8, CPUs)`;
+copy offsets and identity values are pure functions of the global copy index,
+so shards are independent and deterministic). Rows are written as **Parquet**
+— one file per table column-set per shard — and loaded with SQL Server 2022's
+native reader: `INSERT INTO t (cols) SELECT cols FROM OPENROWSET(BULK ...,
+FORMAT='PARQUET')`, one set-based statement per file. Inserts that use
+different column subsets get separate files, so omitted columns take their
+column defaults, and NULL / empty-string / `T`-separator timestamp values load
+as-is. The output directory contains:
+
+- `<Table>[__N]__s<K>.parquet` — table (column-set `N`) rows for shard `K`.
+- `pre.sql` / `shard_<K>.sql` / `post.sql` — the per-shard loads. `pre.sql`
+  turns off FK/CHECK validation on the target tables (as bcp's bulk path
+  implicitly does; `post.sql` re-enables without validating, leaving them
+  untrusted — the same end-state as a bcp load) and, with `--manage-indexes`,
+  disables non-unique nonclustered indexes for `post.sql` to rebuild. Each
+  shard loads the tables in a rotated order to reduce lock contention, wraps
+  every insert in a deadlock-retry block, guards identity tables with
+  `IDENTITY_INSERT`, and `post.sql` reseeds identity tables.
+- `load.sh` — runs `pre.sql`, then the shard scripts in parallel
+  (`LOAD_WORKERS`, default 6), then `post.sql` and `fixup.sql`:
+
+  ```sh
+  SERVER=localhost,3433 DBUSER=sa DBPASSWORD=... \
+      DATA_DIR=/staging/bulkdata sh load.sh
+  ```
+
+  `DATA_DIR` is the path where the **server** sees the `.parquet` files —
+  with the compose mount, `--bulk-out out/<name>` is `/staging/<name>`. With
+  `mssql-tools18`, also set `SQLCMD_OPTS=-C` to trust a self-signed server
+  certificate.
+- `load.sql` — the same load as one sequential script for plain
+  `sqlcmd -v DataDir=... -i load.sql`.
+- `fixup.sql` — the few INSERTs whose values read seed data that only exists
+  on a real database, generated set-based (one statement covers all copies).
+
+Caveats: needs SQL Server 2022+ (`OPENROWSET ... FORMAT='PARQUET'`);
+identity-column values are synthesized starting at `--identity-base` (pick a
+range unused on the target; `DBCC CHECKIDENT` afterwards moves the tables'
+identity seeds past it); recorded UPDATE/DELETEs that no-op on a real replay
+(stale recorded state, or rows seeded outside the tests) are skipped with a
+warning.
+
 ## Development
 
 Run the unit tests (they exercise the comparison, SQL splitting, discovery,
@@ -168,8 +292,13 @@ uv run pytest
 ## Notes
 
 - `setup.sql` performs raw `INSERT`s. Running the same test twice against a
-  persistent dev instance can fail on duplicate keys — the setup error is
-  reported per step. Reset the relevant rows (see `shift_test_ids.py` and the
-  ID ranges in `testData/functional/README.md`) between runs if needed.
+  persistent dev instance with the same (or no) `-s`/`-i` shift can fail on
+  duplicate keys — the setup error is reported per step. Reset the relevant
+  rows (see `shift_test_ids.py` and the ID ranges in
+  `testData/functional/README.md`) between runs if needed, or shift to an
+  unused ID range with `-s`/`-i`. `run_setup_iterations.py` does this
+  automatically across its own iterations, and across separate invocations
+  via its `--state-file` (see above).
 - The application under test must be running and connected to the same
   databases so it can process the inserted source data into `RDB_MODERN`.
+
