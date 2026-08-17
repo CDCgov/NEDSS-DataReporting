@@ -133,10 +133,10 @@ BEGIN
                    end                                                                     as deceased_indicator,
                p.electronic_ind,
                p.ethnic_group_ind,
-               case
-                   when (p.ethnic_group_ind is not null or p.ethnic_group_ind != '') then (select TOP 1 *
-                                                                                           from dbo.fn_get_value_by_cd_ques(p.ethnic_group_ind, 'DEM155') ORDER BY 1)
-                   end                                                                     as ethnicity,
+               COALESCE(
+                   (select TOP 1 * from dbo.fn_get_value_by_cd_ques(p.ethnic_group_ind, 'DEM155') ORDER BY 1),
+                   NULLIF(LTRIM(RTRIM(p.ethnic_group_ind)), '')
+               )                                                                           as ethnicity,
                p.birth_gender_cd,
                case
                    when (p.birth_gender_cd is not null or p.birth_gender_cd != '') then (select TOP 1 *
