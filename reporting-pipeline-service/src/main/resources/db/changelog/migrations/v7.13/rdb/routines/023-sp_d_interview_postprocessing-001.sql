@@ -81,6 +81,16 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #INTERVIEW_INIT';
 
+        CREATE TABLE #requested_interview_ids
+        (
+            interview_uid BIGINT NOT NULL PRIMARY KEY
+        );
+
+        INSERT INTO #requested_interview_ids (interview_uid)
+        SELECT DISTINCT TRY_CAST(value AS BIGINT) AS interview_uid
+        FROM STRING_SPLIT(@interview_uids, ',')
+        WHERE TRY_CAST(value AS BIGINT) IS NOT NULL;
+
         SELECT ix.INTERVIEW_UID,
                ixk.D_INTERVIEW_KEY,
                ix.interview_status_cd AS IX_STATUS_CD,
@@ -102,9 +112,10 @@ BEGIN
                ix.IX_INTERVIEWEE_ROLE
         INTO #INTERVIEW_INIT
         FROM dbo.nrt_interview ix
+            INNER JOIN #requested_interview_ids rii
+                ON ix.interview_uid = rii.interview_uid
             LEFT JOIN dbo.nrt_interview_key ixk
-                ON ix.interview_uid = ixk.interview_uid
-        WHERE ix.interview_uid in (SELECT value FROM STRING_SPLIT(@interview_uids, ','));
+                ON ix.interview_uid = ixk.interview_uid;
 
         if
             @debug = 'true'
