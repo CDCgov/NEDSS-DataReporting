@@ -7,6 +7,7 @@ import pytest
 from functional_test import runner
 from functional_test.remapper import build_id_remapper, build_shift_remapper
 from functional_test.runner import (
+    _refresh_last_chg_time,
     _wait_for_match,
     discover_steps,
     discover_tests,
@@ -15,6 +16,34 @@ from functional_test.runner import (
     run_test,
     split_statements,
 )
+
+
+class TestRefreshLastChgTime:
+    def test_rewrites_literal_to_getdate(self):
+        sql = (
+            "INSERT INTO t (id, LAST_CHG_TIME) VALUES (1, N'2026-05-06T22:11:00.673');"
+        )
+        assert _refresh_last_chg_time(sql) == (
+            "INSERT INTO t (id, LAST_CHG_TIME) VALUES (1, GETDATE());"
+        )
+
+    def test_rewrites_quoted_and_bracketed_forms(self):
+        sql = (
+            "INSERT INTO t ([LAST_CHG_TIME], x) VALUES (N'2026-01-01', '2026-02-02');"
+        )
+        assert _refresh_last_chg_time(sql) == (
+            "INSERT INTO t ([LAST_CHG_TIME], x) VALUES (GETDATE(), '2026-02-02');"
+        )
+
+    def test_leaves_string_literals_untouched(self):
+        sql = "INSERT INTO t (x) VALUES (N'note: LAST_CHG_TIME = ''2026-01-01''');"
+        assert _refresh_last_chg_time(sql) == sql
+
+    def test_case_insensitive(self):
+        sql = "INSERT INTO t (last_chg_time) VALUES (N'2026-01-01');"
+        assert _refresh_last_chg_time(sql) == (
+            "INSERT INTO t (last_chg_time) VALUES (GETDATE());"
+        )
 
 
 class TestSplitStatements:
@@ -178,6 +207,21 @@ class TestRunStep:
         assert db.setup_calls == ["INSERT 1"]
         assert len(result.queries) == 2
         assert all(q.passed for q in result.queries)
+
+    def test_refresh_last_chg_time_flag_rewrites_setup(self, tmp_path):
+        step = _make_step(
+            tmp_path / "010-step",
+            setup="INSERT INTO t (id, LAST_CHG_TIME) VALUES (1, N'2026-01-01');",
+            query="SELECT a",
+            expected={"0": [{"a": 1}]},
+        )
+        db = FakeDB(results=[[{"a": 1}]])
+        result = run_step(
+            db, step, max_retry=1, retry_delay=0, refresh_last_chg_time=True
+        )
+        assert result.passed is True
+        assert "GETDATE()" in db.setup_calls[0]
+        assert "2026-01-01" not in db.setup_calls[0]
 
     def test_failing_query(self, tmp_path):
         step = _make_step(

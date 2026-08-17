@@ -49,6 +49,16 @@ BEGIN
         SET @proc_step_no = 1;
         SET @proc_step_name = ' Create Key Associations table';
 
+        CREATE TABLE #requested_case_ids
+        (
+            public_health_case_uid BIGINT NOT NULL PRIMARY KEY
+        );
+
+        INSERT INTO #requested_case_ids (public_health_case_uid)
+        SELECT DISTINCT TRY_CAST(value AS BIGINT) AS public_health_case_uid
+        FROM STRING_SPLIT(@phc_id_list, ',')
+        WHERE TRY_CAST(value AS BIGINT) IS NOT NULL;
+
         select
             distinct cc.public_health_case_uid,
                      i.investigation_key,
@@ -70,6 +80,7 @@ BEGIN
                      cc.record_status_cd
         into #CASE_COUNT
         from dbo.NRT_INVESTIGATION cc with(nolock)
+                 inner join #requested_case_ids rci on cc.public_health_case_uid = rci.public_health_case_uid
                  inner join dbo.INVESTIGATION i with(nolock) on cc.public_health_case_uid = i.case_uid
                  inner join dbo.condition con with(nolock) on	con.condition_cd = cc.CD
                  left outer join dbo.D_PATIENT dpat with(nolock) on cc.patient_id = dpat.patient_uid
@@ -81,11 +92,7 @@ BEGIN
                  left outer join dbo.RDB_DATE rd1 with(nolock) on cc.investigator_assigned_datetime = rd1.DATE_MM_DD_YYYY
                  left outer join dbo.RDB_DATE rd2 with(nolock) on cc.activity_from_time = rd2.DATE_MM_DD_YYYY
                  left outer join dbo.RDB_DATE rd3 with(nolock) on cc.diagnosis_time = rd3.DATE_MM_DD_YYYY
-                 left outer join dbo.RDB_DATE rd4 with(nolock) on cc.rpt_form_cmplt_time = rd4.DATE_MM_DD_YYYY
-        where cc.public_health_case_uid in (
-            SELECT value FROM STRING_SPLIT(@phc_id_list, ',')
-        )
-        ;
+                 left outer join dbo.RDB_DATE rd4 with(nolock) on cc.rpt_form_cmplt_time = rd4.DATE_MM_DD_YYYY;
         COMMIT TRANSACTION;
 
         BEGIN TRANSACTION;
