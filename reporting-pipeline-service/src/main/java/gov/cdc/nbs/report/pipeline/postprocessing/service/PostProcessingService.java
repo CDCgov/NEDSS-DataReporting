@@ -434,8 +434,7 @@ public class PostProcessingService {
           Arrays.stream(tblNode.asText().split(","))
               .map(String::trim)
               .forEach(
-                  tbl ->
-                      pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
+                  tbl -> pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
         }
       } else if (entity == NOTIFICATION) {
         String actTypeCd = payloadNode.path("act_type_cd").asText();
@@ -495,10 +494,10 @@ public class PostProcessingService {
 
   private void extractSummaryCase(Long uid, String caseType) {
     if (ACT_TYPE_SUM.equals(caseType) || "S".equals(caseType)) {
-        sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      sumCache.computeIfAbsent(CASE_TYPE_SUM, k -> new ConcurrentLinkedQueue<>()).add(uid);
     }
     if (ACT_TYPE_SUM.equals(caseType) || "A".equals(caseType)) {
-        sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
+      sumCache.computeIfAbsent(CASE_TYPE_AGG, k -> new ConcurrentLinkedQueue<>()).add(uid);
     }
   }
 
@@ -700,29 +699,28 @@ public class PostProcessingService {
       final Map<String, List<Long>> idCacheSnapshot;
       final Map<String, List<Long>> pbCacheSnapshot;
       final Map<String, List<Long>> obsCacheSnapshot;
-      
+
       idCacheSnapshot =
-            retryEntry.getValue().entrySet().stream()
-                .filter(entry -> !entry.getKey().contains("^"))
-                .collect(
-                    Collectors.toMap(
-                        Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
-      
+          retryEntry.getValue().entrySet().stream()
+              .filter(entry -> !entry.getKey().contains("^"))
+              .collect(
+                  Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+
       pbCacheSnapshot =
-            retryEntry.getValue().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("PB^"))
-                .collect(
-                    Collectors.toMap(
-                        e -> e.getKey().substring("PB^".length()),
-                        e -> new ArrayList<>(e.getValue())));
+          retryEntry.getValue().entrySet().stream()
+              .filter(e -> e.getKey().startsWith("PB^"))
+              .collect(
+                  Collectors.toMap(
+                      e -> e.getKey().substring("PB^".length()),
+                      e -> new ArrayList<>(e.getValue())));
 
       obsCacheSnapshot =
-            retryEntry.getValue().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("OBS^"))
-                .collect(
-                    Collectors.toMap(
-                        e -> e.getKey().substring("OBS^".length()),
-                        e -> new ArrayList<>(e.getValue())));
+          retryEntry.getValue().entrySet().stream()
+              .filter(e -> e.getKey().startsWith("OBS^"))
+              .collect(
+                  Collectors.toMap(
+                      e -> e.getKey().substring("OBS^".length()),
+                      e -> new ArrayList<>(e.getValue())));
 
       retryCache.remove(batchId);
 
@@ -1425,15 +1423,15 @@ public class PostProcessingService {
 
       synchronized (cacheLock) {
         pbCache.forEach(
-          (tbl, queue) ->
-              retryMap
-                  .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
-                  .addAll(queue));
+            (tbl, queue) ->
+                retryMap
+                    .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
+                    .addAll(queue));
         obsCache.forEach(
-          (key, queue) ->
-              retryMap
-                  .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
-                  .addAll(queue));
+            (key, queue) ->
+                retryMap
+                    .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
+                    .addAll(queue));
       }
     }
 
