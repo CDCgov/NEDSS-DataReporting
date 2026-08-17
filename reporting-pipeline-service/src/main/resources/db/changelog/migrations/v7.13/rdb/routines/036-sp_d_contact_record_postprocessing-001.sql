@@ -93,6 +93,16 @@ BEGIN
         SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
         SET @PROC_STEP_NAME = ' GENERATING #CONTACT_INIT';
 
+        CREATE TABLE #requested_contact_ids
+        (
+            contact_uid BIGINT NOT NULL PRIMARY KEY
+        );
+
+        INSERT INTO #requested_contact_ids (contact_uid)
+        SELECT DISTINCT TRY_CAST(value AS BIGINT) AS contact_uid
+        FROM STRING_SPLIT(@contact_uids, ',')
+        WHERE TRY_CAST(value AS BIGINT) IS NOT NULL;
+
         SELECT
         	ixk.D_CONTACT_RECORD_KEY as D_CONTACT_RECORD_KEY,
             ADD_TIME,
@@ -140,9 +150,10 @@ BEGIN
             VERSION_CTRL_NBR
         INTO #CONTACT_INIT
         FROM dbo.NRT_CONTACT ix
+            INNER JOIN #requested_contact_ids rci
+                ON ix.contact_uid = rci.contact_uid
             LEFT JOIN dbo.NRT_CONTACT_KEY ixk
-                ON ix.contact_uid = ixk.contact_uid
-        WHERE ix.contact_uid in (SELECT value FROM STRING_SPLIT(@contact_uids, ','));
+                ON ix.contact_uid = ixk.contact_uid;
 
         if
             @debug = 'true'
