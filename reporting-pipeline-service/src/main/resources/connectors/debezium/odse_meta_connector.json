@@ -28,7 +28,7 @@
     "topic.creation.default.cleanup.policy": "compact",
     "time.precision.mode": "connect",
     "transforms": "dropPrefix, convertTimezone, unwrap, convertTimestampsConfig_add_time,convertTimestampsConfig_last_chg_time, convertTimestampsConfig_record_status_time",
-    "transforms.dropPrefix.regex": "cdc_odse_meta\\.NBS_ODSE\\.dbo\\.(.+)",
+    "transforms.dropPrefix.regex": "(?i)^cdc_odse_meta\\.NBS_ODSE\\.dbo\\.(.+)",
     "transforms.dropPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
     "transforms.dropPrefix.replacement": "nrt_odse_$1",
     "transforms.convertTimezone.type": "io.debezium.transforms.TimezoneConverter",

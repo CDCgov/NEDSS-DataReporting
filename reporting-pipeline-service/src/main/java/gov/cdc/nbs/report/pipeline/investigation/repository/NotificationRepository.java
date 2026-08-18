@@ -8,7 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface NotificationRepository extends JpaRepository<NotificationUpdate, String> {
 
-  @Query(nativeQuery = true, value = "execute sp_notification_event :notification_uids")
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_notification_event @notification_list = :notification_uids, "
+              + "@debug_logging = :debugLogging")
   Optional<NotificationUpdate> computeNotifications(
-      @Param("notification_uids") String notificationUids);
+      @Param("notification_uids") String notificationUids,
+      @Param("debugLogging") boolean debugLogging);
 }

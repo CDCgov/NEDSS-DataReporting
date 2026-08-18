@@ -48,6 +48,8 @@ import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.BackfillData;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.DatamartData;
 import gov.cdc.nbs.report.pipeline.postprocessing.repository.model.dto.Datamart;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
+import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
@@ -74,11 +76,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.errors.SerializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,6 +163,7 @@ public class PostProcessingService {
   private final InvestigationRepository investigationRepository;
 
   private final ProcessDatamartData dmProcessor;
+  private final RetryTopicResolver retryTopicResolver;
 
   static final String PAYLOAD = "payload";
   static final String SP_EXECUTION_COMPLETED = "Stored proc execution completed: {}";
@@ -177,9 +182,59 @@ public class PostProcessingService {
 
   private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
   private final Object cacheLock = new Object();
+  private final Object retryCacheLock = new Object();
+  private final Object dmCacheLock = new Object();
 
   @Value("${spring.kafka.topics.nrt.investigation}")
   private String investigationTopic;
+
+  @Value("${spring.kafka.topics.nrt.organization}")
+  private String organizationTopic;
+
+  @Value("${spring.kafka.topics.nrt.patient}")
+  private String patientTopic;
+
+  @Value("${spring.kafka.topics.nrt.provider}")
+  private String providerTopic;
+
+  @Value("${spring.kafka.topics.nrt.investigation-notification}")
+  private String notificationTopic;
+
+  @Value("${spring.kafka.topics.nrt.investigation-case-management}")
+  private String caseManagementTopic;
+
+  @Value("${spring.kafka.topics.nrt.interview}")
+  private String interviewTopic;
+
+  @Value("${spring.kafka.topics.nrt.ldf-data}")
+  private String ldfDataTopic;
+
+  @Value("${spring.kafka.topics.nrt.observation}")
+  private String observationTopic;
+
+  @Value("${spring.kafka.topics.nrt.place}")
+  private String placeTopic;
+
+  @Value("${spring.kafka.topics.nrt.auth-user}")
+  private String authUserTopic;
+
+  @Value("${spring.kafka.topics.nrt.contact}")
+  private String contactTopic;
+
+  @Value("${spring.kafka.topics.nrt.treatment}")
+  private String treatmentTopic;
+
+  @Value("${spring.kafka.topics.nrt.vaccination}")
+  private String vaccinationTopic;
+
+  @Value("${spring.kafka.topics.nrt.odse-state-defined-field-metadata}")
+  private String stateDefinedFieldMetadataTopic;
+
+  @Value("${spring.kafka.topics.nrt.odse-nbs-page}")
+  private String nbsPageTopic;
+
+  @Value("${spring.kafka.topics.nrt.srte-condition-code}")
+  private String conditionCodeTopic;
 
   @Value("${featureFlag.post-processing-enable}")
   private boolean serviceEnable;
@@ -190,6 +245,7 @@ public class PostProcessingService {
   private Counter ppDmProcessed;
   private Counter ppMsgSuccess;
   private Counter ppMsgFailure;
+  private Map<String, Entity> nrtTopicEntities;
 
   Timer processTimer;
   private final AtomicInteger msgCacheSizeGauge = new AtomicInteger();
@@ -198,6 +254,25 @@ public class PostProcessingService {
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
+    nrtTopicEntities =
+        Map.ofEntries(
+            Map.entry(investigationTopic, Entity.INVESTIGATION),
+            Map.entry(organizationTopic, Entity.ORGANIZATION),
+            Map.entry(patientTopic, Entity.PATIENT),
+            Map.entry(providerTopic, Entity.PROVIDER),
+            Map.entry(notificationTopic, Entity.NOTIFICATION),
+            Map.entry(caseManagementTopic, Entity.CASE_MANAGEMENT),
+            Map.entry(interviewTopic, Entity.INTERVIEW),
+            Map.entry(ldfDataTopic, Entity.LDF_DATA),
+            Map.entry(observationTopic, Entity.OBSERVATION),
+            Map.entry(placeTopic, Entity.D_PLACE),
+            Map.entry(authUserTopic, Entity.AUTH_USER),
+            Map.entry(contactTopic, Entity.CONTACT),
+            Map.entry(treatmentTopic, Entity.TREATMENT),
+            Map.entry(vaccinationTopic, Entity.VACCINATION),
+            Map.entry(stateDefinedFieldMetadataTopic, Entity.STATE_DEFINED_FIELD_METADATA),
+            Map.entry(nbsPageTopic, Entity.PAGE),
+            Map.entry(conditionCodeTopic, Entity.CONDITION));
 
     ppMsgProcessed = metrics.counter("post_msg_processed", tags);
     ppDmProcessed = metrics.counter("post_dm_processed", tags);
@@ -228,9 +303,7 @@ public class PostProcessingService {
    *   3. Cache the extracted IDs for further processing in idCache and data in idVals.
    * </ul>
    *
-   * @param topic The name of the Kafka topic from which the message was received.
-   * @param key The key of the Kafka message, typically used for partitioning.
-   * @param payload The value of the Kafka message, which contains the payload to be processed.
+   * @param record the consumed Kafka record containing the topic, key, payload, and native headers
    */
   @RetryableTopic(
       attempts = "${spring.kafka.consumer.max-retry}",
@@ -269,35 +342,38 @@ public class PostProcessingService {
         "${spring.kafka.topics.nrt.srte-condition-code}"
       },
       containerFactory = "kafkaListenerContainerFactoryDefault")
-  public void processNrtMessage(
-      @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-      @Header(KafkaHeaders.RECEIVED_KEY) String key,
-      @Payload String payload) {
-
+  public void processNrtMessage(ConsumerRecord<String, String> record) {
     ppMsgProcessed.increment();
     if (!serviceEnable) {
       return; // skip processing when not enabled
     }
-    extractIdFromMessage(topic, key, payload);
+
+    TopicResolution topicResolution = retryTopicResolver.resolve(record, nrtTopicEntities.keySet());
+    String logicalTopic = topicResolution.logicalTopic();
+    Entity entity = nrtTopicEntities.get(logicalTopic);
+    extractIdFromMessage(logicalTopic, record.key(), record.value(), entity);
+  }
+
+  void processNrtMessage(String topic, String key, String payload) {
+    processNrtMessage(new ConsumerRecord<>(topic, 0, 0L, key, payload));
   }
 
   /**
    * Extracts entity UID from the Kafka message and caches it for further processing. If the
    * identifier is numeric, it is also enriched with values from the message payload.
    *
-   * @param topic the Kafka topic from which the message was received (used to determine entity
-   *     type)
+   * @param topic the normalized logical topic used to determine the entity and cache key
    * @param messageKey the Kafka message key in JSON format, containing the entity UID
    * @param payload the Kafka message payload in JSON format, used for enrichment when UID is
    *     numeric
+   * @param entity the entity explicitly mapped from the configured logical topic
    * @throws DataProcessingException if the UID field is missing or cannot be processed
    */
-  private void extractIdFromMessage(String topic, String messageKey, String payload) {
+  private void extractIdFromMessage(
+      String topic, String messageKey, String payload, Entity entity) {
     try {
       logger.info("Got this key payload: {} from the topic: {}", messageKey, topic);
       JsonNode keyNode = objectMapper.readTree(messageKey);
-
-      Entity entity = getEntityByTopic(topic);
       if (Objects.isNull(keyNode.get(PAYLOAD).get(entity.getUidName()))) {
         throw new NoSuchElementException(
             "The '"
@@ -310,11 +386,15 @@ public class PostProcessingService {
 
       if (idNode.isTextual()) {
         String cd = idNode.asText();
-        cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        synchronized (cacheLock) {
+          cdCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(cd);
+        }
       } else {
         Long id = idNode.asLong();
-        idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
-        extractValFromMessage(id, topic, payload);
+        synchronized (cacheLock) {
+          idCache.computeIfAbsent(topic, k -> new ConcurrentLinkedQueue<>()).add(id);
+          extractValFromMessage(id, topic, payload, entity);
+        }
       }
 
     } catch (Exception e) {
@@ -327,7 +407,7 @@ public class PostProcessingService {
    * Extracts and categorizes additional values from a Kafka message payload based on the entity
    * type.
    *
-   * <p>Depending on the topic suffix, this method will:
+   * <p>Depending on the explicitly mapped entity, this method will:
    *
    * <ul>
    *   <li><b>Investigation</b>: add the UID to summary/aggregate caches and map it to Page Builder
@@ -341,11 +421,12 @@ public class PostProcessingService {
    * @param uid the numeric identifier extracted from the Kafka message key
    * @param topic the Kafka topic name, used to determine which entity-specific rules to apply
    * @param payload the Kafka message payload in JSON format, used to extract additional values
+   * @param entity the entity explicitly mapped from the configured logical topic
    */
-  private void extractValFromMessage(Long uid, String topic, String payload) {
+  private void extractValFromMessage(Long uid, String topic, String payload, Entity entity) {
     try {
       JsonNode payloadNode = objectMapper.readTree(payload).get(PAYLOAD);
-      if (topic.endsWith(INVESTIGATION.getEntityName())) {
+      if (entity == INVESTIGATION) {
         extractSummaryCase(uid, payloadNode.path("case_type_cd").asText());
 
         JsonNode tblNode = payloadNode.path("rdb_table_name_list");
@@ -355,11 +436,11 @@ public class PostProcessingService {
               .forEach(
                   tbl -> pbCache.computeIfAbsent(tbl, k -> new ConcurrentLinkedQueue<>()).add(uid));
         }
-      } else if (topic.endsWith(NOTIFICATION.getEntityName())) {
+      } else if (entity == NOTIFICATION) {
         String actTypeCd = payloadNode.path("act_type_cd").asText();
         Long phcUid = payloadNode.get(INVESTIGATION.getUidName()).asLong();
         extractSummaryCase(phcUid, actTypeCd);
-      } else if (topic.endsWith(OBSERVATION.getEntityName())) {
+      } else if (entity == OBSERVATION) {
         String domainCd = payloadNode.path("obs_domain_cd_st_1").asText();
         String ctrlCd =
             Optional.ofNullable(payloadNode.get("ctrl_cd_display_form"))
@@ -463,27 +544,34 @@ public class PostProcessingService {
         return;
       }
 
-      Map<String, Queue<Long>> dmMap =
-          dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
+      /* dmMap is an inner map of dmCache!
+      It is adding the queue directly into that inner map,
+      which is the same object held by dmCache. There is no separate copy being made.
+      */
+      synchronized (dmCacheLock) {
+        Map<String, Queue<Long>> dmMap =
+            dmCache.computeIfAbsent(dmData.getDatamart(), k -> new ConcurrentHashMap<>());
 
-      dmMap
-          .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-          .add(dmData.getPublicHealthCaseUid());
+        dmMap
+            .computeIfAbsent(INVESTIGATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+            .add(dmData.getPublicHealthCaseUid());
 
-      Optional.ofNullable(dmData.getPatientUid())
-          .ifPresent(
-              uid ->
-                  dmMap
-                      .computeIfAbsent(PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                      .add(uid));
+        Optional.ofNullable(dmData.getPatientUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            PATIENT.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
 
-      Optional.ofNullable(dmData.getObservationUid())
-          .ifPresent(
-              uid ->
-                  dmMap
-                      .computeIfAbsent(
-                          OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
-                      .add(uid));
+        Optional.ofNullable(dmData.getObservationUid())
+            .ifPresent(
+                uid ->
+                    dmMap
+                        .computeIfAbsent(
+                            OBSERVATION.getEntityName(), k -> new ConcurrentLinkedQueue<>())
+                        .add(uid));
+      }
 
     } catch (Exception e) {
       String msg = "Error processing datamart message: " + e.getMessage();
@@ -612,32 +700,29 @@ public class PostProcessingService {
       final Map<String, List<Long>> pbCacheSnapshot;
       final Map<String, List<Long>> obsCacheSnapshot;
 
-      synchronized (cacheLock) {
-        idCacheSnapshot =
-            retryEntry.getValue().entrySet().stream()
-                .filter(entry -> !entry.getKey().contains("^"))
-                .collect(
-                    Collectors.toMap(
-                        Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
+      idCacheSnapshot =
+          retryEntry.getValue().entrySet().stream()
+              .filter(entry -> !entry.getKey().contains("^"))
+              .collect(
+                  Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>(entry.getValue())));
 
-        pbCacheSnapshot =
-            retryEntry.getValue().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("PB^"))
-                .collect(
-                    Collectors.toMap(
-                        e -> e.getKey().substring("PB^".length()),
-                        e -> new ArrayList<>(e.getValue())));
+      pbCacheSnapshot =
+          retryEntry.getValue().entrySet().stream()
+              .filter(e -> e.getKey().startsWith("PB^"))
+              .collect(
+                  Collectors.toMap(
+                      e -> e.getKey().substring("PB^".length()),
+                      e -> new ArrayList<>(e.getValue())));
 
-        obsCacheSnapshot =
-            retryEntry.getValue().entrySet().stream()
-                .filter(e -> e.getKey().startsWith("OBS^"))
-                .collect(
-                    Collectors.toMap(
-                        e -> e.getKey().substring("OBS^".length()),
-                        e -> new ArrayList<>(e.getValue())));
+      obsCacheSnapshot =
+          retryEntry.getValue().entrySet().stream()
+              .filter(e -> e.getKey().startsWith("OBS^"))
+              .collect(
+                  Collectors.toMap(
+                      e -> e.getKey().substring("OBS^".length()),
+                      e -> new ArrayList<>(e.getValue())));
 
-        retryCache.remove(batchId);
-      }
+      retryCache.remove(batchId);
 
       boolean processed =
           processIdCache(idCacheSnapshot, pbCacheSnapshot, obsCacheSnapshot, batchId);
@@ -710,17 +795,18 @@ public class PostProcessingService {
         });
 
     // Merge into the main retryCache for reprocessing, preserving batch IDs
-    retryCacheLocal.forEach(
-        (batchId, entityMap) -> {
-          Map<String, Queue<Long>> batchMap =
-              retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-          entityMap.forEach(
-              (entity, queue) ->
-                  batchMap
-                      .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
-                      .addAll(queue));
-        });
-
+    synchronized (retryCacheLock) {
+      retryCacheLocal.forEach(
+          (batchId, entityMap) -> {
+            Map<String, Queue<Long>> batchMap =
+                retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+            entityMap.forEach(
+                (entity, queue) ->
+                    batchMap
+                        .computeIfAbsent(entity, k -> new ConcurrentLinkedQueue<>())
+                        .addAll(queue));
+          });
+    }
     logger.info("Re-queued {} backfill batch(es) into retryCache", backfills.size());
   }
 
@@ -1330,21 +1416,24 @@ public class PostProcessingService {
 
     batchId = dmProcessor.nextBatchId(batchId, e);
 
-    Map<String, Queue<Long>> retryMap =
-        retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
-    retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
+    synchronized (retryCacheLock) {
+      Map<String, Queue<Long>> retryMap =
+          retryCache.computeIfAbsent(batchId, k -> new ConcurrentHashMap<>());
+      retryMap.computeIfAbsent(keyTopic, k -> new ConcurrentLinkedQueue<>()).addAll(ids);
 
-    pbCache.forEach(
-        (tbl, queue) ->
-            retryMap
-                .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue));
-
-    obsCache.forEach(
-        (key, queue) ->
-            retryMap
-                .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
-                .addAll(queue));
+      synchronized (cacheLock) {
+        pbCache.forEach(
+            (tbl, queue) ->
+                retryMap
+                    .computeIfAbsent("PB^" + tbl, k -> new ConcurrentLinkedQueue<>())
+                    .addAll(queue));
+        obsCache.forEach(
+            (key, queue) ->
+                retryMap
+                    .computeIfAbsent("OBS^" + key, k -> new ConcurrentLinkedQueue<>())
+                    .addAll(queue));
+      }
+    }
 
     return batchId;
   }
@@ -1372,7 +1461,7 @@ public class PostProcessingService {
   protected void processDatamartIds() {
 
     Map<String, Map<String, List<Long>>> dmCacheSnapshot;
-    synchronized (cacheLock) {
+    synchronized (dmCacheLock) {
       dmCacheSnapshot = new HashMap<>();
       for (Map.Entry<String, Map<String, Queue<Long>>> entry : dmCache.entrySet()) {
         Map<String, List<Long>> idMap = new HashMap<>();
@@ -1407,23 +1496,14 @@ public class PostProcessingService {
   }
 
   /**
-   * Retrieves the entity type (e.g., INVESTIGATION, NOTIFICATION, ORGANIZATION) based on the Kafka
-   * topic name. This mapping is used to determine how to process the message and which stored
-   * procedure to execute.
+   * Retrieves the entity explicitly mapped to a configured logical NRT topic.
    *
-   * @param topic The name of the Kafka topic (e.g., "dummy_investigation", "dummy_notification").
-   * @return The corresponding entity type as an `Entity` enum value.
-   *     <p>Example: If the topic is "dummy_investigation", the method will return
-   *     `Entity.INVESTIGATION`.
-   * @throws IllegalArgumentException If the topic does not map to a known entity type.
+   * @param topic the normalized logical topic used as the cache key
+   * @return the mapped entity, or {@link Entity#UNKNOWN} when the topic is not configured
    */
   @NonNull
   private Entity getEntityByTopic(String topic) {
-    return Arrays.stream(Entity.values())
-        .filter(entity -> entity.getPriority() > 0)
-        .filter(entity -> topic.endsWith(entity.getEntityName()))
-        .findFirst()
-        .orElse(UNKNOWN);
+    return nrtTopicEntities.getOrDefault(topic, UNKNOWN);
   }
 
   private void processTopic(
@@ -1504,8 +1584,22 @@ public class PostProcessingService {
 
   @Scheduled(cron = "${service.schedule.event-metric-cleanup}")
   protected void eventMetricCleanup() {
-    logger.info("Running event metric cleanup...");
-    postProcRepository.executeEventMetricCleanup();
-    logger.info(SP_EXECUTION_COMPLETED, "sp_event_metric_cleanup_postprocessing");
+    processScheduledProcedure(
+        "sp_event_metric_cleanup_postprocessing", postProcRepository::executeEventMetricCleanup);
+  }
+
+  @Scheduled(cron = "${service.schedule.lab100-cleanup}")
+  protected void lab100Cleanup() {
+    processScheduledProcedure("sp_lab100_cleanup", postProcRepository::executeLab100Cleanup);
+  }
+
+  private void processScheduledProcedure(String name, Supplier<Integer> scheduledProcedure) {
+    logger.info("Running {}...", name);
+    switch (ScheduledExecutionStatus.fromReturnCode(scheduledProcedure.get())) {
+      case COMPLETED -> logger.info(SP_EXECUTION_COMPLETED, name);
+      case SKIPPED -> logger.info("Skipped {} because it's already running", name);
+      case FAILED -> throw new DataProcessingException(name + " reported a cleanup failure");
+      default -> throw new DataProcessingException(name + " encountered an unknown status");
+    }
   }
 }

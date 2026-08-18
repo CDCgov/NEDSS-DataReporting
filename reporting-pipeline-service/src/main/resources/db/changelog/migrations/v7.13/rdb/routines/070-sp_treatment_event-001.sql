@@ -8,7 +8,7 @@ GO
 
 CREATE PROCEDURE [dbo].[sp_treatment_event]
     @treatment_uids nvarchar(max),
-    @debug bit = 'false'
+    @debug bit = 0, @debug_logging bit = 0
 AS
 BEGIN
 
@@ -21,27 +21,22 @@ BEGIN
     BEGIN TRY
         DECLARE @batch_id BIGINT;
         SET @batch_id = CAST((FORMAT(GETDATE(), 'yyMMddHHmmssffff')) AS BIGINT);
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @treatment_uids, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@treatment_uids, 199);
 
         -- Initial log entry
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   0,
-                   LEFT('Pre ID-' + @treatment_uids, 199),
-                   0,
-                   LEFT(@treatment_uids, 199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @DATAFLOW_NAME,
+                @package_name = @PACKAGE_NAME,
+                @status_type = 'START',
+                @step_number = 0,
+                @step_name = @job_flow_step_name,
+                @row_count = 0,
+                @msg_description1 = @job_flow_message;
+        END;
 
         -- STEP 1: Get base UIDs
         BEGIN TRANSACTION;
@@ -91,23 +86,17 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   @Proc_Step_no,
-                   @Proc_Step_Name,
-                   @RowCount_no
-               );
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @DATAFLOW_NAME,
+                @package_name = @PACKAGE_NAME,
+                @status_type = 'START',
+                @step_number = @Proc_Step_no,
+                @step_name = @Proc_Step_Name,
+                @row_count = @RowCount_no;
+        END;
         COMMIT TRANSACTION;
 
         -- STEP 2: CREATE #ASSOCIATED_PHC_UIDS
@@ -132,23 +121,17 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   @Proc_Step_no,
-                   @Proc_Step_Name,
-                   @RowCount_no
-               );
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @DATAFLOW_NAME,
+                @package_name = @PACKAGE_NAME,
+                @status_type = 'START',
+                @step_number = @Proc_Step_no,
+                @step_name = @Proc_Step_Name,
+                @row_count = @RowCount_no;
+        END;
         COMMIT TRANSACTION;
 
         -- STEP 3: Get Treatment Details
@@ -196,17 +179,17 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   @Proc_Step_no,
-                   @Proc_Step_Name,
-                   @RowCount_no
-               );
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @DATAFLOW_NAME,
+                @package_name = @PACKAGE_NAME,
+                @status_type = 'START',
+                @step_number = @Proc_Step_no,
+                @step_name = @Proc_Step_Name,
+                @row_count = @RowCount_no;
+        END;
         COMMIT TRANSACTION;
 
 
@@ -248,32 +231,32 @@ BEGIN
 
         SELECT @RowCount_no = @@ROWCOUNT;
 
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'START',
-                   @Proc_Step_no,
-                   @Proc_Step_Name,
-                   @RowCount_no
-               );
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @DATAFLOW_NAME,
+                @package_name = @PACKAGE_NAME,
+                @status_type = 'START',
+                @step_number = @Proc_Step_no,
+                @step_name = @Proc_Step_Name,
+                @row_count = @RowCount_no;
+        END;
         COMMIT TRANSACTION;
 
         -- Log successful completion
-        INSERT INTO [dbo].[job_flow_log]
-        (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count],[Msg_Description1])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'COMPLETE',
-                   @PROC_STEP_NO,
-                   @Proc_Step_Name,
-                   0,
-                   LEFT(@treatment_uids, 199)
-               );
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = @DATAFLOW_NAME,
+                @package_name = @PACKAGE_NAME,
+                @status_type = 'COMPLETE',
+                @step_number = @PROC_STEP_NO,
+                @step_name = @Proc_Step_Name,
+                @row_count = 0,
+                @msg_description1 = @job_flow_message;
+        END;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0
@@ -281,27 +264,16 @@ BEGIN
 
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1],
-          [Error_Description])
-        VALUES (
-                   @batch_id,
-                   @DATAFLOW_NAME,
-                   @PACKAGE_NAME,
-                   'ERROR',
-                   @PROC_STEP_NO,
-                   @PROC_STEP_NAME,
-                   0,
-                   LEFT(@treatment_uids, 199),
-                   @ErrorMessage
-               );
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = @DATAFLOW_NAME,
+            @package_name = @PACKAGE_NAME,
+            @status_type = 'ERROR',
+            @step_number = @PROC_STEP_NO,
+            @step_name = @PROC_STEP_NAME,
+            @row_count = 0,
+            @msg_description1 = @job_flow_message,
+            @error_description = @ErrorMessage;
 
         return @ErrorMessage;
     END CATCH

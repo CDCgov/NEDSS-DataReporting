@@ -1782,10 +1782,16 @@ BEGIN
 			SET @PROC_STEP_NAME = 'Update Inactive LAB_TEST_RESULT Records';
 
 			/* Update record status for Inactive Orders and associated observations. */
-			SELECT ltr.LAB_TEST_UID
+			/* APP-925: SELECT DISTINCT + a clustered PK make #Inactive_Obs seekable so the
+			   three UPDATEs below can nested-loop seek into it instead of scan-joining a
+			   ~200k-row heap. DISTINCT is equivalence-safe: the UPDATEs set the constant
+			   'INACTIVE' and an UPDATE...FROM affects each qualifying target row at most once,
+			   so collapsing duplicate LAB_TEST_UID matches changes neither the rows written
+			   nor @@ROWCOUNT. */
+			SELECT DISTINCT ltr.LAB_TEST_UID
 			INTO #Inactive_Obs
 			FROM [dbo].LAB_TEST lt WITH (NOLOCK)
-			INNER JOIN [dbo].LAB_TEST_RESULT ltr WITH (NOLOCK) 
+			INNER JOIN [dbo].LAB_TEST_RESULT ltr WITH (NOLOCK)
 				ON ltr.LAB_TEST_UID = lt.LAB_TEST_UID
 			WHERE ROOT_ORDERED_TEST_PNTR IN
 				(SELECT ROOT_ORDERED_TEST_PNTR
@@ -1793,6 +1799,12 @@ BEGIN
 				WHERE LAB_TEST_TYPE = 'Order'
 					AND RECORD_STATUS_CD = 'INACTIVE')
 			AND ltr.RECORD_STATUS_CD <> 'INACTIVE';
+
+			/* SELECT INTO infers LAB_TEST_UID as NULLABLE; the inner join on LAB_TEST_UID
+			   guarantees no NULLs reach #Inactive_Obs, so forcing NOT NULL is a no-op on the
+			   data and lets us build a clustered PRIMARY KEY the UPDATEs can seek. */
+			ALTER TABLE #Inactive_Obs ALTER COLUMN LAB_TEST_UID BIGINT NOT NULL;
+			ALTER TABLE #Inactive_Obs ADD PRIMARY KEY CLUSTERED (LAB_TEST_UID);
 
 			UPDATE lrc
 			SET RECORD_STATUS_CD = 'INACTIVE'

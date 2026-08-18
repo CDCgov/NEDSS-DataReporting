@@ -1,0 +1,36 @@
+{
+  "0": [
+    {
+      "CASE_STATUS": null,
+      "EXTERNAL_IND": "No",
+      "HOSPITAL_FAC_NAME": null,
+      "INVESTIGATION_CREATED_IND": "No",
+      "INVESTIGATION_KEY": null,
+      "JURISDICTION_NAME": "Org County",
+      "MORBIDITY_REPORT_KEY": 9264001,
+      "MORBIDITY_REPORT_LOCAL_ID": "MOR9264001",
+      "PATIENT_LOCAL_ID": null,
+      "PROGRAM_AREA_DESCRIPTION": "Enteric",
+      "PROVIDER_LAST_NAME": null,
+      "REPORTER_LAST_NAME": null,
+      "REPORTING_FACILITY_UID": 9264010,
+      "REPORT_FAC_NAME": "SrcOrg"
+    },
+    {
+      "CASE_STATUS": null,
+      "EXTERNAL_IND": "No",
+      "HOSPITAL_FAC_NAME": "Hospital",
+      "INVESTIGATION_CREATED_IND": "No",
+      "INVESTIGATION_KEY": null,
+      "JURISDICTION_NAME": "Org County",
+      "MORBIDITY_REPORT_KEY": 9264002,
+      "MORBIDITY_REPORT_LOCAL_ID": "MOR9264002",
+      "PATIENT_LOCAL_ID": null,
+      "PROGRAM_AREA_DESCRIPTION": "Enteric",
+      "PROVIDER_LAST_NAME": null,
+      "REPORTER_LAST_NAME": null,
+      "REPORTING_FACILITY_UID": null,
+      "REPORT_FAC_NAME": null
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "0": [
+    {
+      "total_count": 2,
+      "start_count": 1,
+      "error_count": 1,
+      "start_batch_id": 990000001,
+      "error_batch_id": 990000002,
+      "dataflow_name": "Job Flow Log Test",
+      "package_name": "sp_add_job_flow_log_test",
+      "start_step_number": 1.0,
+      "error_step_number": 2.0,
+      "start_step_name": "Test start",
+      "error_step_name": "Test error",
+      "start_row_count": 7,
+      "error_row_count": 0,
+      "start_message": "Test message",
+      "error_message": "Test error message",
+      "error_description": "Test error description"
+    }
+  ]
+}

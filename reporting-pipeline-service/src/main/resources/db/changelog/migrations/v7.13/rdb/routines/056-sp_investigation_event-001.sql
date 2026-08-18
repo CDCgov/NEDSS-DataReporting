@@ -6,32 +6,29 @@ IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_investigat
     END
 GO
 
-CREATE PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max)
+CREATE PROCEDURE [dbo].[sp_investigation_event] @phc_id_list nvarchar(max), @debug_logging bit = 0
 AS
 BEGIN
 
     BEGIN TRY
 
         DECLARE @batch_id BIGINT;
+        DECLARE @job_flow_step_name VARCHAR(200) = LEFT('Pre ID-' + @phc_id_list, 199);
+        DECLARE @job_flow_message VARCHAR(200) = LEFT(@phc_id_list, 199);
         SET @batch_id = cast((format(getdate(), 'yyMMddHHmmssffff')) as bigint);
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'sp_investigation_event'
-               , 'START'
-               , 0
-               , LEFT('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT(@phc_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = 'Investigation PRE-Processing Event',
+                @package_name = 'sp_investigation_event',
+                @status_type = 'START',
+                @step_number = 0,
+                @step_name = @job_flow_step_name,
+                @row_count = 0,
+                @msg_description1 = @job_flow_message;
+        END;
 
         /*Complete Investigation section*/
          SELECT results.public_health_case_uid,
@@ -444,12 +441,7 @@ BEGIN
                                                           SELECT act_id.act_uid AS [id],
                                                                  act_id.act_id_seq AS [act_id_seq],
                                                                  act_id.record_status_cd AS [record_status],
-                                                                 COALESCE(
-                                                                     act_id.root_extension_txt,
-                                                                     CASE
-                                                                         WHEN act_id.type_cd = 'STATE' THEN phc.local_id
-                                                                     END
-                                                                 ) AS [root_extension_txt],
+                                                                 act_id.root_extension_txt AS [root_extension_txt],
                                                                  act_id.type_cd AS [type_cd],
                                                                  act_id.type_desc_txt AS [type_desc_txt],
                                                                  act_id.add_time AS act_id_add_time,
@@ -458,26 +450,6 @@ BEGIN
                                                                  act_id.last_chg_time AS [act_id_last_change_time]
                                                           FROM nbs_odse.dbo.act_id WITH (NOLOCK)
                                                           WHERE act_id.act_uid = phc.public_health_case_uid
-                                                          UNION ALL
-                                                          SELECT phc_fallback.public_health_case_uid AS [id],
-                                                                 0 AS [act_id_seq],
-                                                                 phc_fallback.record_status_cd AS [record_status],
-                                                                 phc_fallback.local_id AS [root_extension_txt],
-                                                                 'STATE' AS [type_cd],
-                                                                 'Local Public Health Case Identifier' AS [type_desc_txt],
-                                                                 phc_fallback.add_time AS act_id_add_time,
-                                                                 phc_fallback.add_user_id AS act_id_add_user_id,
-                                                                 phc_fallback.last_chg_user_id AS act_id_last_chg_user_id,
-                                                                 phc_fallback.last_chg_time AS [act_id_last_change_time]
-                                                          FROM nbs_odse.dbo.public_health_case phc_fallback WITH (NOLOCK)
-                                                          WHERE phc_fallback.public_health_case_uid = phc.public_health_case_uid
-                                                            AND phc_fallback.local_id IS NOT NULL
-                                                            AND NOT EXISTS (
-                                                                SELECT 1
-                                                                FROM nbs_odse.dbo.act_id fallback_state WITH (NOLOCK)
-                                                                WHERE fallback_state.act_uid = phc_fallback.public_health_case_uid
-                                                                  AND fallback_state.type_cd = 'STATE'
-                                                            )
                                                       ) AS act_id_rows
                                                  FOR json path, INCLUDE_NULL_VALUES) AS act_ids) AS act_ids,
                                         -- get associated confirmation method
@@ -1029,23 +1001,18 @@ BEGIN
 
         -- select * from dbo.Investigation_Dim_Event;
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1])
-        VALUES ( @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'sp_investigation_event'
-               , 'COMPLETE'
-               , 0
-               , LEFT('Pre ID-' + @phc_id_list, 199)
-               , 0
-               , LEFT(@phc_id_list, 199));
+        IF @debug_logging = 1
+        BEGIN
+            EXEC dbo.sp_add_job_flow_log
+                @batch_id = @batch_id,
+                @dataflow_name = 'Investigation PRE-Processing Event',
+                @package_name = 'sp_investigation_event',
+                @status_type = 'COMPLETE',
+                @step_number = 0,
+                @step_name = @job_flow_step_name,
+                @row_count = 0,
+                @msg_description1 = @job_flow_message;
+        END;
 
     END TRY
     BEGIN CATCH
@@ -1061,27 +1028,16 @@ BEGIN
             'Error Line: ' + CAST(ERROR_LINE() AS VARCHAR(10)) + CHAR(13) + CHAR(10) +
             'Error Message: ' + ERROR_MESSAGE();
 
-        INSERT INTO [dbo].[job_flow_log]
-        ( batch_id
-        , [Dataflow_Name]
-        , [package_Name]
-        , [Status_Type]
-        , [step_number]
-        , [step_name]
-        , [row_count]
-        , [Msg_Description1]
-        , [Error_Description]
-        )
-        VALUES ( @batch_id
-               , 'Investigation PRE-Processing Event'
-               , 'sp_investigation_event'
-               , 'ERROR'
-               , 0
-               , 'Investigation PRE-Processing Event'
-               , 0
-               , LEFT(@phc_id_list, 199)
-               , @FullErrorMessage
-               );
+        EXEC dbo.sp_add_job_flow_log
+            @batch_id = @batch_id,
+            @dataflow_name = 'Investigation PRE-Processing Event',
+            @package_name = 'sp_investigation_event',
+            @status_type = 'ERROR',
+            @step_number = 0,
+            @step_name = 'Investigation PRE-Processing Event',
+            @row_count = 0,
+            @msg_description1 = @job_flow_message,
+            @error_description = @FullErrorMessage;
         return @FullErrorMessage;
 
     END CATCH
