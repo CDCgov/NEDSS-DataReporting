@@ -320,6 +320,12 @@ public class ProcessInvestigationDataUtil {
           continue;
         }
 
+        // Ignore synthetic or non-meaningful rows such as fallback rows with act_id_seq = 0.
+        // Only real act_id rows should be considered for downstream case-id fields.
+        if (actIdSeq <= 0) {
+          continue;
+        }
+
         // Match by type_cd (not by fixed positional seq). If multiple rows exist for the same
         // type, use the latest row by act_id_seq to mirror ODSE TOP 1 ... ORDER BY act_id_seq DESC.
         if (typeCode.equals("STATE") && actIdSeq >= stateCaseIdSeq) {
@@ -448,7 +454,8 @@ public class ProcessInvestigationDataUtil {
       logger.info(ex.getMessage(), "InvestigationConfirmationMethod");
     } catch (Exception e) {
       logger.error(
-          "Error processing investigation confirmation method JSON array from investigation data: {}",
+          "Error processing investigation confirmation method JSON array from investigation data:"
+              + " {}",
           e.getMessage());
     }
   }
@@ -526,13 +533,14 @@ public class ProcessInvestigationDataUtil {
   }
 
   @Transactional(isolation = Isolation.REPEATABLE_READ)
-  public void processPhcFactDatamart(String publicHealthCaseUid) {
+  public void processPhcFactDatamart(String publicHealthCaseUid, boolean debugLogging) {
     try {
       // Calling sp_public_health_case_fact_datamart_event
       logger.info(
-          "Executing stored proc: sp_public_health_case_fact_datamart_event '{}' to populate PHС fact datamart",
+          "Executing stored proc: sp_public_health_case_fact_datamart_event '{}' to populate PHС"
+              + " fact datamart",
           publicHealthCaseUid);
-      investigationRepository.populatePhcFact(publicHealthCaseUid);
+      investigationRepository.populatePhcFact(publicHealthCaseUid, debugLogging);
       logger.info(
           "Stored proc execution completed: sp_public_health_case_fact_datamart_event '{}",
           publicHealthCaseUid);
@@ -546,7 +554,8 @@ public class ProcessInvestigationDataUtil {
     try {
       // Calling sp_public_health_case_fact_datamart_update
       logger.info(
-          "Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update PHС fact datamart",
+          "Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update"
+              + " PHС fact datamart",
           objName,
           uid);
       investigationRepository.updatePhcFact(objName, uid);
@@ -604,7 +613,8 @@ public class ProcessInvestigationDataUtil {
 
     } catch (Exception e) {
       logger.error(
-          "Error processing Investigation Interview or any of the associated data from interview data: {}",
+          "Error processing Investigation Interview or any of the associated data from interview"
+              + " data: {}",
           e.getMessage());
     }
   }

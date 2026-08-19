@@ -120,7 +120,9 @@ lag:
   admin-timeout-ms: ${LAG_ADMIN_TIMEOUT_MS:10000}
 
 featureFlag:
+  event-procedure-debug-logging: ${EVENT_PROCEDURE_DEBUG_LOGGING:false}
   elastic-search-enable: ${FF_ES_ENABLE:false}
+  seeding-enable: ${FF_SEEDING_ENABLE:true}
   thread-pool-size: ${FF_THREAD_POOL_SIZE:1}
   post-processing-enable: ${FF_POST_PROCESSING_ENABLE:true}
   phc-datamart-enable: false
@@ -155,6 +157,7 @@ service:
     backfill: ${FIXED_DELAY_BF:600000}
   schedule:
     event-metric-cleanup: ${EVENT_METRIC_CLEANUP_CRON:0 0 0 * * *}
+    lab100-cleanup: ${LAB100_CLEANUP_CRON:0 0 */2 * * *}
   max-retries: ${MAX_RETRIES:3}
 
 server:

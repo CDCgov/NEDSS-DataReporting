@@ -1,0 +1,16 @@
+{
+  "0": [
+    {
+      "SRC": "LAB_RESULT_COMMENT",
+      "RECORD_STATUS_CD": "ACTIVE"
+    },
+    {
+      "SRC": "LAB_RESULT_VAL",
+      "RECORD_STATUS_CD": "ACTIVE"
+    },
+    {
+      "SRC": "LAB_TEST_RESULT",
+      "RECORD_STATUS_CD": "ACTIVE"
+    }
+  ]
+}

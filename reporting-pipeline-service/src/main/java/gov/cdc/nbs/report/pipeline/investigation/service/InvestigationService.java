@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.investigation.service;
 
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.*;
 
+import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
 import gov.cdc.nbs.report.pipeline.investigation.repository.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.dto.*;
 import gov.cdc.nbs.report.pipeline.investigation.repository.model.reporting.InvestigationKey;
@@ -11,11 +12,15 @@ import gov.cdc.nbs.report.pipeline.investigation.util.ProcessInvestigationDataUt
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.json.CustomJsonGeneratorImpl;
+import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
+import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,11 +96,13 @@ public class InvestigationService {
   private final ContactRepository contactRepository;
   private final VaccinationRepository vaccinationRepository;
   private final TreatmentRepository treatmentRepository;
+  private final EventProcedureLoggingProperties eventProcedureLoggingProperties;
 
   @Qualifier("investigationKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final ProcessInvestigationDataUtil processDataUtil;
+  private final RetryTopicResolver retryTopicResolver;
   private final ModelMapper modelMapper = new ModelMapper();
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
@@ -114,10 +121,19 @@ public class InvestigationService {
   private Counter msgSuccess;
   private Counter msgFailure;
   private Counter ntfFailure;
+  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {SERVICE_TAG, SERVICE_NAME};
+    inputTopics =
+        Set.of(
+            investigationTopic,
+            notificationTopic,
+            interviewTopic,
+            contactTopic,
+            vaccinationTopic,
+            treatmentTopic);
 
     msgProcessed = metrics.counter("inv_msg_processed", tags);
     msgSuccess = metrics.counter("inv_msg_success", tags);
@@ -153,33 +169,41 @@ public class InvestigationService {
         "${spring.kafka.topics.nbs.interview}",
         "${spring.kafka.topics.nbs.ct-contact}",
         "${spring.kafka.topics.nbs.intervention}",
-        "${spring.kafka.topics.nbs.treatment}",
-        "${spring.kafka.topics.nbs.act-relationship}"
+        "${spring.kafka.topics.nbs.treatment}"
       },
       containerFactory = "investigationKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> rec) {
-    final String topic = rec.topic();
+    TopicResolution topicResolution;
+    try {
+      topicResolution = retryTopicResolver.resolve(rec, inputTopics);
+    } catch (NoSuchElementException exception) {
+      return CompletableFuture.failedFuture(
+          new DataProcessingException(exception.getMessage(), exception));
+    }
+
+    final String physicalTopic = topicResolution.physicalTopic();
+    final String logicalTopic = topicResolution.logicalTopic();
     final String message = rec.value();
     final long batchId = toBatchId.applyAsLong(rec);
 
-    logger.debug(topicDebugLog, "message", message, topic);
-
     return CompletableFuture.runAsync(
         () -> {
-          if (topic.equals(investigationTopic)) {
+          if (logicalTopic.equals(investigationTopic)) {
             processInvestigation(message, batchId);
-          } else if (topic.equals(notificationTopic)) {
+          } else if (logicalTopic.equals(notificationTopic)) {
             processNotification(message);
-          } else if (topic.equals(interviewTopic)) {
+          } else if (logicalTopic.equals(interviewTopic)) {
             processInterview(message, batchId);
-          } else if (topic.equals(contactTopic)) {
+          } else if (logicalTopic.equals(contactTopic)) {
             processContact(message);
-          } else if (topic.equals(vaccinationTopic)) {
+          } else if (logicalTopic.equals(vaccinationTopic)) {
             processVaccination(message, true, "");
-          } else if (topic.equals(treatmentTopic)) {
+          } else if (logicalTopic.equals(treatmentTopic)) {
             processTreatment(message, true, "");
-          } else if (topic.equals(actRelationshipTopic) && message != null) {
-            processActRelationship(message);
+          } else {
+            throw new DataProcessingException(
+                "Received data from an unknown topic: " + physicalTopic,
+                new NoSuchElementException());
           }
         },
         invExecutor);
@@ -196,12 +220,17 @@ public class InvestigationService {
 
             if (phcDatamartEnable) {
               CompletableFuture.runAsync(
-                  () -> processDataUtil.processPhcFactDatamart(phcUid), phcExecutor);
+                  () ->
+                      processDataUtil.processPhcFactDatamart(
+                          phcUid, eventProcedureLoggingProperties.eventProcedureDebugLogging()),
+                  phcExecutor);
             }
 
             logger.info(topicDebugLog, "Investigation", publicHealthCaseUid, investigationTopic);
             Optional<Investigation> investigationData =
-                investigationRepository.computeInvestigations(publicHealthCaseUid);
+                investigationRepository.computeInvestigations(
+                    publicHealthCaseUid,
+                    eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (investigationData.isPresent()) {
               Investigation investigation = investigationData.get();
               investigationKey.setPublicHealthCaseUid(Long.valueOf(publicHealthCaseUid));
@@ -245,34 +274,6 @@ public class InvestigationService {
         SERVICE_NAME);
   }
 
-  private void processActRelationship(String value) {
-    String sourceActUid = "";
-
-    try {
-      String typeCd;
-      String operationType = extractChangeDataCaptureOperation(value);
-
-      if (operationType.equals("d")) {
-        sourceActUid = extractUid(value, "source_act_uid", "before");
-        typeCd = extractValue(value, "type_cd", "before");
-      } else {
-        sourceActUid = extractUid(value, "source_act_uid");
-        typeCd = extractValue(value, "type_cd");
-      }
-
-      logger.info(topicDebugLog, "Act_relationship", sourceActUid, actRelationshipTopic);
-
-      if (typeCd.equals("1180")) {
-        processVaccination(value, false, sourceActUid);
-      }
-      if (typeCd.equals("TreatmentToPHC") || typeCd.equals("TreatmentToMorb")) {
-        processTreatment(value, false, sourceActUid);
-      }
-    } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("ActRelationship", sourceActUid, e), e);
-    }
-  }
-
   public void processNotification(String value) {
     metrics.recordTime(
         "ntf_msg_processing_seconds",
@@ -289,7 +290,8 @@ public class InvestigationService {
             logger.info(topicDebugLog, "Notification", notificationUid, notificationTopic);
 
             Optional<NotificationUpdate> notificationData =
-                notificationRepository.computeNotifications(notificationUid);
+                notificationRepository.computeNotifications(
+                    notificationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
             if (notificationData.isPresent()) {
               NotificationUpdate notification = notificationData.get();
               processDataUtil.processNotifications(notification.getInvestigationNotifications());
@@ -315,7 +317,9 @@ public class InvestigationService {
       interviewUid = extractUid(value, "interview_uid");
 
       logger.info(topicDebugLog, "Interview", interviewUid, interviewTopic);
-      Optional<Interview> interviewData = interviewRepository.computeInterviews(interviewUid);
+      Optional<Interview> interviewData =
+          interviewRepository.computeInterviews(
+              interviewUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (interviewData.isPresent()) {
         Interview interview = interviewData.get();
         processDataUtil.processInterview(interview, batchId);
@@ -337,7 +341,9 @@ public class InvestigationService {
       contactUid = extractUid(value, "ct_contact_uid");
 
       logger.info(topicDebugLog, "Contact", contactUid, contactTopic);
-      Optional<Contact> contactData = contactRepository.computeContact(contactUid);
+      Optional<Contact> contactData =
+          contactRepository.computeContact(
+              contactUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (contactData.isPresent()) {
         Contact contact = contactData.get();
         processDataUtil.processContact(contact);
@@ -352,7 +358,7 @@ public class InvestigationService {
     }
   }
 
-  private void processVaccination(
+  public void processVaccination(
       String value, boolean isFromVaccinationTopic, String actRelationshipSourceActUid) {
     String vaccinationUid = "";
     String topic = (isFromVaccinationTopic) ? vaccinationTopic : actRelationshipTopic;
@@ -367,7 +373,9 @@ public class InvestigationService {
         vaccinationUid = actRelationshipSourceActUid;
       }
       logger.info(topicDebugLog, "Vaccination", vaccinationUid, topic);
-      Optional<Vaccination> vacData = vaccinationRepository.computeVaccination(vaccinationUid);
+      Optional<Vaccination> vacData =
+          vaccinationRepository.computeVaccination(
+              vaccinationUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (vacData.isPresent()) {
         Vaccination vaccination = vacData.get();
         processDataUtil.processVaccination(vaccination);
@@ -383,7 +391,7 @@ public class InvestigationService {
     }
   }
 
-  private void processTreatment(
+  public void processTreatment(
       String value, boolean isFromTreatmentTopic, String actRelationshipSourceActUid) {
     String treatmentUid = "";
     String topic = (isFromTreatmentTopic) ? treatmentTopic : actRelationshipTopic;
@@ -403,7 +411,9 @@ public class InvestigationService {
       }
 
       logger.info(topicDebugLog, "Treatment", treatmentUid, topic);
-      Optional<Treatment> treatmentData = treatmentRepository.computeTreatment(treatmentUid);
+      Optional<Treatment> treatmentData =
+          treatmentRepository.computeTreatment(
+              treatmentUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
       if (treatmentData.isPresent()) {
         Treatment treatment = treatmentData.get();
 

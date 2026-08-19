@@ -620,6 +620,9 @@ BEGIN
           AND (I.RECORD_STATUS_CD = 'ACTIVE')
         ORDER BY LAB_TEST_KEY;
 
+        -- APP-924: index the heap so the #Tmp_BothTable join (step 13) seeks on LAB_TEST_KEY.
+        CREATE CLUSTERED INDEX IX_TMP_InvLab_LAB_TEST_KEY ON #TMP_InvLab (LAB_TEST_KEY);
+
         if @debug = 'true' select @Proc_Step_Name as step, * from #TMP_InvLab;
 
         SELECT @ROWCOUNT_NO = @@ROWCOUNT;

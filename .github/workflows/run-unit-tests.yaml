@@ -9,6 +9,7 @@ on:
       - "docker-compose.yaml"
       - ".github/workflows/**"
       - "containers/db/**"
+      - "bootstrap/*.sql"
 
 jobs:
   pipeline:
