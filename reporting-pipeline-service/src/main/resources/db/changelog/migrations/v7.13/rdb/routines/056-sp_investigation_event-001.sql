@@ -678,6 +678,7 @@ BEGIN
                                                          from fn_get_value_by_cvg(fld_foll_up_prov_exm_reason, 'PRVDR_EXAM_REASON'))   as fl_fup_prov_exm_reason,
                                                         fld_foll_up_prov_diagnosis,
                                                         LEFT(fld_foll_up_prov_diagnosis, 3)                                            as fl_fup_prov_diagnosis,
+                                                        fld_foll_up_notification_plan,
                                                         (select *
                                                         from fn_get_value_by_cvg(fld_foll_up_notification_plan,
                                                             case
@@ -688,9 +689,9 @@ BEGIN
                                                                 then 'NOTIFICATION_ACTUAL_METHOD_HIV'
                                                                 else 'NOTIFICATION_PLAN'
                                                             end
-                                                        )) as fld_foll_up_notification_plan,
-                                                        fld_foll_up_notification_plan as fl_fup_notification_plan_cd,
+                                                        )) as fl_fup_notification_plan_cd,
 
+                                                        fld_foll_up_expected_in,
                                                         (select * from fn_get_value_by_cvg(fld_foll_up_expected_in, 'YN'))             as fl_fup_expected_in_ind,
                                                         fld_foll_up_expected_date                                                      as fl_fup_expected_dt,
                                                         fld_foll_up_exam_date                                                          as fl_fup_exam_dt,

@@ -1222,7 +1222,7 @@
       "PATIENT_COUNTY": "Fulton County",
       "CA_PATIENT_INTV_STAT": "I - Interviewed",
       "FL_FUP_DISPOSITION_CD": "C",
-      "FL_FUP_NOT_PLAN_CD": "3",
+      "FL_FUP_NOT_PLAN_CD": "3 - Dual",
       "SURV_PAT_FOLL_UP_STAT": "Field Follow-up",
       "REFERRAL_BASIS": "T1 - Positive Test",
       "TRANSMISSION_MODE": "Sexually Transmitted",
