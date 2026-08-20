@@ -678,6 +678,7 @@ BEGIN
                                                          from fn_get_value_by_cvg(fld_foll_up_prov_exm_reason, 'PRVDR_EXAM_REASON'))   as fl_fup_prov_exm_reason,
                                                         fld_foll_up_prov_diagnosis,
                                                         LEFT(fld_foll_up_prov_diagnosis, 3)                                            as fl_fup_prov_diagnosis,
+                                                        -- APP-952 switch cd and text columns for proper use of fn_get_value_by_cvg
                                                         fld_foll_up_notification_plan,
                                                         (select *
                                                         from fn_get_value_by_cvg(fld_foll_up_notification_plan,
@@ -690,7 +691,7 @@ BEGIN
                                                                 else 'NOTIFICATION_PLAN'
                                                             end
                                                         )) as fl_fup_notification_plan_cd,
-
+                                                        -- APP 952 include _expected_in field - previously missing
                                                         fld_foll_up_expected_in,
                                                         (select * from fn_get_value_by_cvg(fld_foll_up_expected_in, 'YN'))             as fl_fup_expected_in_ind,
                                                         fld_foll_up_expected_date                                                      as fl_fup_expected_dt,
