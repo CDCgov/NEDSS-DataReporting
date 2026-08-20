@@ -145,7 +145,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // Kafka
-    implementation 'org.springframework.kafka:spring-kafka:3.3.16'
+    implementation 'org.springframework.kafka:spring-kafka:4.1.0'
     implementation 'org.apache.kafka:kafka-clients:3.9.2'
 
     // Persistence & Database
@@ -175,7 +175,7 @@ dependencies {
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    testImplementation 'org.springframework.kafka:spring-kafka-test:3.3.16'
+    testImplementation 'org.springframework.kafka:spring-kafka-test:4.1.0'
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
     testImplementation 'org.testcontainers:testcontainers:2.0.5'
     testImplementation 'org.testcontainers:testcontainers-kafka:2.0.5'
