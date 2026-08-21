@@ -2,8 +2,15 @@
 
 The reporting pipeline service uses Liquibase to manage the `RDB/RDB_MODERN` SQL Server database. This directory contains the root changelog and the versioned SQL migrations that Liquibase runs when the service starts.
 
+> **Important: a release changelog is not a complete inventory of database changes in that release.**
+>
+> A view, function, or stored procedure can be updated in its original changelog and automatically reapplied by Liquibase because its existing changeset uses `runOnChange: true`. For example, a procedure first registered under `v7.13` may be changed and delivered in a later release without a new entry in that later release's changelog. Do **not** use only a release changelog to determine the database changes delivered between releases.
+>
+> To obtain the complete release-level database change picture, review the Git range: `git diff release_a...release_b`. The diff captures both newly registered changesets and in-place updates to existing `runOnChange` definitions.
+
 ## TL;DR
 
+- A release changelog is not a complete database-change inventory; use `git diff release_a...release_b` when comparing releases.
 - Put the migration in the directory for the first release that needs it, such as `v7.13.1` or `v7.14`.
 - Treat ordinary merged or shared migrations as immutable; safely replaceable view, function, and routine changesets with `runOnChange: true` are intentionally updated in place.
 - Make migrations idempotent whenever possible.
