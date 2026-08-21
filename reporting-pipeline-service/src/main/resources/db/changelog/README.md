@@ -92,7 +92,7 @@ This project does not currently provide a migration generator. Create the SQL an
 
 1. Select the target release and the appropriate purpose directory.
 2. If this is the first migration for the release, create its directories and `rdb.changelog-<version>.yaml`.
-3. Add a descriptively named SQL file. Follow the `<sequence>-<description>-<revision>.sql` convention and choose a sequence that does not collide within that purpose directory. Use revision `001` for the initial definition and increment it (`002`, `003`, and so on) for later migrations of the same object.
+3. Add a descriptively named SQL file. Follow the `<sequence>-<description>-<revision>.sql` convention and choose a sequence that does not collide within that purpose directory. Use revision `001` for the initial definition. Increment it (`002`, `003`, and so on) only for a later *ordinary* migration against the same object — a second `ALTER TABLE` on a table you have already migrated. Do **not** increment it for a view, function, or stored procedure: those are `runOnChange: true` and are edited in place, keeping `-001` for the life of the object. If you are about to create `sp_something-002.sql`, you are on the wrong path — see *Updating an existing stored procedure*. Existing files predating this convention may not follow it; apply it to new work.
 4. Whenever possible, make the migration idempotent so running it more than once produces the same database state without failing or duplicating data. Prefer guards such as `IF EXISTS` or `IF NOT EXISTS`, and use conditional data changes where appropriate.
 5. Add a uniquely identified changeset to the release changelog.
 6. Test both a fresh database and an upgrade from the previous released version.
