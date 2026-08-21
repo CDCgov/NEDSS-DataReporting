@@ -21,6 +21,7 @@ db/changelog/
 └── migrations/
     └── v7.13/
         └── rdb/
+            ├── 000-rdbmodern-db-general-001.sql
             ├── rdb.changelog-7.13.yaml
             ├── functions/
             ├── onboarding/
@@ -32,8 +33,9 @@ db/changelog/
 
 - `db.changelog-master.yaml` is configured in `application.yaml`. Its recursive `includeAll` discovers changelog files ending in `.yaml` below `migrations/`.
 - Each release directory has an RDB changelog named `rdb.changelog-<version>.yaml`.
+- The root-level `000-rdbmodern-db-general-001.sql` is a legacy file that predates the purpose-based directory layout; new work should follow the purpose directories unless preserving historical context requires otherwise.
 
-> **Ordering:** `includeAll` orders resources lexically, not by semantic version. For example, `v7.13.1` can sort before `v7.13`. Before adding a release whose directory does not sort in migration order, replace the root `includeAll` with explicit `include` entries in release order (or adopt an agreed sortable naming convention). Never rely on lexical ordering without checking it.
+> **Ordering:** `includeAll` orders resources lexically, not by semantic version. For example, `v7.13.1` can sort before `v7.13`. At the moment there is only one release changelog under `migrations/`, so the recursive discovery and lexical-order behavior are not yet exercised by multiple release directories. Before adding a release such as `v7.14` whose directory does not sort in migration order, replace the root `includeAll` with explicit `include` entries in release order (or adopt an agreed sortable naming convention). Never rely on lexical ordering without checking it.
 
 - SQL files are grouped by their purpose:
   - `routines/`: stored procedures
@@ -73,7 +75,7 @@ Treat ordinary migrations as immutable after they have been merged or applied to
 **Edit a `runOnChange` migration when:**
 
 - it defines a view, function, or routine;
-- its changeset has `runOnChange: true`; and
+- its changeset has `runOnChange: true`;
 - its SQL safely replaces the existing object; and
 - the change updates that object's definition in place rather than adding unrelated migration work.
 
@@ -92,7 +94,13 @@ This project does not currently provide a migration generator. Create the SQL an
 
 1. Select the target release and the appropriate purpose directory.
 2. If this is the first migration for the release, create its directories and `rdb.changelog-<version>.yaml`.
-3. Add a descriptively named SQL file. Follow the `<sequence>-<description>-<revision>.sql` convention and choose a sequence that does not collide within that purpose directory. Use revision `001` for the initial definition. Increment it (`002`, `003`, and so on) only for a later *ordinary* migration against the same object — a second `ALTER TABLE` on a table you have already migrated. Do **not** increment it for a view, function, or stored procedure: those are `runOnChange: true` and are edited in place, keeping `-001` for the life of the object. If you are about to create `sp_something-002.sql`, you are on the wrong path — see *Updating an existing stored procedure*. Existing files predating this convention may not follow it; apply it to new work.
+3. Add a descriptively named SQL file. Follow the `<sequence>-<description>-<revision>.sql` convention and choose a sequence that does not collide within that purpose directory.
+   - Use revision `001` for the initial definition.
+   - Increment it (`002`, `003`, and so on) only for a later *ordinary* migration against the same object, such as a second `ALTER TABLE` on a table you have already migrated.
+   - Do not increment it for a view, function, or stored procedure: those are `runOnChange: true` and are edited in place, keeping `-001` for the life of the object.
+
+> **Note:** If you are about to create `sp_something-002.sql`, you are on the wrong path — see *Updating an existing stored procedure*. Existing files predating this convention may not follow it; apply it to new work.
+
 4. Whenever possible, make the migration idempotent so running it more than once produces the same database state without failing or duplicating data. Prefer guards such as `IF EXISTS` or `IF NOT EXISTS`, and use conditional data changes where appropriate.
 5. Add a uniquely identified changeset to the release changelog.
 6. Test both a fresh database and an upgrade from the previous released version.
