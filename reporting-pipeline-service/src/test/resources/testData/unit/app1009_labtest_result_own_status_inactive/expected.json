@@ -1,0 +1,12 @@
+{
+  "0": [
+    {
+      "LAB_TEST_UID": 1009200001,
+      "RECORD_STATUS_CD": "ACTIVE"
+    },
+    {
+      "LAB_TEST_UID": 1009200002,
+      "RECORD_STATUS_CD": "INACTIVE"
+    }
+  ]
+}

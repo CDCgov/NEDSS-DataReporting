@@ -565,7 +565,14 @@ BEGIN
             lt.ALT_LAB_TEST_CD_SYS_CD,
             lt.ALT_LAB_TEST_CD_SYS_NM,
             lt.LAB_RPT_SHARE_IND,
-            COALESCE (mo.RECORD_STATUS_CD_MERGE, hd.RECORD_STATUS_CD_FOR_RESULT_DRUG) AS RECORD_STATUS_CD,
+            -- APP-1009: the row's own normalized status (lt.record_status_cd, from
+            -- #observation_data) must win over the ancestor-derived COALESCE below --
+            -- otherwise a Result/Order_rslt whose own observation is LOG_DEL stays
+            -- ACTIVE whenever its parent Order is still active.
+            CASE
+                WHEN lt.record_status_cd = 'INACTIVE' THEN 'INACTIVE'
+                ELSE COALESCE(mo.RECORD_STATUS_CD_MERGE, hd.RECORD_STATUS_CD_FOR_RESULT_DRUG)
+            END AS RECORD_STATUS_CD,
             lt.LAB_RPT_STATUS,
             lt.RESULTED_LAB_REPORT_DATE,
             lt.SUS_LAB_REPORT_DATE,
@@ -661,11 +668,14 @@ BEGIN
         IF OBJECT_ID('tempdb..#lab_test_N', 'U') IS NOT NULL
             DROP TABLE #lab_test_N;
 
+        -- APP-1009: no status filter here -- a record created and deleted before it
+        -- was ever synced while ACTIVE must still be inserted (as INACTIVE), matching
+        -- legacy MasterEtl (Lab_Test.sas) which always inserts new rows regardless of
+        -- status.
         SELECT distinct ltf.LAB_TEST_UID
         INTO #lab_test_N
         FROM #lab_test_final ltf
-        WHERE ltf.RECORD_STATUS_CD <> 'INACTIVE'
-        EXCEPT 
+        EXCEPT
         SELECT LAB_TEST_UID
         FROM [dbo].nrt_lab_test_key WITH (NOLOCK);
 
@@ -1152,21 +1162,26 @@ BEGIN
                 lt.[PROCESSING_DECISION_CD]         = RTRIM(CAST(ltf.PROCESSING_DECISION_CD AS varchar(50))),
                 lt.[PROCESSING_DECISION_DESC]       = RTRIM(CAST(ltf.PROCESSING_DECISION_DESC AS varchar(50))),
                 lt.[DOCUMENT_LINK]                  = RTRIM(CAST(ltf.DOCUMENT_LINK as varchar(500)))
-            FROM [dbo].LAB_TEST lt 
-            INNER JOIN #lab_test_final ltf 
+            -- APP-1009: join to nrt_lab_test_key directly (every already-keyed row
+            -- touched this batch), not just the #lab_test_E (non-INACTIVE) bucket, so
+            -- a row transitioning to INACTIVE this batch also gets its RECORD_STATUS_CD
+            -- (and other columns) persisted here instead of being left stale and later
+            -- physically deleted.
+            FROM [dbo].LAB_TEST lt
+            INNER JOIN #lab_test_final ltf
                 ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID
-            INNER JOIN #lab_test_E lte 
-                ON lte.LAB_TEST_UID = ltf.LAB_TEST_UID;
+            INNER JOIN [dbo].nrt_lab_test_key ltk
+                ON ltk.LAB_TEST_UID = ltf.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, lt.* 
-                FROM [dbo].LAB_TEST lt 
-                INNER JOIN #lab_test_final ltf 
+                SELECT @Proc_Step_Name AS step, lt.*
+                FROM [dbo].LAB_TEST lt
+                INNER JOIN #lab_test_final ltf
                     ON lt.LAB_TEST_UID = ltf.LAB_TEST_UID
-                INNER JOIN #lab_test_E lte 
-                    ON lte.LAB_TEST_UID = ltf.LAB_TEST_UID;
+                INNER JOIN [dbo].nrt_lab_test_key ltk
+                    ON ltk.LAB_TEST_UID = ltf.LAB_TEST_UID;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1180,15 +1195,20 @@ BEGIN
 
             /* Update records associated to Inactive Orders using Root Order UID. */
 
+            -- APP-1009: source from #lab_test_final (this batch's freshly computed
+            -- status) instead of dbo.LAB_TEST's already-persisted value. The
+            -- "UPDATING existing entries in LAB_TEST" step above only refreshes rows
+            -- in #lab_test_E (non-INACTIVE), so a row transitioning to INACTIVE this
+            -- batch is not yet written to dbo.LAB_TEST when this cascade runs -- and a
+            -- brand-new Order (no prior key, see #lab_test_N above) would never appear
+            -- via #lab_test_D at all, since that requires a pre-existing key.
             ;WITH inactive_orders AS (
-                SELECT 
-                    lt.root_ordered_test_pntr
-                FROM dbo.LAB_TEST lt WITH (NOLOCK)
-                INNER JOIN #lab_test_D ltd
-                    ON ltd.LAB_TEST_UID = lt.LAB_TEST_UID
-                WHERE 
-                    lt.lab_test_type = 'Order'
-                    AND lt.record_status_cd = 'INACTIVE'
+                SELECT
+                    ltf.root_ordered_test_pntr
+                FROM #lab_test_final ltf
+                WHERE
+                    ltf.lab_test_type = 'Order'
+                    AND ltf.record_status_cd = 'INACTIVE'
             )
             UPDATE lt
             SET record_status_cd = 'INACTIVE'
@@ -1217,20 +1237,20 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'UPDATING field updated_dttm in [dbo].nrt_lab_test_key table';
 
-            UPDATE ltk 
-            SET 
+            UPDATE ltk
+            SET
                 ltk.[updated_dttm] = @rdb_last_refresh_time
             FROM [dbo].nrt_lab_test_key ltk
-            INNER JOIN #lab_test_E lte 
-                ON lte.LAB_TEST_UID = ltk.LAB_TEST_UID;    
+            INNER JOIN #lab_test_final ltf
+                ON ltf.LAB_TEST_UID = ltk.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, ltk.* 
+                SELECT @Proc_Step_Name AS step, ltk.*
                 FROM [dbo].nrt_lab_test_key ltk
-                INNER JOIN #lab_test_E lte 
-                    ON lte.LAB_TEST_UID = ltk.LAB_TEST_UID;
+                INNER JOIN #lab_test_final ltf
+                    ON ltf.LAB_TEST_UID = ltk.LAB_TEST_UID;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1327,33 +1347,32 @@ BEGIN
                 USER_COMMENT_CREATED_BY = ucd.USER_COMMENT_CREATED_BY,
                 RECORD_STATUS_CD = CAST(ucd.RECORD_STATUS_CD AS VARCHAR(8)),
                 RDB_LAST_REFRESH_TIME = @rdb_last_refresh_time
-            FROM [dbo].LAB_RPT_USER_COMMENT lruc 
+            -- APP-1009: join to nrt_lab_rpt_user_comment_key directly (every
+            -- already-keyed comment touched this batch), not just the
+            -- #lab_rpt_user_comment_E (non-INACTIVE) bucket, so a comment transitioning
+            -- to INACTIVE this batch gets persisted here instead of being left stale
+            -- and later physically deleted.
+            FROM [dbo].LAB_RPT_USER_COMMENT lruc
             INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY 
+                ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY
                 AND uck.LAB_TEST_UID = lruc.LAB_TEST_UID
-            INNER JOIN #lab_rpt_user_comment_E ucde
-                ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
-                AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID
             INNER JOIN #lab_rpt_user_comment_data ucd
-                ON ucd.observation_uid = ucde.observation_uid
-                AND ucd.LAB_TEST_uid = ucde.LAB_TEST_uid
+                ON ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
+                AND ucd.LAB_TEST_uid = uck.LAB_TEST_uid
             INNER JOIN [dbo].nrt_lab_test_key lk
                     ON lk.LAB_TEST_UID = ucd.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, lruc.* 
-                FROM [dbo].LAB_RPT_USER_COMMENT lruc WITH (NOLOCK)  
+                SELECT @Proc_Step_Name AS step, lruc.*
+                FROM [dbo].LAB_RPT_USER_COMMENT lruc WITH (NOLOCK)
                 INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY 
+                    ON uck.USER_COMMENT_KEY = lruc.USER_COMMENT_KEY
                     AND uck.LAB_TEST_UID = lruc.LAB_TEST_UID
-                INNER JOIN #lab_rpt_user_comment_E ucde
-                    ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
-                    AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID
                 INNER JOIN #lab_rpt_user_comment_data ucd
-                    ON ucd.observation_uid = ucde.observation_uid
-                    AND ucd.LAB_TEST_uid = ucde.LAB_TEST_uid
+                    ON ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
+                    AND ucd.LAB_TEST_uid = uck.LAB_TEST_uid
                 INNER JOIN [dbo].nrt_lab_test_key lk
                     ON lk.LAB_TEST_UID = ucd.LAB_TEST_UID;
 
@@ -1366,22 +1385,22 @@ BEGIN
             SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
             SET @PROC_STEP_NAME = 'UPDATING field updated_dttm in [dbo].nrt_lab_rpt_user_comment_key table';
 
-            UPDATE uck 
-            SET 
+            UPDATE uck
+            SET
                 uck.[updated_dttm] = @rdb_last_refresh_time
             FROM [dbo].nrt_lab_rpt_user_comment_key uck
-            INNER JOIN #lab_rpt_user_comment_E ucde
-                ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID 
-                AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID;
+            INNER JOIN #lab_rpt_user_comment_data ucd
+                ON ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
+                AND ucd.LAB_TEST_UID = uck.LAB_TEST_UID;
 
             SELECT @RowCount_no = @@ROWCOUNT;
 
             IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, uck.* 
+                SELECT @Proc_Step_Name AS step, uck.*
                 FROM [dbo].nrt_lab_rpt_user_comment_key uck
-                INNER JOIN #lab_rpt_user_comment_E ucde
-                    ON ucde.observation_uid = uck.LAB_RPT_USER_COMMENT_UID 
-                    AND ucde.LAB_TEST_UID = uck.LAB_TEST_UID;
+                INNER JOIN #lab_rpt_user_comment_data ucd
+                    ON ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID
+                    AND ucd.LAB_TEST_UID = uck.LAB_TEST_UID;
 
             INSERT INTO [dbo].[job_flow_log]
             (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
@@ -1389,76 +1408,27 @@ BEGIN
             
             --------------------------------------------------------------------------------------------------------
         
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'DELETING inactive entries from LAB_RPT_USER_COMMENT';
+            -- APP-1009: previously this step hard-DELETEd rows in #lab_rpt_user_comment_D
+            -- (and their nrt_lab_rpt_user_comment_key rows) instead of persisting them as
+            -- INACTIVE. Legacy MasterEtl never deletes LAB_RPT_USER_COMMENT rows -- the
+            -- "UPDATING existing entries in LAB_RPT_USER_COMMENT" step above now already
+            -- refreshes every already-keyed comment (including ones going INACTIVE), so
+            -- nothing further to do here.
 
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, uc.* 
-                FROM [dbo].LAB_RPT_USER_COMMENT uc 
-                INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                    ON uck.LAB_TEST_UID = uc.LAB_TEST_UID 
-                    AND uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY
-                INNER JOIN #lab_rpt_user_comment_D ucd
-                    ON ucd.LAB_TEST_UID = uck.LAB_TEST_UID 
-                    AND ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID;
-
-            DELETE uc 
-            FROM [dbo].LAB_RPT_USER_COMMENT uc 
-            INNER JOIN [dbo].nrt_lab_rpt_user_comment_key uck
-                ON uck.LAB_TEST_UID = uc.LAB_TEST_UID 
-                AND uck.USER_COMMENT_KEY = uc.USER_COMMENT_KEY
-            INNER JOIN #lab_rpt_user_comment_D ucd
-                ON ucd.LAB_TEST_UID = uck.LAB_TEST_UID 
-                AND ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID;
-            
-            DELETE uck
-            FROM [dbo].nrt_lab_rpt_user_comment_key uck
-            INNER JOIN #lab_rpt_user_comment_D ucd 
-                ON ucd.LAB_TEST_UID = uck.LAB_TEST_UID 
-                AND ucd.observation_uid = uck.LAB_RPT_USER_COMMENT_UID;
-           
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
             --------------------------------------------------------------------------------------------------------
 
             -- LAB_TEST Dimension
             --------------------------------------------------------------------------------------------------------
 
-            SET @PROC_STEP_NO = @PROC_STEP_NO + 1;
-            SET @PROC_STEP_NAME = 'DELETING inactive entries from LAB_TEST';
+            -- APP-1009: previously this step hard-DELETEd rows in #lab_test_D (and their
+            -- nrt_lab_test_key rows) instead of persisting them as INACTIVE -- this is
+            -- the defect confirmed live via job_flow_log (a created-then-deleted lab
+            -- report's Order row vanished from LAB_TEST entirely instead of showing
+            -- RECORD_STATUS_CD='INACTIVE' as legacy RDB.LAB_TEST does). The "UPDATING
+            -- existing entries in LAB_TEST" step above now already refreshes every
+            -- already-keyed row (including ones going INACTIVE), so nothing further to
+            -- do here.
 
-            IF @debug = 'true'
-                SELECT @Proc_Step_Name AS step, lt.* 
-                FROM [dbo].LAB_TEST lt 
-                INNER JOIN [dbo].nrt_lab_test_key ltk
-                    ON ltk.LAB_TEST_KEY = lt.LAB_TEST_KEY
-                INNER JOIN #lab_test_D ltd
-                    ON ltd.LAB_TEST_UID = ltk.LAB_TEST_UID; 
-
-            DELETE lt 
-            FROM [dbo].LAB_TEST lt 
-            INNER JOIN [dbo].nrt_lab_test_key ltk
-                ON ltk.LAB_TEST_KEY = lt.LAB_TEST_KEY
-            INNER JOIN #lab_test_D ltd
-                ON ltd.LAB_TEST_UID = ltk.LAB_TEST_UID; 
-            
-            DELETE ltk
-            FROM [dbo].nrt_lab_test_key ltk
-            INNER JOIN #lab_test_D ltd
-                ON ltd.LAB_TEST_UID = ltk.LAB_TEST_UID; 
-           
-
-            SELECT @RowCount_no = @@ROWCOUNT;
-
-            INSERT INTO [dbo].[job_flow_log]
-            (batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
-            VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'START', @Proc_Step_no, @Proc_Step_Name, @RowCount_no);
-        
         COMMIT TRANSACTION
         
         --------------------------------------------------------------------------------------------------------
