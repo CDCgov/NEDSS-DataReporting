@@ -1,0 +1,19 @@
+{
+  "0": [
+    {
+      "LAB_TEST_UID": 1000005101,
+      "LAB_TEST_TYPE": "Order",
+      "RECORD_STATUS_CD": "ACTIVE"
+    },
+    {
+      "LAB_TEST_UID": 1000005102,
+      "LAB_TEST_TYPE": "Order_rslt",
+      "RECORD_STATUS_CD": "ACTIVE"
+    },
+    {
+      "LAB_TEST_UID": 1000005103,
+      "LAB_TEST_TYPE": "Result",
+      "RECORD_STATUS_CD": "ACTIVE"
+    }
+  ]
+}

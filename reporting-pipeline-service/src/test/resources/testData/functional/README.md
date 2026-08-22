@@ -15,7 +15,7 @@ When adding a new functional test, pick the next available range, and add your t
 | covidMarkReviewed        | 1000002000  | 1000002013 |
 | fullPathSupervisorReview | 1000003000  | 1000003009 |
 | interview                | 1000004000  | 1000004005 |
-| morbidityReport          | 1000005000  | 1000005027 |
+| morbidityReport          | 1000005000  | 1000005103 |
 | skipSupervisorReview     | 1000006000  | 1000006030 |
 | stdContactTracing        | 1000007000  | 1000007028 |
 | elrEColi                 | 1000008000  | 1000008049 |
