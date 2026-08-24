@@ -10,6 +10,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ObservationRepository extends JpaRepository<Observation, String> {
 
-  @Query(nativeQuery = true, value = "execute sp_Observation_Event :observation_uids")
-  Optional<Observation> computeObservations(@Param("observation_uids") String observation_uids);
+  @Query(
+      nativeQuery = true,
+      value =
+          "execute sp_observation_event @obs_id_list = :observation_uids, "
+              + "@debug_logging = :debugLogging")
+  Optional<Observation> computeObservations(
+      @Param("observation_uids") String observationUids,
+      @Param("debugLogging") boolean debugLogging);
 }

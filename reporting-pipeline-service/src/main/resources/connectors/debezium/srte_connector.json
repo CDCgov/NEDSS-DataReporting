@@ -29,7 +29,7 @@
     "time.precision.mode": "connect",
     "transforms": "dropPrefix, dropPrefixConfig, unwrapConfig, valueToKey, convertTimezone, unwrap, convertTimestamps_add_time, convertTimestamps_concept_status_time, convertTimestamps_effective_from_time,convertTimestamps_effective_to_time, convertTimestamps_status_time, convertTimestamps_status_to_time,convertTimestamps_value_set_status_time, convertTimestampsConfig_effective_from_time,convertTimestampsConfig_effective_to_time, convertTimestampsConfig_status_time",
     "predicates": "isConfigTable",
-    "transforms.dropPrefix.regex": "cdc_srte\\.NBS_SRTE\\.dbo\\.(.+)",
+    "transforms.dropPrefix.regex": "(?i)^cdc_srte\\.NBS_SRTE\\.dbo\\.(.+)",
     "transforms.dropPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
     "transforms.dropPrefix.replacement": "nrt_srte_$1",
     "transforms.dropPrefixConfig.regex": "cdc_srte\\.NBS_SRTE\\.dbo\\.Snomed_condition",

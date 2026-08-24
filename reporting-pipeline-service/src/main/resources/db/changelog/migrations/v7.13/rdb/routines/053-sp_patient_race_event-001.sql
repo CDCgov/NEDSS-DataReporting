@@ -1,5 +1,42 @@
+-- =============================================================================
+-- Procedure:   dbo.sp_patient_race_event
+-- Purpose:     Derives a patient-level calculated race value (Unknown,
+--              Multi-Race, or a single named race) and a detailed
+--              breakdown of up to 4 sub-races for each of the 5 OMB race
+--              categories, for a batch of patients. Output is one row per
+--              patient, ready for load into the Patient dimension table.
+--
+-- Parameters:
+--   @user_id_list  nvarchar(max) - Comma-delimited list of PERSON_UID
+--                                  values to process for this batch.
+--   @batch_id      bigint        - ETL batch identifier, used for error
+--                                  logging only.
+--
+-- Returns:
+--   Result set: one row per patient with RACE_CALCULATED, RACE_ALL,
+--   RACE_CALC_DETAILS, and per-category (NAT_HI, ASIAN, AMER_IND, BLACK,
+--   WHITE) breakdown columns (_1/_2/_3, _GT3_IND, _ALL).
+--
+--   On error: no result set is returned. The error is logged to
+--   dbo.job_flow_log, and RETURN is called with the error message. Note
+--   that T-SQL coerces the RETURN value to an int, so callers should not
+--   rely on the literal text of the return code - dbo.job_flow_log is
+--   the authoritative error record.
+--
+-- Dependencies:
+--   NBS_ODSE.dbo.PERSON_RACE, NBS_SRTE.dbo.RACE_CODE, dbo.job_flow_log
+--
+-- Concurrency:
+--   Reads use WITH (NOLOCK). Source tables are not modified concurrently
+--   during the ETL window, so dirty reads are acceptable here.
+--
+-- Idempotency:
+--   Proc is dropped and recreated on each deployment so this script can
+--   be re-run safely in CI/CD pipelines.
+-- =============================================================================
+
 IF EXISTS (SELECT * FROM sysobjects WHERE  id = object_id(N'[dbo].[sp_patient_race_event]') 
-	AND OBJECTPROPERTY(id, N'IsProcedure') = 1
+    AND OBJECTPROPERTY(id, N'IsProcedure') = 1
 )
 BEGIN
     DROP PROCEDURE [dbo].[sp_patient_race_event]
@@ -12,6 +49,26 @@ BEGIN
 
     BEGIN TRY
 
+        -- -----------------------------------------------------------------
+        -- Materialize the incoming person_uid list into a temp table so the
+        -- subsequent PERSON_RACE lookup can use a relational join instead
+        -- of comparing bigint values against string-split output.
+        -- -----------------------------------------------------------------
+        CREATE TABLE #requested_person_ids
+        (
+            person_uid BIGINT NOT NULL PRIMARY KEY
+        );
+
+        INSERT INTO #requested_person_ids (person_uid)
+        SELECT TRY_CAST(value AS BIGINT) AS person_uid
+        FROM STRING_SPLIT(@user_id_list, ',')
+        WHERE TRY_CAST(value AS BIGINT) IS NOT NULL;
+
+        -- -----------------------------------------------------------------
+        -- Pull all race rows for the requested patients, resolving the
+        -- description text for the reported RACE_CD and the parent-level
+        -- (ROOT vs. category) classification for RACE_CATEGORY_CD.
+        -- -----------------------------------------------------------------
         SELECT pr.PERSON_UID AS 'PATIENT_UID',
                RACE_CD,
                RACE_CODE.CODE_DESC_TXT,
@@ -19,84 +76,56 @@ BEGIN
                RACE_CODE.PARENT_IS_CD
         into #TMP_S_PERSON_RACE
         from NBS_ODSE.dbo.PERSON_RACE pr with (nolock)
+                 JOIN #requested_person_ids rpi ON rpi.person_uid = pr.person_uid
                  LEFT OUTER JOIN NBS_SRTE.dbo.RACE_CODE with (nolock) ON pr.RACE_CD = RACE_CODE.CODE
                  LEFT OUTER JOIN NBS_SRTE.dbo.RACE_CODE RT with (nolock) ON pr.RACE_CATEGORY_CD = RT.CODE
-        where pr.person_uid in (SELECT value FROM STRING_SPLIT(@user_id_list, ','))
         ORDER BY PATIENT_UID, CODE_DESC_TXT;
 
+        CREATE CLUSTERED INDEX IX_TMP_S_PERSON_RACE_UID
+            ON #TMP_S_PERSON_RACE (PATIENT_UID);
 
+        -- Rows whose category is a top-level ("ROOT") OMB race category;
+        -- basis for the patient-level RACE_CALCULATED / RACE_ALL fields.
         SELECT *
         into #TMP_PERSON_ROOT_RACE
         FROM #TMP_S_PERSON_RACE
         WHERE PARENT_IS_CD = 'ROOT'
---ORDER BY PATIENT_UID
         ;
 
+        CREATE CLUSTERED INDEX IX_TMP_PERSON_ROOT_RACE_UID
+            ON #TMP_PERSON_ROOT_RACE (PATIENT_UID);
 
-        IF OBJECT_ID('tempdb..#TMP_S_PERSON_AMER_INDIAN_RACE', 'U') IS NOT NULL
-            drop table #TMP_S_PERSON_AMER_INDIAN_RACE ;
+        -- -----------------------------------------------------------------
+        -- Detailed sub-race rows rolling up under each of the 5 OMB race
+        -- categories, tagged with RACE_CATEGORY_TAG so all 5 categories
+        -- can be processed together below. RACE_CD <> RACE_CATEGORY_CD
+        -- excludes the category's own summary row.
+        -- -----------------------------------------------------------------
+        IF OBJECT_ID('tempdb..#TMP_S_PERSON_RACE_CAT', 'U') IS NOT NULL
+            drop table #TMP_S_PERSON_RACE_CAT;
 
+        WITH race_category_map AS (
+            SELECT '1002-5' AS race_category_cd, 'AMER_IND' AS race_category_tag -- American Indian / Alaska Native
+            UNION ALL SELECT '2054-5', 'BLACK'                                   -- Black or African American
+            UNION ALL SELECT '2106-3', 'WHITE'                                   -- White
+            UNION ALL SELECT '2028-9', 'ASIAN'                                   -- Asian
+            UNION ALL SELECT '2076-8', 'NAT_HI'                                  -- Native Hawaiian / Other Pacific Islander
+        )
+        SELECT sr.*, 
+               m.race_category_tag AS RACE_CATEGORY_TAG
+        INTO #TMP_S_PERSON_RACE_CAT
+        FROM #TMP_S_PERSON_RACE sr
+                 JOIN race_category_map m
+                      ON sr.RACE_CATEGORY_CD = m.race_category_cd
+        WHERE sr.RACE_CD <> sr.RACE_CATEGORY_CD;
 
-        SELECT *
-        into #TMP_S_PERSON_AMER_INDIAN_RACE
-        FROM #TMP_S_PERSON_RACE
-        WHERE RACE_CATEGORY_CD = '1002-5'
-          AND RACE_CD <> RACE_CATEGORY_CD
---ORDER BY PATIENT_UID
-        ;
-
-
-        IF OBJECT_ID('tempdb..#TMP_S_PERSON_BLACK_RACE', 'U') IS NOT NULL
-            drop table #TMP_S_PERSON_BLACK_RACE ;
-
-
-        SELECT *
-        into #TMP_S_PERSON_BLACK_RACE
-        FROM #TMP_S_PERSON_RACE
-        WHERE RACE_CATEGORY_CD = '2054-5'
-          AND RACE_CD <> RACE_CATEGORY_CD
---ORDER BY PATIENT_UID
-        ;
-
-
-        IF OBJECT_ID('tempdb..#TMP_S_PERSON_WHITE_RACE', 'U') IS NOT NULL
-            drop table #TMP_S_PERSON_WHITE_RACE ;
-
-        SELECT *
-        into #TMP_S_PERSON_WHITE_RACE
-        FROM #TMP_S_PERSON_RACE
-        WHERE RACE_CATEGORY_CD = '2106-3'
-          AND RACE_CD <> RACE_CATEGORY_CD
---ORDER BY PATIENT_UID
-        ;
+        CREATE CLUSTERED INDEX IX_TMP_PERSON_RACE_CAT_UID_TAG
+            ON #TMP_S_PERSON_RACE_CAT (PATIENT_UID, RACE_CATEGORY_TAG);
 
 
-        IF OBJECT_ID('tempdb..#TMP_S_PERSON_ASIAN_RACE', 'U') IS NOT NULL
-            drop table #TMP_S_PERSON_ASIAN_RACE ;
-
-        SELECT *
-        into #TMP_S_PERSON_ASIAN_RACE
-        FROM #TMP_S_PERSON_RACE
-        WHERE RACE_CATEGORY_CD = '2028-9'
-          AND RACE_CD <> RACE_CATEGORY_CD
---ORDER BY PATIENT_UID
-        ;
-
-
-        IF OBJECT_ID('tempdb..#TMP_S_PERSON_HAWAIIAN_RACE', 'U') IS NOT NULL
-            drop table #TMP_S_PERSON_HAWAIIAN_RACE ;
-
-        SELECT *
-        into #TMP_S_PERSON_HAWAIIAN_RACE
-        FROM #TMP_S_PERSON_RACE
-        WHERE RACE_CATEGORY_CD = '2076-8'
-          AND RACE_CD <> RACE_CATEGORY_CD
---ORDER BY PATIENT_UID
-        ;
-
-
-/*Calculate Person Race*/
-
+        -- ===================================================================
+        -- Patient-level calculated race
+        -- ===================================================================
         IF OBJECT_ID('tempdb..#TMP_S_PERSON_ROOT_RACE', 'U') IS NOT NULL
             drop table #TMP_S_PERSON_ROOT_RACE;
 
@@ -104,63 +133,49 @@ BEGIN
         into #TMP_S_PERSON_ROOT_RACE
         from #TMP_PERSON_ROOT_RACE;
 
+        CREATE CLUSTERED INDEX IX_TMP_S_PERSON_ROOT_RACE_UID
+            ON #TMP_S_PERSON_ROOT_RACE (PATIENT_UID);
+
         ALTER TABLE #TMP_S_PERSON_ROOT_RACE
             ADD PATIENT_RACE_CALCULATED VARCHAR(2000),
                 PATIENT_RACE_CALC_DETAILS varchar(4000),
                 PATIENT_RACE_ALL varchar(4000);
 
-        with cte as (select patient_uid,
-                            (STUFF((SELECT ' | ' + CAST(sppr2.CODE_DESC_TXT AS varchar(2000))
-                                    FROM #TMP_S_PERSON_ROOT_RACE sppr2
-                                    WHERE sppr2.patient_uid = sppr.patient_uid
-                                    FOR XML PATH('')), 2, 1, '')) AS CODE_DESC_TXT_List
-                     from #TMP_S_PERSON_ROOT_RACE sppr
-                     where CODE_DESC_TXT is not null
-                     --and RACE_CATEGORY_CD not in ('PHC1175' ,'NASK','U')
-                     group by patient_uid
-            --having count(*) > 1
-
+        -- PATIENT_RACE_ALL: pipe-delimited list of all root race
+        -- descriptions for the patient (includes Unknown/Not Asked/etc.).
+        -- PATIENT_RACE_CALC_DETAILS: same, excluding "non-answer" codes
+        -- (PHC1175, NASK, U) so it reflects only actual reported races.
+        ;WITH agg AS (
+            SELECT patient_uid,
+                   STRING_AGG(CAST(code_desc_txt AS varchar(2000)), ' | ')
+                       WITHIN GROUP (ORDER BY code_desc_txt) AS race_all,
+                   STRING_AGG(
+                       CASE WHEN race_category_cd NOT IN ('PHC1175', 'NASK', 'U')
+                            THEN CAST(code_desc_txt AS varchar(2000)) END,
+                       ' | '
+                   ) WITHIN GROUP (ORDER BY code_desc_txt) AS race_calc_details
+            FROM #TMP_S_PERSON_ROOT_RACE
+            WHERE code_desc_txt IS NOT NULL
+            GROUP BY patient_uid
         )
-        update sppr
-        set sppr.PATIENT_RACE_ALL = rtrim(ltrim(cte1.CODE_DESC_TXT_List))
-        from #TMP_S_PERSON_ROOT_RACE sppr,
-             cte cte1
-        where sppr.PATIENT_UID = cte1.PATIENT_UID
---and cte1.rn = 1
-        ;
+        UPDATE sppr
+        SET sppr.PATIENT_RACE_ALL = rtrim(ltrim(a.race_all)),
+            sppr.PATIENT_RACE_CALC_DETAILS = rtrim(ltrim(a.race_calc_details))
+        FROM #TMP_S_PERSON_ROOT_RACE sppr
+                 JOIN agg a ON sppr.PATIENT_UID = a.patient_uid;
 
-
-        with cte as (select patient_uid,
-                            (STUFF((SELECT ' | ' + CAST(sppr2.CODE_DESC_TXT AS varchar(2000))
-                                    FROM #TMP_S_PERSON_ROOT_RACE sppr2
-                                    WHERE sppr2.patient_uid = sppr.patient_uid
-                                      and RACE_CATEGORY_CD not in ('PHC1175', 'NASK', 'U')
-                                    FOR XML PATH('')), 2, 1, '')) AS CODE_DESC_TXT_List
-                     from #TMP_S_PERSON_ROOT_RACE sppr
-                     where CODE_DESC_TXT is not null
-                     --and RACE_CATEGORY_CD not in ('PHC1175' ,'NASK','U')
-                     group by patient_uid
-            --having count(*) > 1
-
-        )
-        update sppr
-        set sppr.PATIENT_RACE_CALC_DETAILS = rtrim(ltrim(cte1.CODE_DESC_TXT_List))
-        from #TMP_S_PERSON_ROOT_RACE sppr,
-             cte cte1
-        where sppr.PATIENT_UID = cte1.PATIENT_UID
---and cte1.rn = 1
-        ;
-
-        --the sas PatientDimension.sas(line 219) for PATIENT_RACE_CALC_DETAILS column takes an extra step to reassign the column
-        --like so "IF LENGTHN(PATIENT_RACE_CALC_DETAILS)<1 THEN PATIENT_RACE_CALC_DETAILS='Unknown';". We should introduce
-         --a similar reassignment of the column to to prevent it from being NULL.
-
+        -- Parity with legacy SAS logic (PatientDimension.sas): if a
+        -- patient has no qualifying (non-"non-answer") race rows,
+        -- CALC_DETAILS is forced to the literal 'Unknown' instead of
+        -- being left NULL/blank.
         UPDATE sppr
         SET sppr.PATIENT_RACE_CALC_DETAILS = 'Unknown'
         FROM #TMP_S_PERSON_ROOT_RACE sppr
         WHERE NULLIF(LTRIM(RTRIM(sppr.PATIENT_RACE_CALC_DETAILS)), '') IS NULL;
 
-
+        -- Single-value rollup: no details -> 'Unknown'; more than one
+        -- race listed (delimiter present) -> 'Multi-Race'; exactly one
+        -- race listed -> that race's description text.
         update #TMP_S_PERSON_ROOT_RACE
         set PATIENT_RACE_CALCULATED =
                 case
@@ -170,709 +185,211 @@ BEGIN
                     end;
 
 
-/*Person Race Breakdown*/
-        ALTER TABLE #TMP_S_PERSON_AMER_INDIAN_RACE
+        -- ===================================================================
+        -- Per-category sub-race breakdown (all 5 OMB categories in one pass,
+        -- partitioned by PATIENT_UID + RACE_CATEGORY_TAG)
+        -- ===================================================================
+        ALTER TABLE #TMP_S_PERSON_RACE_CAT
             ADD
-                PATIENT_RACE_AMER_IND_ALL varchar(2000),
-                PATIENT_RACE_AMER_IND_1 varchar(50),
-                PATIENT_RACE_AMER_IND_2 varchar(50),
-                PATIENT_RACE_AMER_IND_3 varchar(50),
-                PATIENT_RACE_AMER_IND_4 varchar(50),
-                PATIENT_RACE_AMER_IND_GT3_IND varchar(10);
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_AMER_IND_1] = cte1.code_desc_txt
-        from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 1
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_AMER_IND_2] = cte1.code_desc_txt
-        from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 2
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_AMER_IND_3] = cte1.code_desc_txt
-        from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 3
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_AMER_IND_4] = cte1.code_desc_txt
-        from #TMP_S_PERSON_AMER_INDIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 4
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
+                RACE_ALL varchar(2000),
+                RACE_1 varchar(50),
+                RACE_2 varchar(50),
+                RACE_3 varchar(50),
+                RACE_4 varchar(50),
+                RACE_GT3_IND varchar(10);
 
-        update #TMP_S_PERSON_AMER_INDIAN_RACE
-        set [PATIENT_RACE_AMER_IND_GT3_IND] =
+        -- Rank each patient/category's distinct sub-race rows (tie-break
+        -- on PATIENT_UID for run-to-run stability) and pivot ranks 1-4
+        -- into the RACE_1..RACE_4 slot columns.
+        ;WITH ranked_CAT AS (
+            SELECT PATIENT_UID AS person_uid,
+                   RACE_CATEGORY_TAG AS category_tag,
+                   CODE_DESC_TXT AS code_desc_txt,
+                   row_number() OVER (
+                       PARTITION BY PATIENT_UID, RACE_CATEGORY_TAG
+                       ORDER BY PATIENT_UID) AS rn
+            FROM #TMP_S_PERSON_RACE_CAT
+        ),
+        pivoted_CAT AS (
+            SELECT person_uid,
+                   category_tag,
+                   MAX(CASE WHEN rn = 1 THEN code_desc_txt END) AS r1,
+                   MAX(CASE WHEN rn = 2 THEN code_desc_txt END) AS r2,
+                   MAX(CASE WHEN rn = 3 THEN code_desc_txt END) AS r3,
+                   MAX(CASE WHEN rn = 4 THEN code_desc_txt END) AS r4
+            FROM ranked_CAT
+            GROUP BY person_uid, category_tag
+        )
+        UPDATE prc
+        SET prc.RACE_1 = pv.r1,
+            prc.RACE_2 = pv.r2,
+            prc.RACE_3 = pv.r3,
+            prc.RACE_4 = pv.r4
+        FROM #TMP_S_PERSON_RACE_CAT prc
+                 JOIN pivoted_CAT pv
+                      ON pv.person_uid = prc.PATIENT_UID
+                     AND pv.category_tag = prc.RACE_CATEGORY_TAG;
+
+
+        -- Flag whether the patient has more than 3 distinct sub-races
+        -- reported for this category (i.e. a 4th slot was populated).
+        update #TMP_S_PERSON_RACE_CAT
+        set RACE_GT3_IND =
                 case
-                    when [PATIENT_RACE_AMER_IND_4] is not null then 'TRUE'
-                    when [PATIENT_RACE_AMER_IND_4] is null then 'FALSE'
+                    when RACE_4 is not null then 'TRUE'
+                    else 'FALSE'
                     end;
 
 
-        IF OBJECT_ID('tempdb..#TEMP_AMER_IND_RACE_ALL', 'U') IS NOT NULL
-            drop table #TEMP_AMER_IND_RACE_ALL ;
+        -- Pipe-delimited list of every distinct sub-race description for
+        -- the (patient, category).
+        UPDATE prc
+        SET prc.RACE_ALL = agg.desc_list
+        FROM #TMP_S_PERSON_RACE_CAT prc
+                 JOIN (
+                     SELECT patient_uid, race_category_tag, STRING_AGG(code_desc_txt, ' | ') AS desc_list
+                     FROM (SELECT DISTINCT patient_uid, race_category_tag, code_desc_txt
+                           FROM #TMP_S_PERSON_RACE_CAT) d
+                     GROUP BY patient_uid, race_category_tag
+                 ) agg
+                      ON agg.patient_uid = prc.PATIENT_UID
+                     AND agg.race_category_tag = prc.RACE_CATEGORY_TAG;
 
 
-        SELECT distinct patient_uid,
-                        STUFF((SELECT distinct ' | ' + code_desc_txt
-                               FROM #TMP_S_PERSON_AMER_INDIAN_RACE t1
-                               where t1.patient_uid = t2.patient_uid
-                               FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') as PATIENT_RACE_AMER_IND_ALL
-        into #TEMP_AMER_IND_RACE_ALL
-        from #TMP_S_PERSON_AMER_INDIAN_RACE t2;
-
-        update p
-        SET p.PATIENT_RACE_AMER_IND_ALL = SUBSTRING(ps.PATIENT_RACE_AMER_IND_ALL, 2, LEN(ps.PATIENT_RACE_AMER_IND_ALL))
-        from #TMP_S_PERSON_AMER_INDIAN_RACE p
-                 INNER JOIN #TEMP_AMER_IND_RACE_ALL ps
-                            on p.PATIENT_UID = ps.PATIENT_UID
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        ALTER TABLE #TMP_S_PERSON_BLACK_RACE
-            ADD
-                PATIENT_RACE_BLACK_ALL varchar(2000),
-                PATIENT_RACE_BLACK_1 varchar(50),
-                PATIENT_RACE_BLACK_2 varchar(50),
-                PATIENT_RACE_BLACK_3 varchar(50),
-                PATIENT_RACE_BLACK_4 varchar(50),
-                PATIENT_RACE_BLACK_GT3_IND varchar(10);
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_BLACK_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_BLACK_1] = cte1.code_desc_txt
-        from #TMP_S_PERSON_BLACK_RACE prs,
-             cte cte1
-        where cte1.rn = 1
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_BLACK_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_BLACK_2] = cte1.code_desc_txt
-        from #TMP_S_PERSON_BLACK_RACE prs,
-             cte cte1
-        where cte1.rn = 2
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_BLACK_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_BLACK_3] = cte1.code_desc_txt
-        from #TMP_S_PERSON_BLACK_RACE prs,
-             cte cte1
-        where cte1.rn = 3
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_BLACK_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_BLACK_4] = cte1.code_desc_txt
-        from #TMP_S_PERSON_BLACK_RACE prs,
-             cte cte1
-        where cte1.rn = 4
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        update #TMP_S_PERSON_BLACK_RACE
-        set [PATIENT_RACE_BLACK_GT3_IND] =
-                case
-                    when [PATIENT_RACE_BLACK_4] is not null then 'TRUE'
-                    when [PATIENT_RACE_BLACK_4] is null then 'FALSE'
-                    end;
-
-
-        IF OBJECT_ID('tempdb..#TEMP_BLACK_RACE_ALL', 'U') IS NOT NULL
-            drop table #TEMP_BLACK_RACE_ALL ;
-
-
-        SELECT distinct patient_uid,
-                        STUFF((SELECT distinct ' | ' + code_desc_txt
-                               FROM #TMP_S_PERSON_BLACK_RACE t1
-                               where t1.patient_uid = t2.patient_uid
-                               FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') as PATIENT_RACE_BLACK_ALL
-        into #TEMP_BLACK_RACE_ALL
-        from #TMP_S_PERSON_BLACK_RACE t2
-
-        update p
-        SET p.PATIENT_RACE_BLACK_ALL = SUBSTRING(ps.PATIENT_RACE_BLACK_ALL, 2, LEN(ps.PATIENT_RACE_BLACK_ALL))
-        from #TMP_S_PERSON_BLACK_RACE p
-                 INNER JOIN #TEMP_BLACK_RACE_ALL ps
-                            on p.PATIENT_UID = ps.PATIENT_UID
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        ALTER TABLE #TMP_S_PERSON_WHITE_RACE
-            ADD
-                PATIENT_RACE_WHITE_ALL varchar(2000),
-                PATIENT_RACE_WHITE_1 varchar(50),
-                PATIENT_RACE_WHITE_2 varchar(50),
-                PATIENT_RACE_WHITE_3 varchar(50),
-                PATIENT_RACE_WHITE_4 varchar(50),
-                PATIENT_RACE_WHITE_GT3_IND varchar(10);
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_WHITE_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_WHITE_1] = cte1.code_desc_txt
-        from #TMP_S_PERSON_WHITE_RACE prs,
-             cte cte1
-        where cte1.rn = 1
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_WHITE_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_WHITE_2] = cte1.code_desc_txt
-        from #TMP_S_PERSON_WHITE_RACE prs,
-             cte cte1
-        where cte1.rn = 2
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_WHITE_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_WHITE_3] = cte1.code_desc_txt
-        from #TMP_S_PERSON_WHITE_RACE prs,
-             cte cte1
-        where cte1.rn = 3
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_WHITE_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_WHITE_4] = cte1.code_desc_txt
-        from #TMP_S_PERSON_WHITE_RACE prs,
-             cte cte1
-        where cte1.rn = 4
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        update #TMP_S_PERSON_WHITE_RACE
-        set [PATIENT_RACE_WHITE_GT3_IND] =
-                case
-                    when [PATIENT_RACE_WHITE_4] is not null then 'TRUE'
-                    when [PATIENT_RACE_WHITE_4] is null then 'FALSE'
-                    end;
-
-
-        IF OBJECT_ID('tempdb..#TEMP_WHITE_RACE_ALL', 'U') IS NOT NULL
-            drop table #TEMP_WHITE_RACE_ALL ;
-
-
-        SELECT distinct patient_uid,
-                        STUFF((SELECT distinct ' | ' + code_desc_txt
-                               FROM #TMP_S_PERSON_WHITE_RACE t1
-                               where t1.patient_uid = t2.patient_uid
-                               FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') as PATIENT_RACE_WHITE_ALL
-        into #TEMP_WHITE_RACE_ALL
-        from #TMP_S_PERSON_WHITE_RACE t2;
-
-        update p
-        SET p.PATIENT_RACE_WHITE_ALL = SUBSTRING(ps.PATIENT_RACE_WHITE_ALL, 2, LEN(ps.PATIENT_RACE_WHITE_ALL))
-        from #TMP_S_PERSON_WHITE_RACE p
-                 INNER JOIN #TEMP_WHITE_RACE_ALL ps
-                            on p.PATIENT_UID = ps.PATIENT_UID
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        ALTER TABLE #TMP_S_PERSON_ASIAN_RACE
-            ADD
-                PATIENT_RACE_ASIAN_ALL varchar(2000),
-                PATIENT_RACE_ASIAN_1 varchar(50),
-                PATIENT_RACE_ASIAN_2 varchar(50),
-                PATIENT_RACE_ASIAN_3 varchar(50),
-                PATIENT_RACE_ASIAN_4 varchar(50),
-                PATIENT_RACE_ASIAN_GT3_IND varchar(10);
-        ;
-        with cte as (select pr.person_uid
-                          , prs.race_cd
-                          , prs.race_category_cd
-                          , prs.[code_desc_txt]
-                          , row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_ASIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_ASIAN_1] = cte1.code_desc_txt
-        from #TMP_S_PERSON_ASIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 1
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_ASIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_ASIAN_2] = cte1.code_desc_txt
-        from #TMP_S_PERSON_ASIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 2
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_ASIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_ASIAN_3] = cte1.code_desc_txt
-        from #TMP_S_PERSON_ASIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 3
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_ASIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_ASIAN_4] = cte1.code_desc_txt
-        from #TMP_S_PERSON_ASIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 4
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        update #TMP_S_PERSON_ASIAN_RACE
-        set [PATIENT_RACE_ASIAN_GT3_IND] =
-                case
-                    when [PATIENT_RACE_ASIAN_4] is not null then 'TRUE'
-                    when [PATIENT_RACE_ASIAN_4] is null then 'FALSE'
-                    end;
-
-
-        IF OBJECT_ID('tempdb..#TEMP_ASIAN_RACE_ALL', 'U') IS NOT NULL
-            drop table #TEMP_ASIAN_RACE_ALL ;
-
-
-        SELECT distinct patient_uid,
-                        STUFF((SELECT distinct ' | ' + code_desc_txt
-                               FROM #TMP_S_PERSON_ASIAN_RACE t1
-                               where t1.patient_uid = t2.patient_uid
-                               FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') as PATIENT_RACE_ASIAN_ALL
-        into #TEMP_ASIAN_RACE_ALL
-        from #TMP_S_PERSON_ASIAN_RACE t2
-
-        update p
-        SET p.PATIENT_RACE_ASIAN_ALL = SUBSTRING(ps.PATIENT_RACE_ASIAN_ALL, 2, LEN(ps.PATIENT_RACE_ASIAN_ALL))
-        from #TMP_S_PERSON_ASIAN_RACE p
-                 INNER JOIN #TEMP_ASIAN_RACE_ALL ps
-                            on p.PATIENT_UID = ps.PATIENT_UID
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        ALTER TABLE #TMP_S_PERSON_HAWAIIAN_RACE
-            ADD
-                PATIENT_RACE_NAT_HI_ALL varchar(2000),
-                PATIENT_RACE_NAT_HI_1 varchar(50),
-                PATIENT_RACE_NAT_HI_2 varchar(50),
-                PATIENT_RACE_NAT_HI_3 varchar(50),
-                PATIENT_RACE_NAT_HI_4 varchar(50),
-                PATIENT_RACE_NAT_HI_GT3_IND varchar(10);
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_NAT_HI_1] = cte1.code_desc_txt
-        from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 1
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_NAT_HI_2] = cte1.code_desc_txt
-        from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 2
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_NAT_HI_3] = cte1.code_desc_txt
-        from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 3
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-        ;
-        with cte as (select pr.person_uid,
-                            prs.race_cd,
-                            prs.race_category_cd,
-                            prs.[code_desc_txt],
-                            row_number() OVER (PARTITION BY pr.person_uid ORDER BY pr.person_uid) AS rn
-                     from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-                          NBS_ODSE.dbo.person_race pr with (nolock),
-                          [NBS_SRTE].[dbo].[Race_code] rc with (nolock)
-                     where prs.PATIENT_UID = PR.person_uid
-                       and pr.race_cd = pr.race_category_cd
-                       and rc.code = pr.race_category_cd
-                     group by pr.person_uid, prs.race_cd, prs.race_category_cd, prs.[code_desc_txt])
-        update prs
-        set prs.[PATIENT_RACE_NAT_HI_4] = cte1.code_desc_txt
-        from #TMP_S_PERSON_HAWAIIAN_RACE prs,
-             cte cte1
-        where cte1.rn = 4
-          and prs.PATIENT_UID = cte1.person_uid
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-        update #TMP_S_PERSON_HAWAIIAN_RACE
-        set [PATIENT_RACE_NAT_HI_GT3_IND] =
-                case
-                    when [PATIENT_RACE_NAT_HI_4] is not null then 'TRUE'
-                    when [PATIENT_RACE_NAT_HI_4] is null then 'FALSE'
-                    end;
-
-
-        IF OBJECT_ID('tempdb..#TEMP_HAWAIIAN_RACE_ALL', 'U') IS NOT NULL
-            drop table #TEMP_HAWAIIAN_RACE_ALL ;
-
-
-        SELECT distinct patient_uid,
-                        STUFF((SELECT distinct ' | ' + code_desc_txt
-                               FROM #TMP_S_PERSON_HAWAIIAN_RACE t1
-                               where t1.patient_uid = t2.patient_uid
-                               FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 1, '') as PATIENT_RACE_NAT_HI_ALL
-        into #TEMP_HAWAIIAN_RACE_ALL
-        from #TMP_S_PERSON_HAWAIIAN_RACE t2
-
-        update p
-        SET p.PATIENT_RACE_NAT_HI_ALL = SUBSTRING(ps.PATIENT_RACE_NAT_HI_ALL, 2, LEN(ps.PATIENT_RACE_NAT_HI_ALL))
-        from #TMP_S_PERSON_HAWAIIAN_RACE p
-                 INNER JOIN #TEMP_HAWAIIAN_RACE_ALL ps
-                            on p.PATIENT_UID = ps.PATIENT_UID
---and prs.RACE_CD = cte1.race_cd
-        ;
-
-
-/*Person Race Out*/
+        -- ===================================================================
+        -- Assemble final wide output: one row per patient, seeded with
+        -- typed NULLs for every category breakdown column. Only slots
+        -- 1-3 are surfaced per category in the output shape (slot 4,
+        -- computed above, is used only to derive RACE_GT3_IND).
+        -- ===================================================================
         IF OBJECT_ID('tempdb..#TMP_S_PERSON_RACE_OUT', 'U') IS NOT NULL
             DROP TABLE #TMP_S_PERSON_RACE_OUT ;
 
-
-        select distinct patient_race_calculated     as race_calculated
-                      , patient_race_calc_details   as race_calc_details
-                      , patient_race_all            as race_all
-                      , cast(null as varchar(50))   as race_nat_hi_1
-                      , cast(null as varchar(50))   as race_nat_hi_2
-                      , cast(null as varchar(50))   as race_nat_hi_3
-                      , cast(null as varchar(10))   as race_nat_hi_gt3_ind
-                      , cast(null as varchar(2000)) as race_nat_hi_all
-                      , cast(null as varchar(50))   as race_asian_1
-                      , cast(null as varchar(50))   as race_asian_2
-                      , cast(null as varchar(2000)) as race_asian_all
-                      , cast(null as varchar(50))   as race_asian_3
-                      , cast(null as varchar(10))   as race_asian_gt3_ind
-                      , cast(null as varchar(50))   as race_amer_ind_1
-                      , cast(null as varchar(50))   as race_amer_ind_2
-                      , cast(null as varchar(50))   as race_amer_ind_3
-                      , cast(null as varchar(10))   as race_amer_ind_gt3_ind
-                      , cast(null as varchar(2000)) as race_amer_ind_all
-                      , cast(null as varchar(50))   as race_black_1
-                      , cast(null as varchar(50))   as race_black_2
-                      , cast(null as varchar(50))   as race_black_3
-                      , cast(null as varchar(10))   as race_black_gt3_ind
-                      , cast(null as varchar(2000)) as race_black_all
-                      , cast(null as varchar(50))   as race_white_1
-                      , cast(null as varchar(50))   as race_white_2
-                      , cast(null as varchar(50))   as race_white_3
-                      , cast(null as varchar(10))   as race_white_gt3_ind
-                      , cast(null as varchar(2000)) as race_white_all
-                      , spr.patient_uid             as patient_uid_race_out
+        -- #TMP_S_PERSON_ROOT_RACE has one row per (patient, root
+        -- category); RACE_CALCULATED/_ALL/_CALC_DETAILS are patient-level
+        -- values duplicated across those rows, so ROW_NUMBER() is used to
+        -- pick a single representative row per patient.
+        ;WITH one_per_patient AS (
+            SELECT *,
+                   ROW_NUMBER() OVER (PARTITION BY patient_uid ORDER BY patient_uid) AS rn
+            FROM #tmp_s_person_root_race
+        )
+        select patient_race_calculated     as race_calculated
+             , patient_race_calc_details   as race_calc_details
+             , patient_race_all            as race_all
+             , cast(null as varchar(50))   as race_nat_hi_1
+             , cast(null as varchar(50))   as race_nat_hi_2
+             , cast(null as varchar(50))   as race_nat_hi_3
+             , cast(null as varchar(10))   as race_nat_hi_gt3_ind
+             , cast(null as varchar(2000)) as race_nat_hi_all
+             , cast(null as varchar(50))   as race_asian_1
+             , cast(null as varchar(50))   as race_asian_2
+             , cast(null as varchar(2000)) as race_asian_all
+             , cast(null as varchar(50))   as race_asian_3
+             , cast(null as varchar(10))   as race_asian_gt3_ind
+             , cast(null as varchar(50))   as race_amer_ind_1
+             , cast(null as varchar(50))   as race_amer_ind_2
+             , cast(null as varchar(50))   as race_amer_ind_3
+             , cast(null as varchar(10))   as race_amer_ind_gt3_ind
+             , cast(null as varchar(2000)) as race_amer_ind_all
+             , cast(null as varchar(50))   as race_black_1
+             , cast(null as varchar(50))   as race_black_2
+             , cast(null as varchar(50))   as race_black_3
+             , cast(null as varchar(10))   as race_black_gt3_ind
+             , cast(null as varchar(2000)) as race_black_all
+             , cast(null as varchar(50))   as race_white_1
+             , cast(null as varchar(50))   as race_white_2
+             , cast(null as varchar(50))   as race_white_3
+             , cast(null as varchar(10))   as race_white_gt3_ind
+             , cast(null as varchar(2000)) as race_white_all
+             , patient_uid                 as patient_uid_race_out
         into #tmp_s_person_race_out
-        from #tmp_s_person_root_race spr;
+        from one_per_patient
+        where rn = 1;
+
+        CREATE CLUSTERED INDEX IX_TMP_S_PERSON_RACE_OUT_UID
+            ON #tmp_s_person_race_out (patient_uid_race_out);
 
 
-        update spr
-        set spr.race_amer_ind_1       = sai.patient_race_amer_ind_1,
-            spr.race_amer_ind_2       = sai.patient_race_amer_ind_2,
-            spr.race_amer_ind_3       = sai.patient_race_amer_ind_3,
-            spr.race_amer_ind_gt3_ind = sai.patient_race_amer_ind_gt3_ind,
-            spr.race_amer_ind_all     = left(rtrim(ltrim(sai.patient_race_amer_ind_all)),2000)
-        from #tmp_s_person_race_out spr
-                 join #tmp_s_person_amer_indian_race sai on spr.patient_uid_race_out = sai.patient_uid;
+        -- Fill in every category's breakdown columns in a single UPDATE,
+        -- pivoting #TMP_S_PERSON_RACE_CAT from (patient, category) rows
+        -- into one row per patient with all 5 categories as columns. A
+        -- patient with no rows for a given category gets NULL from
+        -- MAX(CASE...) and the seeded NULL above is left unchanged.
+        ;WITH cat_summary AS (
+            SELECT
+                patient_uid,
+                MAX(CASE WHEN race_category_tag = 'AMER_IND' THEN race_1 END)       AS amer_ind_1,
+                MAX(CASE WHEN race_category_tag = 'AMER_IND' THEN race_2 END)       AS amer_ind_2,
+                MAX(CASE WHEN race_category_tag = 'AMER_IND' THEN race_3 END)       AS amer_ind_3,
+                MAX(CASE WHEN race_category_tag = 'AMER_IND' THEN race_gt3_ind END) AS amer_ind_gt3_ind,
+                MAX(CASE WHEN race_category_tag = 'AMER_IND' THEN race_all END)     AS amer_ind_all,
+
+                MAX(CASE WHEN race_category_tag = 'NAT_HI' THEN race_1 END)         AS nat_hi_1,
+                MAX(CASE WHEN race_category_tag = 'NAT_HI' THEN race_2 END)         AS nat_hi_2,
+                MAX(CASE WHEN race_category_tag = 'NAT_HI' THEN race_3 END)         AS nat_hi_3,
+                MAX(CASE WHEN race_category_tag = 'NAT_HI' THEN race_gt3_ind END)   AS nat_hi_gt3_ind,
+                MAX(CASE WHEN race_category_tag = 'NAT_HI' THEN race_all END)       AS nat_hi_all,
+
+                MAX(CASE WHEN race_category_tag = 'BLACK' THEN race_1 END)          AS black_1,
+                MAX(CASE WHEN race_category_tag = 'BLACK' THEN race_2 END)          AS black_2,
+                MAX(CASE WHEN race_category_tag = 'BLACK' THEN race_3 END)          AS black_3,
+                MAX(CASE WHEN race_category_tag = 'BLACK' THEN race_gt3_ind END)    AS black_gt3_ind,
+                MAX(CASE WHEN race_category_tag = 'BLACK' THEN race_all END)        AS black_all,
+
+                MAX(CASE WHEN race_category_tag = 'WHITE' THEN race_1 END)          AS white_1,
+                MAX(CASE WHEN race_category_tag = 'WHITE' THEN race_2 END)          AS white_2,
+                MAX(CASE WHEN race_category_tag = 'WHITE' THEN race_3 END)          AS white_3,
+                MAX(CASE WHEN race_category_tag = 'WHITE' THEN race_gt3_ind END)    AS white_gt3_ind,
+                MAX(CASE WHEN race_category_tag = 'WHITE' THEN race_all END)        AS white_all,
+
+                MAX(CASE WHEN race_category_tag = 'ASIAN' THEN race_1 END)          AS asian_1,
+                MAX(CASE WHEN race_category_tag = 'ASIAN' THEN race_2 END)          AS asian_2,
+                MAX(CASE WHEN race_category_tag = 'ASIAN' THEN race_3 END)          AS asian_3,
+                MAX(CASE WHEN race_category_tag = 'ASIAN' THEN race_gt3_ind END)    AS asian_gt3_ind,
+                MAX(CASE WHEN race_category_tag = 'ASIAN' THEN race_all END)        AS asian_all
+            FROM #TMP_S_PERSON_RACE_CAT
+            GROUP BY patient_uid
+        )
+        UPDATE spr
+        SET spr.race_amer_ind_1       = cs.amer_ind_1,
+            spr.race_amer_ind_2       = cs.amer_ind_2,
+            spr.race_amer_ind_3       = cs.amer_ind_3,
+            spr.race_amer_ind_gt3_ind = cs.amer_ind_gt3_ind,
+            spr.race_amer_ind_all     = left(rtrim(ltrim(cs.amer_ind_all)), 2000),
+
+            spr.race_nat_hi_1         = cs.nat_hi_1,
+            spr.race_nat_hi_2         = cs.nat_hi_2,
+            spr.race_nat_hi_3         = cs.nat_hi_3,
+            spr.race_nat_hi_gt3_ind   = cs.nat_hi_gt3_ind,
+            spr.race_nat_hi_all       = left(rtrim(ltrim(cs.nat_hi_all)), 2000),
+
+            spr.race_black_1          = cs.black_1,
+            spr.race_black_2          = cs.black_2,
+            spr.race_black_3          = cs.black_3,
+            spr.race_black_gt3_ind    = cs.black_gt3_ind,
+            spr.race_black_all        = left(rtrim(ltrim(cs.black_all)), 2000),
+
+            spr.race_white_1          = cs.white_1,
+            spr.race_white_2          = cs.white_2,
+            spr.race_white_3          = cs.white_3,
+            spr.race_white_gt3_ind    = cs.white_gt3_ind,
+            spr.race_white_all        = left(rtrim(ltrim(cs.white_all)), 2000),
+
+            spr.race_asian_1          = cs.asian_1,
+            spr.race_asian_2          = cs.asian_2,
+            spr.race_asian_3          = cs.asian_3,
+            spr.race_asian_gt3_ind    = cs.asian_gt3_ind,
+            spr.race_asian_all        = left(rtrim(ltrim(cs.asian_all)), 2000)
+        FROM #tmp_s_person_race_out spr
+                 JOIN cat_summary cs ON spr.patient_uid_race_out = cs.patient_uid;
 
 
-        update spr
-        set spr.race_nat_hi_1       = sai.patient_race_nat_hi_1,
-            spr.race_nat_hi_2       = sai.patient_race_nat_hi_2,
-            spr.race_nat_hi_3       = sai.patient_race_nat_hi_3,
-            spr.race_nat_hi_gt3_ind = sai.patient_race_nat_hi_gt3_ind,
-            spr.race_nat_hi_all     = left(rtrim(ltrim(sai.patient_race_nat_hi_all)),2000)
-        from #tmp_s_person_race_out spr
-                 join #tmp_s_person_hawaiian_race sai on spr.patient_uid_race_out = sai.patient_uid;
-
-
-        update spr
-        set spr.race_black_1       = sai.patient_race_black_1,
-            spr.race_black_2       = sai.patient_race_black_2,
-            spr.race_black_3       = sai.patient_race_black_3,
-            spr.race_black_gt3_ind = sai.patient_race_black_gt3_ind,
-            spr.race_black_all     = left(rtrim(ltrim(sai.patient_race_black_all)),2000)
-        from #tmp_s_person_race_out spr
-                 join #tmp_s_person_black_race sai on spr.patient_uid_race_out = sai.patient_uid;
-
-
-        update spr
-        set spr.race_white_1       = sai.patient_race_white_1,
-            spr.race_white_2       = sai.patient_race_white_2,
-            spr.race_white_3       = sai.patient_race_white_3,
-            spr.race_white_gt3_ind = sai.patient_race_white_gt3_ind,
-            spr.race_white_all     = left(rtrim(ltrim(sai.patient_race_white_all)),2000)
-        from #tmp_s_person_race_out spr
-                 join #tmp_s_person_white_race sai on spr.patient_uid_race_out = sai.patient_uid;
-
-
-        update spr
-        set spr.race_asian_1       = sai.patient_race_asian_1,
-            spr.race_asian_2       = sai.patient_race_asian_2,
-            spr.race_asian_3       = sai.patient_race_asian_3,
-            spr.race_asian_gt3_ind = sai.patient_race_asian_gt3_ind,
-            spr.race_asian_all     = left(rtrim(ltrim(sai.patient_race_asian_all)),2000)
-        from #tmp_s_person_race_out spr
-                 join #tmp_s_person_asian_race sai on spr.patient_uid_race_out = sai.patient_uid;
-
-
+        -- ===================================================================
+        -- Final result set. LEFT(...) is applied defensively on every
+        -- varchar output column to enforce the destination dimension
+        -- table's column widths and avoid truncation errors on load.
+        -- ===================================================================
         select left(race_calculated,50) as race_calculated,
                left(race_calc_details,4000) as race_calc_details,
                left(race_all,4000) as race_all,
@@ -909,7 +426,11 @@ BEGIN
 
     BEGIN CATCH
 
-
+        -- On any error: roll back if a transaction happens to be open
+        -- (defensive - this proc does not open its own transaction), log
+        -- the failure to dbo.job_flow_log with enough context for
+        -- pipeline monitoring/troubleshooting, and return the error
+        -- message to the caller.
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
 
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
@@ -940,4 +461,4 @@ BEGIN
 
     END CATCH
 
-end;
+END;

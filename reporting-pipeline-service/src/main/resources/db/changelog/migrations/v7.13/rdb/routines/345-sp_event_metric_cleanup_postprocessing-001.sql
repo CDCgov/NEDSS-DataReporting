@@ -19,10 +19,24 @@ BEGIN
     DECLARE @Proc_Step_Name VARCHAR(200)= '';
 	DECLARE @Dataflow_Name VARCHAR(200) = 'Event Metric Cleanup POST-Processing';
 	DECLARE @Package_Name VARCHAR(200) = 'sp_event_metric_cleanup_postprocessing';
+    DECLARE @lock_resource NVARCHAR(255) = N'RTR:scheduled:event-metric-cleanup';
+    DECLARE @lock_result INT;
+    DECLARE @lock_acquired BIT = 0;
 
     BEGIN TRY
-        
 
+        EXEC @lock_result = sys.sp_getapplock
+            @Resource = @lock_resource,
+            @LockMode = N'Exclusive',
+            @LockOwner = N'Session',
+            @LockTimeout = 0;
+
+        IF @lock_result < 0
+        BEGIN
+            RETURN -2;
+        END;
+
+        SET @lock_acquired = 1;
         SET @Proc_Step_Name = 'SP_Start';
 
         INSERT INTO dbo.job_flow_log ( batch_id
@@ -206,13 +220,26 @@ BEGIN
         INSERT INTO [dbo].[job_flow_log] 
 		(batch_id, [Dataflow_Name], [package_Name], [Status_Type], [step_number], [step_name], [row_count])
         VALUES (@batch_id, @Dataflow_Name, @Package_Name, 'COMPLETE', 999, @Proc_Step_name, @RowCount_no);
-    
+
+        EXEC sys.sp_releaseapplock
+            @Resource = @lock_resource,
+            @LockOwner = N'Session';
+
+        RETURN 1;
+
 -------------------------------------------------------------------------------------------
     END TRY
 
     BEGIN CATCH
 
         IF @@TRANCOUNT > 0   ROLLBACK TRANSACTION;
+
+        IF @lock_acquired = 1
+        BEGIN
+            EXEC sys.sp_releaseapplock
+                @Resource = @lock_resource,
+                @LockOwner = N'Session';
+        END;
 
         -- Construct the error message string with all details:
             DECLARE @FullErrorMessage VARCHAR(8000) =

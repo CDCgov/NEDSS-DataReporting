@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +58,13 @@ public class UtilHelper {
   public static String extractChangeDataCaptureOperation(String message)
       throws JsonProcessingException {
     JsonNode jsonNode = objectMapper.readTree(message);
-    return jsonNode.get(PAYLOAD_KEY).path("op").asText();
+    JsonNode payload = jsonNode.get(PAYLOAD_KEY);
+    if (payload == null || payload.isNull()) {
+      // payload key is not present OR the payload content is null indicating a probable tombstone
+      // message
+      return null;
+    }
+    return payload.path("op").asText();
   }
 
   public static String errorMessage(String entityName, String ids, Exception e) {
@@ -64,5 +73,28 @@ public class UtilHelper {
       base += " with ids '" + ids + "'";
     }
     return base + ": " + e.getMessage();
+  }
+
+  /**
+   * Parses a datetime value pulled from a native SQL Server query result (rendered as a
+   * java.sql.Timestamp-formatted string) back into a LocalDateTime for direct-write entities.
+   */
+  public static LocalDateTime parseDateTime(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    return Timestamp.valueOf(value).toLocalDateTime();
+  }
+
+  public static BigDecimal parseBigDecimal(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    try {
+      return new BigDecimal(value.trim());
+    } catch (NumberFormatException e) {
+      log.warn("Unable to parse numeric value: '{}'", value);
+      return null;
+    }
   }
 }

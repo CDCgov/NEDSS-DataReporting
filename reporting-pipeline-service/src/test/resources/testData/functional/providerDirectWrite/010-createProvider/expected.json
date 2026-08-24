@@ -1,0 +1,20 @@
+{
+  "0": [
+    {
+      "provider_uid": 1000013000,
+      "local_id": "PRV1000013000GA01",
+      "first_name": "Grace",
+      "last_name": "Hopper",
+      "record_status": "ACTIVE"
+    }
+  ],
+  "1": [
+    {
+      "PROVIDER_UID": 1000013000,
+      "PROVIDER_LOCAL_ID": "PRV1000013000GA01",
+      "PROVIDER_FIRST_NAME": "Grace",
+      "PROVIDER_LAST_NAME": "Hopper",
+      "PROVIDER_RECORD_STATUS": "ACTIVE"
+    }
+  ]
+}
