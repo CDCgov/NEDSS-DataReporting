@@ -64,12 +64,12 @@ public abstract class FunctionalTest {
   void tearDown() {
     // Capture stored-proc coverage from job_flow_log while the database is still up.
     StoredProcCoverageRecorder.record(jdbcClient);
-    synchronized (FunctionalTest.class) {
-      if (started) {
-        environment.stop();
-        started = false;
-      }
-    }
+    // synchronized (FunctionalTest.class) {
+    // if (started) {
+    // environment.stop();
+    // started = false;
+    // }
+    // }
   }
 
   static class Initializer
