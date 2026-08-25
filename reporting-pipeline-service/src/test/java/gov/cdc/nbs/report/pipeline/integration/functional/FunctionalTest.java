@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.ComposeContainer;
@@ -31,6 +32,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @TestInstance(Lifecycle.PER_CLASS)
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 @ContextConfiguration(initializers = FunctionalTest.Initializer.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class FunctionalTest {
 
   private static final Logger log = LoggerFactory.getLogger(FunctionalTest.class);
