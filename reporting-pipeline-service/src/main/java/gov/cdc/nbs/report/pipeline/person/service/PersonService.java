@@ -1,6 +1,7 @@
 package gov.cdc.nbs.report.pipeline.person.service;
 
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.errorMessage;
+import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractChangeDataCaptureOperation;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -94,6 +95,7 @@ public class PersonService {
   private final KafkaTemplate<String, String> kafkaTemplate;
 
   private final RetryTopicResolver retryTopicResolver;
+  private final CdcProcessingDelay cdcProcessingDelay;
 
   @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
@@ -174,6 +176,7 @@ public class PersonService {
       },
       kafkaTemplate = "personKafkaTemplate")
   @KafkaListener(
+      id = "person-service-listener",
       topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
       containerFactory = "personKafkaListenerContainerFactory")
   public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> record) {
@@ -212,6 +215,8 @@ public class PersonService {
             JsonNode payloadNode = jsonNode.get("payload").path("after");
 
             personUid = extractUid(message, "person_uid");
+            String operation = extractChangeDataCaptureOperation(message);
+            cdcProcessingDelay.await("person", personUid, operation);
             log.info(topicDebugLog, "Person", personUid, topic);
 
             List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();

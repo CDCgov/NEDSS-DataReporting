@@ -64,6 +64,8 @@ class PersonServiceTest {
 
   @Mock NrtAuthUserRepository nrtAuthUserRepository;
 
+  @Mock CdcProcessingDelay cdcProcessingDelay;
+
   @Mock private KafkaTemplate<String, String> kafkaTemplate;
 
   @Captor private ArgumentCaptor<String> topicCaptor;
@@ -108,6 +110,7 @@ class PersonServiceTest {
             new PersonTransformers(),
             kafkaTemplate,
             new RetryTopicResolver(),
+            cdcProcessingDelay,
             new CustomMetrics(new SimpleMeterRegistry()));
     service.setPersonTopic(inputTopicPerson);
     service.setUserTopic(inputTopicUser);
@@ -172,7 +175,11 @@ class PersonServiceTest {
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
-        .untilAsserted(() -> verify(patientRepository).computePatients("9005400", true));
+        .untilAsserted(
+            () -> {
+              verify(patientRepository).computePatients("9005400", true);
+              verify(cdcProcessingDelay).await("person", "9005400", "u");
+            });
   }
 
   @ParameterizedTest

@@ -24,6 +24,7 @@ When adding a new functional test, pick the next available range, and add your t
 | d_tb_pam                 | 1000011000  | 1000011004 |
 | authUserDirectWrite      | 1000012000  | 1000012000 |
 | providerDirectWrite      | 1000013000  | 1000013000 |
+| cdcDelaySpikePatient     | 1000014000  | 1000014000 |
 
 ## Helper tools
 

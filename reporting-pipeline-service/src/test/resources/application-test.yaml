@@ -41,3 +41,11 @@ connector:
   kafka-connect:
     enabled: true
     url: http://localhost:8083
+
+spike:
+  cdc-delay:
+    enabled: false
+    entity: person
+    uid: 0
+    operation: u
+    timeout-ms: 10000
