@@ -55,11 +55,16 @@ A difference surfaced this way is not automatically a defect. Several are known 
 
 ### Acceptable noise
 
-Some differences appear on every run and should not be chased:
+Some differences appear on every run, and **the validator classifies most of them for you.** Every case comes back as `PASS`, `WARNING`, or `FAIL`. `WARNING` means the rows matched except on differences the tool is willing to overlook:
 
-- **Timestamps are expected to be off.** Replay rewrites inserted timestamps so that MasterETL picks the records up, and the two pipelines write their own audit columns at their own times.
-- **`.000` discrepancies in datetimes are OK.** `2026-04-23T22:22:34.000` and `2026-04-23T22:22:34` are the same value formatted two ways.
-- **`_KEY` columns are surrogate keys**, assigned per database and not comparable across the two. A generated `WHERE` clause that leans on them needs narrowing to a business key before it is trustworthy as an assertion.
+- **Timestamps that differ.** Replay rewrites inserted timestamps so MasterETL picks the records up, and the two pipelines write their own audit columns at their own times. Two ISO datetimes that simply differ are a warning.
+- **`.000` millisecond differences** — `2026-04-23T22:22:34.000` against `2026-04-23T22:22:34` is the same value formatted two ways.
+- **`null` against an empty string.**
+- **Fields whose names end in `_ID`, `_UID`, or `_KEY`**, and `RDB_LAST_REFRESH_TIME`. These are surrogate keys and refresh stamps, assigned per database and not comparable across the two.
+
+**One datetime difference is deliberately not forgiven.** If one side holds a date-only value (`T00:00:00`) and the other a real time, that is a `FAIL`, not a warning — it usually means a date column was replayed as a timestamp or the reverse, which is a defect in the setup data rather than noise. Replay the value as a date if you hit it.
+
+So `WARNING` is the tool having already applied the rules above. Read warnings; do not chase them. `FAIL` is where the work is.
 
 ## Part 1 — Capture the legacy side with dual capture
 
@@ -160,139 +165,40 @@ You now have a `query.sql` / `expected.json` pair for both sides: `RDB_MODERN` u
 
 ### Reading the results
 
-Each run writes `rdb-selects-results.json` and `rdb-selects-results.md` next to the input file. Work from the Markdown: it lists each case as pass or fail with the expected and actual rows side by side.
+Each run writes `rdb-selects-results.json` and `rdb-selects-results.md` next to the input file. Work from the Markdown: it opens with a count, then one row per case, then a field-level diff for each case that did not pass.
 
-Read the results in this order:
+```
+| Cases    | 7 |
+| Passes   | 2 |
+| Warnings | 0 |
+| Fails    | 5 |
+```
 
-1. **`RDB_MODERN` against `RDB_MODERN` must be all green.** Anything else here is a real functional test failure — fix the data or the assertions before looking further.
-2. **Check `RDB` against `RDB`.** If the capture does not validate against its own database, the two crossed runs cannot be interpreted.
-3. **Then read the two crossed runs**, discounting the acceptable noise above, and treating what remains as either a table your test is missing or a difference between RTR and MasterETL worth recording.
+**Read the four runs in this order.**
 
-Add anything you find to `query.sql` and `expected.json`, then run the functional tests:
+1. **`RDB_MODERN` against `RDB_MODERN` must have no `FAIL`.** This is the functional test. Anything failing here is a real test failure — fix the data or the assertions before reading anything else.
+2. **Then `RDB` against `RDB`.** If the capture does not validate against the database it was captured from, it is not a usable baseline and the two crossed runs cannot be interpreted. Re-capture before continuing.
+3. **Then the two crossed runs.** These are where RTR-vs-MasterETL differences surface. Every failing case carries an `Error:` line, and there are only two kinds — which is what tells you where to look:
+
+| `Error:` line | What it means | What to do |
+| --- | --- | --- |
+| `SQL query returned empty output` | The query found nothing on the target side. The table is populated by one pipeline and not the other. | The biggest finding the crossed runs produce. If it is an `RDB` query finding nothing in `RDB_MODERN`, RTR does not populate that table. If it is an `RDB_MODERN` query finding nothing in `RDB`, your test asserts on something MasterETL never wrote. Either way, record it. |
+| `Expected JSON does not match actual query result` | The rows exist on both sides but a field differs. | Read the field table underneath and sort the rows by the three shapes below. |
+
+Within a field-level diff, three shapes are worth telling apart:
+
+| Shape | Example | Reading |
+| --- | --- | --- |
+| Both sides present, values differ, flagged as a warning | `PATIENT_ADD_TIME` — `2026-05-08T17:56:42.520` vs `2026-04-23T14:16:11.967` | Noise. The tool already discounted it. |
+| One side `missing` | `PATIENT_AGE_REPORTED` — `41` vs *missing* | A column-coverage difference: one pipeline populates the column and the other leaves it null, or the assertion is over-specified. Decide which, then either drop the field from the assertion or record the gap. |
+| Both present, values genuinely differ | `CONDITION_CD` — `"50265"` vs `"Salmonellosis"` | A real difference in what the two pipelines store — here, a code against its description. This is the class worth writing down. |
+
+Before filing anything, check it against the team's catalogue of expected differences — as above, several of these are known and intentional.
+
+Add anything you decide to keep to `query.sql` and `expected.json`, then run the functional tests. From the **repository root**, not from `reporting-pipeline-service` — the wrapper lives at the root:
 
 ```shell
-cd reporting-pipeline-service
-./gradlew test --tests "gov.cdc.nbs.report.pipeline.integration.functional.DataDrivenFunctionalTests"
+./gradlew clean reporting-pipeline-service:test-functional -D tests=<suite>
 ```
 
-## Worked example — finding a missing table
-
-What the four-way validation is for is easiest to see on a case where it found something. Running the capture over the Morbidity Report suite showed that MasterETL populated a table the functional test did not assert on at all — the `RDB` queries against `RDB_MODERN` combination, and the reason that combination exists.
-
-### Reading the capture
-
-`logical-changes.md` lists every change MasterETL made, one entry per row written. This entry is the one that mattered:
-
-**113. INSERT dbo.MORBIDITY_REPORT**
-
-| Metric | Value |
-| --- | --- |
-| Identity | business_keys: MORB_RPT_LOCAL_ID="OBS20100086GA01" |
-| Transaction end | 2026-04-23T22:22:34.720 |
-| LSN | 0x00006bf6000312400004 |
-
-**Inserted Row**
-
-| Field | Value |
-| --- | --- |
-| DAYCARE_IND | "N" |
-| DIAGNOSIS_DT | "2026-04-05T00:00:00" |
-| DIE_FROM_ILLNESS_IND | "Y" |
-| ELECTRONIC_IND | "N" |
-| FOOD_HANDLER_IND | "N" |
-| HEALTHCARE_ORG_ASSOCIATE_IND | "UNK" |
-| HOSPITALIZED_IND | "Y" |
-| HSPTL_ADMISSION_DT | "2026-04-03T00:00:00" |
-| JURISDICTION_CD | "130001" |
-| JURISDICTION_NM | "Fulton County" |
-| MORB_RPT_CREATE_BY | 10009282 |
-| MORB_RPT_KEY | 3 |
-| MORB_RPT_LAST_UPDATE_BY | 10009282 |
-| MORB_RPT_LAST_UPDATE_DT | "2026-04-23T22:20:11.717" |
-| MORB_RPT_LOCAL_ID | "OBS20100086GA01" |
-| MORB_RPT_OID | 1300100009 |
-| MORB_RPT_OTHER_SPECIFY | "other something" |
-| MORB_RPT_SHARE_IND | "T" |
-| MORB_RPT_TYPE | "INIT" |
-| MORB_RPT_UID | 20100086 |
-| NURSING_HOME_ASSOCIATE_IND | "Y" |
-| PH_RECEIVE_DT | "2026-04-10T00:00:00" |
-| PREGNANT_IND | "Y" |
-| RDB_LAST_REFRESH_TIME | "2026-04-23T22:22:34.717" |
-| RECORD_STATUS_CD | "ACTIVE" |
-| SUSPECT_FOOD_WTRBORNE_ILLNESS | "N" |
-
-### Updating `query.sql` and `expected.json`
-The existing files for this functional test suite were accurate based on MasterEtl's output with the exception of 1 table: `MORBIDITY_REPORT`. This table was missing completely from validation! To account for this the following was performed:
-1. A new entry added to `query.sql` to get the columns modified on the table.
-```sql
-...
--- 5: MORBIDITY_REPORT
-SELECT
-    [DAYCARE_IND],
-    [DIAGNOSIS_DT],
-    [DIE_FROM_ILLNESS_IND],
-    [ELECTRONIC_IND],
-    [FOOD_HANDLER_IND],
-    [HEALTHCARE_ORG_ASSOCIATE_IND],
-    [HOSPITALIZED_IND],
-    [HSPTL_ADMISSION_DT],
-    [JURISDICTION_CD],
-    [JURISDICTION_NM],
-    [MORB_RPT_CREATE_BY],
-    [MORB_RPT_KEY],
-    [MORB_RPT_LAST_UPDATE_BY],
-    [MORB_RPT_LAST_UPDATE_DT],
-    [MORB_RPT_LOCAL_ID],
-    [MORB_RPT_OID],
-    [MORB_RPT_OTHER_SPECIFY],
-    [MORB_RPT_SHARE_IND],
-    [MORB_RPT_TYPE],
-    [MORB_RPT_UID],
-    [NURSING_HOME_ASSOCIATE_IND],
-    [PH_RECEIVE_DT],
-    [PREGNANT_IND],
-    [RDB_LAST_REFRESH_TIME],
-    [RECORD_STATUS_CD],
-    [SUSPECT_FOOD_WTRBORNE_ILLNESS]
-FROM [RDB_MODERN].[dbo].[MORBIDITY_REPORT]
-WHERE [MORB_RPT_LOCAL_ID] = 'OBS20100027GA01';
-```
-2. A new entry added to `expected.json`.
-```json
-...
-"5": [
-    {
-      "DAYCARE_IND": "N",
-      "DIAGNOSIS_DT": "2026-04-05T00:00:00.000",
-      "DIE_FROM_ILLNESS_IND": "Y",
-      "ELECTRONIC_IND": "N",
-      "FOOD_HANDLER_IND": "N",
-      "HEALTHCARE_ORG_ASSOCIATE_IND": "UNK",
-      "HOSPITALIZED_IND": "Y",
-      "HSPTL_ADMISSION_DT": "2026-04-03T00:00:00.000",
-      "JURISDICTION_CD": "130001",
-      "JURISDICTION_NM": "Fulton County",
-      "MORB_RPT_CREATE_BY": 10009282,
-      "MORB_RPT_LAST_UPDATE_BY": 10009282,
-      "MORB_RPT_LAST_UPDATE_DT": "2026-04-10T20:26:11.853",
-      "MORB_RPT_LOCAL_ID": "OBS20100027GA01",
-      "MORB_RPT_OID": 1300100009,
-      "MORB_RPT_OTHER_SPECIFY": "other something",
-      "MORB_RPT_SHARE_IND": "T",
-      "MORB_RPT_TYPE": "INIT",
-      "MORB_RPT_UID": 20100027,
-      "NURSING_HOME_ASSOCIATE_IND": "Y",
-      "PH_RECEIVE_DT": "2026-04-10T00:00:00.000",
-      "PREGNANT_IND": "Y",
-      "RECORD_STATUS_CD": "ACTIVE",
-      "SUSPECT_FOOD_WTRBORNE_ILLNESS": "N"
-    }
-  ]
-```
-3. Execute the functional test suite, and confirm the new assertion passes:
-
-```shell
-cd reporting-pipeline-service
-./gradlew test --tests "gov.cdc.nbs.report.pipeline.integration.functional.DataDrivenFunctionalTests"
-```
+Drop `-D tests=` to run every functional suite. See [Testing](../README.md#testing) for the unit-test task and the rest of the options.
