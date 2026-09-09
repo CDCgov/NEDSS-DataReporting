@@ -1,3 +1,5 @@
+**This document starts after the functional test exists.** It takes a test step that already has `setup.sql`, `query.sql`, and `expected.json`, and checks it against MasterETL. Creating those three files in the first place — from a recorded UI flow, through `trace_db_dual_capture.py` and `build_step_test_artifacts.py` — is a different workflow, documented in [End-To-End: Create A Functional Test From A Recorded User Flow](../testing-tools/local-db-tracing/README.md#end-to-end-create-a-functional-test-from-a-recorded-user-flow). Do that first if you are starting from nothing.
+
 # Functional Test Validation
 
 Functional tests assert against the changes RTR writes to `RDB_MODERN`. This document covers the other half of the picture: capturing what MasterETL writes to the legacy `RDB` for the same input, and cross-checking the two, so that a passing functional test means something.
@@ -7,11 +9,9 @@ There are two parts to it:
 1. **Capture** — drive a functional test step's `setup.sql` into ODSE, run MasterETL, and record what changed in `RDB`. This produces a `query.sql` / `expected.json` pair for the legacy side.
 2. **Validate** — run each side's queries against each side's database. Four combinations, each answering a different question.
 
-**This document starts after the functional test exists.** It takes a test step that already has `setup.sql`, `query.sql`, and `expected.json`, and checks it against MasterETL. Creating those three files in the first place — from a recorded UI flow, through `trace_db_dual_capture.py` and `build_step_test_artifacts.py` — is a different workflow, documented in [End-To-End: Create A Functional Test From A Recorded User Flow](../testing-tools/local-db-tracing/README.md#end-to-end-create-a-functional-test-from-a-recorded-user-flow). Do that first if you are starting from nothing.
-
 Either way, the artifacts are expected to follow the functional test standards agreed upon by the team, including the use of id fields (e.g., `local_id` or `act_uid`) and the file syntax expected by `reporting-pipeline-service/src/test/java/gov/cdc/nbs/report/pipeline/integration/functional/DataDrivenFunctionalTests.java`. `setup.sql` is expected to be complete, but may require changes based on your unique functional tests.
 
-This documentation was produced as a deliverable for the Jira Ticket [APP-473](https://cdc-nbs.atlassian.net/browse/APP-473).
+This documentation was produced as a deliverable for the Jira Ticket [APP-473](https://cdc-nbs.atlassian.net/browse/APP-473) and updated for ticket [BRDG-47](https://cdc-nbs.atlassian.net/browse/BRDG-47).
 
 ## Prerequisites
 
