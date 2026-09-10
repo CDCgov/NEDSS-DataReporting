@@ -5,8 +5,9 @@
 ## Docker Containers
 
 1. [mssql](https://github.com/cdcent/NEDSSDB/pkgs/container/nedssdb) - Restored MSSQL Server database pre-configured to work with RTR. Notable configurations
-   2. RTR User creation scripts applied
-   3. Change Data Capture (CDC) enabled for relevant databases and tables
+   - RTR User creation scripts applied
+   - Change Data Capture (CDC) enabled for relevant databases and tables
+2. [wildfly](../docker-compose.yaml) - NBS 6 application, published on host port 7003. This is where test data is created.
 3. [kafka](../docker-compose.yaml) - Message broker
 4. [kafka-connect](../docker-compose.yaml) - Reads from the `nrt_*` topics and inserts into `rdb_modern` tables. The MSSQL JDBC sink connector is registered automatically by `reporting-pipeline-service` on startup from [mssql-connector.json](../reporting-pipeline-service/src/main/resources/connectors/kafka-connect/mssql-connector.json).
 5. [debezium](../docker-compose.yaml) - Reads Change Data Capture logs and posts messages to Kafka. Source connectors are registered automatically by `reporting-pipeline-service` on startup from [connectors/debezium](../reporting-pipeline-service/src/main/resources/connectors/debezium).
@@ -15,12 +16,16 @@
 ### Prerequisites:
 
 - [Docker GHCR Authentication](DockerAuth.md)
+- JDK 21 (the `reporting-pipeline-service` image is based on `amazoncorretto:21`)
+- Docker memory: **8 GB minimum, 12 GB recommended.** This stack runs SQL Server, Kafka, Kafka Connect, Debezium, WildFly and optionally SAS; under-allocating it is the most common cause of containers failing to start.
 
 ### Build and run the RTR services
 
 ```sh
 docker compose up -d
 ```
+
+Docker Compose is the path for day-to-day development. If what you are working on is the *deployment* rather than the code, [NEDSS-Helm/local-dev](https://github.com/CDCgov/NEDSS-Helm/blob/main/local-dev/README.md) provisions the same dependencies (database, WildFly, Kafka) on minikube, so the Helm charts can be installed and iterated on locally.
 
 ### Verifying functionality
 
@@ -30,7 +35,7 @@ docker compose up -d
 4. View `RDB_MODERN.D_PATIENT` and `RDB_MODERN.INVESTIGATION` tables and verify the newly created patient and investigation are present.
 
 ### Running SAS
-A SAS container is present in the docker compose witht the `sas` profile. This means it will not start by default.
+A SAS container is present in the docker compose with the `sas` profile. This means it will not start by default.
 
 To start only the SAS container and its dependencies
 ```sh
