@@ -25,6 +25,8 @@
 docker compose up -d
 ```
 
+Docker Compose is the path for day-to-day development. If what you are working on is the *deployment* rather than the code, [NEDSS-Helm/local-dev](https://github.com/CDCgov/NEDSS-Helm/blob/main/local-dev/README.md) provisions the same dependencies (database, WildFly, Kafka) on minikube, so the Helm charts can be installed and iterated on locally.
+
 ### Verifying functionality
 
 1. Log into [NBS 6](http://localhost:7003/nbs/login) using the user: `superuser`. No password is required
