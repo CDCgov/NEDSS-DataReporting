@@ -11,8 +11,6 @@ There are two parts to it:
 
 Either way, the artifacts are expected to follow the functional test standards agreed upon by the team, including the use of id fields (e.g., `local_id` or `act_uid`) and the file syntax expected by `reporting-pipeline-service/src/test/java/gov/cdc/nbs/report/pipeline/integration/functional/DataDrivenFunctionalTests.java`. `setup.sql` is expected to be complete, but may require changes based on your unique functional tests.
 
-This documentation was produced as a deliverable for the Jira Ticket [APP-473](https://cdc-nbs.atlassian.net/browse/APP-473) and updated for ticket [BRDG-47](https://cdc-nbs.atlassian.net/browse/BRDG-47).
-
 ## Prerequisites
 
 - The local stack running with the `sas` profile, and the ability to run MasterETL. See [DevSetup.md](DevSetup.md).
