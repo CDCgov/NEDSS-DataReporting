@@ -165,7 +165,7 @@ dependencies {
     implementation 'org.modelmapper:modelmapper:3.2.0'
 
     // Utilities
-    implementation 'com.google.guava:guava:33.6.0-jre'
+    implementation 'com.google.guava:guava:33.7.1-jre'
     implementation 'commons-io:commons-io:2.22.0'
 
     // Lombok
