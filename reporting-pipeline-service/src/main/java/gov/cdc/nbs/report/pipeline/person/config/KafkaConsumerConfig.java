@@ -53,6 +53,7 @@ public class KafkaConsumerConfig {
       personKafkaListenerContainerFactory() {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
+    factory.setBatchListener(true);
     factory.setConsumerFactory(personConsumerFactory());
     factory.getContainerProperties().setAsyncAcks(true);
     return factory;

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -121,7 +122,6 @@ class PersonServiceTest {
     service.setProviderReportingOutputTopic(providerReportingTopic);
     service.setProviderElasticSearchOutputTopic(providerElasticTopic);
     service.setUserReportingOutputTopic(userReportingTopic);
-    service.setElasticSearchEnable(true);
     service.setPhcDatamartEnable(true);
     service.setThreadPoolSize(1);
     service.initMetrics();
@@ -140,7 +140,7 @@ class PersonServiceTest {
     PatientSp patientSp = constructPatient();
     PatientSp mprPatient = constructPatient();
     mprPatient.setPersonParentUid(mprPatient.getPersonUid());
-    Mockito.when(patientRepository.computePatients(anyString(), Mockito.eq(false)))
+    when(patientRepository.computePatients(anyString(), Mockito.eq(false)))
         .thenReturn(List.of(patientSp))
         .thenReturn(List.of(mprPatient));
 
@@ -152,11 +152,10 @@ class PersonServiceTest {
         patientReportingTopic,
         patientElasticTopic,
         "rawDataFiles/patient/PatientReporting.json",
-        "rawDataFiles/patient/PatientElastic.json",
         "rawDataFiles/patient/PatientKey.json");
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
-
-    personService.processPerson(incomingChangeData, inputTopicPerson);
+    List<String> messages = List.of(incomingChangeData);
+    personService.processPersonMessages(messages);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -172,8 +171,9 @@ class PersonServiceTest {
         .thenReturn(List.of(patientSp));
 
     personService = createPersonService(true);
-    personService.processPerson(
-        readFileData("rawDataFiles/person/PersonPatientChangeData.json"), inputTopicPerson);
+    List<String> messages =
+        List.of(readFileData("rawDataFiles/person/PersonPatientChangeData.json"));
+    personService.processPersonMessages(messages);
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -196,7 +196,7 @@ class PersonServiceTest {
     ProviderSp providerSp = constructProviderCase(personTelephoneFile);
     ProviderSp mprProvider = constructProviderCase(personTelephoneFile);
     mprProvider.setPersonParentUid(mprProvider.getPersonUid());
-    Mockito.when(providerRepository.computeProviders(anyString(), Mockito.eq(false)))
+    when(providerRepository.computeProviders(anyString(), Mockito.eq(false)))
         .thenReturn(List.of(providerSp))
         .thenReturn(List.of(mprProvider));
 
@@ -207,12 +207,11 @@ class PersonServiceTest {
         providerReportingTopic,
         providerElasticTopic,
         providerReportingFile,
-        providerElasticFile,
         "rawDataFiles/provider/ProviderKey.json");
 
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
-
-    personService.processPerson(incomingChangeData, inputTopicPerson);
+    List<String> messages = List.of(incomingChangeData);
+    personService.processPersonMessages(messages);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -224,13 +223,13 @@ class PersonServiceTest {
   @Test
   void testProcessPatientDataNoElasticSearch() {
     PatientSp patientSp = PatientSp.builder().personUid(10000001L).build();
-    Mockito.when(patientRepository.computePatients(anyString(), Mockito.eq(false)))
+    when(patientRepository.computePatients(anyString(), Mockito.eq(false)))
         .thenReturn(List.of(patientSp));
 
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
-    personService.setElasticSearchEnable(false);
-    personService.processPerson(patientData, inputTopicPerson);
+    List<String> messages = List.of(patientData);
+    personService.processPersonMessages(messages);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -245,13 +244,13 @@ class PersonServiceTest {
   @Test
   void testProcessProviderDataNoElasticSearch() {
     ProviderSp providerSp = ProviderSp.builder().personUid(10000001L).build();
-    Mockito.when(providerRepository.computeProviders(anyString(), Mockito.eq(false)))
+    when(providerRepository.computeProviders(anyString(), Mockito.eq(false)))
         .thenReturn(List.of(providerSp));
 
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
-    personService.setElasticSearchEnable(false);
-    personService.processPerson(providerData, inputTopicPerson);
+    List<String> messages = List.of(providerData);
+    personService.processPersonMessages(messages);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -271,7 +270,8 @@ class PersonServiceTest {
     when(patientRepository.computePatients("10000001", false)).thenReturn(List.of(result));
 
     personService.setPhcDatamartEnable(false);
-    personService.processPerson(patientData, inputTopicPerson);
+    List<String> messages = List.of(patientData);
+    personService.processPersonMessages(messages);
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -283,7 +283,8 @@ class PersonServiceTest {
     when(providerRepository.computeProviders("10000001", false)).thenReturn(List.of(result));
 
     personService.setPhcDatamartEnable(false);
-    personService.processPerson(providerData, inputTopicPerson);
+    List<String> messages = List.of(providerData);
+    personService.processPersonMessages(messages);
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -293,7 +294,7 @@ class PersonServiceTest {
 
     AuthUser user = constructAuthUser();
     AuthUserKey userKey = AuthUserKey.builder().authUserUid(11L).build();
-    Mockito.when(userRepository.computeAuthUsers(anyString(), Mockito.eq(false)))
+    when(userRepository.computeAuthUsers(anyString(), Mockito.eq(false)))
         .thenReturn(Optional.of(List.of(user)));
 
     personService.processUser(payload, inputTopicPerson);
@@ -323,13 +324,14 @@ class PersonServiceTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"Person_retry-0", "Person_retry-1"})
-  void testProcessPersonRetryMessage(String retryTopic) {
+  void testProcessPersonMessagesRetryMessage(String retryTopic) {
     String payload = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
     PatientSp patient = PatientSp.builder().personUid(10000001L).build();
     when(patientRepository.computePatients("10000001", false)).thenReturn(List.of(patient));
     personService.setPhcDatamartEnable(false);
 
-    personService.processPerson(payload, inputTopicPerson);
+    List<String> messages = List.of(payload);
+    personService.processPersonMessages(messages);
 
     verify(patientRepository).computePatients("10000001", false);
     verifyNoInteractions(providerRepository, userRepository);
@@ -357,9 +359,10 @@ class PersonServiceTest {
     "{\"payload\": {\"after\": {}}},User"
   })
   void testProcessMessageException(String payload, String inputTopic) {
+    List<String> messages = List.of(payload);
     DataProcessingException ex =
         assertThrows(
-            DataProcessingException.class, () -> personService.processPerson(payload, inputTopic));
+            DataProcessingException.class, () -> personService.processPersonMessages(messages));
     assertEquals(NoSuchElementException.class, ex.getCause().getClass());
   }
 
@@ -375,7 +378,8 @@ class PersonServiceTest {
       Long personUid = 123456789L;
       when(providerRepository.computeProviders(String.valueOf(personUid), false))
           .thenReturn(Collections.emptyList());
-      assertThrows(NoDataException.class, () -> personService.processPerson(payload, inputTopic));
+      List<String> messages = List.of(payload);
+      assertThrows(NoDataException.class, () -> personService.processPersonMessages(messages));
     } else if (inputTopic.equals(inputTopicUser)) {
       Long authUserUid = 11L;
       when(userRepository.computeAuthUsers(String.valueOf(authUserUid), false))
@@ -396,55 +400,39 @@ class PersonServiceTest {
     assertTrue(log.getFormattedMessage().contains(ERROR_MSG));
   }
 
-  @Test
-  void testProcessUnknownCode() {
-    String payload = "{\"payload\": {\"after\": {\"person_uid\": \"123456789\", \"cd\": \"UNK\"}}}";
-    var ex =
-        assertThrows(
-            DataProcessingException.class,
-            () -> personService.processPerson(payload, inputTopicPerson));
-    assertTrue(ex.getCause().getMessage().endsWith("No data to process for this entity type: UNK"));
-  }
-
   private void validateDataTransformation(
       String incomingChangeData,
       String expectedReportingTopic,
       String expectedElasticTopic,
       String expectedReportingValueFilePath,
-      String expectedElasticValueFilePath,
       String expectedKeyFilePath)
       throws JsonProcessingException {
 
     String expectedKey = readFileData(expectedKeyFilePath);
     String expectedReportingValue = readFileData(expectedReportingValueFilePath);
-    String expectedElasticValue = readFileData(expectedElasticValueFilePath);
 
-    personService.processPerson(incomingChangeData, inputTopicPerson);
+    List<String> messages = List.of(incomingChangeData);
+    personService.processPersonMessages(messages);
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
             () ->
-                verify(kafkaTemplate, Mockito.times(2))
+                verify(kafkaTemplate, times(1))
                     .send(topicCaptor.capture(), keyCaptor.capture(), valueCaptor.capture()));
 
     String actualReportingTopic = topicCaptor.getAllValues().get(0);
-    String actualElasticTopic = topicCaptor.getAllValues().get(1);
 
     JsonNode expectedKeyJsonNode = objectMapper.readTree(expectedKey);
     JsonNode expectedReportingValueJsonNode = objectMapper.readTree(expectedReportingValue);
-    JsonNode expectedElasticValueJsonNode = objectMapper.readTree(expectedElasticValue);
 
     JsonNode actualKeyJsonNode = objectMapper.readTree(keyCaptor.getValue());
     JsonNode actualReportingValueJsonNode =
         objectMapper.readTree(valueCaptor.getAllValues().get(0));
-    JsonNode actualElasticValueJsonNode = objectMapper.readTree(valueCaptor.getAllValues().get(1));
 
     assertEquals(expectedReportingTopic, actualReportingTopic);
-    assertEquals(expectedElasticTopic, actualElasticTopic);
     assertEquals(expectedKeyJsonNode, actualKeyJsonNode);
     assertEquals(expectedReportingValueJsonNode, actualReportingValueJsonNode);
-    assertEquals(expectedElasticValueJsonNode, actualElasticValueJsonNode);
   }
 
   private PatientSp constructPatient() {

@@ -3,7 +3,7 @@ package gov.cdc.nbs.report.pipeline.person.service;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.errorMessage;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
@@ -31,6 +31,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -102,9 +104,6 @@ public class PersonService {
   @Value("${spring.kafka.topics.nrt.auth-user}")
   private String userReportingOutputTopic;
 
-  @Value("${featureFlag.elastic-search-enable}")
-  private boolean elasticSearchEnable;
-
   @Value("${featureFlag.phc-datamart-enable}")
   private boolean phcDatamartEnable;
 
@@ -137,141 +136,157 @@ public class PersonService {
     rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
   }
 
-  public void processPerson(String message, String topic) {
-    msgProcessed.increment();
+  public void processPersonMessages(List<String> messages) {
+    msgProcessed.increment(messages.size());
     metrics.recordTime(
         "person_msg_processing_seconds",
         () -> {
-          String personUid = "";
+          String idList = "";
           try {
-            JsonNode jsonNode = objectMapper.readTree(message);
-            JsonNode payloadNode = jsonNode.get("payload").path("after");
+            // Split into separate lists based on "cd" value
+            Map<String, List<String>> partitionedMessages =
+                messages.stream().collect(Collectors.groupingBy(this::parsePersonCd));
 
-            personUid = extractUid(message, "person_uid");
-            log.info(topicDebugLog, "Person", personUid, topic);
+            // Process cd == "PAT" data
+            processPatientMessages(partitionedMessages.get("PAT"));
 
-            List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
-            List<PatientSp> personDataFromStoredProc = new ArrayList<>();
+            // Process cd == "PRV" data
+            processProviderMessages(partitionedMessages.get("PRV"));
 
-            String cd = payloadNode.get("cd").asText();
-            switch (cd) {
-              case "PAT":
-                personDataFromStoredProc =
-                    patientRepository.computePatients(
-                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
-                processPatientData(personDataFromStoredProc);
-                break;
-              case "PRV":
-                providerDataFromStoredProc =
-                    providerRepository.computeProviders(
-                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
-                processProviderData(providerDataFromStoredProc);
-                break;
-              default:
-                throw new IllegalArgumentException(
-                    "No data to process for this entity type: " + cd);
-            }
-
-            if (personDataFromStoredProc.isEmpty() && providerDataFromStoredProc.isEmpty()) {
-              throw new EntityNotFoundException("Unable to find Person with id: " + personUid);
-            }
-            msgSuccess.increment();
+            msgSuccess.increment(messages.size());
           } catch (EntityNotFoundException ex) {
             msgFailure.increment();
             throw new NoDataException(ex.getMessage(), ex);
           } catch (Exception e) {
             msgFailure.increment();
-            throw new DataProcessingException(errorMessage("Person", personUid, e), e);
+            throw new DataProcessingException(errorMessage("Person", idList, e), e);
           }
         },
         "service",
         SERVICE_NAME);
   }
 
-  private void processProviderData(List<ProviderSp> providerData) {
-    final String uids =
-        providerData.stream()
-            .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
-            .map(ProviderSp::getPersonUid)
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+  private void processPatientMessages(List<String> messages) {
+    if (messages == null || messages.isEmpty()) {
+      return;
+    }
+    String idList = messages.stream().map(this::parsePersonUid).collect(Collectors.joining(","));
+    List<PatientSp> patientData =
+        patientRepository.computePatients(
+            idList, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
-    if (phcDatamartEnable) {
-      CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", uids), rtrExecutor);
+    if (patientData.isEmpty()) {
+      throw new EntityNotFoundException("Unable to find Person with ids: " + idList);
     }
 
-    providerData.forEach(
-        provider -> {
-          ProviderReporting providerReporting =
-              (ProviderReporting)
-                  transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
+    if (phcDatamartEnable) {
+      final String mprUids =
+          patientData.stream()
+              .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
+              .map(PatientSp::getPersonUid)
+              .map(String::valueOf)
+              .collect(Collectors.joining(","));
+      CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", mprUids), rtrExecutor);
+    }
 
-          nrtProviderRepository.save(NrtProvider.from(providerReporting));
+    // transform PatientSp to PatientReporting format
+    List<PatientReporting> reportingPatients =
+        patientData.stream()
+            .map(
+                p ->
+                    (PatientReporting)
+                        transformer.processData(p, null, PersonType.PATIENT_REPORTING))
+            .toList();
 
-          String reportingKey = transformer.buildProviderKey(provider);
-          String reportingData = transformer.processData(providerReporting);
-          kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
-          log.info(
-              "Provider data (uid={}) sent to {}",
-              provider.getPersonUid(),
-              providerReportingOutputTopic);
-          log.debug("Provider Reporting: {}", reportingData);
+    // transform PatientReporting to NrtPatient format and persist
+    List<NrtPatient> nrtPatients = reportingPatients.stream().map(NrtPatient::from).toList();
+    nrtPatientRepository.saveAll(nrtPatients);
 
-          if (elasticSearchEnable) {
-            String elasticKey = transformer.buildProviderKey(provider);
-            String elasticData =
-                transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
-            kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
-            log.info(
-                "Provider data (uid={}) sent to {}",
-                provider.getPersonUid(),
-                providerElasticSearchOutputTopic);
-            log.debug("Provider Elastic: {}", elasticData != null ? elasticData : "");
-          }
-        });
+    // post messages to Kafka topic
+    sendPersonKafkaMessages(reportingPatients);
   }
 
-  private void processPatientData(List<PatientSp> patientData) {
-    final String uids =
-        patientData.stream()
-            .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
-            .map(PatientSp::getPersonUid)
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+  private void sendPersonKafkaMessages(List<PatientReporting> reportingPatients) {
+    for (PatientReporting patient : reportingPatients) {
+      String key = transformer.buildPatientKey(patient);
+      String data = transformer.processData(patient);
 
-    if (phcDatamartEnable) {
-      CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
+      kafkaTemplate.send(patientReportingOutputTopic, key, data);
+      log.info(
+          "Patient data (uid={}) sent to {}", patient.getPatientUid(), patientReportingOutputTopic);
+      log.debug("Patient Reporting: {}", data != null ? data : "");
+    }
+  }
+
+  private void processProviderMessages(List<String> messages) {
+    if (messages == null || messages.isEmpty()) {
+      return;
     }
 
-    patientData.forEach(
-        personData -> {
-          PatientReporting patientReporting =
-              (PatientReporting)
-                  transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
+    String idList = messages.stream().map(this::parsePersonUid).collect(Collectors.joining(","));
+    List<ProviderSp> providerData =
+        providerRepository.computeProviders(
+            idList, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
-          nrtPatientRepository.save(NrtPatient.from(patientReporting));
+    if (providerData.isEmpty()) {
+      throw new EntityNotFoundException("Unable to find Person with ids: " + idList);
+    }
 
-          String reportingKey = transformer.buildPatientKey(personData);
-          String reportingData = transformer.processData(patientReporting);
-          kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
-          log.info(
-              "Patient data (uid={}) sent to {}",
-              personData.getPersonUid(),
-              patientReportingOutputTopic);
-          log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
+    if (phcDatamartEnable) {
+      final String mprUids =
+          providerData.stream()
+              .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
+              .map(ProviderSp::getPersonUid)
+              .map(String::valueOf)
+              .collect(Collectors.joining(","));
+      CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", mprUids), rtrExecutor);
+    }
 
-          if (elasticSearchEnable) {
-            String elasticKey = transformer.buildPatientKey(personData);
-            String elasticData =
-                transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
-            kafkaTemplate.send(patientElasticSearchOutputTopic, elasticKey, elasticData);
-            log.info(
-                "Patient data (uid={}) sent to {}",
-                personData.getPersonUid(),
-                patientElasticSearchOutputTopic);
-            log.debug("Patient Elastic: {}", elasticData != null ? elasticData : "");
-          }
-        });
+    // transform ProviderSp to ProviderReporting
+    List<ProviderReporting> reportingProviders =
+        providerData.stream()
+            .map(
+                p ->
+                    (ProviderReporting)
+                        transformer.processData(null, p, PersonType.PROVIDER_REPORTING))
+            .toList();
+
+    // transform ProviderReporting to NrtProvider and persist
+    List<NrtProvider> nrtProviders = reportingProviders.stream().map(NrtProvider::from).toList();
+    nrtProviderRepository.saveAll(nrtProviders);
+
+    // post messages to Kafka topic
+    sendProviderKafkaMessages(reportingProviders);
+  }
+
+  private void sendProviderKafkaMessages(List<ProviderReporting> providers) {
+    for (ProviderReporting provider : providers) {
+      String key = transformer.buildProviderKey(provider);
+      String data = transformer.processData(provider);
+
+      kafkaTemplate.send(providerReportingOutputTopic, key, data);
+      log.info(
+          "Provider data (uid={}) sent to {}",
+          provider.getProviderUid(),
+          providerReportingOutputTopic);
+      log.debug("Provider Reporting: {}", data);
+    }
+  }
+
+  String parsePersonCd(String message) {
+    try {
+      return objectMapper.readTree(message).get("payload").path("after").get("cd").asText();
+    } catch (NullPointerException | JsonProcessingException e) {
+      throw new NoSuchElementException("Failed to parse 'cd' from person message", e);
+    }
+  }
+
+  String parsePersonUid(String message) {
+    try {
+      return extractUid(message, "person_uid");
+    } catch (JsonProcessingException e) {
+      throw new NoSuchElementException("Failed to parse 'person_uid' from person message", e);
+    }
   }
 
   @Transactional

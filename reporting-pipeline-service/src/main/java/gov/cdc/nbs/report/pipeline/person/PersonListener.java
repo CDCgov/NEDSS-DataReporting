@@ -2,6 +2,7 @@ package gov.cdc.nbs.report.pipeline.person;
 
 import gov.cdc.nbs.report.pipeline.person.service.PersonService;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,9 +52,11 @@ public class PersonListener {
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.person}"},
       containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processPersonMessage(ConsumerRecord<String, String> kafkaMessage) {
+  public CompletableFuture<Void> processPersonMessage(
+      List<ConsumerRecord<String, String>> kafkaMessages) {
+    List<String> messages = kafkaMessages.stream().map(ConsumerRecord::value).toList();
     return CompletableFuture.runAsync(
-        () -> personService.processPerson(kafkaMessage.value(), kafkaMessage.topic()), executor);
+        () -> personService.processPersonMessages(messages), executor);
   }
 
   @RetryableTopic(
