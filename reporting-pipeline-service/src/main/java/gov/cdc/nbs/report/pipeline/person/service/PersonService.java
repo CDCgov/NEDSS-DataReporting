@@ -25,17 +25,13 @@ import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonType;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
-import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
-import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,17 +39,9 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.errors.SerializationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.retrytopic.DltStrategy;
-import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.retry.annotation.Backoff;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,8 +81,6 @@ public class PersonService {
   @Qualifier("personKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  private final RetryTopicResolver retryTopicResolver;
-
   @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
 
@@ -126,7 +112,6 @@ public class PersonService {
   private int threadPoolSize;
 
   private ExecutorService rtrExecutor;
-  private ExecutorService prsExecutor;
 
   private static final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
@@ -139,12 +124,10 @@ public class PersonService {
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
-  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
-    inputTopics = Set.of(personTopic, userTopic);
 
     msgProcessed = metrics.counter("person_msg_processed", tags);
     msgSuccess = metrics.counter("person_msg_success", tags);
@@ -152,56 +135,9 @@ public class PersonService {
 
     int nproc = Runtime.getRuntime().availableProcessors();
     rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
-    prsExecutor =
-        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
   }
 
-  @RetryableTopic(
-      attempts = "${spring.kafka.consumer.max-retry}",
-      autoCreateTopics = "false",
-      dltStrategy = DltStrategy.FAIL_ON_ERROR,
-      retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-      dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-      // retry topic name, such as topic-retry-1, topic-retry-2, etc
-      topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-      // time to wait before attempting to retry
-      backoff = @Backoff(delay = 1000, multiplier = 2.0),
-      exclude = {
-        SerializationException.class,
-        DeserializationException.class,
-        RuntimeException.class,
-        NoDataException.class
-      },
-      kafkaTemplate = "personKafkaTemplate")
-  @KafkaListener(
-      topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
-      containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> record) {
-    TopicResolution topicResolution;
-    try {
-      topicResolution = retryTopicResolver.resolve(record, inputTopics);
-    } catch (NoSuchElementException exception) {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(exception.getMessage(), exception));
-    }
-
-    String physicalTopic = topicResolution.physicalTopic();
-    String logicalTopic = topicResolution.logicalTopic();
-    String message = record.value();
-
-    if (logicalTopic.equals(personTopic)) {
-      return CompletableFuture.runAsync(() -> processPerson(message, physicalTopic), prsExecutor);
-    } else if (logicalTopic.equals(userTopic)) {
-      return CompletableFuture.runAsync(() -> processUser(message, physicalTopic), prsExecutor);
-    } else {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(
-              "Received data from an unknown topic: " + physicalTopic,
-              new NoSuchElementException()));
-    }
-  }
-
-  private void processPerson(String message, String topic) {
+  public void processPerson(String message, String topic) {
     msgProcessed.increment();
     metrics.recordTime(
         "person_msg_processing_seconds",
@@ -339,7 +275,7 @@ public class PersonService {
   }
 
   @Transactional
-  private void processUser(String message, String topic) {
+  public void processUser(String message, String topic) {
     String userUid = "";
     try {
       userUid = extractUid(message, "auth_user_uid");

@@ -1,10 +1,15 @@
 package gov.cdc.nbs.report.pipeline.person.service;
 
 import static gov.cdc.nbs.report.pipeline.util.TestUtils.readFileData;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -26,15 +31,13 @@ import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
-import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,11 +46,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.KafkaHeaders;
 
 @ExtendWith(MockitoExtension.class)
 class PersonServiceTest {
@@ -107,7 +113,6 @@ class PersonServiceTest {
             nrtAuthUserRepository,
             new PersonTransformers(),
             kafkaTemplate,
-            new RetryTopicResolver(),
             new CustomMetrics(new SimpleMeterRegistry()));
     service.setPersonTopic(inputTopicPerson);
     service.setUserTopic(inputTopicUser);
@@ -151,7 +156,7 @@ class PersonServiceTest {
         "rawDataFiles/patient/PatientKey.json");
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
 
-    personService.processMessage(record(incomingChangeData, inputTopicPerson));
+    personService.processPerson(incomingChangeData, inputTopicPerson);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -167,8 +172,8 @@ class PersonServiceTest {
         .thenReturn(List.of(patientSp));
 
     personService = createPersonService(true);
-    personService.processMessage(
-        record(readFileData("rawDataFiles/person/PersonPatientChangeData.json"), inputTopicPerson));
+    personService.processPerson(
+        readFileData("rawDataFiles/person/PersonPatientChangeData.json"), inputTopicPerson);
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -207,7 +212,7 @@ class PersonServiceTest {
 
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
 
-    personService.processMessage(record(incomingChangeData, inputTopicPerson));
+    personService.processPerson(incomingChangeData, inputTopicPerson);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -225,7 +230,7 @@ class PersonServiceTest {
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
 
     personService.setElasticSearchEnable(false);
-    personService.processMessage(record(patientData, inputTopicPerson));
+    personService.processPerson(patientData, inputTopicPerson);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -246,7 +251,7 @@ class PersonServiceTest {
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
 
     personService.setElasticSearchEnable(false);
-    personService.processMessage(record(providerData, inputTopicPerson));
+    personService.processPerson(providerData, inputTopicPerson);
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
         .untilAsserted(
@@ -261,18 +266,24 @@ class PersonServiceTest {
   @Test
   void testProcessPatientDataPhcFactDisabled() {
     String patientData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PAT\"}}}";
+    PatientSp result = new PatientSp();
+    result.setPersonUid(1l);
+    when(patientRepository.computePatients("10000001", false)).thenReturn(List.of(result));
 
     personService.setPhcDatamartEnable(false);
-    personService.processMessage(record(patientData, inputTopicPerson));
+    personService.processPerson(patientData, inputTopicPerson);
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
   @Test
   void testProcessProviderDataPhcFactDisabled() {
     String providerData = "{\"payload\": {\"after\": {\"person_uid\": 10000001,\"cd\": \"PRV\"}}}";
+    ProviderSp result = new ProviderSp();
+    result.setPersonUid(1l);
+    when(providerRepository.computeProviders("10000001", false)).thenReturn(List.of(result));
 
     personService.setPhcDatamartEnable(false);
-    personService.processMessage(record(providerData, inputTopicPerson));
+    personService.processPerson(providerData, inputTopicPerson);
     verify(patientRepository, never()).updatePhcFact(anyString(), anyString());
   }
 
@@ -285,7 +296,7 @@ class PersonServiceTest {
     Mockito.when(userRepository.computeAuthUsers(anyString(), Mockito.eq(false)))
         .thenReturn(Optional.of(List.of(user)));
 
-    personService.processMessage(record(payload, inputTopicUser));
+    personService.processUser(payload, inputTopicPerson);
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -318,9 +329,7 @@ class PersonServiceTest {
     when(patientRepository.computePatients("10000001", false)).thenReturn(List.of(patient));
     personService.setPhcDatamartEnable(false);
 
-    CompletableFuture<Void> future =
-        personService.processMessage(retryRecord(payload, retryTopic, inputTopicPerson));
-    future.join();
+    personService.processPerson(payload, inputTopicPerson);
 
     verify(patientRepository).computePatients("10000001", false);
     verifyNoInteractions(providerRepository, userRepository);
@@ -333,24 +342,10 @@ class PersonServiceTest {
     when(userRepository.computeAuthUsers("11", false))
         .thenReturn(Optional.of(List.of(constructAuthUser())));
 
-    CompletableFuture<Void> future =
-        personService.processMessage(retryRecord(payload, retryTopic, inputTopicUser));
-    future.join();
+    personService.processUser(payload, inputTopicPerson);
 
     verify(userRepository).computeAuthUsers("11", false);
     verifyNoInteractions(patientRepository, providerRepository);
-  }
-
-  @Test
-  void testProcessMessageRejectsUnknownOriginalTopic() {
-    ConsumerRecord<String, String> retryRecord =
-        retryRecord(null, "Person_retry-0", "unknownTopic");
-
-    CompletableFuture<Void> future = personService.processMessage(retryRecord);
-
-    CompletionException exception = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoSuchElementException.class, exception.getCause().getCause().getClass());
-    verifyNoInteractions(patientRepository, providerRepository, userRepository);
   }
 
   @ParameterizedTest
@@ -362,9 +357,10 @@ class PersonServiceTest {
     "{\"payload\": {\"after\": {}}},User"
   })
   void testProcessMessageException(String payload, String inputTopic) {
-    CompletableFuture<Void> future = personService.processMessage(record(payload, inputTopic));
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoSuchElementException.class, ex.getCause().getCause().getClass());
+    DataProcessingException ex =
+        assertThrows(
+            DataProcessingException.class, () -> personService.processPerson(payload, inputTopic));
+    assertEquals(NoSuchElementException.class, ex.getCause().getClass());
   }
 
   @ParameterizedTest
@@ -379,14 +375,13 @@ class PersonServiceTest {
       Long personUid = 123456789L;
       when(providerRepository.computeProviders(String.valueOf(personUid), false))
           .thenReturn(Collections.emptyList());
+      assertThrows(NoDataException.class, () -> personService.processPerson(payload, inputTopic));
     } else if (inputTopic.equals(inputTopicUser)) {
       Long authUserUid = 11L;
       when(userRepository.computeAuthUsers(String.valueOf(authUserUid), false))
           .thenReturn(Optional.of(Collections.emptyList()));
+      assertThrows(NoDataException.class, () -> personService.processUser(payload, inputTopic));
     }
-    CompletableFuture<Void> future = personService.processMessage(record(payload, inputTopic));
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(NoDataException.class, ex.getCause().getClass());
   }
 
   @Test
@@ -404,10 +399,10 @@ class PersonServiceTest {
   @Test
   void testProcessUnknownCode() {
     String payload = "{\"payload\": {\"after\": {\"person_uid\": \"123456789\", \"cd\": \"UNK\"}}}";
-    CompletableFuture<Void> future =
-        personService.processMessage(record(payload, inputTopicPerson));
-    CompletionException ex = assertThrows(CompletionException.class, future::join);
-    assertEquals(DataProcessingException.class, ex.getCause().getClass());
+    var ex =
+        assertThrows(
+            DataProcessingException.class,
+            () -> personService.processPerson(payload, inputTopicPerson));
     assertTrue(ex.getCause().getMessage().endsWith("No data to process for this entity type: UNK"));
   }
 
@@ -424,7 +419,7 @@ class PersonServiceTest {
     String expectedReportingValue = readFileData(expectedReportingValueFilePath);
     String expectedElasticValue = readFileData(expectedElasticValueFilePath);
 
-    personService.processMessage(record(incomingChangeData, inputTopicPerson));
+    personService.processPerson(incomingChangeData, inputTopicPerson);
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -479,19 +474,6 @@ class PersonServiceTest {
         .entityDataNested(readFileData(filePathPrefix + "PersonEntityData.json"))
         .emailNested(readFileData(filePathPrefix + "PersonEmail.json"))
         .build();
-  }
-
-  private ConsumerRecord<String, String> record(String payload, String topic) {
-    return new ConsumerRecord<>(topic, 0, 11L, null, payload);
-  }
-
-  private ConsumerRecord<String, String> retryRecord(
-      String payload, String retryTopic, String originalTopic) {
-    ConsumerRecord<String, String> record = record(payload, retryTopic);
-    record
-        .headers()
-        .add(KafkaHeaders.ORIGINAL_TOPIC, originalTopic.getBytes(StandardCharsets.UTF_8));
-    return record;
   }
 
   private AuthUser constructAuthUser() {
