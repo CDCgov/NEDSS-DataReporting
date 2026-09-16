@@ -30,13 +30,11 @@ import gov.cdc.nbs.report.pipeline.person.repository.PatientRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.ProviderRepository;
 import gov.cdc.nbs.report.pipeline.person.repository.UserRepository;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
-import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
@@ -55,6 +53,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.BatchListenerFailedException;
 
 @ExtendWith(MockitoExtension.class)
 class PersonServiceTest {
@@ -362,10 +361,11 @@ class PersonServiceTest {
   })
   void testProcessMessageException(String payload, String inputTopic) {
     List<String> messages = List.of(payload);
-    DataProcessingException ex =
+    BatchListenerFailedException ex =
         assertThrows(
-            DataProcessingException.class, () -> personService.processPersonMessages(messages));
-    assertEquals(NoSuchElementException.class, ex.getCause().getClass());
+            BatchListenerFailedException.class,
+            () -> personService.processPersonMessages(messages));
+    assertEquals(NoDataException.class, ex.getCause().getClass());
   }
 
   @ParameterizedTest
@@ -381,7 +381,8 @@ class PersonServiceTest {
       when(providerRepository.computeProviders(String.valueOf(personUid), false))
           .thenReturn(Collections.emptyList());
       List<String> messages = List.of(payload);
-      assertThrows(NoDataException.class, () -> personService.processPersonMessages(messages));
+      assertThrows(
+          BatchListenerFailedException.class, () -> personService.processPersonMessages(messages));
     } else if (inputTopic.equals(inputTopicUser)) {
       Long authUserUid = 11L;
       when(userRepository.computeAuthUsers(String.valueOf(authUserUid), false))
