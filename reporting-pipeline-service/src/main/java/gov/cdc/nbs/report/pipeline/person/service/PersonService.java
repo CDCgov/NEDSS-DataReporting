@@ -30,6 +30,7 @@ import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -136,41 +138,115 @@ public class PersonService {
     rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
   }
 
-  public void processPersonMessages(List<String> messages) {
-    msgProcessed.increment(messages.size());
+  /**
+   * Processes a batch of person change events, partitioned by record type ({@code PAT} / {@code
+   * PRV}) and grouped for bulk lookup and transformation.
+   *
+   * <p>On failure, throws {@link BatchListenerFailedException} identifying the index of the first
+   * unprocessed record in {@code kafkaMessages}. The container uses this index to commit offsets
+   * for records that completed successfully and to redeliver only the failed record and those after
+   * it, rather than the entire batch.
+   *
+   * @param kafkaMessages raw message values for the polled batch, in delivery order
+   * @throws BatchListenerFailedException identifying the first record that failed to process
+   */
+  public void processPersonMessages(List<String> kafkaMessages) {
+    msgProcessed.increment(kafkaMessages.size());
     metrics.recordTime(
         "person_msg_processing_seconds",
         () -> {
-          String idList = "";
+          // group messages based on patient cd value
+          Map<String, List<Integer>> indicesByCd = groupIndicesByCd(kafkaMessages);
+          List<Integer> patIndices = indicesByCd.getOrDefault("PAT", List.of());
+          List<Integer> prvIndices = indicesByCd.getOrDefault("PRV", List.of());
+
+          boolean patientsProcessed = false;
           try {
-            // Split into separate lists based on "cd" value
-            Map<String, List<String>> partitionedMessages =
-                messages.stream().collect(Collectors.groupingBy(this::parsePersonCd));
+            processPatientMessages(valuesAt(kafkaMessages, patIndices));
+            patientsProcessed = true;
 
-            // Process cd == "PAT" data
-            processPatientMessages(partitionedMessages.get("PAT"));
+            processProviderMessages(valuesAt(kafkaMessages, prvIndices));
 
-            // Process cd == "PRV" data
-            processProviderMessages(partitionedMessages.get("PRV"));
-
-            msgSuccess.increment(messages.size());
+            msgSuccess.increment(kafkaMessages.size());
           } catch (EntityNotFoundException ex) {
             msgFailure.increment();
-            throw new NoDataException(ex.getMessage(), ex);
+            throw new BatchListenerFailedException(
+                ex.getMessage(),
+                new NoDataException(ex.getMessage(), ex),
+                firstFailedIndex(patientsProcessed, patIndices, prvIndices));
           } catch (Exception e) {
             msgFailure.increment();
-            throw new DataProcessingException(errorMessage("Person", idList, e), e);
+            String message = errorMessage("Person", "", e);
+            throw new BatchListenerFailedException(
+                message,
+                new DataProcessingException(message, e),
+                firstFailedIndex(patientsProcessed, patIndices, prvIndices));
           }
         },
         "service",
         SERVICE_NAME);
   }
 
+  /**
+   * Partitions message indices by their {@code cd} field, preserving each message's position in the
+   * original batch.
+   *
+   * @param messages raw message values for the polled batch
+   * @return batch indices grouped by {@code cd} value
+   * @throws BatchListenerFailedException identifying the index of the first message that could not
+   *     be parsed
+   */
+  private Map<String, List<Integer>> groupIndicesByCd(List<String> messages) {
+    Map<String, List<Integer>> indicesByCd = new LinkedHashMap<>();
+    for (int i = 0; i < messages.size(); i++) {
+      final String cd;
+      try {
+        cd = parsePersonCd(messages.get(i));
+      } catch (RuntimeException e) {
+        msgFailure.increment();
+        throw new BatchListenerFailedException(
+            "Failed to parse 'cd' from person message",
+            new NoDataException("Failed to parse 'cd' from person message", e),
+            i);
+      }
+      indicesByCd.computeIfAbsent(cd, k -> new ArrayList<>()).add(i);
+    }
+    return indicesByCd;
+  }
+
+  /**
+   * Resolves the given batch indices to their corresponding message values.
+   *
+   * @param messages raw message values for the polled batch
+   * @param indices batch indices to resolve
+   * @return message values at the given indices, in order
+   */
+  private static List<String> valuesAt(List<String> messages, List<Integer> indices) {
+    return indices.stream().map(messages::get).toList();
+  }
+
+  /**
+   * Determines the batch index to report on failure, based on which processing stage failed.
+   *
+   * @param patientsProcessed whether patient processing completed successfully
+   * @param patIndices batch indices for patient records
+   * @param prvIndices batch indices for provider records
+   * @return index of the first record belonging to the failed stage
+   */
+  private static int firstFailedIndex(
+      boolean patientsProcessed, List<Integer> patIndices, List<Integer> prvIndices) {
+    if (!patientsProcessed) {
+      return patIndices.isEmpty() ? 0 : patIndices.get(0);
+    }
+    return prvIndices.isEmpty() ? 0 : prvIndices.get(0);
+  }
+
   private void processPatientMessages(List<String> messages) {
     if (messages == null || messages.isEmpty()) {
       return;
     }
-    String idList = messages.stream().map(this::parsePersonUid).collect(Collectors.joining(","));
+    String idList =
+        messages.stream().map(this::parsePersonUid).distinct().collect(Collectors.joining(","));
     List<PatientSp> patientData =
         patientRepository.computePatients(
             idList, eventProcedureLoggingProperties.eventProcedureDebugLogging());
@@ -223,7 +299,8 @@ public class PersonService {
       return;
     }
 
-    String idList = messages.stream().map(this::parsePersonUid).collect(Collectors.joining(","));
+    String idList =
+        messages.stream().map(this::parsePersonUid).distinct().collect(Collectors.joining(","));
     List<ProviderSp> providerData =
         providerRepository.computeProviders(
             idList, eventProcedureLoggingProperties.eventProcedureDebugLogging());
@@ -238,6 +315,7 @@ public class PersonService {
               .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
               .map(ProviderSp::getPersonUid)
               .map(String::valueOf)
+              .distinct()
               .collect(Collectors.joining(","));
       CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", mprUids), rtrExecutor);
     }
@@ -290,38 +368,53 @@ public class PersonService {
   }
 
   @Transactional
-  public void processUser(String message, String topic) {
-    String userUid = "";
+  public void processUser(List<String> messages) {
+    String userUids = "";
     try {
-      userUid = extractUid(message, "auth_user_uid");
-      log.info(topicDebugLog, "User", userUid, topic);
+      userUids =
+          messages.stream().map(this::parseAuthUserUid).distinct().collect(Collectors.joining(","));
+      log.info(topicDebugLog, "User", userUids, userTopic);
       Optional<List<AuthUser>> userData =
           userRepository.computeAuthUsers(
-              userUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
+              userUids, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
-      List<AuthUser> authUsers = new ArrayList<>();
+      List<AuthUser> authUsers;
 
       if (userData.isPresent() && !userData.get().isEmpty()) {
         authUsers = userData.get();
       } else {
-        throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUid);
+        throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUids);
       }
 
-      authUsers.forEach(
-          authUser -> {
-            nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-            String jsonKey = transformer.buildUserKey(authUser);
-            String jsonValue = transformer.processData(authUser);
-            kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
-            log.info(
-                "User data (uid={}) sent to {}",
-                authUser.getAuthUserUid(),
-                userReportingOutputTopic);
-          });
+      // transform AuthUser to NrtAuthUser and persist
+      List<NrtAuthUser> nrtAuthUsers = authUsers.stream().map(NrtAuthUser::from).toList();
+      nrtAuthUserRepository.saveAll(nrtAuthUsers);
+
+      // post messages to Kafka topic
+      sendAuthUserKafkaMessages(authUsers);
+
     } catch (EntityNotFoundException ex) {
       throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("User", userUid, e), e);
+      throw new DataProcessingException(errorMessage("User", userUids, e), e);
+    }
+  }
+
+  private String parseAuthUserUid(String message) {
+    try {
+      return extractUid(message, "auth_user_uid");
+    } catch (JsonProcessingException e) {
+      throw new NoSuchElementException("Failed to parse 'person_uid' from person message", e);
+    }
+  }
+
+  private void sendAuthUserKafkaMessages(List<AuthUser> authUsers) {
+    for (AuthUser authUser : authUsers) {
+      String jsonKey = transformer.buildUserKey(authUser);
+      String jsonValue = transformer.processData(authUser);
+      kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
+      log.info(
+          "User data (uid={}) sent to {}", authUser.getAuthUserUid(), userReportingOutputTopic);
     }
   }
 

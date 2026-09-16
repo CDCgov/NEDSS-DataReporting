@@ -297,7 +297,8 @@ class PersonServiceTest {
     when(userRepository.computeAuthUsers(anyString(), Mockito.eq(false)))
         .thenReturn(Optional.of(List.of(user)));
 
-    personService.processUser(payload, inputTopicPerson);
+    List<String> messages = List.of(payload);
+    personService.processUser(messages);
 
     Awaitility.await()
         .atMost(1, TimeUnit.SECONDS)
@@ -344,7 +345,8 @@ class PersonServiceTest {
     when(userRepository.computeAuthUsers("11", false))
         .thenReturn(Optional.of(List.of(constructAuthUser())));
 
-    personService.processUser(payload, inputTopicPerson);
+    List<String> messages = List.of(payload);
+    personService.processUser(messages);
 
     verify(userRepository).computeAuthUsers("11", false);
     verifyNoInteractions(patientRepository, providerRepository);
@@ -384,7 +386,8 @@ class PersonServiceTest {
       Long authUserUid = 11L;
       when(userRepository.computeAuthUsers(String.valueOf(authUserUid), false))
           .thenReturn(Optional.of(Collections.emptyList()));
-      assertThrows(NoDataException.class, () -> personService.processUser(payload, inputTopic));
+      List<String> messages = List.of(payload);
+      assertThrows(NoDataException.class, () -> personService.processUser(messages));
     }
   }
 

@@ -33,7 +33,7 @@ class KafkaConsumerConfigTest {
 
     // Act
     ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory =
-        kafkaConsumerConfig.personKafkaListenerContainerFactory();
+        kafkaConsumerConfig.personKafkaListenerContainerFactory(null);
 
     // Assert
     Assertions.assertNotNull(kafkaListenerContainerFactory);
