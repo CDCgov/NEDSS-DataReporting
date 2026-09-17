@@ -109,9 +109,6 @@ public class PersonService {
   @Value("${featureFlag.phc-datamart-enable}")
   private boolean phcDatamartEnable;
 
-  @Value("${featureFlag.thread-pool-size:1}")
-  private int threadPoolSize;
-
   private ExecutorService rtrExecutor;
 
   private static final ObjectMapper objectMapper =

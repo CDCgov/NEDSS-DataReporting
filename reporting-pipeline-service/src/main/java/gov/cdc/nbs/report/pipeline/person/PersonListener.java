@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
  * processed synchronously on the listener container thread.
  *
  * <p>Processing is intentionally synchronous. Retry and dead-letter handling are delegated to the
- * {@code personBatchErrorHandler} configured on the listener container factory, and that handler
- * is only invoked when the listener method itself throws. If a batch listener returns a {@code
+ * {@code personBatchErrorHandler} configured on the listener container factory, and that handler is
+ * only invoked when the listener method itself throws. If a batch listener returns a {@code
  * CompletableFuture} instead, Spring Kafka handles a failed future inside the listener adapter
  * ({@code MessagingMessageListenerAdapter.asyncFailure}), which logs the error and acknowledges the
  * batch - the container error handler, {@link
