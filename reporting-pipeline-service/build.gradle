@@ -149,7 +149,7 @@ dependencies {
     implementation 'org.apache.kafka:kafka-clients:3.9.2'
 
     // Persistence & Database
-    implementation 'com.microsoft.sqlserver:mssql-jdbc:13.4.0.jre11'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:13.6.0.jre11'
 
     // Liquibase
     implementation 'org.liquibase:liquibase-core:5.0.3'
