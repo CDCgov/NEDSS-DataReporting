@@ -38,6 +38,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -139,6 +140,19 @@ public class PersonService {
    * Processes a batch of person change events, partitioned by record type ({@code PAT} / {@code
    * PRV}) and grouped for bulk lookup and transformation.
    *
+   * <p>Each record-type group is first attempted as a single bulk operation via {@link #tryBulk},
+   * since that is far cheaper than looking up records one at a time. Both groups are attempted
+   * independently - a failure in one does not prevent the other from being attempted - so a problem
+   * isolated to patients, for example, never causes provider messages to be skipped.
+   *
+   * <p>A bulk lookup only tells us that <em>something</em> in the group failed, not which specific
+   * message caused it. So if either bulk attempt fails, every message in {@code kafkaMessages} is
+   * replayed one at a time, <strong>in the exact order it was received</strong> (see {@link
+   * #processRemainingIndividually}), rather than replaying patients and then providers as separate
+   * passes. Processing in original delivery order - regardless of type - is what guarantees the
+   * failure index ultimately reported is accurate: every message ahead of it, whether patient or
+   * provider, is genuinely complete, so it is always safe for the container to commit past it.
+   *
    * <p>On failure, throws {@link BatchListenerFailedException} identifying the index of the first
    * unprocessed record in {@code kafkaMessages}. The container uses this index to commit offsets
    * for records that completed successfully and to redeliver only the failed record and those after
@@ -157,31 +171,132 @@ public class PersonService {
           List<Integer> patIndices = indicesByCd.getOrDefault("PAT", List.of());
           List<Integer> prvIndices = indicesByCd.getOrDefault("PRV", List.of());
 
-          boolean patientsProcessed = false;
-          try {
-            processPatientMessages(valuesAt(kafkaMessages, patIndices));
-            patientsProcessed = true;
+          // Attempt each group as a bulk operation. Both are attempted regardless of whether the
+          // other succeeds, so neither type is ever skipped because of a failure in the other.
+          boolean patientsCompleted =
+              tryBulk(valuesAt(kafkaMessages, patIndices), this::processPatientMessages, "Patient");
+          boolean providersCompleted =
+              tryBulk(
+                  valuesAt(kafkaMessages, prvIndices), this::processProviderMessages, "Provider");
 
-            processProviderMessages(valuesAt(kafkaMessages, prvIndices));
-
-            msgSuccess.increment(kafkaMessages.size());
-          } catch (EntityNotFoundException ex) {
-            msgFailure.increment();
-            throw new BatchListenerFailedException(
-                ex.getMessage(),
-                new NoDataException(ex.getMessage(), ex),
-                firstFailedIndex(patientsProcessed, patIndices, prvIndices));
-          } catch (Exception e) {
-            msgFailure.increment();
-            String message = errorMessage("Person", "", e);
-            throw new BatchListenerFailedException(
-                message,
-                new DataProcessingException(message, e),
-                firstFailedIndex(patientsProcessed, patIndices, prvIndices));
+          if (patientsCompleted && providersCompleted) {
+            return;
           }
+
+          // At least one bulk attempt failed. Replay the full original batch, in order, to find
+          // the exact failing message. Groups that already succeeded in bulk are skipped inside
+          // processRemainingIndividually so they are not persisted or published twice.
+          processRemainingIndividually(kafkaMessages, patientsCompleted, providersCompleted);
         },
         "service",
         SERVICE_NAME);
+  }
+
+  /**
+   * Attempts to process a same-type group of messages (all patients or all providers) as a single
+   * bulk operation for efficiency.
+   *
+   * @param messages raw message values belonging to this group, in original batch order
+   * @param processor performs bulk lookup, transformation, persistence, and Kafka publishing for
+   *     the given list of messages
+   * @param recordType human-readable record type, used only for logging
+   * @return {@code true} if the group was empty or processed successfully; {@code false} if the
+   *     bulk attempt threw, meaning the group still needs to be processed one message at a time
+   */
+  private boolean tryBulk(
+      List<String> messages, Consumer<List<String>> processor, String recordType) {
+    if (messages.isEmpty()) {
+      return true;
+    }
+    try {
+      processor.accept(messages);
+      msgSuccess.increment(messages.size());
+      return true;
+    } catch (Exception e) {
+      log.warn(
+          "Bulk processing failed for {} {} message(s); falling back to one-at-a-time processing in"
+              + " original order. Cause: {}",
+          messages.size(),
+          recordType,
+          e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * Replays messages one at a time, in original batch order, after at least one bulk attempt has
+   * failed.
+   *
+   * <p>Messages belonging to a record type whose bulk attempt already succeeded are skipped, since
+   * they are already fully persisted and published; reprocessing them would duplicate database
+   * writes and Kafka output. Every other message is dispatched to the correct processor based on
+   * its {@code cd} value, in the exact order it was received - patients and providers are no longer
+   * handled as separate passes, so a failure in one type can never cause a message of the other
+   * type to be silently skipped.
+   *
+   * <p>It is possible for every remaining message to succeed individually even though its group's
+   * bulk attempt failed - for example, a transient issue specific to the bulk call itself. In that
+   * case this method simply returns without throwing.
+   *
+   * @param kafkaMessages raw message values for the polled batch, in delivery order
+   * @param patientsCompleted whether the patient bulk attempt already succeeded
+   * @param providersCompleted whether the provider bulk attempt already succeeded
+   * @throws BatchListenerFailedException identifying the original batch index of the first message
+   *     that fails, wrapping the underlying cause as either {@link NoDataException} (record not
+   *     found) or {@link DataProcessingException} (any other processing failure)
+   */
+  private void processRemainingIndividually(
+      List<String> kafkaMessages, boolean patientsCompleted, boolean providersCompleted) {
+
+    for (int i = 0; i < kafkaMessages.size(); i++) {
+      String message = kafkaMessages.get(i);
+      String cd = resolveCd(message, patientsCompleted, providersCompleted);
+
+      if (cd == null) {
+        continue; // already handled by a successful bulk group, or an unrecognized cd value
+      }
+
+      boolean isPatient = "PAT".equals(cd);
+      Consumer<List<String>> processor =
+          isPatient ? this::processPatientMessages : this::processProviderMessages;
+      String recordType = isPatient ? "Patient" : "Provider";
+
+      try {
+        processor.accept(List.of(message));
+        msgSuccess.increment(1);
+      } catch (EntityNotFoundException ex) {
+        msgFailure.increment();
+        throw new BatchListenerFailedException(
+            ex.getMessage(), new NoDataException(ex.getMessage(), ex), i);
+      } catch (Exception ex) {
+        msgFailure.increment();
+        String errMsg = errorMessage(recordType, "", ex);
+        throw new BatchListenerFailedException(errMsg, new DataProcessingException(errMsg, ex), i);
+      }
+    }
+  }
+
+  /**
+   * Determines whether a single message should be processed during the one-at-a-time fallback,
+   * based on its {@code cd} value and which bulk groups already succeeded.
+   *
+   * @param message raw message value to inspect
+   * @param patientsCompleted whether the patient bulk attempt already succeeded
+   * @param providersCompleted whether the provider bulk attempt already succeeded
+   * @return {@code "PAT"} or {@code "PRV"} if the message still needs individual processing, or
+   *     {@code null} if it should be skipped - either because it was already handled as part of a
+   *     successful bulk group, or because its {@code cd} value is not one this service processes
+   */
+  private String resolveCd(String message, boolean patientsCompleted, boolean providersCompleted) {
+    String cd = parsePersonCd(message); // already validated once in groupIndicesByCd
+
+    if ("PAT".equals(cd)) {
+      return patientsCompleted ? null : cd;
+    }
+    if ("PRV".equals(cd)) {
+      return providersCompleted ? null : cd;
+    }
+    return null; // unrecognized cd values are not processed, consistent with groupIndicesByCd
   }
 
   /**
@@ -220,22 +335,6 @@ public class PersonService {
    */
   private static List<String> valuesAt(List<String> messages, List<Integer> indices) {
     return indices.stream().map(messages::get).toList();
-  }
-
-  /**
-   * Determines the batch index to report on failure, based on which processing stage failed.
-   *
-   * @param patientsProcessed whether patient processing completed successfully
-   * @param patIndices batch indices for patient records
-   * @param prvIndices batch indices for provider records
-   * @return index of the first record belonging to the failed stage
-   */
-  private static int firstFailedIndex(
-      boolean patientsProcessed, List<Integer> patIndices, List<Integer> prvIndices) {
-    if (!patientsProcessed) {
-      return patIndices.isEmpty() ? 0 : patIndices.get(0);
-    }
-    return prvIndices.isEmpty() ? 0 : prvIndices.get(0);
   }
 
   private void processPatientMessages(List<String> messages) {
@@ -421,7 +520,7 @@ public class PersonService {
         // Calling sp_public_health_case_fact_datamart_update
         log.info(
             "Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update"
-                + " PHС fact datamart",
+                + " PHC fact datamart",
             objName,
             uids);
         patientRepository.updatePhcFact(objName, uids);
