@@ -2,60 +2,66 @@ package gov.cdc.nbs.report.pipeline.person;
 
 import gov.cdc.nbs.report.pipeline.person.service.PersonService;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * Kafka listener for person change events. Messages are consumed in batches and processed
- * asynchronously on a dedicated executor; retry and dead-letter handling for failed records is
- * delegated to the {@code personBatchErrorHandler} configured on the listener container factory
- * rather than handled here.
+ * Kafka listener for person and auth-user change events. Messages are consumed in batches and
+ * processed synchronously on the listener container thread.
+ *
+ * <p>Processing is intentionally synchronous. Retry and dead-letter handling are delegated to the
+ * {@code personBatchErrorHandler} configured on the listener container factory, and that handler
+ * is only invoked when the listener method itself throws. If a batch listener returns a {@code
+ * CompletableFuture} instead, Spring Kafka handles a failed future inside the listener adapter
+ * ({@code MessagingMessageListenerAdapter.asyncFailure}), which logs the error and acknowledges the
+ * batch - the container error handler, {@link
+ * org.springframework.kafka.listener.BatchListenerFailedException} index, retries, and dead-letter
+ * topic are all bypassed. Async retry support in Spring Kafka exists only for single-record
+ * listeners.
+ *
+ * <p>Parallelism is provided by the container's concurrency setting (one consumer per partition up
+ * to the configured concurrency) rather than a separate executor.
  */
 @Service
 public class PersonListener {
 
   private final PersonService personService;
-  private final ExecutorService executor;
 
-  public PersonListener(
-      final PersonService personService,
-      @Value("${featureFlag.thread-pool-size:1}") final int threadPoolSize) {
+  public PersonListener(final PersonService personService) {
     this.personService = personService;
-    this.executor =
-        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
   }
 
   /**
-   * Consumes a batch of person change events and processes them asynchronously.
+   * Consumes a batch of person change events.
+   *
+   * <p>Exceptions thrown by {@link PersonService#processPersonMessages(List)} propagate to the
+   * container error handler. A {@link
+   * org.springframework.kafka.listener.BatchListenerFailedException} commits offsets before the
+   * failed index and retries from that record.
    *
    * @param kafkaMessages raw message values for the polled batch, in delivery order
-   * @return future completed when the batch has finished processing
    */
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.person}"},
       batch = "true",
       containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processPersonMessage(List<String> kafkaMessages) {
-    return CompletableFuture.runAsync(
-        () -> personService.processPersonMessages(kafkaMessages), executor);
+  public void processPersonMessage(List<String> kafkaMessages) {
+    personService.processPersonMessages(kafkaMessages);
   }
 
   /**
-   * Consumes a batch of auth-user change events and processes them asynchronously.
+   * Consumes a batch of auth-user change events.
+   *
+   * <p>Exceptions thrown by {@link PersonService#processUser(List)} propagate to the container
+   * error handler.
    *
    * @param kafkaMessages raw message values for the polled batch, in delivery order
-   * @return future completed when the batch has finished processing
    */
   @KafkaListener(
       topics = {"${spring.kafka.topics.nbs.auth-user}"},
       batch = "true",
       containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processAuthUserMessage(List<String> kafkaMessages) {
-    return CompletableFuture.runAsync(() -> personService.processUser(kafkaMessages), executor);
+  public void processAuthUserMessage(List<String> kafkaMessages) {
+    personService.processUser(kafkaMessages);
   }
 }

@@ -48,6 +48,9 @@ public class KafkaConsumerConfig {
   @Value("${spring.kafka.dlq.dlq-suffix:_dlt}")
   private String dlqSuffix;
 
+  @Value("${featureFlag.thread-pool-size:1}")
+  private int concurrency = 1;
+
   @Bean
   public ConsumerFactory<String, String> personConsumerFactory() {
     final Map<String, Object> config = new HashMap<>();
@@ -107,6 +110,14 @@ public class KafkaConsumerConfig {
    * Container factory for the person batch listener, wired with the batch-aware error handler
    * defined above.
    *
+   * <p>Listeners using this factory must process synchronously (return {@code void}) and must not
+   * enable async acks. The error handler is only invoked when the listener method throws; a failed
+   * {@code CompletableFuture} from a batch listener is logged and acknowledged by Spring Kafka
+   * without reaching the error handler.
+   *
+   * <p>Parallelism comes from container concurrency ({@code featureFlag.thread-pool-size}), which
+   * creates one consumer per partition up to that number.
+   *
    * @param personBatchErrorHandler error handler applied to containers built by this factory
    * @return configured listener container factory
    */
@@ -117,7 +128,7 @@ public class KafkaConsumerConfig {
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setBatchListener(true);
     factory.setConsumerFactory(personConsumerFactory());
-    factory.getContainerProperties().setAsyncAcks(true);
+    factory.setConcurrency(concurrency);
     factory.setCommonErrorHandler(personBatchErrorHandler);
     return factory;
   }
