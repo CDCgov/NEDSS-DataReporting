@@ -18,9 +18,19 @@ import org.springframework.stereotype.Component;
 public class PersonTransformers {
   private final CustomJsonGeneratorImpl jsonGenerator = new CustomJsonGeneratorImpl();
 
+  public String buildPatientKey(PatientReporting p) {
+    return jsonGenerator.generateStringJson(
+        PatientKey.builder().patientUid(p.getPatientUid()).build());
+  }
+
   public String buildPatientKey(PatientSp p) {
     return jsonGenerator.generateStringJson(
         PatientKey.builder().patientUid(p.getPersonUid()).build());
+  }
+
+  public String buildProviderKey(ProviderReporting p) {
+    return jsonGenerator.generateStringJson(
+        ProviderKey.builder().providerUid(p.getProviderUid()).build());
   }
 
   public String buildProviderKey(ProviderSp p) {

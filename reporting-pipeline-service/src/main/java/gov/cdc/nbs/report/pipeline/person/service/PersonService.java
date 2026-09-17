@@ -3,7 +3,7 @@ package gov.cdc.nbs.report.pipeline.person.service;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.errorMessage;
 import static gov.cdc.nbs.report.pipeline.util.UtilHelper.extractUid;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cdc.nbs.report.pipeline.config.EventProcedureLoggingProperties;
@@ -25,35 +25,28 @@ import gov.cdc.nbs.report.pipeline.person.transformer.PersonTransformers;
 import gov.cdc.nbs.report.pipeline.person.transformer.PersonType;
 import gov.cdc.nbs.report.pipeline.util.DataProcessingException;
 import gov.cdc.nbs.report.pipeline.util.NoDataException;
-import gov.cdc.nbs.report.pipeline.util.kafka.RetryTopicResolver;
-import gov.cdc.nbs.report.pipeline.util.kafka.TopicResolution;
 import gov.cdc.nbs.report.pipeline.util.metrics.CustomMetrics;
 import io.micrometer.core.instrument.Counter;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.errors.SerializationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.retrytopic.DltStrategy;
-import org.springframework.kafka.retrytopic.TopicSuffixingStrategy;
-import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.retry.annotation.Backoff;
+import org.springframework.kafka.listener.BatchListenerFailedException;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,8 +86,6 @@ public class PersonService {
   @Qualifier("personKafkaTemplate")
   private final KafkaTemplate<String, String> kafkaTemplate;
 
-  private final RetryTopicResolver retryTopicResolver;
-
   @Value("${spring.kafka.topics.nbs.person}")
   private String personTopic;
 
@@ -116,17 +107,10 @@ public class PersonService {
   @Value("${spring.kafka.topics.nrt.auth-user}")
   private String userReportingOutputTopic;
 
-  @Value("${featureFlag.elastic-search-enable}")
-  private boolean elasticSearchEnable;
-
   @Value("${featureFlag.phc-datamart-enable}")
   private boolean phcDatamartEnable;
 
-  @Value("${featureFlag.thread-pool-size:1}")
-  private int threadPoolSize;
-
   private ExecutorService rtrExecutor;
-  private ExecutorService prsExecutor;
 
   private static final ObjectMapper objectMapper =
       new ObjectMapper().registerModule(new JavaTimeModule());
@@ -139,12 +123,10 @@ public class PersonService {
   private Counter msgProcessed;
   private Counter msgSuccess;
   private Counter msgFailure;
-  private Set<String> inputTopics;
 
   @PostConstruct
   void initMetrics() {
     String[] tags = {"service", SERVICE_NAME};
-    inputTopics = Set.of(personTopic, userTopic);
 
     msgProcessed = metrics.counter("person_msg_processed", tags);
     msgSuccess = metrics.counter("person_msg_success", tags);
@@ -152,225 +134,383 @@ public class PersonService {
 
     int nproc = Runtime.getRuntime().availableProcessors();
     rtrExecutor = Executors.newFixedThreadPool(nproc * 2, new CustomizableThreadFactory("rtr-"));
-    prsExecutor =
-        Executors.newFixedThreadPool(threadPoolSize, new CustomizableThreadFactory("prs-"));
   }
 
-  @RetryableTopic(
-      attempts = "${spring.kafka.consumer.max-retry}",
-      autoCreateTopics = "false",
-      dltStrategy = DltStrategy.FAIL_ON_ERROR,
-      retryTopicSuffix = "${spring.kafka.dlq.retry-suffix}",
-      dltTopicSuffix = "${spring.kafka.dlq.dlq-suffix}",
-      // retry topic name, such as topic-retry-1, topic-retry-2, etc
-      topicSuffixingStrategy = TopicSuffixingStrategy.SUFFIX_WITH_INDEX_VALUE,
-      // time to wait before attempting to retry
-      backoff = @Backoff(delay = 1000, multiplier = 2.0),
-      exclude = {
-        SerializationException.class,
-        DeserializationException.class,
-        RuntimeException.class,
-        NoDataException.class
-      },
-      kafkaTemplate = "personKafkaTemplate")
-  @KafkaListener(
-      topics = {"${spring.kafka.topics.nbs.person}", "${spring.kafka.topics.nbs.auth-user}"},
-      containerFactory = "personKafkaListenerContainerFactory")
-  public CompletableFuture<Void> processMessage(ConsumerRecord<String, String> record) {
-    TopicResolution topicResolution;
-    try {
-      topicResolution = retryTopicResolver.resolve(record, inputTopics);
-    } catch (NoSuchElementException exception) {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(exception.getMessage(), exception));
-    }
-
-    String physicalTopic = topicResolution.physicalTopic();
-    String logicalTopic = topicResolution.logicalTopic();
-    String message = record.value();
-
-    if (logicalTopic.equals(personTopic)) {
-      return CompletableFuture.runAsync(() -> processPerson(message, physicalTopic), prsExecutor);
-    } else if (logicalTopic.equals(userTopic)) {
-      return CompletableFuture.runAsync(() -> processUser(message, physicalTopic), prsExecutor);
-    } else {
-      return CompletableFuture.failedFuture(
-          new DataProcessingException(
-              "Received data from an unknown topic: " + physicalTopic,
-              new NoSuchElementException()));
-    }
-  }
-
-  private void processPerson(String message, String topic) {
-    msgProcessed.increment();
+  /**
+   * Processes a batch of person change events, partitioned by record type ({@code PAT} / {@code
+   * PRV}) and grouped for bulk lookup and transformation.
+   *
+   * <p>Each record-type group is first attempted as a single bulk operation via {@link #tryBulk},
+   * since that is far cheaper than looking up records one at a time. Both groups are attempted
+   * independently - a failure in one does not prevent the other from being attempted - so a problem
+   * isolated to patients, for example, never causes provider messages to be skipped.
+   *
+   * <p>A bulk lookup only tells us that <em>something</em> in the group failed, not which specific
+   * message caused it. So if either bulk attempt fails, every message in {@code kafkaMessages} is
+   * replayed one at a time, <strong>in the exact order it was received</strong> (see {@link
+   * #processRemainingIndividually}), rather than replaying patients and then providers as separate
+   * passes. Processing in original delivery order - regardless of type - is what guarantees the
+   * failure index ultimately reported is accurate: every message ahead of it, whether patient or
+   * provider, is genuinely complete, so it is always safe for the container to commit past it.
+   *
+   * <p>On failure, throws {@link BatchListenerFailedException} identifying the index of the first
+   * unprocessed record in {@code kafkaMessages}. The container uses this index to commit offsets
+   * for records that completed successfully and to redeliver only the failed record and those after
+   * it, rather than the entire batch.
+   *
+   * @param kafkaMessages raw message values for the polled batch, in delivery order
+   * @throws BatchListenerFailedException identifying the first record that failed to process
+   */
+  public void processPersonMessages(List<String> kafkaMessages) {
+    msgProcessed.increment(kafkaMessages.size());
     metrics.recordTime(
         "person_msg_processing_seconds",
         () -> {
-          String personUid = "";
-          try {
-            JsonNode jsonNode = objectMapper.readTree(message);
-            JsonNode payloadNode = jsonNode.get("payload").path("after");
+          // group messages based on patient cd value
+          Map<String, List<Integer>> indicesByCd = groupIndicesByCd(kafkaMessages);
+          List<Integer> patIndices = indicesByCd.getOrDefault("PAT", List.of());
+          List<Integer> prvIndices = indicesByCd.getOrDefault("PRV", List.of());
 
-            personUid = extractUid(message, "person_uid");
-            log.info(topicDebugLog, "Person", personUid, topic);
+          // Attempt each group as a bulk operation. Both are attempted regardless of whether the
+          // other succeeds, so neither type is ever skipped because of a failure in the other.
+          boolean patientsCompleted =
+              tryBulk(valuesAt(kafkaMessages, patIndices), this::processPatientMessages, "Patient");
+          boolean providersCompleted =
+              tryBulk(
+                  valuesAt(kafkaMessages, prvIndices), this::processProviderMessages, "Provider");
 
-            List<ProviderSp> providerDataFromStoredProc = new ArrayList<>();
-            List<PatientSp> personDataFromStoredProc = new ArrayList<>();
-
-            String cd = payloadNode.get("cd").asText();
-            switch (cd) {
-              case "PAT":
-                personDataFromStoredProc =
-                    patientRepository.computePatients(
-                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
-                processPatientData(personDataFromStoredProc);
-                break;
-              case "PRV":
-                providerDataFromStoredProc =
-                    providerRepository.computeProviders(
-                        personUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
-                processProviderData(providerDataFromStoredProc);
-                break;
-              default:
-                throw new IllegalArgumentException(
-                    "No data to process for this entity type: " + cd);
-            }
-
-            if (personDataFromStoredProc.isEmpty() && providerDataFromStoredProc.isEmpty()) {
-              throw new EntityNotFoundException("Unable to find Person with id: " + personUid);
-            }
-            msgSuccess.increment();
-          } catch (EntityNotFoundException ex) {
-            msgFailure.increment();
-            throw new NoDataException(ex.getMessage(), ex);
-          } catch (Exception e) {
-            msgFailure.increment();
-            throw new DataProcessingException(errorMessage("Person", personUid, e), e);
+          if (patientsCompleted && providersCompleted) {
+            return;
           }
+
+          // At least one bulk attempt failed. Replay the full original batch, in order, to find
+          // the exact failing message. Groups that already succeeded in bulk are skipped inside
+          // processRemainingIndividually so they are not persisted or published twice.
+          processRemainingIndividually(kafkaMessages, patientsCompleted, providersCompleted);
         },
         "service",
         SERVICE_NAME);
   }
 
-  private void processProviderData(List<ProviderSp> providerData) {
-    final String uids =
-        providerData.stream()
-            .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
-            .map(ProviderSp::getPersonUid)
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
-
-    if (phcDatamartEnable) {
-      CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", uids), rtrExecutor);
+  /**
+   * Attempts to process a same-type group of messages (all patients or all providers) as a single
+   * bulk operation for efficiency.
+   *
+   * @param messages raw message values belonging to this group, in original batch order
+   * @param processor performs bulk lookup, transformation, persistence, and Kafka publishing for
+   *     the given list of messages
+   * @param recordType human-readable record type, used only for logging
+   * @return {@code true} if the group was empty or processed successfully; {@code false} if the
+   *     bulk attempt threw, meaning the group still needs to be processed one message at a time
+   */
+  private boolean tryBulk(
+      List<String> messages, Consumer<List<String>> processor, String recordType) {
+    if (messages.isEmpty()) {
+      return true;
     }
-
-    providerData.forEach(
-        provider -> {
-          ProviderReporting providerReporting =
-              (ProviderReporting)
-                  transformer.processData(null, provider, PersonType.PROVIDER_REPORTING);
-
-          nrtProviderRepository.save(NrtProvider.from(providerReporting));
-
-          String reportingKey = transformer.buildProviderKey(provider);
-          String reportingData = transformer.processData(providerReporting);
-          kafkaTemplate.send(providerReportingOutputTopic, reportingKey, reportingData);
-          log.info(
-              "Provider data (uid={}) sent to {}",
-              provider.getPersonUid(),
-              providerReportingOutputTopic);
-          log.debug("Provider Reporting: {}", reportingData);
-
-          if (elasticSearchEnable) {
-            String elasticKey = transformer.buildProviderKey(provider);
-            String elasticData =
-                transformer.processData(provider, PersonType.PROVIDER_ELASTIC_SEARCH);
-            kafkaTemplate.send(providerElasticSearchOutputTopic, elasticKey, elasticData);
-            log.info(
-                "Provider data (uid={}) sent to {}",
-                provider.getPersonUid(),
-                providerElasticSearchOutputTopic);
-            log.debug("Provider Elastic: {}", elasticData != null ? elasticData : "");
-          }
-        });
+    try {
+      processor.accept(messages);
+      msgSuccess.increment(messages.size());
+      return true;
+    } catch (Exception e) {
+      log.warn(
+          "Bulk processing failed for {} {} message(s); falling back to one-at-a-time processing in"
+              + " original order. Cause: {}",
+          messages.size(),
+          recordType,
+          e.getMessage());
+      return false;
+    }
   }
 
-  private void processPatientData(List<PatientSp> patientData) {
-    final String uids =
-        patientData.stream()
-            .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
-            .map(PatientSp::getPersonUid)
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+  /**
+   * Replays messages one at a time, in original batch order, after at least one bulk attempt has
+   * failed.
+   *
+   * <p>Messages belonging to a record type whose bulk attempt already succeeded are skipped, since
+   * they are already fully persisted and published; reprocessing them would duplicate database
+   * writes and Kafka output. Every other message is dispatched to the correct processor based on
+   * its {@code cd} value, in the exact order it was received - patients and providers are no longer
+   * handled as separate passes, so a failure in one type can never cause a message of the other
+   * type to be silently skipped.
+   *
+   * <p>It is possible for every remaining message to succeed individually even though its group's
+   * bulk attempt failed - for example, a transient issue specific to the bulk call itself. In that
+   * case this method simply returns without throwing.
+   *
+   * @param kafkaMessages raw message values for the polled batch, in delivery order
+   * @param patientsCompleted whether the patient bulk attempt already succeeded
+   * @param providersCompleted whether the provider bulk attempt already succeeded
+   * @throws BatchListenerFailedException identifying the original batch index of the first message
+   *     that fails, wrapping the underlying cause as either {@link NoDataException} (record not
+   *     found) or {@link DataProcessingException} (any other processing failure)
+   */
+  private void processRemainingIndividually(
+      List<String> kafkaMessages, boolean patientsCompleted, boolean providersCompleted) {
 
-    if (phcDatamartEnable) {
-      CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", uids), rtrExecutor);
+    for (int i = 0; i < kafkaMessages.size(); i++) {
+      String message = kafkaMessages.get(i);
+      String cd = resolveCd(message, patientsCompleted, providersCompleted);
+
+      if (cd == null) {
+        continue; // already handled by a successful bulk group, or an unrecognized cd value
+      }
+
+      boolean isPatient = "PAT".equals(cd);
+      Consumer<List<String>> processor =
+          isPatient ? this::processPatientMessages : this::processProviderMessages;
+      String recordType = isPatient ? "Patient" : "Provider";
+
+      try {
+        processor.accept(List.of(message));
+        msgSuccess.increment(1);
+      } catch (EntityNotFoundException ex) {
+        msgFailure.increment();
+        throw new BatchListenerFailedException(
+            ex.getMessage(), new NoDataException(ex.getMessage(), ex), i);
+      } catch (Exception ex) {
+        msgFailure.increment();
+        String errMsg = errorMessage(recordType, "", ex);
+        throw new BatchListenerFailedException(errMsg, new DataProcessingException(errMsg, ex), i);
+      }
+    }
+  }
+
+  /**
+   * Determines whether a single message should be processed during the one-at-a-time fallback,
+   * based on its {@code cd} value and which bulk groups already succeeded.
+   *
+   * @param message raw message value to inspect
+   * @param patientsCompleted whether the patient bulk attempt already succeeded
+   * @param providersCompleted whether the provider bulk attempt already succeeded
+   * @return {@code "PAT"} or {@code "PRV"} if the message still needs individual processing, or
+   *     {@code null} if it should be skipped - either because it was already handled as part of a
+   *     successful bulk group, or because its {@code cd} value is not one this service processes
+   */
+  private String resolveCd(String message, boolean patientsCompleted, boolean providersCompleted) {
+    String cd = parsePersonCd(message); // already validated once in groupIndicesByCd
+
+    if ("PAT".equals(cd)) {
+      return patientsCompleted ? null : cd;
+    }
+    if ("PRV".equals(cd)) {
+      return providersCompleted ? null : cd;
+    }
+    return null; // unrecognized cd values are not processed, consistent with groupIndicesByCd
+  }
+
+  /**
+   * Partitions message indices by their {@code cd} field, preserving each message's position in the
+   * original batch.
+   *
+   * @param messages raw message values for the polled batch
+   * @return batch indices grouped by {@code cd} value
+   * @throws BatchListenerFailedException identifying the index of the first message that could not
+   *     be parsed
+   */
+  private Map<String, List<Integer>> groupIndicesByCd(List<String> messages) {
+    Map<String, List<Integer>> indicesByCd = new LinkedHashMap<>();
+    for (int i = 0; i < messages.size(); i++) {
+      final String cd;
+      try {
+        cd = parsePersonCd(messages.get(i));
+      } catch (RuntimeException e) {
+        msgFailure.increment();
+        throw new BatchListenerFailedException(
+            "Failed to parse 'cd' from person message",
+            new NoDataException("Failed to parse 'cd' from person message", e),
+            i);
+      }
+      indicesByCd.computeIfAbsent(cd, k -> new ArrayList<>()).add(i);
+    }
+    return indicesByCd;
+  }
+
+  /**
+   * Resolves the given batch indices to their corresponding message values.
+   *
+   * @param messages raw message values for the polled batch
+   * @param indices batch indices to resolve
+   * @return message values at the given indices, in order
+   */
+  private static List<String> valuesAt(List<String> messages, List<Integer> indices) {
+    return indices.stream().map(messages::get).toList();
+  }
+
+  private void processPatientMessages(List<String> messages) {
+    if (messages == null || messages.isEmpty()) {
+      return;
+    }
+    String idList =
+        messages.stream().map(this::parsePersonUid).distinct().collect(Collectors.joining(","));
+    List<PatientSp> patientData =
+        patientRepository.computePatients(
+            idList, eventProcedureLoggingProperties.eventProcedureDebugLogging());
+
+    if (patientData.isEmpty()) {
+      throw new EntityNotFoundException("Unable to find Person with ids: " + idList);
     }
 
-    patientData.forEach(
-        personData -> {
-          PatientReporting patientReporting =
-              (PatientReporting)
-                  transformer.processData(personData, null, PersonType.PATIENT_REPORTING);
+    if (phcDatamartEnable) {
+      final String mprUids =
+          patientData.stream()
+              .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
+              .map(PatientSp::getPersonUid)
+              .map(String::valueOf)
+              .collect(Collectors.joining(","));
+      CompletableFuture.runAsync(() -> processPhcFactDatamart("PAT", mprUids), rtrExecutor);
+    }
 
-          nrtPatientRepository.save(NrtPatient.from(patientReporting));
+    // transform PatientSp to PatientReporting format
+    List<PatientReporting> reportingPatients =
+        patientData.stream()
+            .map(
+                p ->
+                    (PatientReporting)
+                        transformer.processData(p, null, PersonType.PATIENT_REPORTING))
+            .toList();
 
-          String reportingKey = transformer.buildPatientKey(personData);
-          String reportingData = transformer.processData(patientReporting);
-          kafkaTemplate.send(patientReportingOutputTopic, reportingKey, reportingData);
-          log.info(
-              "Patient data (uid={}) sent to {}",
-              personData.getPersonUid(),
-              patientReportingOutputTopic);
-          log.debug("Patient Reporting: {}", reportingData != null ? reportingData : "");
+    // transform PatientReporting to NrtPatient format and persist
+    List<NrtPatient> nrtPatients = reportingPatients.stream().map(NrtPatient::from).toList();
+    nrtPatientRepository.saveAll(nrtPatients);
 
-          if (elasticSearchEnable) {
-            String elasticKey = transformer.buildPatientKey(personData);
-            String elasticData =
-                transformer.processData(personData, PersonType.PATIENT_ELASTIC_SEARCH);
-            kafkaTemplate.send(patientElasticSearchOutputTopic, elasticKey, elasticData);
-            log.info(
-                "Patient data (uid={}) sent to {}",
-                personData.getPersonUid(),
-                patientElasticSearchOutputTopic);
-            log.debug("Patient Elastic: {}", elasticData != null ? elasticData : "");
-          }
-        });
+    // post messages to Kafka topic
+    sendPersonKafkaMessages(reportingPatients);
+  }
+
+  private void sendPersonKafkaMessages(List<PatientReporting> reportingPatients) {
+    for (PatientReporting patient : reportingPatients) {
+      String key = transformer.buildPatientKey(patient);
+      String data = transformer.processData(patient);
+
+      kafkaTemplate.send(patientReportingOutputTopic, key, data);
+      log.info(
+          "Patient data (uid={}) sent to {}", patient.getPatientUid(), patientReportingOutputTopic);
+      log.debug("Patient Reporting: {}", data != null ? data : "");
+    }
+  }
+
+  private void processProviderMessages(List<String> messages) {
+    if (messages == null || messages.isEmpty()) {
+      return;
+    }
+
+    String idList =
+        messages.stream().map(this::parsePersonUid).distinct().collect(Collectors.joining(","));
+    List<ProviderSp> providerData =
+        providerRepository.computeProviders(
+            idList, eventProcedureLoggingProperties.eventProcedureDebugLogging());
+
+    if (providerData.isEmpty()) {
+      throw new EntityNotFoundException("Unable to find Person with ids: " + idList);
+    }
+
+    if (phcDatamartEnable) {
+      final String mprUids =
+          providerData.stream()
+              .filter(p -> p.getPersonUid().equals(p.getPersonParentUid()))
+              .map(ProviderSp::getPersonUid)
+              .map(String::valueOf)
+              .distinct()
+              .collect(Collectors.joining(","));
+      CompletableFuture.runAsync(() -> processPhcFactDatamart("PRV", mprUids), rtrExecutor);
+    }
+
+    // transform ProviderSp to ProviderReporting
+    List<ProviderReporting> reportingProviders =
+        providerData.stream()
+            .map(
+                p ->
+                    (ProviderReporting)
+                        transformer.processData(null, p, PersonType.PROVIDER_REPORTING))
+            .toList();
+
+    // transform ProviderReporting to NrtProvider and persist
+    List<NrtProvider> nrtProviders = reportingProviders.stream().map(NrtProvider::from).toList();
+    nrtProviderRepository.saveAll(nrtProviders);
+
+    // post messages to Kafka topic
+    sendProviderKafkaMessages(reportingProviders);
+  }
+
+  private void sendProviderKafkaMessages(List<ProviderReporting> providers) {
+    for (ProviderReporting provider : providers) {
+      String key = transformer.buildProviderKey(provider);
+      String data = transformer.processData(provider);
+
+      kafkaTemplate.send(providerReportingOutputTopic, key, data);
+      log.info(
+          "Provider data (uid={}) sent to {}",
+          provider.getProviderUid(),
+          providerReportingOutputTopic);
+      log.debug("Provider Reporting: {}", data);
+    }
+  }
+
+  String parsePersonCd(String message) {
+    try {
+      return objectMapper.readTree(message).get("payload").path("after").get("cd").asText();
+    } catch (NullPointerException | JsonProcessingException e) {
+      throw new NoSuchElementException("Failed to parse 'cd' from person message", e);
+    }
+  }
+
+  String parsePersonUid(String message) {
+    try {
+      return extractUid(message, "person_uid");
+    } catch (JsonProcessingException e) {
+      throw new NoSuchElementException("Failed to parse 'person_uid' from person message", e);
+    }
   }
 
   @Transactional
-  private void processUser(String message, String topic) {
-    String userUid = "";
+  public void processUser(List<String> messages) {
+    String userUids = "";
     try {
-      userUid = extractUid(message, "auth_user_uid");
-      log.info(topicDebugLog, "User", userUid, topic);
+      userUids =
+          messages.stream().map(this::parseAuthUserUid).distinct().collect(Collectors.joining(","));
+      log.info(topicDebugLog, "User", userUids, userTopic);
       Optional<List<AuthUser>> userData =
           userRepository.computeAuthUsers(
-              userUid, eventProcedureLoggingProperties.eventProcedureDebugLogging());
+              userUids, eventProcedureLoggingProperties.eventProcedureDebugLogging());
 
-      List<AuthUser> authUsers = new ArrayList<>();
+      List<AuthUser> authUsers;
 
       if (userData.isPresent() && !userData.get().isEmpty()) {
         authUsers = userData.get();
       } else {
-        throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUid);
+        throw new EntityNotFoundException("Unable to find AuthUser data for id(s): " + userUids);
       }
 
-      authUsers.forEach(
-          authUser -> {
-            nrtAuthUserRepository.save(NrtAuthUser.from(authUser));
-            String jsonKey = transformer.buildUserKey(authUser);
-            String jsonValue = transformer.processData(authUser);
-            kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
-            log.info(
-                "User data (uid={}) sent to {}",
-                authUser.getAuthUserUid(),
-                userReportingOutputTopic);
-          });
+      // transform AuthUser to NrtAuthUser and persist
+      List<NrtAuthUser> nrtAuthUsers = authUsers.stream().map(NrtAuthUser::from).toList();
+      nrtAuthUserRepository.saveAll(nrtAuthUsers);
+
+      // post messages to Kafka topic
+      sendAuthUserKafkaMessages(authUsers);
+
     } catch (EntityNotFoundException ex) {
       throw new NoDataException(ex.getMessage(), ex);
     } catch (Exception e) {
-      throw new DataProcessingException(errorMessage("User", userUid, e), e);
+      throw new DataProcessingException(errorMessage("User", userUids, e), e);
+    }
+  }
+
+  private String parseAuthUserUid(String message) {
+    try {
+      return extractUid(message, "auth_user_uid");
+    } catch (JsonProcessingException e) {
+      throw new NoSuchElementException("Failed to parse 'person_uid' from person message", e);
+    }
+  }
+
+  private void sendAuthUserKafkaMessages(List<AuthUser> authUsers) {
+    for (AuthUser authUser : authUsers) {
+      String jsonKey = transformer.buildUserKey(authUser);
+      String jsonValue = transformer.processData(authUser);
+      kafkaTemplate.send(userReportingOutputTopic, jsonKey, jsonValue);
+      log.info(
+          "User data (uid={}) sent to {}", authUser.getAuthUserUid(), userReportingOutputTopic);
     }
   }
 
@@ -380,7 +520,7 @@ public class PersonService {
         // Calling sp_public_health_case_fact_datamart_update
         log.info(
             "Executing stored proc: sp_public_health_case_fact_datamart_update '{}', '{}' to update"
-                + " PHС fact datamart",
+                + " PHC fact datamart",
             objName,
             uids);
         patientRepository.updatePhcFact(objName, uids);

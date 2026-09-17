@@ -33,9 +33,13 @@ class KafkaConsumerConfigTest {
 
     // Act
     ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory =
-        kafkaConsumerConfig.personKafkaListenerContainerFactory();
+        kafkaConsumerConfig.personKafkaListenerContainerFactory(null);
 
     // Assert
     Assertions.assertNotNull(kafkaListenerContainerFactory);
+    Assertions.assertTrue(kafkaListenerContainerFactory.isBatchListener());
+    // Async acks must stay off: a failed async batch is acknowledged without reaching the error
+    // handler.
+    Assertions.assertFalse(kafkaListenerContainerFactory.getContainerProperties().isAsyncAcks());
   }
 }
