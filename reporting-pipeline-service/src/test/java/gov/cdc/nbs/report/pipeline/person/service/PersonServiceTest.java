@@ -122,7 +122,6 @@ class PersonServiceTest {
     service.setProviderElasticSearchOutputTopic(providerElasticTopic);
     service.setUserReportingOutputTopic(userReportingTopic);
     service.setPhcDatamartEnable(true);
-    service.setThreadPoolSize(1);
     service.initMetrics();
     return service;
   }
