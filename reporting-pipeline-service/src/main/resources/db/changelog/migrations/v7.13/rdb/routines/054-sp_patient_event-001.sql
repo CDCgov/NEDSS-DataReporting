@@ -275,7 +275,8 @@ BEGIN
             SELECT
                 code,
                 code_short_desc_txt,
-                RANK() OVER (PARTITION BY code ORDER BY nbs_uid DESC) AS rnk
+                ROW_NUMBER() OVER (PARTITION BY code
+                                ORDER BY nbs_uid DESC, code_short_desc_txt) AS rnk
             FROM nbs_srte.dbo.CODE_VALUE_GENERAL WITH (NOLOCK)
             WHERE CODE_SET_NM IN ('PHVS_BIRTHCOUNTRY_CDC', 'PHVS_TB_BIRTH_CNTRY', 'PSL_CNTRY')
         )
