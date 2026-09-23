@@ -1,6 +1,6 @@
 # Local Development Setup
 
-![Real Time Reporting diagram](./rtr_diagram.jpeg)
+![Real Time Reporting diagram](./rtr_diagram.png)
 
 ## Docker Containers
 
