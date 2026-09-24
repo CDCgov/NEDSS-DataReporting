@@ -1,0 +1,43 @@
+name: Smoke Test
+
+on:
+  pull_request:
+    paths:
+      - "reporting-pipeline-service/**"
+      - "testing-tools/smoke-testing/**"
+      - "docker-compose.yaml"
+      - ".github/workflows/**"
+
+jobs:
+  smoke-test:
+    name: Run smoke test
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install sqlcmd
+        run: |
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft-prod.gpg > /dev/null
+          curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" | sudo tee /etc/apt/sources.list.d/msprod.list
+          sudo apt-get update
+          sudo apt-get install -y mssql-tools18 unixodbc-dev
+          echo "/opt/mssql-tools18/bin" >> "$GITHUB_PATH"
+
+      - name: Run smoke test
+        run: ./testing-tools/smoke-testing/run.sh
+
+      - name: Capture container logs on failure
+        if: failure()
+        run: docker compose logs --no-color > /tmp/container-logs.txt 2>&1 || true
+
+      - name: Upload container logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: container-logs
+          path: /tmp/container-logs.txt
